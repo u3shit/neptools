@@ -1,0 +1,92 @@
+#include "raw_item.hpp"
+#include <iomanip>
+#include <cassert>
+
+
+static inline char FilterPrintable(Byte c)
+{
+    //return isprint(c) ? c : '.';
+    if (c >= ' ' && c < '~')
+        return c;
+    else
+        return '.';
+}
+
+void RawItem::Dump(std::ostream& os) const
+{
+    auto flags = os.flags();
+    os << std::hex;
+
+
+    size_t i = 0;
+    do
+    {
+        os << std::setw(8) << std::setfill('0') << GetPosition() + i
+           << ' ';
+
+        // numbers
+        size_t j = 0;
+        for (; j < 8 && i+j < GetSize(); ++j)
+            os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
+        os << ' ';
+        for (; j < 16 && i+j < GetSize(); ++j)
+            os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
+        for (; j < 16; ++j) os << "   ";
+
+        os << " |";
+        // chars
+        j = 0;
+        for (; j < 16 && i+j < GetSize(); ++j)
+            os << FilterPrintable((*this)[i+j]);
+        os << "|\n";
+    }
+    while ((i += 16) < GetSize());
+    os.flags(flags);
+}
+
+// split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
+void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
+{
+    size_t len = nitem->GetSize();
+    assert(pos <= GetSize() && pos+len <= GetSize());
+    size_t rem_len = GetSize() - len - pos;
+
+    // complete replace
+    if (pos == 0 && rem_len == 0)
+    {
+        Replace(std::move(nitem));
+    }
+    // no previous element
+    else if (pos == 0)
+    {
+        InsertBefore(std::move(nitem));
+        this->offset += len;
+        this->len -= len;
+        this->position += len;
+    }
+    else
+    {
+        // if we need the third element, alloc it here
+        if (rem_len != 0)
+        {
+            std::unique_ptr<RawItem> split{new RawItem(
+                buf, offset+pos+len, rem_len, position+pos+len)};
+            nitem->InsertAfter(std::move(split));
+        }
+        InsertAfter(std::move(nitem));
+        this->len = pos;
+    }
+}
+
+void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem, PointerMap& pmap)
+{
+    auto sav = nitem.get();
+    Split(pos, std::move(nitem));
+
+    // might do some extraneous assignments
+    if (sav->GetPrev())
+        pmap[sav->GetPrev()->GetPosition()] = sav->GetPrev();
+    pmap[sav->GetPosition()] = sav;
+    if (sav->GetNext())
+        pmap[sav->GetNext()->GetPosition()] = sav->GetNext();
+}
