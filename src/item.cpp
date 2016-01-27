@@ -4,15 +4,15 @@
 
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
-    assert(nitem->parent == nullptr && nitem->prev == nullptr &&
-           nitem->next == nullptr);
+    assert(nitem->ctx == ctx && nitem->parent == nullptr &&
+           nitem->prev == nullptr && nitem->next == nullptr);
     nitem->next = std::move(children);
     children = std::move(nitem);
 }
 
 void Item::InsertAfter(std::unique_ptr<Item> nitem) noexcept
 {
-    assert(nitem->ctx == nullptr && nitem->parent == nullptr &&
+    assert(nitem->ctx == ctx && nitem->parent == nullptr &&
            nitem->prev == nullptr && nitem->next == nullptr);
     nitem->ctx = ctx;
     nitem->parent = parent;
@@ -25,7 +25,7 @@ void Item::InsertAfter(std::unique_ptr<Item> nitem) noexcept
 
 void Item::InsertBefore(std::unique_ptr<Item> nitem) noexcept
 {
-    assert(nitem->ctx == nullptr && nitem->parent == nullptr &&
+    assert(nitem->ctx == ctx && nitem->parent == nullptr &&
            nitem->prev == nullptr && nitem->next == nullptr);
     auto sav = nitem.get();
     sav->parent = parent;

@@ -12,8 +12,11 @@ using FilePointer = std::uint32_t;
 
 class Item
 {
+protected:
+    struct ContextKey { Context* ctx; };
 public:
-    explicit Item(FilePointer position = 0) noexcept : position{position} {}
+    explicit Item(ContextKey ctx, FilePointer position = 0) noexcept
+        : position{position}, ctx{ctx.ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
     virtual ~Item() = default;
@@ -42,11 +45,11 @@ public:
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
 protected:
-    FilePointer position = 0;
+    FilePointer position;
 
 private:
     friend class Context;
-    Context* ctx = nullptr;
+    Context* ctx;
     Item* parent = nullptr;
     std::unique_ptr<Item> children;
     Item* prev = nullptr;

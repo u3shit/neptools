@@ -70,7 +70,7 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
         if (rem_len != 0)
         {
             std::unique_ptr<RawItem> split{new RawItem(
-                buf, offset+pos+len, rem_len, position+pos+len)};
+                {GetContext()}, buf, offset+pos+len, rem_len, position+pos+len)};
             nitem->InsertAfter(std::move(split));
         }
         InsertAfter(std::move(nitem));

@@ -1,9 +1,12 @@
 #include "context.hpp"
 #include "item.hpp"
+#include <cassert>
 
-Context::Context(std::unique_ptr<Item> root) : root{std::move(root)}
+void Context::SetRoot(std::unique_ptr<Item> nroot)
 {
-    this->root->ctx = this;
+    assert(nroot->ctx == this);
+    root = std::move(nroot);
+    size = root->GetSize();
 }
 
 
