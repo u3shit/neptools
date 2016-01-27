@@ -10,15 +10,16 @@ namespace Stcm
 
 struct Header
 {
+    struct MsgParts
+    {
+        char magic[5];
+        char version;
+        char rest[0x20-5-1];
+    };
     union
     {
         char msg[0x20];
-        struct
-        {
-            char magic[5];
-            char version;
-            char rest[0x20-5-1];
-        } parts;
+        MsgParts parts;
     };
     boost::endian::little_uint32_t export_offset;
     boost::endian::little_uint32_t export_count;
