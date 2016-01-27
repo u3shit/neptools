@@ -1,10 +1,10 @@
 #include "context.hpp"
 #include "item.hpp"
-#include <cassert>
+#include <boost/assert.hpp>
 
 void Context::SetRoot(std::unique_ptr<Item> nroot)
 {
-    assert(nroot->ctx == this);
+    BOOST_ASSERT(nroot->ctx == this);
     root = std::move(nroot);
     size = root->GetSize();
 }

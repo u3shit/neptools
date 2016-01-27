@@ -2,7 +2,7 @@
 #include "header.hpp"
 #include "../item.hpp"
 #include <map>
-#include <cassert>
+#include <boost/assert.hpp>
 
 namespace Stcm
 {
@@ -16,9 +16,9 @@ File::File(std::shared_ptr<Buffer> buf)
 void File::Parse()
 {
     std::map<FilePointer, Item*> pointer_map;
-    assert(GetRoot()->GetNext() == nullptr &&
-           GetRoot()->GetPosition() == 0 &&
-           dynamic_cast<RawItem*>(GetRoot()));
+    BOOST_ASSERT(GetRoot()->GetNext() == nullptr &&
+                 GetRoot()->GetPosition() == 0 &&
+                 dynamic_cast<RawItem*>(GetRoot()));
     pointer_map[0] = GetRoot();
 
     auto& root = static_cast<RawItem&>(*GetRoot());

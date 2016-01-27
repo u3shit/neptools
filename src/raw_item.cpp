@@ -1,6 +1,6 @@
 #include "raw_item.hpp"
 #include <iomanip>
-#include <cassert>
+#include <boost/assert.hpp>
 
 
 static inline char FilterPrintable(Byte c)
@@ -48,7 +48,7 @@ void RawItem::Dump(std::ostream& os) const
 void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
 {
     size_t len = nitem->GetSize();
-    assert(pos <= GetSize() && pos+len <= GetSize());
+    BOOST_ASSERT(pos <= GetSize() && pos+len <= GetSize());
     size_t rem_len = GetSize() - len - pos;
 
     // complete replace
