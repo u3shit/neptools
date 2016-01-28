@@ -104,15 +104,41 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
     }
 }
 
+namespace
+{
+struct PmapRem
+{
+    using T = std::pair<PointerMap::iterator, bool>;
+    PointerMap& pmap;
+    T x;
+    ~PmapRem() { if (x.second) pmap.erase(x.first); }
+};
+}
+
 void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem, PointerMap& pmap)
 {
     auto sav = nitem.get();
+    // prealloc new PointerMap items, so in case of an exception we can rollback
+    PmapRem p0{pmap, pmap.insert({sav->GetPosition() + pos, {}})};
+    PmapRem p1{pmap, pmap.insert({sav->GetPosition() + sav->GetSize() + pos, {}})};
+
     Split(pos, std::move(nitem));
 
-    // might do some extraneous assignments
-    if (sav->GetPrev())
-        pmap[sav->GetPrev()->GetPosition()] = sav->GetPrev();
-    pmap[sav->GetPosition()] = sav;
-    if (sav->GetNext())
-        pmap[sav->GetNext()->GetPosition()] = sav->GetNext();
+    // actually set PointerMap
+    if (auto ptr = sav->GetPrev())
+    {
+        auto p = pmap.find(ptr->GetPosition());
+        BOOST_ASSERT(p != pmap.end());
+        p->second = ptr;
+    }
+
+    p0.x.first->second = sav;
+    p0.x.second = false;
+
+    if (auto ptr = sav->GetNext())
+    {
+        BOOST_ASSERT(p1.x.first == pmap.find(ptr->GetPosition()));
+        p1.x.first->second = ptr;
+        p1.x.second = false;
+    }
 }
