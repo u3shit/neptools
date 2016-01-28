@@ -2,6 +2,7 @@
 #define STCM_HEADER_HPP
 #pragma once
 
+#include "../fixed_string.hpp"
 #include "../raw_item.hpp"
 #include <boost/endian/arithmetic.hpp>
 
@@ -18,7 +19,7 @@ struct Header
     };
     union
     {
-        char msg[0x20];
+        FixedString<0x20> msg;
         MsgParts parts;
     };
     boost::endian::little_uint32_t export_offset;
@@ -26,21 +27,26 @@ struct Header
     boost::endian::little_uint32_t field_28;
     boost::endian::little_uint32_t collection_link_offset;
 
-    bool IsValid(size_t file_size);
+    bool IsValid(size_t file_size) const noexcept;
 };
 static_assert(sizeof(Header) == 0x30, "");
 
 class HeaderItem : public Item
 {
 public:
-    HeaderItem(Key k, Context* ctx, const RawItem& it)
-        : HeaderItem{k, ctx, it.GetPtr(), it.GetSize()} {}
-    HeaderItem(Key k, Context* ctx, const Byte* data, size_t len);
+    HeaderItem(Key k, Context* ctx, const RawItem& it, const PointerMap& pmap)
+        : HeaderItem{k, ctx, it.GetPtr(), it.GetSize(), pmap} {}
+    HeaderItem(Key k, Context* ctx, const Byte* data, size_t len,
+               const PointerMap& pmap);
 
     void Dump(std::ostream& os) const;
     size_t GetSize() const noexcept { return sizeof(Header); }
+
 private:
-    Header raw;
+    FixedString<0x20> msg;
+    uint32_t export_count, field_28;
+    const Label* export_sec;
+    const Label* collection_link;
 };
 
 }

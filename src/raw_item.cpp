@@ -2,6 +2,13 @@
 #include <iomanip>
 #include <boost/assert.hpp>
 
+ItemPointer GetPointer(const PointerMap& pmap, FilePointer pos)
+{
+    auto it = pmap.upper_bound(pos);
+    BOOST_ASSERT(it != pmap.begin());
+    --it;
+    return {it->second, pos - it->first};
+}
 
 static inline char FilterPrintable(Byte c)
 {

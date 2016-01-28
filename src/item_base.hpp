@@ -4,19 +4,20 @@
 
 #include <cstdint>
 #include <functional>
-#include <boost/operators.hpp>
 
 class Item;
 class Context;
 
 using FilePointer = std::uint32_t;
-struct ItemPointer : boost::equality_comparable<ItemPointer>
+struct ItemPointer
 {
     Item* item;
     FilePointer offset;
 
     bool operator==(const ItemPointer& o) const
     { return item == o.item && offset == o.offset; }
+    bool operator!=(const ItemPointer& o) const
+    { return item != o.item || offset != o.offset; }
 };
 
 using Label = std::pair<const std::string, ItemPointer>;

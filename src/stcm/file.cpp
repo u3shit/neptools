@@ -22,7 +22,7 @@ void File::Parse()
     pointer_map[0] = GetRoot();
 
     auto& root = static_cast<RawItem&>(*GetRoot());
-    root.Split(0, Create<HeaderItem>(root), pointer_map);
+    root.Split(0, Create<HeaderItem>(root, pointer_map), pointer_map);
 }
 
 }

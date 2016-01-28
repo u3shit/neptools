@@ -5,7 +5,9 @@
 #include "item.hpp"
 #include <map>
 
+// properties needed: sorted
 using PointerMap = std::map<FilePointer, Item*>;
+ItemPointer GetPointer(const PointerMap& pmap, FilePointer pos);
 
 class RawItem final : public Item
 {

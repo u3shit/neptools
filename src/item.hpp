@@ -41,6 +41,7 @@ public:
     void Remove() noexcept;
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
+    // properties needed: none (might help if ordered)
     using LabelsContainer = std::unordered_multimap<FilePointer, Label*>;
     const LabelsContainer& GetLabels() const { return labels; }
 

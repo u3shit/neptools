@@ -11,7 +11,7 @@ void Context::SetRoot(std::unique_ptr<Item> nroot)
     size = root->GetSize();
 }
 
-const Label& Context::CreateLabel(const std::string& name, ItemPointer ptr)
+const Label* Context::CreateLabel(const std::string& name, ItemPointer ptr)
 {
     auto pair = labels.insert({name, ptr});
     if (!pair.second)
@@ -27,14 +27,14 @@ const Label& Context::CreateLabel(const std::string& name, ItemPointer ptr)
         labels.erase(pair.first);
         throw;
     }
-    return *item;
+    return item;
 }
 
-const Label& Context::GetLabelTo(ItemPointer ptr)
+const Label* Context::GetLabelTo(ItemPointer ptr)
 {
     auto& lctr = ptr.item->labels;
     auto it = lctr.find(ptr.offset);
-    if (it != lctr.end()) return *it->second;
+    if (it != lctr.end()) return it->second;
 
     std::stringstream ss;
     ss << "loc_" << std::setw(8) << std::setfill('0') << std::hex

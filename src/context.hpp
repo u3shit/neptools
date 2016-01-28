@@ -19,8 +19,8 @@ public:
     std::unique_ptr<T> Create(Args&&... args);
 
     ItemPointer GetLabel(const std::string& name) const { return labels.at(name); }
-    const Label& CreateLabel(const std::string& name, ItemPointer ptr);
-    const Label& GetLabelTo(ItemPointer ptr);
+    const Label* CreateLabel(const std::string& name, ItemPointer ptr);
+    const Label* GetLabelTo(ItemPointer ptr);
 
 protected:
     void SetRoot(std::unique_ptr<Item> nroot);
@@ -31,6 +31,7 @@ private:
     std::unique_ptr<Item> root;
     size_t size;
 
+    // properties needed: stable pointers
     std::unordered_map<std::string, ItemPointer> labels;
 };
 
