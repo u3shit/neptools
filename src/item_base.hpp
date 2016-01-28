@@ -8,11 +8,11 @@
 class Item;
 class Context;
 
-using FilePointer = std::uint32_t;
+using FilePosition = std::uint32_t;
 struct ItemPointer
 {
     Item* item;
-    FilePointer offset;
+    FilePosition offset;
 
     bool operator==(const ItemPointer& o) const
     { return item == o.item && offset == o.offset; }
@@ -28,7 +28,7 @@ template<> struct hash<ItemPointer>
 {
     std::size_t operator()(const ItemPointer& ptr) const
     {
-        return hash<Item*>()(ptr.item) ^ hash<FilePointer>()(ptr.offset);
+        return hash<Item*>()(ptr.item) ^ hash<FilePosition>()(ptr.offset);
     }
 };
 }

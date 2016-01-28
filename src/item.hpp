@@ -12,7 +12,7 @@ class Item
 protected:
     struct Key {};
 public:
-    explicit Item(Key, Context* ctx, FilePointer position = 0) noexcept
+    explicit Item(Key, Context* ctx, FilePosition position = 0) noexcept
         : position{position}, ctx{ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
@@ -33,7 +33,7 @@ public:
     const Item* GetNext() const noexcept     { return next.get(); }
     const Item* GetPrev() const noexcept     { return prev; }
 
-    FilePointer GetPosition() const noexcept { return position; }
+    FilePosition GetPosition() const noexcept { return position; }
 
     void PrependChild(std::unique_ptr<Item> nitem) noexcept;
     void InsertAfter(std::unique_ptr<Item> nitem) noexcept;
@@ -42,13 +42,13 @@ public:
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
-    using LabelsContainer = std::unordered_multimap<FilePointer, Label*>;
+    using LabelsContainer = std::unordered_multimap<FilePosition, Label*>;
     const LabelsContainer& GetLabels() const { return labels; }
 
     void CommitLabels(Key, LabelsContainer&& ctr) noexcept;
 protected:
-    void TrimLabels(FilePointer pos) noexcept;
-    FilePointer position;
+    void TrimLabels(FilePosition pos) noexcept;
+    FilePosition position;
 
 private:
     friend class Context;

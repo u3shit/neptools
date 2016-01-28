@@ -15,7 +15,7 @@ File::File(std::shared_ptr<Buffer> buf)
 
 void File::Parse()
 {
-    std::map<FilePointer, Item*> pointer_map;
+    std::map<FilePosition, Item*> pointer_map;
     BOOST_ASSERT(GetRoot()->GetNext() == nullptr &&
                  GetRoot()->GetPosition() == 0 &&
                  dynamic_cast<RawItem*>(GetRoot()));

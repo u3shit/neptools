@@ -102,7 +102,7 @@ void Item::CommitLabels(Key, LabelsContainer&& cnt) noexcept
     }
 }
 
-void Item::TrimLabels(FilePointer pos) noexcept
+void Item::TrimLabels(FilePosition pos) noexcept
 {
     EraseIf(labels, [pos](auto x) { return x.first >= pos; });
     MaybeRehash(labels);

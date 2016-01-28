@@ -6,8 +6,8 @@
 #include <map>
 
 // properties needed: sorted
-using PointerMap = std::map<FilePointer, Item*>;
-ItemPointer GetPointer(const PointerMap& pmap, FilePointer pos);
+using PointerMap = std::map<FilePosition, Item*>;
+ItemPointer GetPointer(const PointerMap& pmap, FilePosition pos);
 
 class RawItem final : public Item
 {
@@ -26,7 +26,7 @@ public:
 
 protected:
     RawItem(Context* ctx, std::shared_ptr<Buffer> buf, size_t offset,
-            size_t len, FilePointer position) noexcept
+            size_t len, FilePosition position) noexcept
         : Item{{}, ctx, position}, offset{offset}, len{len}, buf{std::move(buf)} {}
 private:
     size_t offset, len;

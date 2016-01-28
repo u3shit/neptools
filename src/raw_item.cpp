@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <boost/assert.hpp>
 
-ItemPointer GetPointer(const PointerMap& pmap, FilePointer pos)
+ItemPointer GetPointer(const PointerMap& pmap, FilePosition pos)
 {
     auto it = pmap.upper_bound(pos);
     BOOST_ASSERT(it != pmap.begin());
