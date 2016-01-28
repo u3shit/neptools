@@ -1,6 +1,8 @@
 #include "context.hpp"
 #include "item.hpp"
+#include "utils.hpp"
 #include <boost/assert.hpp>
+#include <iostream>
 
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
@@ -57,6 +59,7 @@ void Item::InsertBefore(std::unique_ptr<Item> nitem) noexcept
 
 void Item::Remove() noexcept
 {
+    BOOST_ASSERT(labels.empty());
     if (next) next->prev = prev;
 
     if (prev) prev->next = std::move(next);
@@ -67,6 +70,50 @@ void Item::Remove() noexcept
 
 void Item::Replace(std::unique_ptr<Item> nitem) noexcept
 {
+#ifndef BOOST_ASSERT_IS_VOID
+    auto nsize = nitem->GetSize();
+    for (auto it : labels)
+        BOOST_ASSERT(it.first < nsize);
+    BOOST_ASSERT(nitem->labels.empty());
+#endif
+
+    nitem->labels = std::move(labels);
+    labels.clear(); // standard does not guarantee it
+    for (auto& it : nitem->labels)
+        it.second->second.item = nitem.get();
+
     InsertAfter(std::move(nitem));
     Remove();
+}
+
+void Item::CommitLabels(Key, LabelsContainer&& cnt) noexcept
+{
+#ifndef BOOST_ASSERT_IS_VOID
+    auto size = GetSize();
+#endif
+
+    labels = std::move(cnt);
+    for (auto& it : labels)
+    {
+        BOOST_ASSERT(it.first < size);
+        auto& ptr = it.second->second;
+        ptr.item = this;
+        ptr.offset = it.first;
+    }
+}
+
+void Item::TrimLabels(FilePointer pos) noexcept
+{
+    EraseIf(labels, [pos](auto x) { return x.first >= pos; });
+    MaybeRehash(labels);
+}
+
+std::ostream& operator<<(std::ostream& os, const Item& item)
+{
+    for (auto it = &item; it; it = it->GetNext())
+    {
+        it->Dump(os);
+        os << '\n';
+    }
+    return os;
 }

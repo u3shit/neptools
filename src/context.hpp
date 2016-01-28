@@ -2,8 +2,10 @@
 #define CONTEXT_HPP
 #pragma once
 
+#include "item_base.hpp"
 #include <memory>
-class Item;
+#include <string>
+#include <unordered_map>
 
 class Context
 {
@@ -16,6 +18,10 @@ public:
     template <typename T, typename... Args>
     std::unique_ptr<T> Create(Args&&... args);
 
+    ItemPointer GetLabel(const std::string& name) const { return labels.at(name); }
+    const Label& CreateLabel(const std::string& name, ItemPointer ptr);
+    const Label& GetLabelTo(ItemPointer ptr);
+
 protected:
     void SetRoot(std::unique_ptr<Item> nroot);
     ~Context() = default;
@@ -24,6 +30,8 @@ private:
     friend class Item;
     std::unique_ptr<Item> root;
     size_t size;
+
+    std::unordered_map<std::string, ItemPointer> labels;
 };
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx);
@@ -32,7 +40,7 @@ std::ostream& operator<<(std::ostream& os, const Context& ctx);
 template <typename T, typename... Args>
 inline std::unique_ptr<T> Context::Create(Args&&... args)
 {
-    return std::unique_ptr<T>(new T(Item::ContextKey{this}, std::forward<Args>(args)...));
+    return std::unique_ptr<T>(new T(Item::Key{}, this, std::forward<Args>(args)...));
 }
 
 #endif

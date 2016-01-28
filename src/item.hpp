@@ -2,21 +2,18 @@
 #define ITEM_HPP
 #pragma once
 
+#include "item_base.hpp"
 #include "buffer.hpp"
-#include <cstdint>
-#include <iostream>
-
-class Item;
-class Context;
-using FilePointer = std::uint32_t;
+#include <iosfwd>
+#include <unordered_map>
 
 class Item
 {
 protected:
-    struct ContextKey { Context* ctx; };
+    struct Key {};
 public:
-    explicit Item(ContextKey ctx, FilePointer position = 0) noexcept
-        : position{position}, ctx{ctx.ctx} {}
+    explicit Item(Key, Context* ctx, FilePointer position = 0) noexcept
+        : position{position}, ctx{ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
     virtual ~Item() = default;
@@ -44,7 +41,12 @@ public:
     void Remove() noexcept;
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
+    using LabelsContainer = std::unordered_multimap<FilePointer, Label*>;
+    const LabelsContainer& GetLabels() const { return labels; }
+
+    void CommitLabels(Key, LabelsContainer&& ctr) noexcept;
 protected:
+    void TrimLabels(FilePointer pos) noexcept;
     FilePointer position;
 
 private:
@@ -54,16 +56,10 @@ private:
     std::unique_ptr<Item> children;
     Item* prev = nullptr;
     std::unique_ptr<Item> next;
+
+    LabelsContainer labels;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Item& item)
-{
-    for (auto it = &item; it; it = it->GetNext())
-    {
-        it->Dump(os);
-        os << '\n';
-    }
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, const Item& item);
 
 #endif

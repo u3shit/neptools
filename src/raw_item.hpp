@@ -10,8 +10,8 @@ using PointerMap = std::map<FilePointer, Item*>;
 class RawItem final : public Item
 {
 public:
-    RawItem(ContextKey ctx, std::shared_ptr<Buffer> buf) noexcept
-        : Item{ctx}, offset{0}, len{buf->GetSize()}, buf{std::move(buf)} {}
+    RawItem(Key k, Context* ctx, std::shared_ptr<Buffer> buf) noexcept
+        : Item{k, ctx}, offset{0}, len{buf->GetSize()}, buf{std::move(buf)} {}
 
     const Byte* GetPtr() const noexcept { return buf->GetPtr(); }
     size_t GetSize() const noexcept override { return len; }
@@ -23,9 +23,9 @@ public:
     void Split(size_t pos, std::unique_ptr<Item> nitem, PointerMap& pmap);
 
 protected:
-    RawItem(ContextKey ctx, std::shared_ptr<Buffer> buf, size_t offset,
+    RawItem(Context* ctx, std::shared_ptr<Buffer> buf, size_t offset,
             size_t len, FilePointer position) noexcept
-        : Item{ctx, position}, offset{offset}, len{len}, buf{std::move(buf)} {}
+        : Item{{}, ctx, position}, offset{offset}, len{len}, buf{std::move(buf)} {}
 private:
     size_t offset, len;
     std::shared_ptr<Buffer> buf;

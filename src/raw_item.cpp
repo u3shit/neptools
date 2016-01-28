@@ -54,11 +54,21 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
     // complete replace
     if (pos == 0 && rem_len == 0)
     {
-        Replace(std::move(nitem));
+        Replace(std::move(nitem)); // moves labels too
     }
     // no previous element
     else if (pos == 0)
     {
+        LabelsContainer cthis, cnitem;
+        for (auto it : GetLabels())
+            if (it.first >= len)
+                cthis.insert({it.first-len, it.second});
+            else
+                cnitem.insert({it.first, it.second});
+
+        CommitLabels({}, std::move(cthis));
+        nitem->CommitLabels({}, std::move(cnitem));
+
         InsertBefore(std::move(nitem));
         this->offset += len;
         this->len -= len;
@@ -66,14 +76,30 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
     }
     else
     {
+        // filter out new labels
+        LabelsContainer cnitem, cnext;
+        for (auto it : GetLabels())
+            if (it.first >= pos+len)
+                cnext.insert({it.first-pos-len, it.second});
+            else if (it.first >= pos)
+                cnitem.insert({it.first-pos, it.second});
+
         // if we need the third element, alloc it here
         if (rem_len != 0)
         {
             std::unique_ptr<RawItem> split{new RawItem(
-                {GetContext()}, buf, offset+pos+len, rem_len, position+pos+len)};
+                GetContext(), buf, offset+pos+len, rem_len, position+pos+len)};
+            // everything is noexcept after this
+            split->CommitLabels({}, std::move(cnext));
             nitem->InsertAfter(std::move(split));
         }
+        else
+            BOOST_ASSERT(cnext.empty());
+
+        nitem->CommitLabels({}, std::move(cnitem));
         InsertAfter(std::move(nitem));
+
+        TrimLabels(pos);
         this->len = pos;
     }
 }

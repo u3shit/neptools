@@ -1,6 +1,7 @@
 #include "../context.hpp"
 #include "header.hpp"
 #include <stdexcept>
+#include <iostream>
 
 namespace Stcm
 {
@@ -14,8 +15,8 @@ bool Header::IsValid(size_t file_size)
         collection_link_offset < file_size;
 }
 
-HeaderItem::HeaderItem(ContextKey ctx, const Byte* data, size_t len)
-    : Item{ctx}
+HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
+    : Item{k, ctx}
 {
     if (len < sizeof(Header))
         throw std::out_of_range("STCM header too short");
