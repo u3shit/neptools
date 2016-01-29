@@ -1,5 +1,6 @@
 #include "file.hpp"
 #include "header.hpp"
+#include "exports.hpp"
 #include "../item.hpp"
 #include <boost/assert.hpp>
 
@@ -19,7 +20,9 @@ void File::Parse()
                  dynamic_cast<RawItem*>(GetRoot()));
 
     auto& root = static_cast<RawItem&>(*GetRoot());
-    root.Split(0, Create<HeaderItem>(root));
+    auto hdr = root.Split(0, Create<HeaderItem>(root));
+    auto& exp = hdr->export_sec->second;
+    static_cast<RawItem*>(exp.item)->Split(exp.offset, Create<Exports>(hdr));
 }
 
 }

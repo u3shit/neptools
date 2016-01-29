@@ -27,7 +27,6 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
     msg = raw->msg;
     export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
     export_count = raw->export_count;
-    field_28 = raw->field_28;
     collection_link = ctx->CreateLabelFallback("collection_link", raw->collection_link_offset);;
 }
 
@@ -35,8 +34,8 @@ void HeaderItem::Dump(std::ostream& os) const
 {
     Item::Dump(os);
 
-    os << "Msg: " << msg << "\nVars: " << export_sec->first << ", "
-       << export_count << ", " << field_28 << ", "
+    os << "Msg: " << msg << "\nVars: @" << export_sec->first << ", "
+       << export_count << ", @"
        << collection_link->first;
 }
 

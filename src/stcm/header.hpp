@@ -41,9 +41,8 @@ public:
     void Dump(std::ostream& os) const;
     size_t GetSize() const noexcept { return sizeof(Header); }
 
-private:
     FixedString<0x20> msg;
-    uint32_t export_count, field_28;
+    uint32_t export_count;
     const Label* export_sec;
     const Label* collection_link;
 };

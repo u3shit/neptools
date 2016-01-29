@@ -99,6 +99,8 @@ std::unique_ptr<Item> Item::Remove() noexcept
         ret = std::move(ctx->root);
         ctx->root = std::move(next);
     }
+
+    prev = parent = nullptr;
     return ret;
 }
 
@@ -178,7 +180,7 @@ void Item::Slice(SliceSeq seq)
         cur->CommitLabels(std::move(nlabels[i]));
         if (seq[i].first == nullptr)
         {
-            prev->InsertAfter(Remove());
+            if (prev != this) prev->InsertAfter(Remove());
             ++moved;
         }
         else

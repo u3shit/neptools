@@ -45,7 +45,7 @@ void RawItem::Dump(std::ostream& os) const
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
-void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
+void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
 {
     size_t len = nitem->GetSize();
     BOOST_ASSERT(pos <= GetSize() && pos+len <= GetSize());
@@ -71,9 +71,12 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
         }
 
     Slice(std::move(seq));
-    if (pos == 0 && rem_len > 0)
+    if (pos == 0)
     {
+        BOOST_ASSERT(rem_len > 0);
         this->offset += len;
-        this->len -= len;
+        this->len = rem_len;
     }
+    else
+        this->len = pos;
 }
