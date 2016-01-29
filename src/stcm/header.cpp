@@ -25,10 +25,10 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
         throw std::runtime_error("Invalid STCM header");
 
     msg = raw->msg;
-    export_sec = ctx->GetLabelTo(raw->export_offset);
+    export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
     export_count = raw->export_count;
     field_28 = raw->field_28;
-    collection_link = ctx->GetLabelTo(raw->collection_link_offset);;
+    collection_link = ctx->CreateLabelFallback("collection_link", raw->collection_link_offset);;
 }
 
 void HeaderItem::Dump(std::ostream& os) const

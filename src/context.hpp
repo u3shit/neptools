@@ -20,7 +20,11 @@ public:
     std::unique_ptr<T> Create(Args&&... args);
 
     ItemPointer GetLabel(const std::string& name) const { return labels.at(name); }
-    const Label* CreateLabel(const std::string& name, ItemPointer ptr);
+    const Label* CreateLabel(std::string name, ItemPointer ptr);
+    const Label* CreateLabelFallback(const std::string& name, ItemPointer ptr);
+    const Label* CreateLabelFallback(const std::string& name, FilePosition pos)
+    { return CreateLabelFallback(name, GetPointer(pos)); }
+
     const Label* GetLabelTo(ItemPointer ptr);
     const Label* GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
 
@@ -38,11 +42,15 @@ private:
     size_t size;
 
     // properties needed: stable pointers
-    std::unordered_map<std::string, ItemPointer> labels;
+    using LabelsMap = std::unordered_map<std::string, ItemPointer>;
+    LabelsMap labels;
     PointerMap pmap;
 
     // can use stuff inside context
     std::unique_ptr<Item> root;
+
+    const Label* PostCreateLabel(
+        std::pair<LabelsMap::iterator, bool> pair, ItemPointer ptr);
 };
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx);

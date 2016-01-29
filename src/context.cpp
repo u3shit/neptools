@@ -14,12 +14,30 @@ void Context::SetRoot(std::unique_ptr<Item> nroot)
     size = root->GetSize();
 }
 
-const Label* Context::CreateLabel(const std::string& name, ItemPointer ptr)
+const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
 {
-    auto pair = labels.insert({name, ptr});
+    auto pair = labels.insert({std::move(name), ptr});
     if (!pair.second)
         throw std::out_of_range("label already exists");
 
+    return PostCreateLabel(pair, ptr);
+}
+
+const Label* Context::CreateLabelFallback(const std::string& name, ItemPointer ptr)
+{
+    auto pair = labels.insert({name, ptr});
+    for (int i = 1; !pair.second; ++i)
+    {
+        std::stringstream ss;
+        ss << name << " " << i;
+        pair = labels.insert({ss.str(), ptr});
+    }
+    return PostCreateLabel(pair, ptr);
+}
+
+const Label* Context::PostCreateLabel(
+    std::pair<LabelsMap::iterator, bool> pair, ItemPointer ptr)
+{
     Label* item = &*pair.first;
     try
     {
@@ -42,7 +60,7 @@ const Label* Context::GetLabelTo(ItemPointer ptr)
     std::stringstream ss;
     ss << "loc_" << std::setw(8) << std::setfill('0') << std::hex
        << ptr.item->GetPosition() + ptr.offset;
-    return CreateLabel(ss.str(), ptr); // todo: duplicates?!
+    return CreateLabelFallback(ss.str(), ptr);
 }
 
 ItemPointer Context::GetPointer(FilePosition pos) const noexcept
