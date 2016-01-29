@@ -13,6 +13,7 @@ static inline char FilterPrintable(Byte c)
 
 void RawItem::Dump(std::ostream& os) const
 {
+    Item::Dump(os);
     auto flags = os.flags();
     os << std::hex;
 

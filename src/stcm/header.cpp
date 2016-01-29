@@ -33,6 +33,8 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
 
 void HeaderItem::Dump(std::ostream& os) const
 {
+    Item::Dump(os);
+
     os << "Msg: " << msg << "\nVars: " << export_sec->first << ", "
        << export_count << ", " << field_28 << ", "
        << collection_link->first;

@@ -13,6 +13,17 @@ Item::~Item()
         ctx->pmap.erase(it);
 }
 
+void Item::Dump(std::ostream& os) const
+{
+    for (const auto& it : GetLabels())
+    {
+        os << '@' << it.second->first;
+        if (it.first != 0)
+            os << '+' << it.first;
+        os << ":\n";
+    }
+}
+
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
     BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&
