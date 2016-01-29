@@ -20,11 +20,11 @@ struct ExportEntry
 static_assert(sizeof(ExportEntry) == 0x28, "");
 
 class HeaderItem;
-class Exports : public Item
+class ExportsItem : public Item
 {
 public:
-    Exports(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
-    static Exports* CreateAndInsert(Context* ctx, const HeaderItem* hdr);
+    ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
+    static ExportsItem* CreateAndInsert(Context* ctx, const HeaderItem* hdr);
 
     void Dump(std::ostream& os) const;
     size_t GetSize() const noexcept { return sizeof(ExportEntry) * entries.size(); }

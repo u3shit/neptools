@@ -21,7 +21,7 @@ void File::Parse()
 
     auto root = static_cast<RawItem*>(GetRoot());
     auto hdr = HeaderItem::CreateAndInsert(this, root);
-    Exports::CreateAndInsert(this, hdr);
+    ExportsItem::CreateAndInsert(this, hdr);
 }
 
 }
