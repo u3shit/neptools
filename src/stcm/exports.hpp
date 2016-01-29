@@ -23,12 +23,12 @@ class HeaderItem;
 class Exports : public Item
 {
 public:
-    Exports(Key k, Context* ctx, const HeaderItem* hdr);
+    Exports(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
+    static Exports* CreateAndInsert(Context* ctx, const HeaderItem* hdr);
 
     void Dump(std::ostream& os) const;
     size_t GetSize() const noexcept { return sizeof(ExportEntry) * entries.size(); }
 
-private:
     using EntryType = std::pair<FixedString<0x20>, const Label*>;
     std::vector<EntryType> entries;
 };

@@ -15,12 +15,9 @@ bool Header::IsValid(size_t file_size) const noexcept
         collection_link_offset < file_size;
 }
 
-HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
+HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
     : Item{k, ctx}
 {
-    if (len < sizeof(Header))
-        throw std::out_of_range("STCM header too short");
-    auto raw = reinterpret_cast<const Header*>(data);
     if (!raw->IsValid(GetContext()->GetSize()))
         throw std::runtime_error("Invalid STCM header");
 
@@ -28,6 +25,15 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Byte* data, size_t len)
     export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
     export_count = raw->export_count;
     collection_link = ctx->CreateLabelFallback("collection_link", raw->collection_link_offset);;
+}
+
+HeaderItem* HeaderItem::CreateAndInsert(Context* ctx, RawItem* ritem)
+{
+    if (ritem->GetSize() < sizeof(Header))
+        throw std::out_of_range("STCM header too short");
+    auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
+
+    return ritem->Split(0, ctx->Create<HeaderItem>(raw));
 }
 
 void HeaderItem::Dump(std::ostream& os) const

@@ -11,16 +11,12 @@ bool ExportEntry::IsValid(size_t file_size) const noexcept
     return field_0 == 0 && name.is_valid() && offset < file_size;
 }
 
-Exports::Exports(Key k, Context* ctx, const HeaderItem* hdr)
+Exports::Exports(Key k, Context* ctx, const ExportEntry* e, size_t export_count)
     : Item{k, ctx}
 {
-    auto& ptr = hdr->export_sec->second;
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
-    auto e = reinterpret_cast<const ExportEntry*>(ritem.GetPtr() + ptr.offset);
-
-    entries.reserve(hdr->export_count);
+    entries.reserve(export_count);
     auto size = GetContext()->GetSize();
-    for (size_t i = 0; i < hdr->export_count; ++i)
+    for (size_t i = 0; i < export_count; ++i)
     {
         if (!e[i].IsValid(size))
             throw std::runtime_error("Invalid export entry");
@@ -28,6 +24,17 @@ Exports::Exports(Key k, Context* ctx, const HeaderItem* hdr)
             e[i].name,
             GetContext()->CreateLabelFallback(e[i].name.c_str(), e[i].offset));
     }
+}
+
+Exports* Exports::CreateAndInsert(Context* ctx, const HeaderItem* hdr)
+{
+    auto& ptr = hdr->export_sec->second;
+    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto e = reinterpret_cast<const ExportEntry*>(ritem.GetPtr() + ptr.offset);
+
+    if (ritem.GetSize() - ptr.offset < hdr->export_count*sizeof(ExportEntry))
+        throw std::runtime_error("Invalid export entry: premature end of data");
+    return ritem.Split(ptr.offset, ctx->Create<Exports>(e, hdr->export_count));
 }
 
 void Exports::Dump(std::ostream& os) const

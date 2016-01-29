@@ -19,10 +19,9 @@ void File::Parse()
                  GetRoot()->GetPosition() == 0 &&
                  dynamic_cast<RawItem*>(GetRoot()));
 
-    auto& root = static_cast<RawItem&>(*GetRoot());
-    auto hdr = root.Split(0, Create<HeaderItem>(root));
-    auto& exp = hdr->export_sec->second;
-    static_cast<RawItem*>(exp.item)->Split(exp.offset, Create<Exports>(hdr));
+    auto root = static_cast<RawItem*>(GetRoot());
+    auto hdr = HeaderItem::CreateAndInsert(this, root);
+    Exports::CreateAndInsert(this, hdr);
 }
 
 }
