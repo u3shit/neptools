@@ -2,14 +2,6 @@
 #include <iomanip>
 #include <boost/assert.hpp>
 
-ItemPointer GetPointer(const PointerMap& pmap, FilePosition pos)
-{
-    auto it = pmap.upper_bound(pos);
-    BOOST_ASSERT(it != pmap.begin());
-    --it;
-    return {it->second, pos - it->first};
-}
-
 static inline char FilterPrintable(Byte c)
 {
     //return isprint(c) ? c : '.';
@@ -58,94 +50,29 @@ void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem)
     BOOST_ASSERT(pos <= GetSize() && pos+len <= GetSize());
     size_t rem_len = GetSize() - len - pos;
 
-    // complete replace
     if (pos == 0 && rem_len == 0)
     {
-        Replace(std::move(nitem)); // moves labels too
+        Replace(std::move(nitem));
+        return;
     }
-    // no previous element
-    else if (pos == 0)
-    {
-        LabelsContainer cthis, cnitem;
-        for (auto it : GetLabels())
-            if (it.first >= len)
-                cthis.insert({it.first-len, it.second});
-            else
-                cnitem.insert({it.first, it.second});
 
-        CommitLabels({}, std::move(cthis));
-        nitem->CommitLabels({}, std::move(cnitem));
-
-        InsertBefore(std::move(nitem));
-        this->offset += len;
-        this->len -= len;
-        this->position += len;
-    }
-    else
-    {
-        // filter out new labels
-        LabelsContainer cnitem, cnext;
-        for (auto it : GetLabels())
-            if (it.first >= pos+len)
-                cnext.insert({it.first-pos-len, it.second});
-            else if (it.first >= pos)
-                cnitem.insert({it.first-pos, it.second});
-
-        // if we need the third element, alloc it here
-        if (rem_len != 0)
+    SliceSeq seq;
+    if (pos != 0) seq.push_back({nullptr, 0});
+    seq.push_back({std::move(nitem), pos});
+    if (rem_len > 0)
+        if (pos == 0)
+            seq.push_back({nullptr, len});
+        else
         {
             std::unique_ptr<RawItem> split{new RawItem(
                 GetContext(), buf, offset+pos+len, rem_len, position+pos+len)};
-            // everything is noexcept after this
-            split->CommitLabels({}, std::move(cnext));
-            nitem->InsertAfter(std::move(split));
+            seq.push_back({std::move(split), pos+len});
         }
-        else
-            BOOST_ASSERT(cnext.empty());
 
-        nitem->CommitLabels({}, std::move(cnitem));
-        InsertAfter(std::move(nitem));
-
-        TrimLabels(pos);
-        this->len = pos;
-    }
-}
-
-namespace
-{
-struct PmapRem
-{
-    using T = std::pair<PointerMap::iterator, bool>;
-    PointerMap& pmap;
-    T x;
-    ~PmapRem() { if (x.second) pmap.erase(x.first); }
-};
-}
-
-void RawItem::Split(size_t pos, std::unique_ptr<Item> nitem, PointerMap& pmap)
-{
-    auto sav = nitem.get();
-    // prealloc new PointerMap items, so in case of an exception we can rollback
-    PmapRem p0{pmap, pmap.insert({sav->GetPosition() + pos, {}})};
-    PmapRem p1{pmap, pmap.insert({sav->GetPosition() + sav->GetSize() + pos, {}})};
-
-    Split(pos, std::move(nitem));
-
-    // actually set PointerMap
-    if (auto ptr = sav->GetPrev())
+    Slice(std::move(seq));
+    if (pos == 0 && rem_len > 0)
     {
-        auto p = pmap.find(ptr->GetPosition());
-        BOOST_ASSERT(p != pmap.end());
-        p->second = ptr;
-    }
-
-    p0.x.first->second = sav;
-    p0.x.second = false;
-
-    if (auto ptr = sav->GetNext())
-    {
-        BOOST_ASSERT(p1.x.first == pmap.find(ptr->GetPosition()));
-        p1.x.first->second = ptr;
-        p1.x.second = false;
+        this->offset += len;
+        this->len -= len;
     }
 }

@@ -17,7 +17,7 @@ def configure(cfg):
     cfg.check_cxx(cxxflags='-std=c++14')
     cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
     cfg.env.append_value('CXXFLAGS', cfg.filter_flags([
-        '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic']))
+        '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses']))
 
     cfg.check_boost(lib='')
 

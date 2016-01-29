@@ -34,10 +34,9 @@ static_assert(sizeof(Header) == 0x30, "");
 class HeaderItem : public Item
 {
 public:
-    HeaderItem(Key k, Context* ctx, const RawItem& it, const PointerMap& pmap)
-        : HeaderItem{k, ctx, it.GetPtr(), it.GetSize(), pmap} {}
-    HeaderItem(Key k, Context* ctx, const Byte* data, size_t len,
-               const PointerMap& pmap);
+    HeaderItem(Key k, Context* ctx, const RawItem& it)
+        : HeaderItem{k, ctx, it.GetPtr(), it.GetSize()} {}
+    HeaderItem(Key k, Context* ctx, const Byte* data, size_t len);
 
     void Dump(std::ostream& os) const;
     size_t GetSize() const noexcept { return sizeof(Header); }

@@ -5,6 +5,7 @@
 #include "item_base.hpp"
 #include <memory>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 class Context
@@ -21,6 +22,12 @@ public:
     ItemPointer GetLabel(const std::string& name) const { return labels.at(name); }
     const Label* CreateLabel(const std::string& name, ItemPointer ptr);
     const Label* GetLabelTo(ItemPointer ptr);
+    const Label* GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
+
+    ItemPointer GetPointer(FilePosition pos) const noexcept;
+
+    // properties needed: sorted
+    using PointerMap = std::map<FilePosition, Item*>;
 
 protected:
     void SetRoot(std::unique_ptr<Item> nroot);
@@ -28,11 +35,14 @@ protected:
 
 private:
     friend class Item;
-    std::unique_ptr<Item> root;
     size_t size;
 
     // properties needed: stable pointers
     std::unordered_map<std::string, ItemPointer> labels;
+    PointerMap pmap;
+
+    // can use stuff inside context
+    std::unique_ptr<Item> root;
 };
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx);

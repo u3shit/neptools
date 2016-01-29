@@ -5,6 +5,7 @@
 #include "item_base.hpp"
 #include "buffer.hpp"
 #include <iosfwd>
+#include <vector>
 #include <unordered_map>
 
 class Item
@@ -16,7 +17,7 @@ public:
         : position{position}, ctx{ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
-    virtual ~Item() = default;
+    virtual ~Item();
 
     virtual void Dump(std::ostream& os) const = 0;
     virtual size_t GetSize() const noexcept = 0;
@@ -38,19 +39,23 @@ public:
     void PrependChild(std::unique_ptr<Item> nitem) noexcept;
     void InsertAfter(std::unique_ptr<Item> nitem) noexcept;
     void InsertBefore(std::unique_ptr<Item> nitem) noexcept;
-    void Remove() noexcept;
+    std::unique_ptr<Item> Remove() noexcept;
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
     using LabelsContainer = std::unordered_multimap<FilePosition, Label*>;
     const LabelsContainer& GetLabels() const { return labels; }
 
-    void CommitLabels(Key, LabelsContainer&& ctr) noexcept;
 protected:
-    void TrimLabels(FilePosition pos) noexcept;
+    using SlicePair = std::pair<std::unique_ptr<Item>, FilePosition>;
+    using SliceSeq = std::vector<SlicePair>;
+    void Slice(SliceSeq seq);
+
     FilePosition position;
 
 private:
+    void CommitLabels(LabelsContainer&& ctr) noexcept;
+
     friend class Context;
     Context* ctx;
     Item* parent = nullptr;

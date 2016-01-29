@@ -2,7 +2,16 @@
 #include "item.hpp"
 #include "utils.hpp"
 #include <boost/assert.hpp>
+#include <algorithm>
 #include <iostream>
+
+Item::~Item()
+{
+    //BOOST_ASSERT(labels.empty());
+    auto it = ctx->pmap.find(position);
+    if (it != ctx->pmap.end() && it->second == this)
+        ctx->pmap.erase(it);
+}
 
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
@@ -57,15 +66,29 @@ void Item::InsertBefore(std::unique_ptr<Item> nitem) noexcept
     prev = sav;
 }
 
-void Item::Remove() noexcept
+std::unique_ptr<Item> Item::Remove() noexcept
 {
-    BOOST_ASSERT(labels.empty());
     if (next) next->prev = prev;
 
-    if (prev) prev->next = std::move(next);
+    std::unique_ptr<Item> ret;
+    if (prev)
+    {
+        BOOST_ASSERT(prev->next.get() == this);
+        ret = std::move(prev->next);
+        prev->next = std::move(next);
+    }
     else if (parent && parent->children.get() == this)
+    {
+        ret = std::move(parent->children);
         parent->children = std::move(next);
-    else BOOST_ASSERT(false);
+    }
+    else
+    {
+        BOOST_ASSERT(ctx->root.get() == this);
+        ret = std::move(ctx->root);
+        ctx->root = std::move(next);
+    }
+    return ret;
 }
 
 void Item::Replace(std::unique_ptr<Item> nitem) noexcept
@@ -77,16 +100,84 @@ void Item::Replace(std::unique_ptr<Item> nitem) noexcept
     BOOST_ASSERT(nitem->labels.empty());
 #endif
 
+    // move labels
     nitem->labels = std::move(labels);
     labels.clear(); // standard does not guarantee it
     for (auto& it : nitem->labels)
         it.second->second.item = nitem.get();
 
+    // update pointermap
+    nitem->position = position;
+    auto it = ctx->pmap.find(position);
+    if (it != ctx->pmap.end()) it->second = nitem.get();
+
     InsertAfter(std::move(nitem));
     Remove();
 }
 
-void Item::CommitLabels(Key, LabelsContainer&& cnt) noexcept
+namespace
+{
+struct PmapRem
+{
+    using T = std::pair<Context::PointerMap::iterator, bool>;
+    Context::PointerMap& pmap;
+    T x;
+
+    PmapRem(Context::PointerMap& pmap, T x) noexcept : pmap(pmap), x(x) {}
+    PmapRem(PmapRem&& o) noexcept : pmap(o.pmap), x(o.x) { o.x.second = false; }
+    void operator=(const PmapRem&) = delete;
+    ~PmapRem() { if (x.second) pmap.erase(x.first); }
+};
+}
+
+void Item::Slice(SliceSeq seq)
+{
+    BOOST_ASSERT(std::is_sorted(seq.begin(), seq.end(),
+        [](const auto& a, const auto& b) { return a.second < b.second; }));
+    BOOST_ASSERT(seq[0].second == 0);
+
+    std::vector<PmapRem> ps;
+    std::vector<LabelsContainer> nlabels;
+    ps.reserve(seq.size());
+    nlabels.resize(seq.size());
+
+    for (const auto& p : seq)
+        ps.emplace_back(ctx->pmap, ctx->pmap.insert({position + p.second, {}}));
+
+
+    for (auto lbl : GetLabels())
+    {
+        size_t i = seq.size() - 1;
+        for (; lbl.first < seq[i].second; --i);
+        nlabels[i].insert({lbl.first - seq[i].second, lbl.second});
+    }
+
+    // everything's allocd, commit it....
+    auto prev = this;
+    auto base_pos = position;
+    size_t moved = 0;
+    for (size_t i = 0; i < seq.size(); ++i)
+    {
+        auto cur = seq[i].first.get();
+        if (cur == nullptr) cur = this;
+        ps[i].x.first->second = cur;
+        ps[i].x.second = false;
+
+        cur->position = base_pos + seq[i].second;
+        cur->CommitLabels(std::move(nlabels[i]));
+        if (seq[i].first == nullptr)
+        {
+            prev->InsertAfter(Remove());
+            ++moved;
+        }
+        else
+            prev->InsertAfter(std::move(seq[i].first));
+        prev = cur;
+    }
+    BOOST_ASSERT(moved == 1);
+}
+
+void Item::CommitLabels(LabelsContainer&& cnt) noexcept
 {
 #ifndef BOOST_ASSERT_IS_VOID
     auto size = GetSize();
@@ -100,12 +191,6 @@ void Item::CommitLabels(Key, LabelsContainer&& cnt) noexcept
         ptr.item = this;
         ptr.offset = it.first;
     }
-}
-
-void Item::TrimLabels(FilePosition pos) noexcept
-{
-    EraseIf(labels, [pos](auto x) { return x.first >= pos; });
-    MaybeRehash(labels);
 }
 
 std::ostream& operator<<(std::ostream& os, const Item& item)

@@ -6,7 +6,10 @@
 
 void Context::SetRoot(std::unique_ptr<Item> nroot)
 {
-    BOOST_ASSERT(nroot->ctx == this);
+    BOOST_ASSERT(nroot->ctx == this && nroot->position == 0);
+    PointerMap npmap{{0, nroot.get()}};
+
+    pmap = std::move(npmap);
     root = std::move(nroot);
     size = root->GetSize();
 }
@@ -40,6 +43,14 @@ const Label* Context::GetLabelTo(ItemPointer ptr)
     ss << "loc_" << std::setw(8) << std::setfill('0') << std::hex
        << ptr.item->GetPosition() + ptr.offset;
     return CreateLabel(ss.str(), ptr); // todo: duplicates?!
+}
+
+ItemPointer Context::GetPointer(FilePosition pos) const noexcept
+{
+    auto it = pmap.upper_bound(pos);
+    BOOST_ASSERT(it != pmap.begin());
+    --it;
+    return {it->second, pos - it->first};
 }
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx)
