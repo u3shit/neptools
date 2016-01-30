@@ -218,6 +218,14 @@ void InstructionItem::Dump48(
     }
 }
 
+void InstructionItem::UpdatePositions(FilePosition npos)
+{
+    if (GetChildren())
+        GetChildren()->UpdatePositions(
+            npos + Instruction::SIZE + params.size() * sizeof(Instruction::Parameter));
+    return Item::UpdatePositions(npos);
+}
+
 void InstructionItem::Dump(std::ostream& os) const
 {
     Instruction ins;

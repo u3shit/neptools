@@ -14,5 +14,6 @@ int main(int argc, char** argv)
     //std::cout << item;
     Stcm::File ctx{argv[1]};
     //std::cout << ctx;
+    ctx.UpdatePositions();
     ctx.Dump(std::cout);
 }

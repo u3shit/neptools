@@ -22,6 +22,7 @@ public:
     virtual void Dump(std::ostream& os) const = 0;
     virtual void PrettyPrint(std::ostream& os) const = 0;
     virtual size_t GetSize() const noexcept = 0;
+    virtual void UpdatePositions(FilePosition npos);
 
     Context* GetContext() noexcept { return ctx; }
     Item* GetParent() noexcept   { return parent; }

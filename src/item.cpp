@@ -24,6 +24,13 @@ void Item::PrettyPrint(std::ostream& os) const
     }
 }
 
+void Item::UpdatePositions(FilePosition npos)
+{
+    position = npos;
+    if (GetNext())
+        GetNext()->UpdatePositions(npos + GetSize());
+}
+
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
     BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&

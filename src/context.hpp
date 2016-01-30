@@ -30,6 +30,7 @@ public:
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
+    void UpdatePositions();
     void Dump(std::ostream& os) const;
 
     // properties needed: sorted
