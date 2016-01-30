@@ -14,6 +14,7 @@ public:
     size_t GetSize() const noexcept override { return len; }
     const Byte& operator[](size_t i) const noexcept
     { return buf->GetPtr()[offset + i]; }
+    void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
 
     template <typename T>

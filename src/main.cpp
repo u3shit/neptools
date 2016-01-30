@@ -13,5 +13,6 @@ int main(int argc, char** argv)
     //RawItem item(ReadFile(argv[1]));
     //std::cout << item;
     Stcm::File ctx{argv[1]};
-    std::cout << ctx;
+    //std::cout << ctx;
+    ctx.Dump(std::cout);
 }

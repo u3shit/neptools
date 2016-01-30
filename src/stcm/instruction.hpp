@@ -59,6 +59,8 @@ struct Instruction
 
         static constexpr inline uint32_t TypeTag(uint32_t x) { return x >> 30; }
         static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
+        static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
+        { return (tag << 30) | val; }
         bool IsValid(size_t file_size) const noexcept;
     } params[1];
 
@@ -74,6 +76,7 @@ public:
     InstructionItem(Key k, Context* ctx, RawItem& ritem, FilePosition offset);
     static InstructionItem* CreateAndInsert(Context* ctx, ItemPointer ptr);
 
+    void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override;
 
@@ -119,6 +122,7 @@ public:
     std::vector<Param> params;
 
 private:
+    void Dump48(boost::endian::little_uint32_t& out, const Param48& in) const noexcept;
     void ConvertParam(Param& out, const Instruction::Parameter& in);
     void ConvertParam48(Param48& out, uint32_t in);
 };

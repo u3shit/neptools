@@ -36,6 +36,18 @@ HeaderItem* HeaderItem::CreateAndInsert(Context* ctx, RawItem* ritem)
     return ritem->Split(0, ctx->Create<HeaderItem>(raw));
 }
 
+void HeaderItem::Dump(std::ostream& os) const
+{
+    Header hdr;
+    hdr.msg = msg;
+    hdr.export_offset = ToFilePos(export_sec->second);
+    hdr.export_count = export_count;
+    hdr.field_28 = 1;
+    hdr.collection_link_offset = ToFilePos(collection_link->second);
+
+    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
+}
+
 void HeaderItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);

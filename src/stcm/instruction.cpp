@@ -41,7 +41,7 @@ bool Instruction::Parameter::IsValid(size_t file_size) const noexcept
             return param_4 == 0x40000000 && param_8 == 0x40000000;
         else if (param_0 == Type0Special::INSTR_PTR0 ||
                  param_0 == Type0Special::INSTR_PTR1)
-            return Param48Valid(param_4, file_size) && param_8 == 0x40000000;
+            return param_4 < file_size && param_8 == 0x40000000;
         else
             return false;
     default:
@@ -158,8 +158,7 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
     {
     case IP::Type48::MEM_OFFSET:
         out.type = Param48::MEM_OFFSET;
-        out.label = GetContext()->GetLabelTo(
-            IP::Value(in) + 16);
+        out.label = GetContext()->GetLabelTo(IP::Value(in));
         break;
     case IP::Type48::IMMEDIATE:
         out.type = Param48::IMMEDIATE;
@@ -200,6 +199,85 @@ size_t InstructionItem::GetSize() const noexcept
 
     return Instruction::SIZE + params.size() * sizeof(Instruction::Parameter) +
         children_size;
+}
+
+void InstructionItem::Dump48(
+    boost::endian::little_uint32_t& out, const Param48& in) const noexcept
+{
+    switch (in.type)
+    {
+    case Param48::MEM_OFFSET:
+        out = IP::Tag(IP::Type48::MEM_OFFSET, ToFilePos(in.label->second));
+        break;
+    case Param48::IMMEDIATE:
+        out = IP::Tag(IP::Type48::IMMEDIATE, in.num);
+        break;
+    case Param48::INDIRECT:
+        out = IP::Tag(IP::Type48::INDIRECT, in.num);
+        break;
+    }
+}
+
+void InstructionItem::Dump(std::ostream& os) const
+{
+    Instruction ins;
+    ins.is_call = is_call;
+
+    if (is_call)
+        ins.opcode = ToFilePos(target->second);
+    else
+        ins.opcode = opcode;
+    ins.param_count = params.size();
+    ins.size = GetSize();
+    os.write(reinterpret_cast<char*>(&ins), Instruction::SIZE);
+
+    auto& pp = ins.params[0];
+    for (const auto& p : params)
+    {
+        switch (p.type)
+        {
+        case Param::MEM_OFFSET:
+            pp.param_0 =
+                IP::Tag(Param::MEM_OFFSET, ToFilePos(p.param_0.label->second));
+            Dump48(pp.param_4, p.param_4);
+            Dump48(pp.param_8, p.param_8);
+            break;
+
+        case Param::INDIRECT:
+            pp.param_0 = IP::Tag(Param::INDIRECT, p.param_0.num);
+            pp.param_4 = 0x40000000;
+            Dump48(pp.param_8, p.param_8);
+            break;
+
+        case Param::READ_STACK:
+            pp.param_0 = IP::Type0Special::READ_STACK_MIN + p.param_0.num;
+            pp.param_4 = 0x40000000;
+            pp.param_8 = 0x40000000;
+            break;
+
+        case Param::READ_4AC:
+            pp.param_0 = IP::Type0Special::READ_4AC_MIN + p.param_0.num;
+            pp.param_4 = 0x40000000;
+            pp.param_8 = 0x40000000;
+            break;
+
+        case Param::INSTR_PTR0:
+            pp.param_0 = IP::Type0Special::INSTR_PTR0;
+            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_8 = 0x40000000;
+            break;
+
+        case Param::INSTR_PTR1:
+            pp.param_0 = IP::Type0Special::INSTR_PTR1;
+            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_8 = 0x40000000;
+            break;
+        }
+        os.write(reinterpret_cast<char*>(&pp), sizeof(Instruction::Parameter));
+    }
+
+    for (auto it = GetChildren(); it; it = it->GetNext())
+        it->Dump(os);
 }
 
 void InstructionItem::PrettyPrint(std::ostream &os) const

@@ -37,6 +37,7 @@ public:
     HeaderItem(Key k, Context* ctx, const Header* hdr);
     static HeaderItem* CreateAndInsert(Context* ctx, RawItem* ritem);
 
+    void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override { return sizeof(Header); }
 

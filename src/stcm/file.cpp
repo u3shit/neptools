@@ -41,8 +41,7 @@ void File::Parse()
         done.insert(pos);
 
         if (instr->is_call)
-            work.insert(instr->target->second.item->GetPosition() +
-                        instr->target->second.offset);
+            work.insert(ToFilePos(instr->target->second));
         if (instr->is_call || !no_returns.count(instr->opcode))
             work.insert(instr->GetNext()->GetPosition());
 
@@ -50,8 +49,7 @@ void File::Parse()
         {
             if (p.type == InstructionItem::Param::INSTR_PTR0 ||
                 p.type == InstructionItem::Param::INSTR_PTR1)
-                work.insert(p.param_4.label->second.item->GetPosition() +
-                            p.param_4.label->second.offset);
+                work.insert(ToFilePos(p.param_4.label->second));
         }
     }
 }

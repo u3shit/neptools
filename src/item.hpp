@@ -19,6 +19,7 @@ public:
     void operator=(const Item&) = delete;
     virtual ~Item();
 
+    virtual void Dump(std::ostream& os) const = 0;
     virtual void PrettyPrint(std::ostream& os) const = 0;
     virtual size_t GetSize() const noexcept = 0;
 
@@ -67,5 +68,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& os, const Item& item);
+inline FilePosition ToFilePos(ItemPointer ptr) noexcept
+{ return ptr.item->GetPosition() + ptr.offset; }
 
 #endif

@@ -26,6 +26,7 @@ public:
     ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
     static ExportsItem* CreateAndInsert(Context* ctx, const HeaderItem* hdr);
 
+    void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override
     { return sizeof(ExportEntry) * entries.size(); }

@@ -11,6 +11,11 @@ static inline char FilterPrintable(Byte c)
         return '.';
 }
 
+void RawItem::Dump(std::ostream& os) const
+{
+    os.write(reinterpret_cast<const char*>(GetPtr()), GetSize());
+}
+
 void RawItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);

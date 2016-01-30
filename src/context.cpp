@@ -71,6 +71,12 @@ ItemPointer Context::GetPointer(FilePosition pos) const noexcept
     return {it->second, pos - it->first};
 }
 
+void Context::Dump(std::ostream& os) const
+{
+    for (auto it = GetRoot(); it; it = it->GetNext())
+        it->Dump(os);
+}
+
 std::ostream& operator<<(std::ostream& os, const Context& ctx)
 {
     if (ctx.GetRoot()) os << *ctx.GetRoot();

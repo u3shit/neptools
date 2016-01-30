@@ -37,6 +37,19 @@ ExportsItem* ExportsItem::CreateAndInsert(Context* ctx, const HeaderItem* hdr)
     return ritem.Split(ptr.offset, ctx->Create<ExportsItem>(e, hdr->export_count));
 }
 
+void ExportsItem::Dump(std::ostream& os) const
+{
+    ExportEntry ee;
+    ee.field_0 = 0;
+
+    for (auto& e : entries)
+    {
+        ee.name = e.first;
+        ee.offset = ToFilePos(e.second->second);
+        os.write(reinterpret_cast<char*>(&ee), sizeof(ExportEntry));
+    }
+}
+
 void ExportsItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);

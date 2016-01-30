@@ -30,6 +30,8 @@ public:
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
+    void Dump(std::ostream& os) const;
+
     // properties needed: sorted
     using PointerMap = std::map<FilePosition, Item*>;
 
