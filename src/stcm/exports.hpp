@@ -20,7 +20,7 @@ struct ExportEntry
 static_assert(sizeof(ExportEntry) == 0x28, "");
 
 class HeaderItem;
-class ExportsItem : public Item
+class ExportsItem final : public Item
 {
 public:
     ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t export_count);

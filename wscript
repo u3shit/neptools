@@ -28,9 +28,10 @@ def build(bld):
         'src/item.cpp',
         'src/main.cpp',
         'src/raw_item.cpp',
+        'src/stcm/exports.cpp',
         'src/stcm/file.cpp',
         'src/stcm/header.cpp',
-        'src/stcm/exports.cpp',
+        'src/stcm/instruction.cpp',
     ]
     bld.program(source = src,
                 uselib = 'BOOST',

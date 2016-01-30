@@ -31,7 +31,7 @@ struct Header
 };
 static_assert(sizeof(Header) == 0x30, "");
 
-class HeaderItem : public Item
+class HeaderItem final : public Item
 {
 public:
     HeaderItem(Key k, Context* ctx, const Header* hdr);

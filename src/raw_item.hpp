@@ -24,7 +24,10 @@ public:
         return ret;
     }
 
+    RawItem* Split(size_t offset, size_t size);
+
 protected:
+    std::unique_ptr<RawItem> InternalSlice(size_t offset, size_t size);
     void Split2(size_t pos, std::unique_ptr<Item> nitem);
 
     RawItem(Context* ctx, std::shared_ptr<Buffer> buf, size_t offset,

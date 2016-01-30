@@ -19,7 +19,7 @@ void RawItem::Dump(std::ostream& os) const
 
 
     size_t i = 0;
-    do
+    while (true)
     {
         os << std::setw(8) << std::setfill('0') << GetPosition() + i
            << ' ';
@@ -38,10 +38,18 @@ void RawItem::Dump(std::ostream& os) const
         j = 0;
         for (; j < 16 && i+j < GetSize(); ++j)
             os << FilterPrintable((*this)[i+j]);
-        os << "|\n";
+        os << '|';
+        if ((i+=16) >= GetSize()) break;
+        os << '\n';
     }
-    while ((i += 16) < GetSize());
     os.flags(flags);
+}
+
+std::unique_ptr<RawItem> RawItem::InternalSlice(size_t spos, size_t slen)
+{
+    BOOST_ASSERT(spos+slen <= len);
+    return std::unique_ptr<RawItem>{new RawItem{
+        GetContext(), buf, offset+spos, slen, FilePosition(position+spos)}};
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
@@ -64,13 +72,9 @@ void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
         if (pos == 0)
             seq.push_back({nullptr, len});
         else
-        {
-            std::unique_ptr<RawItem> split{new RawItem(
-                GetContext(), buf, offset+pos+len, rem_len, position+pos+len)};
-            seq.push_back({std::move(split), pos+len});
-        }
+            seq.push_back({InternalSlice(pos+len, rem_len), pos+len});
 
-    Slice(std::move(seq));
+    Item::Slice(std::move(seq));
     if (pos == 0)
     {
         BOOST_ASSERT(rem_len > 0);
@@ -79,4 +83,12 @@ void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
     }
     else
         this->len = pos;
+}
+
+RawItem* RawItem::Split(size_t offset, size_t size)
+{
+    auto it = InternalSlice(offset, size);
+    auto ret = it.get();
+    Split2(offset, std::move(it));
+    return ret;
 }

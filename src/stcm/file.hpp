@@ -8,7 +8,7 @@
 namespace Stcm
 {
 
-class File : public Context
+class File final : public Context
 {
 public:
     File(std::shared_ptr<Buffer> buf);
