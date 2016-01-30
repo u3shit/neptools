@@ -37,9 +37,9 @@ ExportsItem* ExportsItem::CreateAndInsert(Context* ctx, const HeaderItem* hdr)
     return ritem.Split(ptr.offset, ctx->Create<ExportsItem>(e, hdr->export_count));
 }
 
-void ExportsItem::Dump(std::ostream& os) const
+void ExportsItem::PrettyPrint(std::ostream& os) const
 {
-    Item::Dump(os);
+    Item::PrettyPrint(os);
 
     for (auto& e : entries)
         os << e.first << " -> @" << e.second->first << '\n';

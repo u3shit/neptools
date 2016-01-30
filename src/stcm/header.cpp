@@ -36,9 +36,9 @@ HeaderItem* HeaderItem::CreateAndInsert(Context* ctx, RawItem* ritem)
     return ritem->Split(0, ctx->Create<HeaderItem>(raw));
 }
 
-void HeaderItem::Dump(std::ostream& os) const
+void HeaderItem::PrettyPrint(std::ostream& os) const
 {
-    Item::Dump(os);
+    Item::PrettyPrint(os);
 
     os << "Msg: " << msg << "\nVars: @" << export_sec->first << ", "
        << export_count << ", @"

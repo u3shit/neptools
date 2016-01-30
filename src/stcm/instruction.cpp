@@ -202,9 +202,9 @@ size_t InstructionItem::GetSize() const noexcept
         children_size;
 }
 
-void InstructionItem::Dump(std::ostream &os) const
+void InstructionItem::PrettyPrint(std::ostream &os) const
 {
-    Item::Dump(os);
+    Item::PrettyPrint(os);
 
     if (is_call)
         os << "call @" << target->first;

@@ -37,8 +37,8 @@ public:
     HeaderItem(Key k, Context* ctx, const Header* hdr);
     static HeaderItem* CreateAndInsert(Context* ctx, RawItem* ritem);
 
-    void Dump(std::ostream& os) const;
-    size_t GetSize() const noexcept { return sizeof(Header); }
+    void PrettyPrint(std::ostream& os) const override;
+    size_t GetSize() const noexcept override { return sizeof(Header); }
 
     FixedString<0x20> msg;
     uint32_t export_count;

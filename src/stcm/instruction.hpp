@@ -74,7 +74,7 @@ public:
     InstructionItem(Key k, Context* ctx, RawItem& ritem, FilePosition offset);
     static InstructionItem* CreateAndInsert(Context* ctx, ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override;
+    void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override;
 
     bool is_call;

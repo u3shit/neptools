@@ -26,8 +26,9 @@ public:
     ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
     static ExportsItem* CreateAndInsert(Context* ctx, const HeaderItem* hdr);
 
-    void Dump(std::ostream& os) const;
-    size_t GetSize() const noexcept { return sizeof(ExportEntry) * entries.size(); }
+    void PrettyPrint(std::ostream& os) const override;
+    size_t GetSize() const noexcept override
+    { return sizeof(ExportEntry) * entries.size(); }
 
     using EntryType = std::pair<FixedString<0x20>, const Label*>;
     std::vector<EntryType> entries;

@@ -13,7 +13,7 @@ Item::~Item()
         ctx->pmap.erase(it);
 }
 
-void Item::Dump(std::ostream& os) const
+void Item::PrettyPrint(std::ostream& os) const
 {
     for (const auto& it : GetLabels())
     {
@@ -210,7 +210,7 @@ std::ostream& operator<<(std::ostream& os, const Item& item)
 {
     for (auto it = &item; it; it = it->GetNext())
     {
-        it->Dump(os);
+        it->PrettyPrint(os);
         os << '\n';
     }
     return os;

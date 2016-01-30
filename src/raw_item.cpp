@@ -11,9 +11,9 @@ static inline char FilterPrintable(Byte c)
         return '.';
 }
 
-void RawItem::Dump(std::ostream& os) const
+void RawItem::PrettyPrint(std::ostream& os) const
 {
-    Item::Dump(os);
+    Item::PrettyPrint(os);
     auto flags = os.flags();
     os << std::hex;
 
