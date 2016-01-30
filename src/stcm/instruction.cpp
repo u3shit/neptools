@@ -1,7 +1,9 @@
 #include "instruction.hpp"
+#include "data.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include <boost/assert.hpp>
+#include <set>
 #include <iostream>
 
 #define IP Instruction::Parameter
@@ -67,16 +69,9 @@ bool Instruction::IsValid(size_t file_size) const noexcept
             (opcode >= SYSTEM_OPCODES_BEGIN && opcode <= SYSTEM_OPCODES_END);
 }
 
-InstructionItem::InstructionItem(
-    Key k, Context* ctx, RawItem& ritem, FilePosition offset)
+InstructionItem::InstructionItem(Key k, Context* ctx, const Instruction* instr)
     : Item{k, ctx}
 {
-    auto instr = reinterpret_cast<const Instruction*>(ritem.GetPtr() + offset);
-    if (ritem.GetSize() - offset < Instruction::SIZE ||
-        ritem.GetSize() - offset < instr->size)
-        throw std::runtime_error("Invalid instruction: premature end of data");
-
-
     if (!instr->IsValid(ctx->GetSize()))
         throw std::runtime_error("invalid instruction");
 
@@ -89,17 +84,6 @@ InstructionItem::InstructionItem(
     params.resize(instr->param_count);
     for (size_t i = 0; i < instr->param_count; ++i)
         ConvertParam(params[i], instr->params[i]);
-
-    /*
-    auto rem_data = instr->size - Instruction::SIZE -
-        sizeof(Instruction::Parameter) * instr->param_count;
-    std::cerr << instr->size << " " << rem_data << std::endl;
-    if (rem_data)
-        // todo: exception safety
-        PrependChild(ritem.Split(instr->size - rem_data, rem_data)->Remove());
-
-    BOOST_ASSERT(GetSize() == instr->size);
-    */
 }
 
 void InstructionItem::ConvertParam(Param& out, const Instruction::Parameter& in)
@@ -174,11 +158,27 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
     }
 }
 
-InstructionItem* InstructionItem::CreateAndInsert(Context* ctx, ItemPointer ptr)
+static const std::set<uint32_t> no_returns{0, 6};
+
+void InstructionItem::MaybeCreate(ItemPointer ptr)
+{
+    auto item = dynamic_cast<RawItem*>(ptr.item);
+    if (item)
+        InstructionItem::CreateAndInsert(ptr);
+    else
+        BOOST_ASSERT(dynamic_cast<InstructionItem*>(ptr.item));
+}
+
+InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
     auto instr = reinterpret_cast<const Instruction*>(ritem.GetPtr() + ptr.offset);
-    auto ret = ritem.Split(ptr.offset, ctx->Create<InstructionItem>(ritem, ptr.offset));
+    if (ritem.GetSize() - ptr.offset < Instruction::SIZE ||
+        ritem.GetSize() - ptr.offset < instr->size)
+        throw std::runtime_error("Invalid instruction: premature end of data");
+
+    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
+        Create<InstructionItem>(instr));
 
     auto rem_data = instr->size - Instruction::SIZE -
         sizeof(Instruction::Parameter) * instr->param_count;
@@ -187,6 +187,21 @@ InstructionItem* InstructionItem::CreateAndInsert(Context* ctx, ItemPointer ptr)
             ret->GetNext())->Split(0, rem_data)->Remove());
 
     BOOST_ASSERT(ret->GetSize() == instr->size);
+
+    // recursive parse
+    if (ret->is_call)
+        MaybeCreate(ret->target->second);
+    if (ret->is_call || !no_returns.count(ret->opcode))
+        MaybeCreate({ret->GetNext(), 0});
+    for (const auto& p : ret->params)
+    {
+        if (p.type == InstructionItem::Param::MEM_OFFSET)
+            DataItem::MaybeCreate(p.param_0.label->second);
+        else if (p.type == InstructionItem::Param::INSTR_PTR0 ||
+            p.type == InstructionItem::Param::INSTR_PTR1)
+            MaybeCreate(p.param_4.label->second);
+    }
+
     return ret;
 }
 

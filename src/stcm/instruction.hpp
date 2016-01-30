@@ -73,8 +73,9 @@ static_assert(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10, "");
 class InstructionItem final : public Item
 {
 public:
-    InstructionItem(Key k, Context* ctx, RawItem& ritem, FilePosition offset);
-    static InstructionItem* CreateAndInsert(Context* ctx, ItemPointer ptr);
+    InstructionItem(Key k, Context* ctx, const Instruction* instr);
+    static void MaybeCreate(ItemPointer ptr);
+    static InstructionItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;

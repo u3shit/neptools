@@ -1,5 +1,6 @@
 #include "../context.hpp"
 #include "header.hpp"
+#include "exports.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -27,13 +28,15 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
     collection_link = ctx->CreateLabelFallback("collection_link", raw->collection_link_offset);;
 }
 
-HeaderItem* HeaderItem::CreateAndInsert(Context* ctx, RawItem* ritem)
+HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
 {
     if (ritem->GetSize() < sizeof(Header))
         throw std::out_of_range("STCM header too short");
     auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
 
-    return ritem->Split(0, ctx->Create<HeaderItem>(raw));
+    auto ret = ritem->Split(0, ritem->GetContext()->Create<HeaderItem>(raw));
+    ExportsItem::CreateAndInsert(ret);
+    return ret;
 }
 
 void HeaderItem::Dump(std::ostream& os) const

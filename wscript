@@ -28,6 +28,7 @@ def build(bld):
         'src/item.cpp',
         'src/main.cpp',
         'src/raw_item.cpp',
+        'src/stcm/data.cpp',
         'src/stcm/exports.cpp',
         'src/stcm/file.cpp',
         'src/stcm/header.cpp',

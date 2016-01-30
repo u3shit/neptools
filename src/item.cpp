@@ -36,6 +36,7 @@ void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
     BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&
                  nitem->prev == nullptr && nitem->next == nullptr);
     nitem->next = std::move(children);
+    nitem->parent = this;
     children = std::move(nitem);
 }
 

@@ -16,9 +16,6 @@ public:
     File(const char* fname) : File{ReadFile(fname)} {}
     File(const File&) = delete;
     void operator=(const File&) = delete;
-
-private:
-    void Parse();
 };
 
 }
