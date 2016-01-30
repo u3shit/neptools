@@ -14,6 +14,14 @@ void Context::SetRoot(std::unique_ptr<Item> nroot)
     size = root->GetSize();
 }
 
+const Label* Context::GetLabel(const std::string& name) const
+{
+    auto it = labels.find(name);
+    if (it == labels.end())
+        throw std::out_of_range("Context::GetLabel");
+    return &*it;
+}
+
 const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
 {
     auto pair = labels.insert({std::move(name), ptr});

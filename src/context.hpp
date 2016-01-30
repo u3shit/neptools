@@ -19,7 +19,7 @@ public:
     template <typename T, typename... Args>
     std::unique_ptr<T> Create(Args&&... args);
 
-    ItemPointer GetLabel(const std::string& name) const { return labels.at(name); }
+    const Label* GetLabel(const std::string& name) const;
     const Label* CreateLabel(std::string name, ItemPointer ptr);
     const Label* CreateLabelFallback(const std::string& name, ItemPointer ptr);
     const Label* CreateLabelFallback(const std::string& name, FilePosition pos)

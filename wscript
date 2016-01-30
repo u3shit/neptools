@@ -31,6 +31,7 @@ def build(bld):
         'src/stcm/data.cpp',
         'src/stcm/exports.cpp',
         'src/stcm/file.cpp',
+        'src/stcm/gbnl.cpp',
         'src/stcm/header.cpp',
         'src/stcm/instruction.cpp',
     ]

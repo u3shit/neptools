@@ -1,4 +1,5 @@
 #include "data.hpp"
+#include "gbnl.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include <iostream>
@@ -46,6 +47,13 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
         ret->PrependChild(reinterpret_cast<RawItem*>(
             ret->GetNext())->Split(0, data_length)->Remove());
     BOOST_ASSERT(ret->GetSize() == sizeof(DataHeader) + data_length);
+
+    // hack
+    auto child = dynamic_cast<RawItem*>(ret->GetChildren());
+    if (child && child->GetSize() > sizeof(GbnlFooter) &&
+        memcmp(child->GetPtr() + child->GetSize() - sizeof(GbnlFooter), "GBNL", 4) == 0)
+        GbnlItem::CreateAndInsert(child);
+
     return ret;
 }
 
