@@ -1,6 +1,7 @@
 #include "gbnl.hpp"
 #include "../context.hpp"
 #include <iostream>
+#include <boost/assert.hpp>
 
 namespace Stcm
 {
@@ -52,8 +53,10 @@ GbnlItem::GbnlItem(Key k, Context* ctx, const Byte* data, size_t len)
             msgs[i].message_id, msgs[i].lipsync_chara_id, msgs[i].field_08,
             msgs[i].field_0c, msgs[i].field_10, msgs[i].field_18,
             msgs[i].name_id, msgs[i].audio_id,
-            reinterpret_cast<const char*>(data) + foot->offset_msgs + msgs[i].text_offset});
+            reinterpret_cast<const char*>(data) + foot->offset_msgs + msgs[i].text_offset,
+            0});
     }
+    RecalcSize();
 }
 
 GbnlItem* GbnlItem::CreateAndInsert(RawItem* ritem)
@@ -69,7 +72,6 @@ static char ZEROS[16];
 void GbnlItem::Dump(std::ostream& os) const
 {
     GbnlMessageDescriptor msgd;
-    msgd.text_offset = 0;
 
     for (const auto& m : messages)
     {
@@ -81,8 +83,8 @@ void GbnlItem::Dump(std::ostream& os) const
         msgd.field_18 = m.field_18;
         msgd.name_id = m.name_id;
         msgd.audio_id = m.audio_id;
+        msgd.text_offset = m.offset;
         os.write(reinterpret_cast<char*>(&msgd), sizeof(GbnlMessageDescriptor));
-        msgd.text_offset += m.text.size() + 1;
     }
     auto msgs_end = sizeof(GbnlMessageDescriptor) * messages.size();
     auto msgs_end_round = (msgs_end + 15) / 16 * 16;
@@ -99,14 +101,18 @@ void GbnlItem::Dump(std::ostream& os) const
     auto control_end_round = (control_end + 15) / 16 * 16;
     os.write(ZEROS, control_end_round - control_end);
 
-    auto data_end = control_end_round;
+    size_t offset = 0;
     for (const auto& m : messages)
     {
-        os.write(m.text.c_str(), m.text.size() + 1);
-        data_end += m.text.size() + 1;
+        if (m.offset == offset)
+        {
+            os.write(m.text.c_str(), m.text.size() + 1);
+            offset += m.text.size() + 1;
+        }
     }
-    auto data_end_round = (data_end + 15) / 16 * 16;
-    os.write(ZEROS, data_end_round - data_end);
+    BOOST_ASSERT(offset == msgs_size);
+    auto offset_round = (offset + 15) / 16 * 16;
+    os.write(ZEROS, offset_round - offset);
 
     GbnlFooter foot;
     memcpy(foot.magic, "GBNL", 4);
@@ -143,13 +149,25 @@ void GbnlItem::PrettyPrint(std::ostream& os) const
     os << "])";
 }
 
+void GbnlItem::RecalcSize()
+{
+    std::map<std::string, size_t> offset_map;
+    size_t offset = 0;
+    for (auto& m : messages)
+    {
+        auto x = offset_map.emplace(m.text, offset);
+        if (x.second) // new item inserted
+            offset += m.text.size() + 1;
+        m.offset = x.first->second;
+    }
+    msgs_size = offset;
+}
+
 size_t GbnlItem::GetSize() const noexcept
 {
     size_t ret = sizeof(GbnlMessageDescriptor) * messages.size();
     ret = (ret + 15) / 16 * 16 + sizeof(GbnlControlDescriptor) * control.size();
-    ret = (ret + 15) / 16 * 16;
-    for (const auto& m : messages)
-        ret += m.text.size() + 1;
+    ret = (ret + 15) / 16 * 16 + msgs_size;
     ret = (ret + 15) / 16 * 16 + sizeof(GbnlFooter);
     return ret;
 }

@@ -72,11 +72,16 @@ public:
         uint32_t message_id, lipsync_chara_id, field_08, field_0c, field_10,
             field_18, name_id, audio_id;
         std::string text;
+        size_t offset;
     };
 
     uint32_t field_28, field_30;
     std::vector<Message> messages;
     std::vector<std::pair<uint16_t, uint16_t>> control;
+
+    void RecalcSize();
+private:
+    size_t msgs_size;
 };
 
 }
