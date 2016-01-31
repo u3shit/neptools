@@ -22,7 +22,10 @@ static bool Param48Valid(uint32_t param, size_t file_size) noexcept
     case IP::Type48::INDIRECT:
         return true; // ??
     default:
-        return false; // todo
+        return (param >= IP::Type48Special::READ_STACK_MIN &&
+                param <= IP::Type48Special::READ_STACK_MAX) ||
+               (param >= IP::Type48Special::READ_4AC_MIN &&
+                param <= IP::Type48Special::READ_4AC_MAX);
     }
 }
 
@@ -44,6 +47,8 @@ bool Instruction::Parameter::IsValid(size_t file_size) const noexcept
         else if (param_0 == Type0Special::INSTR_PTR0 ||
                  param_0 == Type0Special::INSTR_PTR1)
             return param_4 < file_size && param_8 == 0x40000000;
+        else if (param_0 == Type0Special::UNK42)
+            return param_4 + 8 < file_size && param_8 == 0;
         else
             return false;
     default:
@@ -127,6 +132,11 @@ void InstructionItem::ConvertParam(Param& out, const Instruction::Parameter& in)
             out.type = Param::INSTR_PTR1;
             out.param_4.label = GetContext()->GetLabelTo(in.param_4);
         }
+        else if (in.param_0 == IP::Type0Special::UNK42)
+        {
+            out.type = Param::UNK42;
+            out.param_4.label = GetContext()->GetLabelTo(in.param_4);
+        }
         else
             BOOST_ASSERT(false);
         break;
@@ -151,6 +161,22 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
     case IP::Type48::INDIRECT:
         out.type = Param48::INDIRECT;
         out.num = IP::Value(in);
+        break;
+    case IP::Type48::SPECIAL:
+        if (in >= IP::Type48Special::READ_STACK_MIN &&
+            in <= IP::Type48Special::READ_STACK_MAX)
+        {
+            out.type = Param48::READ_STACK;
+            out.num = in - IP::Type48Special::READ_STACK_MIN;
+        }
+        else if (in >= IP::Type48Special::READ_4AC_MIN &&
+                 in <= IP::Type48Special::READ_4AC_MAX)
+        {
+            out.type = Param48::READ_4AC;
+            out.num = in - IP::Type48Special::READ_4AC_MIN;
+        }
+        else
+            BOOST_ASSERT(false);
         break;
 
     default:
@@ -223,14 +249,21 @@ void InstructionItem::Dump48(
     {
     case Param48::MEM_OFFSET:
         out = IP::Tag(IP::Type48::MEM_OFFSET, ToFilePos(in.label->second));
-        break;
+        return;
     case Param48::IMMEDIATE:
         out = IP::Tag(IP::Type48::IMMEDIATE, in.num);
-        break;
+        return;
     case Param48::INDIRECT:
         out = IP::Tag(IP::Type48::INDIRECT, in.num);
-        break;
+        return;
+    case Param48::READ_STACK:
+        out = IP::Type48Special::READ_STACK_MIN + in.num;
+        return;
+    case Param48::READ_4AC:
+        out = IP::Type48Special::READ_4AC_MIN + in.num;
+        return;
     }
+    BOOST_ASSERT(false);
 }
 
 void InstructionItem::UpdatePositions(FilePosition npos)
@@ -261,13 +294,13 @@ void InstructionItem::Dump(std::ostream& os) const
         {
         case Param::MEM_OFFSET:
             pp.param_0 =
-                IP::Tag(Param::MEM_OFFSET, ToFilePos(p.param_0.label->second));
+                IP::Tag(IP::Type0::MEM_OFFSET, ToFilePos(p.param_0.label->second));
             Dump48(pp.param_4, p.param_4);
             Dump48(pp.param_8, p.param_8);
             break;
 
         case Param::INDIRECT:
-            pp.param_0 = IP::Tag(Param::INDIRECT, p.param_0.num);
+            pp.param_0 = IP::Tag(IP::Type0::INDIRECT, p.param_0.num);
             pp.param_4 = 0x40000000;
             Dump48(pp.param_8, p.param_8);
             break;
@@ -294,6 +327,12 @@ void InstructionItem::Dump(std::ostream& os) const
             pp.param_0 = IP::Type0Special::INSTR_PTR1;
             pp.param_4 = ToFilePos(p.param_4.label->second);
             pp.param_8 = 0x40000000;
+            break;
+
+        case Param::UNK42:
+            pp.param_0 = IP::Type0Special::UNK42;
+            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_8 = 0;
             break;
         }
         os.write(reinterpret_cast<char*>(&pp), sizeof(Instruction::Parameter));
@@ -334,6 +373,10 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
         return os << p.num;
     case InstructionItem::Param48::INDIRECT:
         return os << "indirect(" << p.num << ')';
+    case InstructionItem::Param48::READ_STACK:
+        return os << "stack(" << p.num << ')';
+    case InstructionItem::Param48::READ_4AC:
+        return os << "4ac(" << p.num << ')';
     }
     abort();
 }
@@ -354,10 +397,10 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
         return os << "instr_ptr0(@" << p.param_4.label->first << ')';
     case InstructionItem::Param::INSTR_PTR1:
         return os << "instr_ptr1(@" << p.param_4.label->first << ')';
-
-    default:
-        abort();
+    case InstructionItem::Param::UNK42:
+        return os << "unk42(@" << p.param_4.label->first << ')';
     }
+    abort();
 }
 
 

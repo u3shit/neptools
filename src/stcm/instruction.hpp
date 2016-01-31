@@ -42,7 +42,7 @@ struct Instruction
             static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
             static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
             static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
-            static constexpr uint32_t UNK            = 0xffffff42;
+            static constexpr uint32_t UNK42          = 0xffffff42;
         };
 
         struct Type48
@@ -51,6 +51,14 @@ struct Instruction
             static constexpr uint32_t IMMEDIATE = 1;
             static constexpr uint32_t INDIRECT = 2;
             static constexpr uint32_t SPECIAL = 3;
+        };
+
+        struct Type48Special
+        {
+            static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
+            static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
+            static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
+            static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
         };
 
         boost::endian::little_uint32_t param_0;
@@ -73,6 +81,7 @@ static_assert(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10, "");
 class InstructionItem final : public Item
 {
 public:
+    InstructionItem(Key k, Context* ctx) : Item{k, ctx} {}
     InstructionItem(Key k, Context* ctx, const Instruction* instr);
     static void MaybeCreate(ItemPointer ptr);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);
@@ -96,6 +105,8 @@ public:
             MEM_OFFSET,
             IMMEDIATE,
             INDIRECT,
+            READ_STACK,
+            READ_4AC,
         } type;
         union
         {
@@ -113,6 +124,7 @@ public:
             READ_4AC,
             INSTR_PTR0,
             INSTR_PTR1,
+            UNK42,
         } type;
         union
         {

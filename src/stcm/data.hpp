@@ -31,7 +31,7 @@ public:
     size_t GetSize() const noexcept override;
     void UpdatePositions(FilePosition npos) override;
 
-    uint32_t type, offset_unit;
+    uint32_t type, offset_unit, field_8;
 };
 
 }

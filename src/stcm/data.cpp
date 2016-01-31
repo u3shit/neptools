@@ -10,7 +10,7 @@ namespace Stcm
 
 bool DataHeader::IsValid(size_t chunk_size) const noexcept
 {
-    return type < 0xff && field_8 == 1 && length <= chunk_size;
+    return type < 0xff && length <= chunk_size;
 }
 
 DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size)
@@ -21,6 +21,7 @@ DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size
 
     type = raw->type;
     offset_unit = raw->offset_unit;
+    field_8 = raw->field_8;
 }
 
 void DataItem::MaybeCreate(ItemPointer ptr)
@@ -62,7 +63,7 @@ void DataItem::Dump(std::ostream& os) const
     DataHeader hdr;
     hdr.type = type;
     hdr.offset_unit = offset_unit;
-    hdr.field_8 = 1;
+    hdr.field_8 = field_8;
     hdr.length = GetSize() - sizeof(DataHeader);
     os.write(reinterpret_cast<char*>(&hdr), sizeof(DataHeader));
 
@@ -73,7 +74,7 @@ void DataItem::Dump(std::ostream& os) const
 void DataItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);
-    os << "data(" << type << ", " << offset_unit << ") {";
+    os << "data(" << type << ", " << offset_unit << ", " << field_8 << ") {";
     if (GetChildren()) os << '\n' << *GetChildren();
     os << '}';
 }
