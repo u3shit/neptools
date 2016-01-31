@@ -223,3 +223,17 @@ std::ostream& operator<<(std::ostream& os, const Item& item)
     }
     return os;
 }
+
+void ItemWithChildren::Dump(std::ostream& os) const
+{
+    for (auto it = GetChildren(); it; it = it->GetNext())
+        it->Dump(os);
+}
+
+size_t ItemWithChildren::GetSize() const noexcept
+{
+    size_t ret = 0;
+    for (auto it = GetChildren(); it; it = it->GetNext())
+        ret += it->GetSize();
+    return ret;
+}

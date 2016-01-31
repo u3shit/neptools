@@ -75,7 +75,7 @@ bool Instruction::IsValid(size_t file_size) const noexcept
 }
 
 InstructionItem::InstructionItem(Key k, Context* ctx, const Instruction* instr)
-    : Item{k, ctx}
+    : ItemWithChildren{k, ctx}
 {
     if (!instr->IsValid(ctx->GetSize()))
         throw std::runtime_error("invalid instruction");
@@ -234,12 +234,8 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 
 size_t InstructionItem::GetSize() const noexcept
 {
-    size_t children_size = 0;
-    for (auto p = GetChildren(); p; p = p->GetNext())
-        children_size += p->GetSize();
-
     return Instruction::SIZE + params.size() * sizeof(Instruction::Parameter) +
-        children_size;
+        ItemWithChildren::GetSize();
 }
 
 void InstructionItem::Dump48(
@@ -338,8 +334,7 @@ void InstructionItem::Dump(std::ostream& os) const
         os.write(reinterpret_cast<char*>(&pp), sizeof(Instruction::Parameter));
     }
 
-    for (auto it = GetChildren(); it; it = it->GetNext())
-        it->Dump(os);
+    ItemWithChildren::Dump(os);
 }
 
 void InstructionItem::PrettyPrint(std::ostream &os) const
@@ -402,6 +397,5 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
     }
     abort();
 }
-
 
 }

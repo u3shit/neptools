@@ -72,4 +72,13 @@ std::ostream& operator<<(std::ostream& os, const Item& item);
 inline FilePosition ToFilePos(ItemPointer ptr) noexcept
 { return ptr.item->GetPosition() + ptr.offset; }
 
+class ItemWithChildren : public Item
+{
+public:
+    using Item::Item;
+
+    void Dump(std::ostream& os) const override;
+    size_t GetSize() const noexcept override;
+};
+
 #endif

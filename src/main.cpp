@@ -1,4 +1,5 @@
 #include "item.hpp"
+#include "cl3/file.hpp"
 #include "stcm/file.hpp"
 #include <iostream>
 
@@ -33,6 +34,13 @@ int main(int argc, char** argv)
                   << " [redump|inspect|write-txt|read-txt] file_name"
                   << std::endl;
         return 1;
+    }
+
+    if (strcmp(argv[1], "cl3") == 0)
+    {
+        Cl3::File ctx{argv[2]};
+        std::cout << ctx;
+        return 0;
     }
 
     Stcm::File ctx{argv[2]};

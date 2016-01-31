@@ -78,10 +78,10 @@ struct Instruction
 static_assert(sizeof(Instruction::Parameter) == 0xc, "");
 static_assert(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10, "");
 
-class InstructionItem final : public Item
+class InstructionItem final : public ItemWithChildren
 {
 public:
-    InstructionItem(Key k, Context* ctx) : Item{k, ctx} {}
+    InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context* ctx, const Instruction* instr);
     static void MaybeCreate(ItemPointer ptr);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);

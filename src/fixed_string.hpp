@@ -8,7 +8,9 @@
 #include <boost/operators.hpp>
 
 template <size_t N>
-class FixedString : boost::totally_ordered<FixedString<N>>
+class FixedString :
+    boost::totally_ordered<FixedString<N>>,
+    boost::totally_ordered<FixedString<N>, const char*>
 {
 public:
     FixedString() = default;
@@ -41,10 +43,22 @@ public:
     size_t length() const noexcept { return strnlen(str, N); }
     size_t max_size() const noexcept { return N-1; }
 
-    bool operator==(const FixedString& o) { return strncmp(str, o.str, N) == 0; }
-    bool operator<(const FixedString& o) { return strncmp(str, o.str, N) < 0; }
+    bool operator==(const FixedString& o) const noexcept
+    { return strncmp(str, o.str, N) == 0; }
+    bool operator<(const FixedString& o) const noexcept
+    { return strncmp(str, o.str, N) < 0; }
+
+    bool operator==(const char* o) const noexcept
+    { return strcmp(str, o) == 0; }
+    bool operator<(const char* o) const noexcept
+    { return strcmp(str, o) < 0; }
+
     template <size_t M>
-    bool operator==(const FixedString<M>& o) { return strcmp(str, o.str) == 0; }
+    bool operator==(const FixedString<M>& o) const noexcept
+    { return strcmp(str, o.str) == 0; }
+    template <size_t M>
+    bool operator<=(const FixedString<M>& o) const noexcept
+    { return strcmp(str, o.str) <= 0; }
 private:
     char str[N];
 };
