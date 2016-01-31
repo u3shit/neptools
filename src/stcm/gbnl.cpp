@@ -2,6 +2,10 @@
 #include "../context.hpp"
 #include <iostream>
 #include <boost/assert.hpp>
+#include <boost/preprocessor/repetition/repeat.hpp>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 namespace Stcm
 {
@@ -170,6 +174,64 @@ size_t GbnlItem::GetSize() const noexcept
     ret = (ret + 15) / 16 * 16 + msgs_size;
     ret = (ret + 15) / 16 * 16 + sizeof(GbnlFooter);
     return ret;
+}
+
+const char SEP_DASH[] = {
+#define REP_MACRO(x,y,z) char(0x81), char(0x5c),
+    BOOST_PP_REPEAT(40, REP_MACRO, )
+    ' '
+};
+
+void GbnlItem::WriteTxt(std::ostream& os) const
+{
+    for (const auto& m : messages)
+    {
+        os.write(SEP_DASH, sizeof(SEP_DASH));
+        os << m.message_id << "\r\n"
+           << boost::replace_all_copy(m.text, "\n", "\r\n") << "\r\n";
+    }
+    os.write(SEP_DASH, sizeof(SEP_DASH));
+    os << "EOF";
+}
+
+void GbnlItem::ReadTxt(std::istream& is)
+{
+    std::vector<Message>::iterator it{};
+    std::string line, msg;
+
+    while (is.good())
+    {
+        std::getline(is, line);
+
+        if (line.compare(0, sizeof(SEP_DASH), SEP_DASH, sizeof(SEP_DASH)) == 0)
+        {
+            if (it != std::vector<Message>::iterator{})
+            {
+                boost::trim_right(msg);
+                it->text = std::move(msg);
+                msg.clear();
+            }
+
+            if (line.compare(sizeof(SEP_DASH), -1, "EOF") == 0)
+            {
+                RecalcSize();
+                return;
+            }
+            auto id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
+            it = std::find_if(messages.begin(), messages.end(),
+                              [id](const auto& m) { return m.message_id == id; });
+            if (it == messages.end())
+                throw std::runtime_error("GbnlTxt: invalid id in input");
+        }
+        else
+        {
+            if (it == std::vector<Message>::iterator{})
+                throw std::runtime_error("GbnlTxt: data before separator");
+            boost::trim_right(line);
+            msg.append(line).append(1, '\n');
+        }
+    }
+    throw std::runtime_error("GbnlTxt: EOF");
 }
 
 }

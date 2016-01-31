@@ -67,6 +67,9 @@ public:
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override;
 
+    void WriteTxt(std::ostream& os) const;
+    void ReadTxt(std::istream& is);
+
     struct Message
     {
         uint32_t message_id, lipsync_chara_id, field_08, field_0c, field_10,
