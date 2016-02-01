@@ -4,6 +4,7 @@
 
 #include <string>
 #include <memory>
+#include <boost/filesystem/path.hpp>
 
 using Byte = unsigned char;
 
@@ -29,6 +30,7 @@ protected:
     bool read_only;
 };
 
+#if !defined(_WIN32) && !defined(_WIN64)
 class MmappedBuffer final : public Buffer
 {
 public:
@@ -36,6 +38,7 @@ public:
     MmappedBuffer(const std::string& fname) : MmappedBuffer(fname.c_str()) {}
     ~MmappedBuffer();
 };
+#endif
 
 /*
 class MemoryBuffer final : public Buffer
@@ -54,8 +57,6 @@ private:
     std::string s;
 };
 
-std::shared_ptr<Buffer> ReadFile(const char* file);
-inline std::shared_ptr<Buffer> ReadFile(const std::string& str)
-{ return ReadFile(str.c_str()); }
+std::shared_ptr<Buffer> ReadFile(const boost::filesystem::path& file);
 
 #endif

@@ -98,7 +98,7 @@ void Context::Dump(const boost::filesystem::path& path) const
     auto path2 = path;
     {
         boost::filesystem::ofstream os;
-        os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
         os.open(path2+=".tmp", std::ios_base::out | std::ios_base::binary);
         Dump(os);
     }

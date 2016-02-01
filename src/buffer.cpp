@@ -1,9 +1,10 @@
 #include "buffer.hpp"
-#include <system_error>
 #include <iostream>
-#include <fstream>
 #include <sstream>
+#include <boost/filesystem/fstream.hpp>
 
+#if !defined(_WIN32) && !defined(_WIN64)
+#include <system_error>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -41,6 +42,7 @@ MmappedBuffer::~MmappedBuffer()
 {
     munmap(ptr, len);
 }
+#endif
 
 StringBuffer::StringBuffer(std::string buf)
     : s{std::move(buf)}
@@ -50,23 +52,27 @@ StringBuffer::StringBuffer(std::string buf)
     read_only = false;
 }
 
-std::shared_ptr<Buffer> ReadFile(const char* fname)
+std::shared_ptr<Buffer> ReadFile(const boost::filesystem::path& fname)
 {
+#if !defined(_WIN32) && !defined(_WIN64)
     try
     {
-        return std::make_shared<MmappedBuffer>(fname);
+        return std::make_shared<MmappedBuffer>(fname.native());
     }
     catch (const std::runtime_error& e)
     {
         std::cerr << "Failed to mmap file " << fname << ": " << e.what()
                   << std::endl;
+#endif
 
-        std::ifstream in;
-        in.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        in.open(fname, std::ifstream::binary);
+        boost::filesystem::ifstream in;
+        in.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+        in.open(fname, std::ios_base::in | std::ios_base::binary);
 
         std::stringstream ss;
         ss << in.rdbuf();
         return std::make_shared<StringBuffer>(ss.str());
+#if !defined(_WIN32) && !defined(_WIN64)
     }
+#endif
 }

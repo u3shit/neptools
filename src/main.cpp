@@ -110,7 +110,8 @@ struct Cl3Create : public Command
     }
 };
 
-std::pair<std::unique_ptr<Context>, Stcm::File*> SmartStcm(const char* fname)
+std::pair<std::unique_ptr<Context>, Stcm::File*>
+SmartStcm(const fs::path& fname)
 {
     auto buf = ReadFile(fname);
     if (buf->GetSize() < 4)
@@ -215,11 +216,11 @@ struct GbnlWrite : public Command
 {
     static void Conv(const fs::path& in, const fs::path& out)
     {
-        auto x = SmartStcm(in.c_str());
+        auto x = SmartStcm(in);
         auto gbnl = FindGbnl(*x.second);
 
         fs::ofstream os;
-        os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
         os.open(out, std::ios_base::out | std::ios_base::binary);
         gbnl->WriteTxt(os);
     }
@@ -243,11 +244,11 @@ struct GbnlRead : public Command
 {
     static void Conv(const fs::path& dat, const fs::path& txt, const fs::path& out)
     {
-        auto x = SmartStcm(dat.c_str());
+        auto x = SmartStcm(dat);
         {
             fs::ifstream is;
-            is.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-            is.open(txt, std::ios_base::out | std::ios_base::binary);
+            is.exceptions(std::ios_base::failbit | std::ios_base::badbit);
+            is.open(txt, std::ios_base::in | std::ios_base::binary);
             FindGbnl(*x.second)->ReadTxt(is);
         }
         x.first->Fixup();
