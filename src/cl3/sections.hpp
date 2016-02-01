@@ -30,9 +30,11 @@ struct Section
 static_assert(sizeof(Section) == 0x50, "");
 
 class HeaderItem;
+class SectionEntryItem;
 class SectionsItem final : public Item
 {
 public:
+    SectionsItem(Key k, Context* ctx) : Item{k, ctx} {}
     SectionsItem(Key k, Context* ctx, const Section* s, size_t count);
     static SectionsItem* CreateAndInsert(const HeaderItem* hdr);
 
@@ -40,6 +42,15 @@ public:
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override
     { return entries.size() * sizeof(Section); }
+
+    const SectionEntryItem* GetEntry(const char* name) const noexcept
+    { return GetEntryInt(name); }
+    const SectionEntryItem* GetEntry(const std::string& name) const noexcept
+    { return GetEntryInt(name.c_str()); }
+    SectionEntryItem* GetEntry(const char* name) noexcept
+    { return GetEntryInt(name); }
+    SectionEntryItem* GetEntry(const std::string& name) noexcept
+    { return GetEntryInt(name.c_str()); }
 
     struct Entry
     {
@@ -49,6 +60,9 @@ public:
     };
 
     std::vector<Entry> entries;
+
+private:
+    SectionEntryItem* GetEntryInt(const char* name) const noexcept;
 };
 
 class SectionEntryItem final : public ItemWithChildren

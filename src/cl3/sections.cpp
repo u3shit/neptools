@@ -1,6 +1,6 @@
 #include "sections.hpp"
 #include "header.hpp"
-#include "file_entry.hpp"
+#include "file_collection.hpp"
 #include "../context.hpp"
 
 #include <boost/assert.hpp>
@@ -59,7 +59,7 @@ SectionsItem* SectionsItem::CreateAndInsert(const HeaderItem* hdr)
             CreateLabelFallback(s[i].name.c_str(), {entr, 0});
 
         if (s[i].name == "FILE_COLLECTION")
-            FileEntriesItem::CreateAndInsert(it2, s[i].count);
+            FileCollectionItem::CreateAndInsert(it2, s[i].count, ret);
     }
     return ret;
 }
@@ -79,6 +79,19 @@ void SectionsItem::Dump(std::ostream& os) const
         os.write(reinterpret_cast<char*>(&sec), sizeof(Section));
     }
 }
+
+SectionEntryItem* SectionsItem::GetEntryInt(const char* name) const noexcept
+{
+    for (const auto& e : entries)
+        if (e.name == name)
+        {
+            BOOST_ASSERT(e.data->second.offset == 0 &&
+                         dynamic_cast<SectionEntryItem*>(e.data->second.item));
+            return static_cast<SectionEntryItem*>(e.data->second.item);
+        }
+    return nullptr;
+}
+
 
 void SectionsItem::PrettyPrint(std::ostream& os) const
 {

@@ -237,3 +237,10 @@ size_t ItemWithChildren::GetSize() const noexcept
         ret += it->GetSize();
     return ret;
 }
+
+void ItemWithChildren::UpdatePositions(FilePosition npos)
+{
+    if (GetChildren())
+        GetChildren()->UpdatePositions(npos);
+    return Item::UpdatePositions(npos);
+}

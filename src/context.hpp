@@ -7,6 +7,7 @@
 #include <string>
 #include <map>
 #include <unordered_map>
+#include <boost/filesystem/path.hpp>
 
 class Context
 {
@@ -32,6 +33,7 @@ public:
 
     void UpdatePositions();
     void Dump(std::ostream& os) const;
+    void Dump(const boost::filesystem::path& path) const;
 
     // properties needed: sorted
     using PointerMap = std::map<FilePosition, Item*>;

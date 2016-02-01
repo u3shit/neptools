@@ -42,6 +42,8 @@ public:
     void InsertAfter(std::unique_ptr<Item> nitem) noexcept;
     void InsertBefore(std::unique_ptr<Item> nitem) noexcept;
     std::unique_ptr<Item> Remove() noexcept;
+    std::unique_ptr<Item> RemoveChildren() noexcept
+    { return std::move(children); }
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
@@ -79,6 +81,7 @@ public:
 
     void Dump(std::ostream& os) const override;
     size_t GetSize() const noexcept override;
+    void UpdatePositions(FilePosition npos) override;
 };
 
 #endif

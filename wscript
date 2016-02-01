@@ -19,7 +19,7 @@ def configure(cfg):
     cfg.env.append_value('CXXFLAGS', cfg.filter_flags([
         '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses']))
 
-    cfg.check_boost(lib='')
+    cfg.check_boost(lib='filesystem system')
 
 def build(bld):
     src = [
@@ -29,7 +29,7 @@ def build(bld):
         'src/main.cpp',
         'src/raw_item.cpp',
         'src/cl3/file.cpp',
-        'src/cl3/file_entry.cpp',
+        'src/cl3/file_collection.cpp',
         'src/cl3/header.cpp',
         'src/cl3/sections.cpp',
         'src/stcm/data.cpp',

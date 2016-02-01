@@ -1,6 +1,6 @@
 #include "raw_item.hpp"
+#include "context.hpp"
 #include <iomanip>
-#include <boost/assert.hpp>
 
 static inline char FilterPrintable(Byte c)
 {
@@ -53,8 +53,7 @@ void RawItem::PrettyPrint(std::ostream& os) const
 std::unique_ptr<RawItem> RawItem::InternalSlice(size_t spos, size_t slen)
 {
     BOOST_ASSERT(spos+slen <= len);
-    return std::unique_ptr<RawItem>{new RawItem{
-        GetContext(), buf, offset+spos, slen, FilePosition(position+spos)}};
+    return GetContext()->Create<RawItem>(buf, offset+spos, slen, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size

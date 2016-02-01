@@ -3,12 +3,20 @@
 #pragma once
 
 #include "item.hpp"
+#include <boost/assert.hpp>
 
 class RawItem final : public Item
 {
 public:
     RawItem(Key k, Context* ctx, std::shared_ptr<Buffer> buf) noexcept
         : Item{k, ctx}, offset{0}, len{buf->GetSize()}, buf{std::move(buf)} {}
+    RawItem(Key k, Context* ctx, std::shared_ptr<Buffer> buf, size_t offset,
+            size_t len, FilePosition position = 0) noexcept
+        : Item{k, ctx, position}, offset{offset}, len{len}, buf{std::move(buf)}
+    {
+        BOOST_ASSERT(offset <= this->buf->GetSize() &&
+                     offset + len <= this->buf->GetSize());
+    }
 
     const Byte* GetPtr() const noexcept { return buf->GetPtr() + offset; }
     size_t GetSize() const noexcept override { return len; }
@@ -31,9 +39,6 @@ protected:
     std::unique_ptr<RawItem> InternalSlice(size_t offset, size_t size);
     void Split2(size_t pos, std::unique_ptr<Item> nitem);
 
-    RawItem(Context* ctx, std::shared_ptr<Buffer> buf, size_t offset,
-            size_t len, FilePosition position) noexcept
-        : Item{{}, ctx, position}, offset{offset}, len{len}, buf{std::move(buf)} {}
 private:
     size_t offset, len;
     std::shared_ptr<Buffer> buf;

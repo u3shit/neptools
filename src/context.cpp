@@ -1,6 +1,7 @@
 #include "context.hpp"
 #include "item.hpp"
 #include <boost/assert.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <iomanip>
 #include <sstream>
 
@@ -89,6 +90,14 @@ void Context::Dump(std::ostream& os) const
 {
     for (auto it = GetRoot(); it; it = it->GetNext())
         it->Dump(os);
+}
+
+void Context::Dump(const boost::filesystem::path& path) const
+{
+    boost::filesystem::ofstream os;
+    os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    os.open(path, std::ios_base::out | std::ios_base::binary);
+    Dump(os);
 }
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx)
