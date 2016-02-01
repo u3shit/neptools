@@ -2,6 +2,7 @@
 #include "item.hpp"
 #include <boost/assert.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <iomanip>
 #include <sstream>
 
@@ -94,10 +95,14 @@ void Context::Dump(std::ostream& os) const
 
 void Context::Dump(const boost::filesystem::path& path) const
 {
-    boost::filesystem::ofstream os;
-    os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    os.open(path, std::ios_base::out | std::ios_base::binary);
-    Dump(os);
+    auto path2 = path;
+    {
+        boost::filesystem::ofstream os;
+        os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        os.open(path2+=".tmp", std::ios_base::out | std::ios_base::binary);
+        Dump(os);
+    }
+    boost::filesystem::rename(path2, path);
 }
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx)

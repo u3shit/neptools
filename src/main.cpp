@@ -6,6 +6,10 @@
 #include "stcm/gbnl.hpp"
 #include <iostream>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+
+namespace fs = boost::filesystem;
 
 namespace
 {
@@ -190,42 +194,83 @@ Stcm::GbnlItem* FindGbnl(Context& ctx)
     return x;
 }
 
+template <typename Fun>
+void RecDo(const fs::path& path, const std::string& ext, Fun f)
+{
+    if (fs::is_directory(path))
+        for (auto& e: fs::directory_iterator(path))
+            RecDo(e, ext, f);
+    else if (boost::ends_with(path.native(), ext))
+    {
+        std::cerr << "Processing: " << path << std::endl;
+        try { f(path); }
+        catch (const std::runtime_error& e)
+        {
+            std::cerr << "Failed: " << e.what() << std::endl;
+        }
+    }
+}
+
 struct GbnlWrite : public Command
 {
+    static void Conv(const fs::path& in, const fs::path& out)
+    {
+        auto x = SmartStcm(in.c_str());
+        auto gbnl = FindGbnl(*x.second);
+
+        fs::ofstream os;
+        os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        os.open(out, std::ios_base::out | std::ios_base::binary);
+        gbnl->WriteTxt(os);
+    }
+
     void Do(int argc, char** argv) override
     {
-        if (argc != 2) throw InvalidParameters{};
-
-        auto x = SmartStcm(argv[0]);
-        boost::filesystem::ofstream os;
-        os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-        os.open(argv[1], std::ios_base::out | std::ios_base::binary);
-        FindGbnl(*x.second)->WriteTxt(os);
+        if (argc == 1)
+            RecDo(argv[0], ".cl3", [](auto& x) { Conv(x, fs::path(x)+=".txt"); });
+        else if (argc == 2)
+            Conv(argv[0], argv[1]);
+        else
+            throw InvalidParameters{};
     }
     void Help(std::ostream& os) const override
-    { os << "<cl3/stcm_input> <txt_output>\n\t"
-            "Extract messages from Cl3/Stcm file\n"; }
+    { os << "[<dir>|<cl3/stcm_input> <txt_output>]\n\t"
+            "1st variant: Extracts all *.cl3 files in <dir> into *.cl3.txt\n\t"
+            "2nd variant: Extract messages from <cl3/stcm_input> into <txt_output>\n"; }
 };
 
 struct GbnlRead : public Command
 {
-    void Do(int argc, char** argv) override
+    static void Conv(const fs::path& dat, const fs::path& txt, const fs::path& out)
     {
-        if (argc != 3) throw InvalidParameters{};
-
-        auto x = SmartStcm(argv[0]);
+        auto x = SmartStcm(dat.c_str());
         {
-            boost::filesystem::ifstream is;
+            fs::ifstream is;
             is.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-            is.open(argv[1], std::ios_base::out | std::ios_base::binary);
+            is.open(txt, std::ios_base::out | std::ios_base::binary);
             FindGbnl(*x.second)->ReadTxt(is);
         }
         x.first->Fixup();
-        x.first->Dump(argv[2]);
+        x.first->Dump(out);
+    }
+
+    void Do(int argc, char** argv) override
+    {
+        if (argc == 1)
+            RecDo(argv[0], ".cl3.txt", [](auto& x) {
+                fs::path dat = x.native().substr(0, x.size()-4);
+                Conv(dat, x, dat);
+            });
+        else if (argc == 3)
+            Conv(argv[0], argv[1], argv[2]);
+        else
+            throw InvalidParameters{};
+
     }
     void Help(std::ostream& os) const override
-    { os << "<cl3/stcm_input> <txt_input> <cl3/stcm_output>\n\t"
-            "Replaces messages inside Cl3/Stcm file\n"; }
+    { os << "[<dir>|<cl3/stcm_input> <txt_input> <cl3/stcm_output>]\n\t"
+            "1st variant: Replaces messages in all *.cl3 files in <dir> from *.cl3.txt\n\t"
+            "2nd variant: Replaces messages inside <cl3/stcm_input> with <txt_input>, storing result inside <cl3/stcm_output\n"; }
 };
 
 }
@@ -242,7 +287,7 @@ int main(int argc, char** argv)
     commands["stcm-inspect"] = std::make_unique<StcmInspect>();
     commands["stcm-redump"] = std::make_unique<StcmRedump>();
 
-    commands["save-txt"] = std::make_unique<GbnlWrite>();
+    commands["write-txt"] = std::make_unique<GbnlWrite>();
     commands["read-txt"] = std::make_unique<GbnlRead>();
 
     bool show_hidden = false;
