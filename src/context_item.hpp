@@ -16,6 +16,9 @@ public:
     void PrettyPrint(std::ostream& os) const override
     { os << *static_cast<const Ctx*>(this); }
     size_t GetSize() const noexcept override { return Ctx::GetSize(); }
+
+    size_t UpdatePositions(FilePosition npos) override
+    { /*Ctx::Fixup();*/ return Item::UpdatePositions(npos); }
 };
 
 #endif

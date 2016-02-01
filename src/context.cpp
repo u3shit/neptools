@@ -84,7 +84,10 @@ ItemPointer Context::GetPointer(FilePosition pos) const noexcept
 void Context::UpdatePositions()
 {
     pmap.clear();
-    if (GetRoot()) GetRoot()->UpdatePositions(0);
+    if (GetRoot())
+        size = GetRoot()->UpdatePositions(0);
+    else
+        size = 0;
 }
 
 void Context::Dump(std::ostream& os) const

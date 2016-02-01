@@ -24,11 +24,13 @@ void Item::PrettyPrint(std::ostream& os) const
     }
 }
 
-void Item::UpdatePositions(FilePosition npos)
+size_t Item::UpdatePositions(FilePosition npos)
 {
     position = npos;
     if (GetNext())
-        GetNext()->UpdatePositions(npos + GetSize());
+        return GetNext()->UpdatePositions(npos + GetSize());
+    else
+        return npos + GetSize();
 }
 
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
@@ -238,7 +240,7 @@ size_t ItemWithChildren::GetSize() const noexcept
     return ret;
 }
 
-void ItemWithChildren::UpdatePositions(FilePosition npos)
+size_t ItemWithChildren::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(npos);

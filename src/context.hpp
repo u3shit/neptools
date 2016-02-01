@@ -50,7 +50,7 @@ protected:
 
 private:
     friend class Item;
-    size_t size;
+    size_t size = 0;
 
     // properties needed: stable pointers
     using LabelsMap = std::unordered_map<std::string, ItemPointer>;

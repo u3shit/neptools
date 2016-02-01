@@ -262,7 +262,7 @@ void InstructionItem::Dump48(
     BOOST_ASSERT(false);
 }
 
-void InstructionItem::UpdatePositions(FilePosition npos)
+size_t InstructionItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(

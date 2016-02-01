@@ -87,7 +87,7 @@ size_t DataItem::GetSize() const noexcept
     return ret;
 }
 
-void DataItem::UpdatePositions(FilePosition npos)
+size_t DataItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(

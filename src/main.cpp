@@ -100,7 +100,6 @@ struct Cl3Create : public Command
         if (argc < 1 || argc % 2 != 1) throw InvalidParameters{};
         Cl3::File file;
         UpdateCl3(file, argc, argv);
-        std::cout << file;
     }
 
     void Help(std::ostream& os) const override
@@ -251,6 +250,7 @@ struct GbnlRead : public Command
             is.open(txt, std::ios_base::in | std::ios_base::binary);
             FindGbnl(*x.second)->ReadTxt(is);
         }
+        x.second->Fixup();
         x.first->Fixup();
         x.first->Dump(out);
     }

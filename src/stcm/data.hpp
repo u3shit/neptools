@@ -29,7 +29,7 @@ public:
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
     size_t GetSize() const noexcept override;
-    void UpdatePositions(FilePosition npos) override;
+    size_t UpdatePositions(FilePosition npos) override;
 
     uint32_t type, offset_unit, field_8;
 };
