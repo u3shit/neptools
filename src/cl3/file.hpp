@@ -11,15 +11,16 @@ namespace Cl3
 class HeaderItem;
 class FileCollectionItem;
 
-class File final : public Context
+class File : public Context
 {
 public:
     File();
-    File(std::shared_ptr<Buffer> buf);
+    File(std::shared_ptr<Buffer> buf) : File{buf, 0, buf->GetSize()} {}
+    File(std::shared_ptr<Buffer> buf, size_t offset, size_t len);
     File(const std::string& fname) : File{ReadFile(fname)} {}
     File(const char* fname) : File{ReadFile(fname)} {}
-    File(const File&) = delete;
-    void operator=(const File&) = delete;
+
+    void Fixup() override;
 
     const HeaderItem& GetHeader() const noexcept;
     HeaderItem& GetHeader() noexcept;

@@ -35,6 +35,9 @@ public:
 
     RawItem* Split(size_t offset, size_t size);
 
+    auto GetOffset() const noexcept { return offset; }
+    auto GetBuffer() const noexcept { return buf; }
+
 protected:
     std::unique_ptr<RawItem> InternalSlice(size_t offset, size_t size);
     void Split2(size_t pos, std::unique_ptr<Item> nitem);

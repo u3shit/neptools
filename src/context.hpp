@@ -12,6 +12,13 @@
 class Context
 {
 public:
+    Context() = default;
+    Context(const Context&) = delete;
+    void operator=(const Context&) = delete;
+    virtual ~Context() = default;
+
+    virtual void Fixup() { UpdatePositions(); }
+
     Item* GetRoot() noexcept { return root.get(); }
     const Item* GetRoot() const noexcept { return root.get(); }
 
@@ -40,7 +47,6 @@ public:
 
 protected:
     void SetRoot(std::unique_ptr<Item> nroot);
-    ~Context() = default;
 
 private:
     friend class Item;

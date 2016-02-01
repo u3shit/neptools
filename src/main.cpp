@@ -1,4 +1,5 @@
 #include "item.hpp"
+#include "context_item.hpp"
 #include "cl3/file.hpp"
 #include "cl3/file_collection.hpp"
 #include "stcm/file.hpp"
@@ -68,8 +69,7 @@ void UpdateCl3(Cl3::File& file, int argc, char** argv)
     for (int i = 1; i < argc; i += 2)
         fc.ReplaceFile(
             argv[i], fc.GetContext()->Create<RawItem>(ReadFile(argv[i+1])));
-    fc.RedoPadding();
-    file.UpdatePositions();
+    file.Fixup();
     file.Dump(argv[0]);
 }
 
@@ -106,18 +106,49 @@ struct Cl3Create : public Command
     }
 };
 
+std::pair<std::unique_ptr<Context>, Stcm::File*> SmartStcm(const char* fname)
+{
+    auto buf = ReadFile(fname);
+    if (buf->GetSize() < 4)
+        throw std::runtime_error("Input file too short");
+
+    if (memcmp(buf->GetPtr(), "CL3L", 4) == 0)
+    {
+        auto cl3 = std::make_unique<Cl3::File>(buf);
+        auto dat = cl3->GetFileCollection().GetFile("main.DAT");
+        if (!dat) throw std::runtime_error("Invalid CL3 file");
+
+        BOOST_ASSERT(dynamic_cast<RawItem*>(dat->GetChildren()));
+        auto ritem = static_cast<RawItem*>(dat->GetChildren());
+        auto stcm = cl3->Create<ContextItem<Stcm::File>>(
+            ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
+        auto ret2 = stcm.get();
+        ritem->Replace(std::move(stcm));
+        return {std::move(cl3), ret2};
+    }
+    else if (memcmp(buf->GetPtr(), "STCM", 4) == 0)
+    {
+        auto stcm = std::make_unique<Stcm::File>(buf);
+        auto ret2 = stcm.get();
+        return {std::move(stcm), ret2};
+    }
+    else
+        throw std::runtime_error("Invalid input file");
+}
+
 struct StcmInspect : public Command
 {
     void Do(int argc, char** argv) override
     {
         if (argc != 1) throw InvalidParameters{};
 
-        Stcm::File file{argv[0]};
-        std::cout << file;
+        auto x = SmartStcm(argv[0]);
+        std::cout << *x.first;
     }
 
     void Help(std::ostream& os) const override
-    { os << "<stcm_file>\n\tInspect Stcm file\n"; }
+    { os << "<cl3/stcm_file>\n\t"
+            "Inspect Stcm file (possibly inside Cl3 as main.DAT)\n"; }
     bool Hidden() const noexcept override { return true; }
 };
 
@@ -127,13 +158,14 @@ struct StcmRedump : public Command
     {
         if (argc != 2) throw InvalidParameters{};
 
-        Stcm::File file{argv[0]};
-        file.UpdatePositions();
-        file.Dump(argv[1]);
+        auto x = SmartStcm(argv[0]);
+        x.first->Fixup();
+        x.first->Dump(argv[1]);
     }
 
     void Help(std::ostream& os) const override
-    { os << "<stcm_input> <stcm_output>\n\tRe-dumps Stcm file\n"; }
+    { os << "<cl3/stcm_input> <cl3/stcm_output>\n\t"
+            "Re-dumps Stcm file (possibly inside Cl3 as main.DAT)\n"; }
     bool Hidden() const noexcept override { return true; }
 };
 
@@ -164,14 +196,15 @@ struct GbnlWrite : public Command
     {
         if (argc != 2) throw InvalidParameters{};
 
-        Stcm::File file{argv[0]};
+        auto x = SmartStcm(argv[0]);
         boost::filesystem::ofstream os;
         os.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         os.open(argv[1], std::ios_base::out | std::ios_base::binary);
-        FindGbnl(file)->WriteTxt(os);
+        FindGbnl(*x.second)->WriteTxt(os);
     }
     void Help(std::ostream& os) const override
-    { os << "<stcm_input> <txt_output>\n\tExtract messages from Stcm file\n"; }
+    { os << "<cl3/stcm_input> <txt_output>\n\t"
+            "Extract messages from Cl3/Stcm file\n"; }
 };
 
 struct GbnlRead : public Command
@@ -180,20 +213,19 @@ struct GbnlRead : public Command
     {
         if (argc != 3) throw InvalidParameters{};
 
-        Stcm::File file{argv[0]};
-
+        auto x = SmartStcm(argv[0]);
         {
             boost::filesystem::ifstream is;
             is.exceptions(std::ifstream::failbit | std::ifstream::badbit);
             is.open(argv[1], std::ios_base::out | std::ios_base::binary);
-            FindGbnl(file)->ReadTxt(is);
+            FindGbnl(*x.second)->ReadTxt(is);
         }
-        file.UpdatePositions();
-        file.Dump(argv[2]);
+        x.first->Fixup();
+        x.first->Dump(argv[2]);
     }
     void Help(std::ostream& os) const override
-    { os << "<stcm_input> <txt_input> <stcm_output>\n\t"
-            "Replaces messages inside Stcm file\n"; }
+    { os << "<cl3/stcm_input> <txt_input> <cl3/stcm_output>\n\t"
+            "Replaces messages inside Cl3/Stcm file\n"; }
 };
 
 }
