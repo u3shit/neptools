@@ -4,89 +4,58 @@ stcm-editor
 This tool allows you to edit dialogues in Hyperdimension Neptunia Re;Birth 3: V
 Century. The file format is compatible with nr2_strool/nr3_strtool's.
 
+Note: if you've used strtool before, you should delete the modified `.cl3` files
+and reimport the `.txt`s using the original, unmodifed `.cl3` files. Strtool
+sometimes damages the `.cl3` files in a way that this tool can't handle.
+
 Usage
 =====
 
-Run without arguments to get a brief help. The two most useful commands are
-probably `read-txt` which turns a `.cl3` file into a `.txt` file and
-`write-txt`, which converts it back:
+The main functionality of this program is to dump out the text script inside the
+`.cl3` files, and then reimport modifications. You should be able to do that by
+just dragging the `.cl3` file onto the executable to extract the .txt files, and
+drop the `.txt` files to import back. You can also mass-convert directories by
+dropping them. By default it will export every `.cl3` which doesn't have a
+corresponding `.txt`, and import where `.txt` exitst. You can override it with
+the `--export-only` and `--import-only` options to only import or export.
 
-```
-stcm-editor read-txt main.cl3
-# edit main.cl3 using your favourite text editor
-stcm-editor write-txt main.cl3.txt
-```
+Advanced usage
+--------------
 
-You can also give the name of a directory instead of a single file to bach
-convert all files inside it.
+The tool also has an advanced mode, where you have more control over what
+happens.
 
-Use `stcm-editor --show-hidden` to display some extra commands, that are
-probably useless unless you know what are you doing.
+First you have to open a file with `--open <filename>`. Afterwards you can
+inspect/modify them. Every operation is done on this file, until you open a new
+one (or create an empty cl3 file with `--create-cl3`). Changes are not
+automatically saved, you'll have to `--save <filename>` them. Run `stcm-editor
+--help` to list all available operations.
+Some examples:
 
+    # list all files in a .cl3 file
+    stcm-editor --open foo.cl3 --list-files
+    # extract a .cl3 file
+    stcm-editor --open foo.cl3 --extract-files output_directory
+    # replace a file in .cl3
+    stcm-editor --open foo.cl3 --replace-file name_in_cl3 file_name --save out.cl3
+    # export txt
+    stcm-editor --open foo.cl3 --export-txt foo.txt
+    # chain operations together: export a file, and a txt:
+    stcm-editor --open foo.cl3 --extract-file bar.tid orig.tid --export-txt foo.txt
+    # chain operations: replace file and txt, extract a second cl3
+    stcm-editor --open foo.cl3 --replace-file bar.tid new.tid --import-txt foo.txt --open bar.cl3 --export-files dir
+    # and so on...
 
 Compilation
 ===========
 
-Note: all of the following assumes you're on Linux. If you're on Windows, have
-fun figuring things out...
+See [COMPILE.md](COMPILE.md) if you downloaded a source distribution. Otherwise
+refer to http://github.com/u3shit/stcm-editor.
 
-You'll need python (for the compilation script), a C++14 compiler and boost-1.60
-compiled with c++14 support. Most likely you'll have a C++98 ABI version, which
-means it'll probably compile but crash randomly when run. Refer to the next
-section how to obtain a correct boost version. If you have them, you can just
-run:
+License
+=======
 
-```
-./waf configure
-./waf
-```
-
-You can specify compile flags on configure:
-
-```
-CXX=g++-5.3.0 CXXFLAGS="-O3 -DNDEBUG" LINKFLAGS="-whatever" ./waf configure
-```
-
-If everything goes well, you'll get an executable in `build/stcm-editor`.
-
-Boost with C++14
-----------------
-
-[Download the latest release][boost-dl], and look at
-[getting started][boost-getting-started] guide, specially the 5.2. section. If
-you have boost installed globally, that can cause problems. In this case edit
-`tools/build/src/engine/jambase.c` and remove/comment out the line:
-```
-"BOOST_BUILD_PATH = /usr/share/boost-build ;\n",
-```
-before running `bootstrap.sh`.
-
-Continue until 5.2.4. You'll need to add `cxxflags=-std=c++14` to the `b2`
-command line. Adding `link=static` is also a good idea to avoid dynamic loader
-path problems. We currently only use the filesystem library, so you can add
-`--with-filesystem` to reduce build time. I used the following command line:
-```
-b2 --with-filesystem toolset=gcc-5.3.0 variant=release link=static threading=single runtime-link=shared cxxflags=-std=c++14 stage
-```
-
-To actually use it, if you unpacked boost into `$boost_dir`:
-```
-./waf configure --boost-includes $boost_dir --liibst-libs $boost_dir/stage/libs
-```
-
-Cross compiling to Windows
---------------------------
-
-Get a cross compiler. Refer to your distro's documentation or google. For boost,
-look [here][boost-cross]. You'll have to specify your cross compiler when
-configuring:
-```
-CXX=i686-w64-mingw32-g++-5.3.0 LINKFLAGS="-static-libstdc++ -static-libgcc" ./waf configure ...
-```
-
-Specifying the `-static-*` options are not required, but in that case you'll
-manually have to copy the required dlls next to the executable.
-
-[boost-dl]: http://www.boost.org/users/download/
-[boost-getting-started]: http://www.boost.org/doc/libs/1_60_0/more/getting_started/unix-variants.html
-[boost-cross]: http://www.boost.org/build/doc/html/bbv2/tasks/crosscompile.html
+This program is free software. It comes without any warranty, to the extent
+permitted by applicable law. You can redistribute it and/or modify it under the
+terms of the Do What The Fuck You Want To Public License, Version 2, as
+published by Sam Hocevar. See http://www.wtfpl.net/ for more details.
