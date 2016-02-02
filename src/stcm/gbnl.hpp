@@ -68,7 +68,9 @@ public:
     size_t GetSize() const noexcept override;
 
     void WriteTxt(std::ostream& os) const;
+    void WriteTxt(std::ostream&& os) const { WriteTxt(os); }
     void ReadTxt(std::istream& is);
+    void ReadTxt(std::istream&& is) { ReadTxt(is); }
 
     struct Message
     {

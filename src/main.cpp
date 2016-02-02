@@ -4,8 +4,10 @@
 #include "cl3/file_collection.hpp"
 #include "stcm/file.hpp"
 #include "stcm/gbnl.hpp"
+#include "utils.hpp"
 #include <iostream>
-#include <boost/filesystem/fstream.hpp>
+#include <fstream>
+#include <deque>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -18,99 +20,18 @@ struct InvalidParameters {};
 
 struct Command
 {
-    virtual void Do(int argc, char** argv) = 0;
-    virtual void Help(std::ostream& os) const = 0;
-    virtual bool Hidden() const noexcept { return false; }
+    using DoFun = std::function<void (std::deque<const char*>&)>;
+
+    Command(std::string name, DoFun fun, std::string help)
+        : name{std::move(name)}, fun{std::move(fun)}, help{std::move(help)} {}
+
+    std::string name;
+    DoFun fun;
+    std::string help;
 };
 
-struct Cl3List : public Command
-{
-    void Do(int argc, char** argv) override
-    {
-        if (argc != 1) throw InvalidParameters{};
-
-        Cl3::File file{argv[0]};
-        for (const auto& e : file.GetFileCollection().entries)
-            std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
-    }
-
-    void Help(std::ostream& os) const override
-    { os << "<cl3_file>\n\tList Cl3 contents\n"; }
-};
-
-struct Cl3Inspect : public Command
-{
-    void Do(int argc, char** argv) override
-    {
-        if (argc != 1) throw InvalidParameters{};
-
-        Cl3::File file{argv[0]};
-        std::cout << file;
-    }
-
-    void Help(std::ostream& os) const override
-    { os << "<cl3_file>\n\tInspect Cl3 file\n"; }
-    bool Hidden() const noexcept override { return true; }
-};
-
-struct Cl3Extract : public Command
-{
-    void Do(int argc, char** argv) override
-    {
-        if (argc != 2) throw InvalidParameters{};
-
-        Cl3::File file{argv[0]};
-        file.GetFileCollection().ExtractTo(argv[1]);
-    }
-    void Help(std::ostream& os) const override
-    { os << "<cl3_file> <output_dir>\n\tExtract Cl3 file\n"; }
-};
-
-void UpdateCl3(Cl3::File& file, int argc, char** argv)
-{
-    auto& fc = file.GetFileCollection();
-
-    for (int i = 1; i < argc; i += 2)
-        fc.ReplaceFile(
-            argv[i], fc.GetContext()->Create<RawItem>(ReadFile(argv[i+1])));
-    file.Fixup();
-    file.Dump(argv[0]);
-}
-
-struct Cl3Update : public Command
-{
-    void Do(int argc, char** argv) override
-    {
-        if (argc < 2 || argc % 2 != 0) throw InvalidParameters{};
-        Cl3::File file{argv[0]};
-        UpdateCl3(file, argc-1, argv+1);
-    }
-
-    void Help(std::ostream& os) const override
-    {
-        os << "<cl3_input> <cl3_output> [<entry_name> <replacement_file>]..."
-           << "\n\tReplaces or adds files into a Cl3 archive\n";
-    }
-};
-
-struct Cl3Create : public Command
-{
-    void Do(int argc, char** argv) override
-    {
-        if (argc < 1 || argc % 2 != 1) throw InvalidParameters{};
-        Cl3::File file;
-        UpdateCl3(file, argc, argv);
-    }
-
-    void Help(std::ostream& os) const override
-    {
-        os << "<cl3_output> [<entry_name> <replacement_file>]..."
-           << "\n\tCreates a Cl3 archive from files\n";
-    }
-};
-
-std::pair<std::unique_ptr<Context>, Stcm::File*>
-SmartStcm(const fs::path& fname)
+std::tuple<std::unique_ptr<Context>, Cl3::File*, Stcm::File*>
+SmartOpen(const fs::path& fname)
 {
     auto buf = ReadFile(fname);
     if (buf->GetSize() < 4)
@@ -119,59 +40,58 @@ SmartStcm(const fs::path& fname)
     if (memcmp(buf->GetPtr(), "CL3L", 4) == 0)
     {
         auto cl3 = std::make_unique<Cl3::File>(buf);
-        auto dat = cl3->GetFileCollection().GetFile("main.DAT");
-        if (!dat) throw std::runtime_error("Invalid CL3 file");
-
-        BOOST_ASSERT(dynamic_cast<RawItem*>(dat->GetChildren()));
-        auto ritem = static_cast<RawItem*>(dat->GetChildren());
-        auto stcm = cl3->Create<ContextItem<Stcm::File>>(
-            ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
-        auto ret2 = stcm.get();
-        ritem->Replace(std::move(stcm));
-        return {std::move(cl3), ret2};
+        auto ret2 = cl3.get();
+        return std::make_tuple(std::move(cl3), ret2, nullptr);
     }
     else if (memcmp(buf->GetPtr(), "STCM", 4) == 0)
     {
         auto stcm = std::make_unique<Stcm::File>(buf);
         auto ret2 = stcm.get();
-        return {std::move(stcm), ret2};
+        return std::make_tuple(std::move(stcm), nullptr, ret2);
     }
     else
         throw std::runtime_error("Invalid input file");
 }
 
-struct StcmInspect : public Command
+template <typename T, typename Fun>
+void ShellDumpGen(const T* item, std::deque<const char*>& args, Fun f)
 {
-    void Do(int argc, char** argv) override
+    if (args.empty()) throw InvalidParameters{};
+
+    auto fname = args.front(); args.pop_front();
+    if (fname[0] == '-' && fname[1] == '\0')
+        f(item, std::cout);
+    else
     {
-        if (argc != 1) throw InvalidParameters{};
-
-        auto x = SmartStcm(argv[0]);
-        std::cout << *x.first;
+        f(item, OpenOut(fname));
     }
+}
 
-    void Help(std::ostream& os) const override
-    { os << "<cl3/stcm_file>\n\t"
-            "Inspect Stcm file (possibly inside Cl3 as main.DAT)\n"; }
-    bool Hidden() const noexcept override { return true; }
-};
+template <typename T>
+void ShellDump(const T* item, std::deque<const char*>& args)
+{ ShellDumpGen(item, args, [](auto x, auto&& y) { x->Dump(y); }); }
 
-struct StcmRedump : public Command
+template <typename T>
+void ShellInspect(const T* item, std::deque<const char*>& args)
+{ ShellDumpGen(item, args, [](auto x, auto&& y) { y << *x; }); }
+
+void EnsureStcm(Context* ctx, Stcm::File*& stcm)
 {
-    void Do(int argc, char** argv) override
-    {
-        if (argc != 2) throw InvalidParameters{};
+    if (stcm) return;
+    if (!ctx) throw std::runtime_error{"No file loaded"};
 
-        auto x = SmartStcm(argv[0]);
-        x.first->Fixup();
-        x.first->Dump(argv[1]);
-    }
+    BOOST_ASSERT(dynamic_cast<Cl3::File*>(ctx));
+    auto cl3 = static_cast<Cl3::File*>(ctx);
+    auto dat = cl3->GetFileCollection().GetFile("main.DAT");
+    if (!dat) throw std::runtime_error("Invalid CL3 file");
 
-    void Help(std::ostream& os) const override
-    { os << "<cl3/stcm_input> <cl3/stcm_output>\n\t"
-            "Re-dumps Stcm file (possibly inside Cl3 as main.DAT)\n"; }
-    bool Hidden() const noexcept override { return true; }
-};
+    BOOST_ASSERT(dynamic_cast<RawItem*>(dat->GetChildren()));
+    auto ritem = static_cast<RawItem*>(dat->GetChildren());
+    auto nstcm = cl3->Create<ContextItem<Stcm::File>>(
+        ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
+    stcm = nstcm.get();
+    ritem->Replace(std::move(nstcm));
+}
 
 Stcm::GbnlItem* FindGbnl(Item* root)
 {
@@ -194,130 +114,226 @@ Stcm::GbnlItem* FindGbnl(Context& ctx)
     return x;
 }
 
-template <typename Fun>
-void RecDo(const fs::path& path, const std::string& ext, Fun f)
+template <typename Pred, typename Fun>
+void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
 {
     if (fs::is_directory(path))
         for (auto& e: fs::directory_iterator(path))
-            RecDo(e, ext, f);
-    else if (boost::ends_with(path.native(), ext))
+            RecDo(e, p, f, true);
+    else if (p(path, rec))
     {
-        std::cerr << "Processing: " << path << std::endl;
         try { f(path); }
         catch (const std::runtime_error& e)
         {
             std::cerr << "Failed: " << e.what() << std::endl;
         }
     }
+    else if (!rec)
+        std::cerr << "Invalid filename: " << path << std::endl;
 }
 
-struct GbnlWrite : public Command
+bool do_import = true, do_export = true;
+void DoAutoFun(const fs::path& p)
 {
-    static void Conv(const fs::path& in, const fs::path& out)
+    fs::path cl3, txt;
+    bool import;
+    if (boost::ends_with(p.native(), ".txt"))
     {
-        auto x = SmartStcm(in);
-        auto gbnl = FindGbnl(*x.second);
-
-        fs::ofstream os;
-        os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-        os.open(out, std::ios_base::out | std::ios_base::binary);
-        gbnl->WriteTxt(os);
+        cl3 = p.native().substr(0, p.native().size()-4);
+        txt = p;
+        import = true;
+        std::cerr << "Importing: " << cl3 << " <- " << txt << std::endl;
+    }
+    else
+    {
+        cl3 = txt = p;
+        txt += ".txt";
+        import = false;
+        std::cerr << "Exporting: " << cl3 << " -> " << txt << std::endl;
     }
 
-    void Do(int argc, char** argv) override
+    auto x = SmartOpen(cl3);
+    EnsureStcm(std::get<0>(x).get(), std::get<2>(x));
+    auto gbnl = FindGbnl(*std::get<2>(x));
+    if (import)
     {
-        if (argc == 1)
-            RecDo(argv[0], ".cl3", [](auto& x) { Conv(x, fs::path(x)+=".txt"); });
-        else if (argc == 2)
-            Conv(argv[0], argv[1]);
-        else
-            throw InvalidParameters{};
+        gbnl->ReadTxt(OpenIn(txt));
+        std::get<2>(x)->Fixup();
+        std::get<0>(x)->Fixup();
+        std::get<0>(x)->Dump(cl3);
     }
-    void Help(std::ostream& os) const override
-    { os << "[<dir>|<cl3/stcm_input> <txt_output>]\n\t"
-            "1st variant: Extracts all *.cl3 files in <dir> into *.cl3.txt\n\t"
-            "2nd variant: Extract messages from <cl3/stcm_input> into <txt_output>\n"; }
-};
-
-struct GbnlRead : public Command
+    else
+        gbnl->WriteTxt(OpenOut(txt));
+}
+void DoAuto(const fs::path& path)
 {
-    static void Conv(const fs::path& dat, const fs::path& txt, const fs::path& out)
-    {
-        auto x = SmartStcm(dat);
+    bool (*pred)(const fs::path&, bool);
+
+    if (do_import && do_export)
+        pred = [](auto& p, bool rec)
         {
-            fs::ifstream is;
-            is.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-            is.open(txt, std::ios_base::in | std::ios_base::binary);
-            FindGbnl(*x.second)->ReadTxt(is);
-        }
-        x.second->Fixup();
-        x.first->Fixup();
-        x.first->Dump(out);
-    }
-
-    void Do(int argc, char** argv) override
-    {
-        if (argc == 1)
-            RecDo(argv[0], ".cl3.txt", [](auto& x) {
-                fs::path dat = x.native().substr(0, x.size()-4);
-                Conv(dat, x, dat);
-            });
-        else if (argc == 3)
-            Conv(argv[0], argv[1], argv[2]);
-        else
-            throw InvalidParameters{};
-
-    }
-    void Help(std::ostream& os) const override
-    { os << "[<dir>|<cl3/stcm_input> <txt_input> <cl3/stcm_output>]\n\t"
-            "1st variant: Replaces messages in all *.cl3 files in <dir> from *.cl3.txt\n\t"
-            "2nd variant: Replaces messages inside <cl3/stcm_input> with <txt_input>, storing result inside <cl3/stcm_output\n"; }
-};
+            if (rec)
+                return (boost::ends_with(p.native(), ".cl3.txt") &&
+                        fs::exists(p.native().substr(0, p.native().size()-4))) ||
+                       (boost::ends_with(p.native(), ".cl3") &&
+                        !fs::exists(fs::path(p)+=".txt"));
+            else
+                return boost::ends_with(p.native(), ".cl3") ||
+                    boost::ends_with(p.native(), ".cl3.txt");
+        };
+    else if (do_export)
+        pred = [](auto& p, bool)
+            { return boost::ends_with(p.native(), ".cl3"); };
+    else
+        pred = [](auto& p, bool)
+        {
+            return boost::ends_with(p.native(), ".cl3.txt") &&
+                fs::exists(p.native().substr(0, p.native().size()-4));
+        };
+    RecDo(path, pred, DoAutoFun);
+}
 
 }
 
 int main(int argc, char** argv)
 {
-    std::map<std::string, std::unique_ptr<Command>> commands;
-    commands["cl3-list"] = std::make_unique<Cl3List>();
-    commands["cl3-inspect"] = std::make_unique<Cl3Inspect>();
-    commands["cl3-extract"] = std::make_unique<Cl3Extract>();
-    commands["cl3-update"] = std::make_unique<Cl3Update>();
-    commands["cl3-create"] = std::make_unique<Cl3Create>();
+    std::unique_ptr<Context> ctx;
+    Cl3::File* cl3 = nullptr;
+    Stcm::File* stcm = nullptr;
 
-    commands["stcm-inspect"] = std::make_unique<StcmInspect>();
-    commands["stcm-redump"] = std::make_unique<StcmRedump>();
+    std::deque<const char*> args(argv+1, argv+argc);
+    std::vector<Command> commands;
+#define CMD(...) commands.emplace_back(__VA_ARGS__)
+    CMD("--help", [](auto&){ throw InvalidParameters{}; }, "\n\tShow this help message\n");
+    CMD("--export-only", [&](auto&) { do_import = false; do_export = true; },
+        "\n\tOnly export txt (.cl3->.cl3.txt)\n");
+    CMD("--import-only", [&](auto&) { do_import = true; do_export = false; },
+        "\n\tOnly import txt (.cl3.txt->.cl3)\n\nAdvanced operations (see README):\n");
 
-    commands["write-txt"] = std::make_unique<GbnlWrite>();
-    commands["read-txt"] = std::make_unique<GbnlRead>();
+    CMD("--open", [&](auto& args)
+        {
+            if (args.empty()) throw InvalidParameters{};
+            std::tie(ctx, cl3, stcm) = SmartOpen(args.front());
+            args.pop_front();
+        }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
+    CMD("--save", [&](auto& args)
+        {
+            if (!ctx) throw std::runtime_error{"No file loaded"};
+            ctx->Fixup();
+            ShellDump(ctx.get(), args);
+        }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
+    CMD("--create-cl3", [&](auto&)
+        {
+            auto c = std::make_unique<Cl3::File>();
+            cl3 = c.get();
+            stcm = nullptr;
+            ctx = std::move(c);
+        }, "\n\tCreates an empty cl3 file\n");
+    CMD("--list-files", [&](auto&)
+        {
+            if (!cl3) throw std::runtime_error("No cl3 loaded");
+            for (const auto& e : cl3->GetFileCollection().entries)
+                std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
+        }, "\n\tLists the contents of the cl3 archive\n");
+    CMD("--extract-file", [&](auto& args)
+        {
+            if (args.size() < 2) throw InvalidParameters{};
+            if (!cl3) throw std::runtime_error("No cl3 loaded");
+            const auto& col = cl3->GetFileCollection().entries;
+            auto fn = args.front(); args.pop_front();
+            auto it = std::find_if(col.begin(), col.end(),
+                                   [fn](auto& e) { return e.name == fn; });
+            if (it == col.end())
+                throw std::runtime_error{"specified file not found"};
+            else
+                ShellDump(it->data->second.item, args);
+        }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
+    CMD("--extract-files", [&](auto& args)
+        {
+            if (args.empty()) throw InvalidParameters{};
+            if (!cl3) throw std::runtime_error("No cl3 loaded");
+            cl3->GetFileCollection().ExtractTo(args.front());
+            args.pop_front();
+        }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
+    CMD("--replace-file", [&](auto& args)
+        {
+            if (args.size() < 2) throw InvalidParameters{};
+            if (!cl3) throw std::runtime_error("No cl3 loaded");
+            auto& fc = cl3->GetFileCollection();
 
-    bool show_hidden = false;
-    int argc_base = 2;
+            fc.ReplaceFile(
+                args[0], fc.GetContext()->Create<RawItem>(ReadFile(args[1])));
+            args.pop_front(); args.pop_front();
+        }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
+    CMD("--inspect", [&](auto& args)
+        {
+            if (!ctx) throw std::runtime_error("No file loaded");
+            ShellInspect(ctx.get(), args);
+        }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
+    CMD("--inspect-stcm", [&](auto& args)
+        {
+            EnsureStcm(ctx.get(), stcm);
+            ShellInspect(stcm, args);
+        }, "<out>|-\n\tInspects only the stcm portion of the currently loaded file into <out> or stdout\n");
+    CMD("--parse-stcm", [&](auto&) { EnsureStcm(ctx.get(), stcm); },
+        "\n\tParse STCM-inside-CL3 (usually done automatically)\n");
+    CMD("--export-txt", [&](auto& args)
+        {
+            EnsureStcm(ctx.get(), stcm);
+            auto gbnl = FindGbnl(*stcm);
+            ShellDumpGen(gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
+        }, "<out_file>|-\n\tExport text to <out_file> or stdout\n");
+    CMD("--import-txt", [&](auto& args)
+        {
+            if (args.empty()) throw InvalidParameters{};
+            EnsureStcm(ctx.get(), stcm);
+            auto gbnl = FindGbnl(*stcm);
+            auto fname = args.front(); args.pop_front();
+            if (fname[0] == '-' && fname[1] == '\0')
+                gbnl->ReadTxt(std::cin);
+            else
+                gbnl->ReadTxt(OpenIn(fname));
+            stcm->Fixup();
+        }, "<in_file>|-\n\tRead text from <in_file> or stdin\n");
 
     try
     {
-        if (argc < 2) throw InvalidParameters{};
-        if (strcmp(argv[1], "--show-hidden") == 0)
+        if (args.empty()) throw InvalidParameters{};
+
+        while (!args.empty())
         {
-            show_hidden = true;
-            ++argc_base;
+            auto cmd = args.front(); args.pop_front();
+            if (cmd[0] == '-' && cmd[1] == '-' && cmd[2] == '\0') break;
+
+            if (cmd[0] == '-')
+            {
+                auto it = std::find_if(
+                    commands.begin(), commands.end(),
+                    [cmd](const auto& x) { return x.name == cmd; });
+                if (it == commands.end()) throw InvalidParameters{};
+
+                it->fun(args);
+            }
+            else
+                DoAuto(cmd);
         }
-
-        if (argc < argc_base) throw InvalidParameters{};
-        auto it = commands.find(argv[argc_base-1]);
-        if (it == commands.end()) throw InvalidParameters{};
-
-        it->second->Do(argc-argc_base, argv+argc_base);
+        while (!args.empty())
+        {
+            DoAuto(args.front());
+            args.pop_front();
+        }
     }
     catch (InvalidParameters ip)
     {
-        std::cerr << "Usage:\n";
+        std::cerr << "Usage: " << argv[0]
+                  << " [--options] [<file/directory>...]\n"
+                     "Default operation: import all .cl3.txt to .cl3, export "
+                     "all .cl3 to .cl3.txt.\n\n"
+                     "Options:\n";
+
         for (auto& c : commands)
-            if (show_hidden || !c.second->Hidden())
-            {
-                std::cerr << argv[0] << ' ' << c.first << ' ';
-                c.second->Help(std::cerr);
-            }
+            std::cerr << "  " << c.name << ' ' << c.help;
+
         return -1;
     }
     return 0;

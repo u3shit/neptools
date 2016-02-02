@@ -3,10 +3,11 @@
 #include "sections.hpp"
 #include "header.hpp"
 #include "../context.hpp"
+#include "../utils.hpp"
+#include <fstream>
 
 #include <boost/assert.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/fstream.hpp>
 
 namespace Cl3
 {
@@ -150,9 +151,7 @@ void FileCollectionItem::ExtractTo(const boost::filesystem::path& dir) const
         boost::filesystem::create_directories(dir);
     for (const auto& e : entries)
     {
-        boost::filesystem::ofstream os;
-        os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-        os.open(dir / e.name.c_str(), std::ios_base::out | std::ios_base::binary);
+        auto os = OpenOut(dir / e.name.c_str());
         BOOST_ASSERT(e.data->second.offset == 0);
         e.data->second.item->Dump(os);
     }

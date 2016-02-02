@@ -1,9 +1,10 @@
 #include "context.hpp"
 #include "item.hpp"
+#include "utils.hpp"
 #include <boost/assert.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <iomanip>
+#include <fstream>
 #include <sstream>
 
 void Context::SetRoot(std::unique_ptr<Item> nroot)
@@ -99,12 +100,7 @@ void Context::Dump(std::ostream& os) const
 void Context::Dump(const boost::filesystem::path& path) const
 {
     auto path2 = path;
-    {
-        boost::filesystem::ofstream os;
-        os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-        os.open(path2+=".tmp", std::ios_base::out | std::ios_base::binary);
-        Dump(os);
-    }
+    Dump(OpenOut(path2+=".tmp"));
     boost::filesystem::rename(path2, path);
 }
 

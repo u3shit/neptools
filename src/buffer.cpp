@@ -1,7 +1,8 @@
 #include "buffer.hpp"
+#include "utils.hpp"
 #include <iostream>
+#include <fstream>
 #include <sstream>
-#include <boost/filesystem/fstream.hpp>
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <system_error>
@@ -65,9 +66,7 @@ std::shared_ptr<Buffer> ReadFile(const boost::filesystem::path& fname)
                   << std::endl;
 #endif
 
-        boost::filesystem::ifstream in;
-        in.exceptions(std::ios_base::failbit | std::ios_base::badbit);
-        in.open(fname, std::ios_base::in | std::ios_base::binary);
+        auto in = OpenIn(fname);
 
         std::stringstream ss;
         ss << in.rdbuf();

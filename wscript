@@ -28,6 +28,7 @@ def build(bld):
         'src/item.cpp',
         'src/main.cpp',
         'src/raw_item.cpp',
+        'src/utils.cpp',
         'src/cl3/file.cpp',
         'src/cl3/file_collection.cpp',
         'src/cl3/header.cpp',

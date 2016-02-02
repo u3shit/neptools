@@ -40,6 +40,7 @@ public:
 
     void UpdatePositions();
     void Dump(std::ostream& os) const;
+    void Dump(std::ostream&& os) const { return Dump(os); }
     void Dump(const boost::filesystem::path& path) const;
 
     // properties needed: sorted
