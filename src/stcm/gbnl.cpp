@@ -212,7 +212,7 @@ void GbnlItem::ReadTxt(std::istream& is)
                 msg.clear();
             }
 
-            if (line.compare(sizeof(SEP_DASH), -1, "EOF") == 0)
+            if (line.compare(sizeof(SEP_DASH), 3, "EOF") == 0)
             {
                 RecalcSize();
                 return;
