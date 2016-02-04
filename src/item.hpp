@@ -6,7 +6,7 @@
 #include "buffer.hpp"
 #include <iosfwd>
 #include <vector>
-#include <unordered_map>
+#include <map>
 
 class Item
 {
@@ -47,7 +47,7 @@ public:
     void Replace(std::unique_ptr<Item> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
-    using LabelsContainer = std::unordered_multimap<FilePosition, Label*>;
+    using LabelsContainer = std::multimap<FilePosition, Label*>;
     const LabelsContainer& GetLabels() const { return labels; }
 
 protected:

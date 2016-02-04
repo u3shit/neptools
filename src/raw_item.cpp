@@ -18,35 +18,41 @@ void RawItem::Dump(std::ostream& os) const
 
 void RawItem::PrettyPrint(std::ostream& os) const
 {
-    Item::PrettyPrint(os);
     auto flags = os.flags();
     os << std::hex;
 
-
+    auto it = GetLabels().begin();
     size_t i = 0;
     while (true)
     {
+        for (; it != GetLabels().end() && it->first == i; ++it)
+            os << '@' << it->second->first << ":\n";
+        auto max = GetSize();
+        if (it != GetLabels().end() && it->first < max)
+            max = it->first;
+
         os << std::setw(8) << std::setfill('0') << GetPosition() + i
            << ' ';
 
         // numbers
         size_t j = 0;
-        for (; j < 8 && i+j < GetSize(); ++j)
+        for (; j < 8 && i+j < max; ++j)
             os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
         os << ' ';
-        for (; j < 16 && i+j < GetSize(); ++j)
+        for (; j < 16 && i+j < max; ++j)
             os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
         for (; j < 16; ++j) os << "   ";
 
         os << " |";
         // chars
         j = 0;
-        for (; j < 16 && i+j < GetSize(); ++j)
+        for (; j < 16 && i+j < max; ++j)
             os << FilterPrintable((*this)[i+j]);
         os << '|';
-        if ((i+=16) >= GetSize()) break;
+        if ((i+=j) >= GetSize()) break;
         os << '\n';
     }
+    BOOST_ASSERT(it == GetLabels().end());
     os.flags(flags);
 }
 
