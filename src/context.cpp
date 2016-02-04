@@ -40,7 +40,7 @@ const Label* Context::CreateLabelFallback(const std::string& name, ItemPointer p
     for (int i = 1; !pair.second; ++i)
     {
         std::stringstream ss;
-        ss << name << " " << i;
+        ss << name << '_' << i;
         pair = labels.insert({ss.str(), ptr});
     }
     return PostCreateLabel(pair, ptr);
