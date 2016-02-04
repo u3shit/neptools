@@ -46,6 +46,15 @@ Some examples:
     stcm-editor --open foo.cl3 --replace-file bar.tid new.tid --import-txt foo.txt --open bar.cl3 --export-files dir
     # and so on...
 
+A note on cl3 editing and `--create-cl3`
+----------------------------------------
+
+Cl3 files have a `FILE_LINK` section that describes links between different
+files. This information is currently not exported (and you can't edit them yet),
+but updating an existing cl3 file will preserve them. So for the time being you
+should only replace existing files in existing cl3 archives.
+
+
 Compilation
 ===========
 
