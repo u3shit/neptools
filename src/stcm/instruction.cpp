@@ -47,7 +47,7 @@ bool Instruction::Parameter::IsValid(size_t file_size) const noexcept
         else if (param_0 == Type0Special::INSTR_PTR0 ||
                  param_0 == Type0Special::INSTR_PTR1)
             return param_4 < file_size && param_8 == 0x40000000;
-        else if (param_0 == Type0Special::UNK42)
+        else if (param_0 == Type0Special::COLL_LINK)
             return param_4 + 8 < file_size && param_8 == 0;
         else
             return false;
@@ -132,9 +132,9 @@ void InstructionItem::ConvertParam(Param& out, const Instruction::Parameter& in)
             out.type = Param::INSTR_PTR1;
             out.param_4.label = GetContext()->GetLabelTo(in.param_4);
         }
-        else if (in.param_0 == IP::Type0Special::UNK42)
+        else if (in.param_0 == IP::Type0Special::COLL_LINK)
         {
-            out.type = Param::UNK42;
+            out.type = Param::COLL_LINK;
             out.param_4.label = GetContext()->GetLabelTo(in.param_4);
         }
         else
@@ -325,8 +325,8 @@ void InstructionItem::Dump(std::ostream& os) const
             pp.param_8 = 0x40000000;
             break;
 
-        case Param::UNK42:
-            pp.param_0 = IP::Type0Special::UNK42;
+        case Param::COLL_LINK:
+            pp.param_0 = IP::Type0Special::COLL_LINK;
             pp.param_4 = ToFilePos(p.param_4.label->second);
             pp.param_8 = 0;
             break;
@@ -392,8 +392,8 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
         return os << "instr_ptr0(@" << p.param_4.label->first << ')';
     case InstructionItem::Param::INSTR_PTR1:
         return os << "instr_ptr1(@" << p.param_4.label->first << ')';
-    case InstructionItem::Param::UNK42:
-        return os << "unk42(@" << p.param_4.label->first << ')';
+    case InstructionItem::Param::COLL_LINK:
+        return os << "coll_link(@" << p.param_4.label->first << ')';
     }
     abort();
 }

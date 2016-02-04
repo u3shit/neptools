@@ -16,8 +16,8 @@ struct FileEntry
     boost::endian::little_uint32_t field_200;
     boost::endian::little_uint32_t data_offset;
     boost::endian::little_uint32_t data_size;
-    boost::endian::little_uint32_t field_20c;
-    boost::endian::little_uint32_t field_210;
+    boost::endian::little_uint32_t field_20c; // offset
+    boost::endian::little_uint32_t field_210; // count
     boost::endian::little_uint32_t field_214;
     boost::endian::little_uint32_t field_218;
     boost::endian::little_uint32_t field_21c;

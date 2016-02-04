@@ -119,7 +119,7 @@ void Item::Replace(std::unique_ptr<Item> nitem) noexcept
 #ifndef BOOST_ASSERT_IS_VOID
     auto nsize = nitem->GetSize();
     for (auto it : labels)
-        BOOST_ASSERT(it.first < nsize);
+        BOOST_ASSERT(it.first <= nsize);
     BOOST_ASSERT(nitem->labels.empty());
 #endif
 

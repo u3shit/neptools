@@ -42,7 +42,7 @@ struct Instruction
             static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
             static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
             static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
-            static constexpr uint32_t UNK42          = 0xffffff42;
+            static constexpr uint32_t COLL_LINK      = 0xffffff42;
         };
 
         struct Type48
@@ -124,7 +124,7 @@ public:
             READ_4AC,
             INSTR_PTR0,
             INSTR_PTR1,
-            UNK42,
+            COLL_LINK,
         } type;
         union
         {

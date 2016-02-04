@@ -1,5 +1,6 @@
-#include "../context.hpp"
 #include "header.hpp"
+#include "../context.hpp"
+#include "collection_link.hpp"
 #include "exports.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -25,7 +26,8 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
     msg = raw->msg;
     export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
     export_count = raw->export_count;
-    collection_link = ctx->CreateLabelFallback("collection_link", raw->collection_link_offset);;
+    collection_link = ctx->CreateLabelFallback(
+        "collection_link_hdr", raw->collection_link_offset);;
 }
 
 HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
@@ -35,6 +37,7 @@ HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
     auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
 
     auto ret = ritem->Split(0, ritem->GetContext()->Create<HeaderItem>(raw));
+    CollectionLinkHeaderItem::CreateAndInsert(ret->collection_link->second);
     ExportsItem::CreateAndInsert(ret);
     return ret;
 }

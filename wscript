@@ -33,6 +33,7 @@ def build(bld):
         'src/cl3/file_collection.cpp',
         'src/cl3/header.cpp',
         'src/cl3/sections.cpp',
+        'src/stcm/collection_link.cpp',
         'src/stcm/data.cpp',
         'src/stcm/exports.cpp',
         'src/stcm/file.cpp',
