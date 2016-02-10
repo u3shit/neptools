@@ -70,7 +70,7 @@ public:
     struct Entry
     {
         FixedString<0x200> name;
-        uint32_t field_20c, field_210;
+        uint32_t field_200, field_20c, field_210;
         const Label* data;
     };
 

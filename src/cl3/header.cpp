@@ -11,8 +11,7 @@ bool Header::IsValid(size_t file_size) const noexcept
     return memcmp(magic, "CL3L", 4) == 0 &&
         field_04 == 0 &&
         field_08 == 3 &&
-        secs_offset + num_sections * sizeof(Section) <= file_size &&
-        field_14 == 1;
+        secs_offset + num_sections * sizeof(Section) <= file_size;
 }
 
 HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
@@ -22,6 +21,7 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
         throw std::runtime_error("Invalid Cl3 header");
 
     num_sections = raw->num_sections;
+    field_14 = raw->field_14;
     sections = ctx->CreateLabelFallback("sections", raw->secs_offset);
 }
 
@@ -44,7 +44,7 @@ void HeaderItem::Dump(std::ostream& os) const
     hdr.field_08 = 3;
     hdr.num_sections = num_sections;
     hdr.secs_offset = ToFilePos(sections->second);
-    hdr.field_14 = 1;
+    hdr.field_14 = field_14;
 
     os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
 }
@@ -53,7 +53,8 @@ void HeaderItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);
 
-    os << "cl3(" << num_sections << ", @" << sections->first << ')';
+    os << "cl3(" << num_sections << ", @" << sections->first << ", "
+       << field_14 << ')';
 }
 
 SectionsItem& HeaderItem::GetSectionsInt() const noexcept

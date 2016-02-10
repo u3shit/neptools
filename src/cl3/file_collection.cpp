@@ -15,7 +15,6 @@ namespace Cl3
 bool FileEntry::IsValid(size_t rem_size) const noexcept
 {
     return name.is_valid() &&
-        field_200 == 0 &&
         data_offset + data_size <= rem_size &&
         field_214 == 0 && field_218 == 0 && field_21c == 0 &&
         field_220 == 0 && field_224 == 0 && field_228 == 0 && field_22c == 0;
@@ -34,7 +33,8 @@ FileCollectionItem::FileCollectionItem(
         if (!e[i].IsValid(size - GetPosition()))
             throw std::runtime_error("Invalid Cl3 FILE_COLLECTION header");
 
-        entries.push_back({e[i].name, e[i].field_20c, e[i].field_210, nullptr});
+        entries.push_back({
+            e[i].name, e[i].field_200, e[i].field_20c, e[i].field_210, nullptr});
     }
 }
 
@@ -76,6 +76,7 @@ void FileCollectionItem::Dump(std::ostream& os) const
         BOOST_ASSERT(e.data->second.offset == 0);
         out.data_size = e.data->second.item->GetSize();
         out.data_offset = ToFilePos(e.data->second) - GetPosition();
+        out.field_200 = e.field_200;
         out.field_20c = e.field_20c;
         out.field_210 = e.field_210;
 
@@ -88,8 +89,8 @@ void FileCollectionItem::PrettyPrint(std::ostream& os) const
     Item::PrettyPrint(os);
 
     for (const auto& e : entries)
-        os << "file(" << e.name << ", " << e.field_20c << ", " << e.field_210
-           << ", @" << e.data->first << ")\n";
+        os << "file(" << e.name << ", " << e.field_200 << ", " << e.field_20c
+           << ", " << e.field_210 << ", @" << e.data->first << ")\n";
 }
 
 FileDataItem* FileCollectionItem::GetFileInt(const char* name) const noexcept
@@ -120,7 +121,7 @@ FileDataItem& FileCollectionItem::GetOrAddFile(const char* name)
     for (; it->GetNext(); it = it->GetNext());
     auto nit = GetContext()->Create<FileDataItem>();
     auto ret = nit.get();
-    entries.push_back({FixedString<0x200>{name}, 0, 0,
+    entries.push_back({FixedString<0x200>{name}, 0, 0, 0,
         GetContext()->CreateLabelFallback(name, {nit.get(), 0})});
     it->InsertAfter(std::move(nit));
 

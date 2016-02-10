@@ -37,7 +37,7 @@ public:
     const SectionsItem& GetSections() const noexcept { return GetSectionsInt(); }
     SectionsItem& GetSections() noexcept { return GetSectionsInt(); }
 
-    uint32_t num_sections;
+    uint32_t num_sections, field_14;
     const Label* sections;
 
 private:
