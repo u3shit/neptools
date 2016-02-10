@@ -5,6 +5,7 @@
 #include "dumpable.hpp"
 #include "buffer.hpp"
 #include <boost/endian/arithmetic.hpp>
+#include <vector>
 
 struct GbnlMessageDescriptor
 {

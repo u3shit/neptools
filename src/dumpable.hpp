@@ -15,26 +15,17 @@ public:
     virtual void Fixup() = 0;
     void Dump(std::ostream& os) const { return Dump_(os); }
     void Dump(std::ostream&& os) const { return Dump_(os); }
-    void Dump(const fs::path& path) const
-    {
-        auto path2 = path;
-        Dump(OpenOut(path2+=".tmp"));
-        fs::rename(path2, path);
-    }
+    void Dump(const fs::path& path) const;
 
     void Inspect(std::ostream& os) const { return Inspect_(os); }
     void Inspect(std::ostream&& os) const { return Inspect_(os); }
-    void Inspect(const fs::path& path) const { return Inspect(OpenOut(path)); }
+    void Inspect(const fs::path& path) const;
 
 private:
     virtual void Dump_(std::ostream& os) const = 0;
     virtual void Inspect_(std::ostream& os) const = 0;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Dumpable& dmp)
-{
-    dmp.Inspect(os);
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
 
 #endif
