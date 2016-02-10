@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <functional>
+#include "utils.hpp"
 
 class Item;
 class Context;
@@ -18,6 +19,36 @@ struct ItemPointer
     { return item == o.item && offset == o.offset; }
     bool operator!=(const ItemPointer& o) const
     { return item != o.item || offset != o.offset; }
+
+    template <typename T>
+    T& As() const { return *asserted_cast<T*>(item); }
+
+    template <typename T>
+    T& AsChecked() const { return dynamic_cast<T&>(*item); }
+
+    template <typename T>
+    T* Maybe() const { return dynamic_cast<T*>(item); }
+
+    template <typename T>
+    T& As0() const
+    {
+        BOOST_ASSERT(offset == 0);
+        return *asserted_cast<T*>(item);
+    }
+
+    template <typename T>
+    T& AsChecked0() const
+    {
+        BOOST_ASSERT(offset == 0);
+        return dynamic_cast<T&>(*item);
+    }
+
+    template <typename T>
+    T* Maybe0() const
+    {
+        BOOST_ASSERT(offset == 0);
+        return dynamic_cast<T*>(item);
+    }
 };
 
 using Label = std::pair<const std::string, ItemPointer>;

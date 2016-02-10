@@ -52,7 +52,7 @@ FileCollectionItem* FileCollectionItem::CreateAndInsert(
     {
         auto ptr2 = ret->GetContext()->GetPointer(
             ret->GetPosition() + s[i].data_offset);
-        auto& ritem2 = dynamic_cast<RawItem&>(*ptr2.item);
+        auto& ritem2 = ptr2.AsChecked<RawItem>();
         auto it2 = ritem2.Split(ptr2.offset, s[i].data_size);
 
         it2->InsertAfter(ret->GetContext()->
@@ -96,11 +96,7 @@ FileDataItem* FileCollectionItem::GetFileInt(const char* name) const noexcept
 {
     for (const auto& e : entries)
         if (e.name == name)
-        {
-            BOOST_ASSERT(e.data->second.offset == 0 &&
-                         dynamic_cast<FileDataItem*>(e.data->second.item));
-            return static_cast<FileDataItem*>(e.data->second.item);
-        }
+            return &e.data->second.As0<FileDataItem>();
 
     return nullptr;
 }

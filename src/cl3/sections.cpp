@@ -35,7 +35,7 @@ SectionsItem::SectionsItem(Key k, Context* ctx, const Section* s, size_t count)
 SectionsItem* SectionsItem::CreateAndInsert(const HeaderItem* hdr)
 {
     auto& ptr = hdr->sections->second;
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto& ritem = ptr.AsChecked<RawItem>();
     auto s = reinterpret_cast<const Section*>(ritem.GetPtr() + ptr.offset);
 
     uint32_t cnt = hdr->num_sections;
@@ -48,7 +48,7 @@ SectionsItem* SectionsItem::CreateAndInsert(const HeaderItem* hdr)
     for (size_t i = 0; i < cnt; ++i)
     {
         auto ptr2 = ret->GetContext()->GetPointer(s[i].data_offset);
-        auto& ritem2 = dynamic_cast<RawItem&>(*ptr2.item);
+        auto& ritem2 = ptr2.AsChecked<RawItem>();
         auto it2 = ritem2.Split(ptr2.offset, s[i].data_size);
 
         it2->InsertAfter(ret->GetContext()->
@@ -84,11 +84,8 @@ SectionEntryItem* SectionsItem::GetEntryInt(const char* name) const noexcept
 {
     for (const auto& e : entries)
         if (e.name == name)
-        {
-            BOOST_ASSERT(e.data->second.offset == 0 &&
-                         dynamic_cast<SectionEntryItem*>(e.data->second.item));
-            return static_cast<SectionEntryItem*>(e.data->second.item);
-        }
+            return &e.data->second.As0<SectionEntryItem>();
+
     return nullptr;
 }
 

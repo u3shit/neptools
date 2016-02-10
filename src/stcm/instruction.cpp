@@ -188,16 +188,16 @@ static const std::set<uint32_t> no_returns{0, 6};
 
 void InstructionItem::MaybeCreate(ItemPointer ptr)
 {
-    auto item = dynamic_cast<RawItem*>(ptr.item);
+    auto item = ptr.Maybe<RawItem>();
     if (item)
         InstructionItem::CreateAndInsert(ptr);
     else
-        BOOST_ASSERT(dynamic_cast<InstructionItem*>(ptr.item));
+        ptr.As0<InstructionItem>(); // assert it
 }
 
 InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto& ritem = ptr.AsChecked<RawItem>();
     auto instr = reinterpret_cast<const Instruction*>(ritem.GetPtr() + ptr.offset);
     if (ritem.GetSize() - ptr.offset < Instruction::SIZE ||
         ritem.GetSize() - ptr.offset < instr->size)
@@ -209,7 +209,7 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
     auto rem_data = instr->size - Instruction::SIZE -
         sizeof(Instruction::Parameter) * instr->param_count;
     if (rem_data)
-        ret->PrependChild(reinterpret_cast<RawItem*>(
+        ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, rem_data)->Remove());
 
     BOOST_ASSERT(ret->GetSize() == instr->size);

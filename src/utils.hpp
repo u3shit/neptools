@@ -4,6 +4,7 @@
 
 #include "fs.hpp"
 #include <iosfwd>
+#include <boost/assert.hpp>
 
 template <typename T, typename P>
 void EraseIf(T& cnt, P fun)
@@ -36,6 +37,13 @@ template<typename D, typename B>
 std::unique_ptr<D> static_cast_ptr(std::unique_ptr<B>&& base)
 {
     return std::unique_ptr<D>(static_cast<D*>(base.release()));
+}
+
+template <typename T, typename U>
+T asserted_cast(U* ptr)
+{
+    BOOST_ASSERT(dynamic_cast<T>(ptr));
+    return static_cast<T>(ptr);
 }
 
 std::ofstream OpenOut(const fs::path& pth);

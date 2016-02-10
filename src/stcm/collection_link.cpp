@@ -37,7 +37,7 @@ CollectionLinkHeaderItem::CollectionLinkHeaderItem(
 CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     ItemPointer ptr)
 {
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto& ritem = ptr.AsChecked<RawItem>();
     auto hdr = reinterpret_cast<const CollectionLinkHeader*>(
         ritem.GetPtr() + ptr.offset);
 
@@ -48,13 +48,13 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
         Create<CollectionLinkHeaderItem>(hdr));
 
     auto ptr2 = ret->data->second;
-    auto* ritem2 = dynamic_cast<RawItem*>(ptr2.item);
+    auto* ritem2 = ptr2.Maybe<RawItem>();
     if (!ritem2)
     {
         // HACK!
         if (ptr2.offset != 0 || count != 0)
             throw std::runtime_error("Collection link: invalid entry pointer");
-        auto& eof = dynamic_cast<EofItem&>(*ptr2.item);
+        auto& eof = ptr2.AsChecked0<EofItem>();
         eof.Replace(eof.GetContext()->Create<CollectionLinkItem>(nullptr, 0));
         return ret;
     }
@@ -74,8 +74,7 @@ void CollectionLinkHeaderItem::Dump(std::ostream& os) const
 {
     CollectionLinkHeader hdr{};
     hdr.offset = ToFilePos(data->second);
-    BOOST_ASSERT(dynamic_cast<CollectionLinkItem*>(data->second.item));
-    hdr.count = static_cast<CollectionLinkItem*>(data->second.item)->entries.size();
+    hdr.count = data->second.As0<CollectionLinkItem>().entries.size();
     os.write(reinterpret_cast<char*>(&hdr), sizeof(CollectionLinkHeader));
 }
 

@@ -52,23 +52,19 @@ void File::Fixup()
 {
     auto fc = GetHeader().GetSections().GetEntry("FILE_COLLECTION");
     if (fc)
-    {
-        BOOST_ASSERT(dynamic_cast<FileCollectionItem*>(fc->GetChildren()));
-        static_cast<FileCollectionItem*>(fc->GetChildren())->RedoPadding();
-    }
+        asserted_cast<FileCollectionItem*>(fc->GetChildren())->RedoPadding();
+
     Context::Fixup();
 }
 
 const HeaderItem& File::GetHeader() const noexcept
 {
-    BOOST_ASSERT(dynamic_cast<const HeaderItem*>(GetRoot()));
-    return *static_cast<const HeaderItem*>(GetRoot());
+    return *asserted_cast<const HeaderItem*>(GetRoot());
 }
 
 HeaderItem& File::GetHeader() noexcept
 {
-    BOOST_ASSERT(dynamic_cast<HeaderItem*>(GetRoot()));
-    return *static_cast<HeaderItem*>(GetRoot());
+    return *asserted_cast<HeaderItem*>(GetRoot());
 }
 
 template <typename Ret, typename Ref>
@@ -77,8 +73,8 @@ static Ret& GetFileCollection2(Ref& file)
     auto x = file.GetHeader().GetSections().GetEntry("FILE_COLLECTION");
     if (!x)
         throw std::runtime_error("Invalid CL3 file: no FILE_COLLECTION");
-    BOOST_ASSERT(dynamic_cast<Ret*>(x->GetChildren()));
-    return *static_cast<Ret*>(x->GetChildren());
+
+    return *asserted_cast<Ret*>(x->GetChildren());
 }
 
 const FileCollectionItem& File::GetFileCollection() const

@@ -78,13 +78,11 @@ void EnsureStcm(Context* ctx, Stcm::File*& stcm)
     if (stcm) return;
     if (!ctx) throw std::runtime_error{"No file loaded"};
 
-    BOOST_ASSERT(dynamic_cast<Cl3::File*>(ctx));
-    auto cl3 = static_cast<Cl3::File*>(ctx);
+    auto cl3 = asserted_cast<Cl3::File*>(ctx);
     auto dat = cl3->GetFileCollection().GetFile("main.DAT");
     if (!dat) throw std::runtime_error("Invalid CL3 file");
 
-    BOOST_ASSERT(dynamic_cast<RawItem*>(dat->GetChildren()));
-    auto ritem = static_cast<RawItem*>(dat->GetChildren());
+    auto ritem = asserted_cast<RawItem*>(dat->GetChildren());
     auto nstcm = cl3->Create<ContextItem<Stcm::File>>(
         ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
     stcm = nstcm.get();

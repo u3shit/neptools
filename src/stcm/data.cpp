@@ -26,16 +26,16 @@ DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size
 
 void DataItem::MaybeCreate(ItemPointer ptr)
 {
-    auto item = dynamic_cast<RawItem*>(ptr.item);
+    auto item = ptr.Maybe<RawItem>();
     if (item)
         DataItem::CreateAndInsert(ptr);
     else
-        BOOST_ASSERT(dynamic_cast<DataItem*>(ptr.item));
+        ptr.As0<DataItem>(); // assert it
 }
 
 DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto& ritem = ptr.AsChecked<RawItem>();
     auto hdr = reinterpret_cast<const DataHeader*>(ritem.GetPtr() + ptr.offset);
     uint32_t data_length = hdr->length; // hdr may be invalidated by Split...
     auto rem_size = ritem.GetSize() - ptr.offset;
@@ -45,7 +45,7 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
     auto ret = ritem.Split(ptr.offset, ritem.GetContext()->Create<DataItem>(
         hdr, rem_size - sizeof(DataHeader)));
     if (data_length > 0)
-        ret->PrependChild(reinterpret_cast<RawItem*>(
+        ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, data_length)->Remove());
     BOOST_ASSERT(ret->GetSize() == sizeof(DataHeader) + data_length);
 

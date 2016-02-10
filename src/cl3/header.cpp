@@ -59,9 +59,7 @@ void HeaderItem::PrettyPrint(std::ostream& os) const
 
 SectionsItem& HeaderItem::GetSectionsInt() const noexcept
 {
-    BOOST_ASSERT(sections->second.offset == 0 &&
-                 dynamic_cast<SectionsItem*>(sections->second.item));
-    return *static_cast<SectionsItem*>(sections->second.item);
+    return sections->second.As0<SectionsItem>();
 }
 
 }

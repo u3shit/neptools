@@ -30,7 +30,7 @@ ExportsItem::ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t expor
 ExportsItem* ExportsItem::CreateAndInsert(const HeaderItem* hdr)
 {
     auto& ptr = hdr->export_sec->second;
-    auto& ritem = dynamic_cast<RawItem&>(*ptr.item);
+    auto& ritem = ptr.AsChecked<RawItem>();
     auto e = reinterpret_cast<const ExportEntry*>(ritem.GetPtr() + ptr.offset);
 
     if (ritem.GetSize() - ptr.offset < hdr->export_count*sizeof(ExportEntry))
