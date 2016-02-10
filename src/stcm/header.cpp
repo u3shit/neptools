@@ -25,7 +25,6 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
 
     msg = raw->msg;
     export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
-    export_count = raw->export_count;
     collection_link = ctx->CreateLabelFallback(
         "collection_link_hdr", raw->collection_link_offset);;
 }
@@ -35,10 +34,11 @@ HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
     if (ritem->GetSize() < sizeof(Header))
         throw std::out_of_range("STCM header too short");
     auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
+    size_t export_count = raw->export_count;
 
     auto ret = ritem->Split(0, ritem->GetContext()->Create<HeaderItem>(raw));
     CollectionLinkHeaderItem::CreateAndInsert(ret->collection_link->second);
-    ExportsItem::CreateAndInsert(ret);
+    ExportsItem::CreateAndInsert(ret->export_sec->second, export_count);
     return ret;
 }
 
@@ -47,7 +47,7 @@ void HeaderItem::Dump(std::ostream& os) const
     Header hdr;
     hdr.msg = msg;
     hdr.export_offset = ToFilePos(export_sec->second);
-    hdr.export_count = export_count;
+    hdr.export_count = export_sec->second.As0<ExportsItem>().entries.size();
     hdr.field_28 = 1;
     hdr.collection_link_offset = ToFilePos(collection_link->second);
 
@@ -58,8 +58,7 @@ void HeaderItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);
 
-    os << "Msg: " << msg << "\nVars: @" << export_sec->first << ", "
-       << export_count << ", @"
+    os << "Msg: " << msg << "\nVars: @" << export_sec->first << ", @"
        << collection_link->first;
 }
 

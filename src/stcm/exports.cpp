@@ -27,16 +27,15 @@ ExportsItem::ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t expor
     }
 }
 
-ExportsItem* ExportsItem::CreateAndInsert(const HeaderItem* hdr)
+ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, size_t export_count)
 {
-    auto& ptr = hdr->export_sec->second;
     auto& ritem = ptr.AsChecked<RawItem>();
     auto e = reinterpret_cast<const ExportEntry*>(ritem.GetPtr() + ptr.offset);
 
-    if (ritem.GetSize() - ptr.offset < hdr->export_count*sizeof(ExportEntry))
+    if (ritem.GetSize() - ptr.offset < export_count*sizeof(ExportEntry))
         throw std::runtime_error("Invalid export entry: premature end of data");
     auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
-        Create<ExportsItem>(e, hdr->export_count));
+        Create<ExportsItem>(e, export_count));
 
     for (const auto& e : ret->entries)
         InstructionItem::MaybeCreate(e.second->second);
