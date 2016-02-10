@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 
 # the following two variables are used by the target "waf dist"
-VERSION='0.2.1'
+VERSION='0.2.2'
 APPNAME='stcm-editor'
 
 # these variables are mandatory ('/' are converted automatically)
@@ -10,10 +10,14 @@ out = 'build'
 
 def options(opt):
     opt.load('compiler_cxx boost')
-    opt.add_option('--msvc-hack', action='store_true', default=False)
+    opt.add_option('--msvc-hack', action='store_true', default=False,
+                   help='Read COMPILE.md...')
+    opt.add_option('--release', action='store_true', default=False,
+                   help='Enable some flags for release builds')
 
 def configure(cfg):
     if cfg.options.msvc_hack:
+        cfg.env.DEST_OS = 'win32'
         if 'LINK_CXX' in cfg.environ:
             cfg.env['LINK_CXX'] = cfg.environ['LINK_CXX']
         cfg.load('msvc', funs='no_autodetect')
@@ -25,7 +29,11 @@ def configure(cfg):
     cfg.load('compiler_cxx boost clang_compilation_database')
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
-        cfg.env.append_value('CXXFLAGS', ['/EHsc'])
+        cfg.env.append_value('CXXFLAGS', ['/EHsc', '/Za', '/MD'])
+        if cfg.options.release:
+            cfg.env.prepend_value('CXXFLAGS', [
+                '/O2', '/Gv', '/GL', '/Gw', '/Gy'])
+            cfg.env.prepend_value('LINKFLAGS', ['/LTCG', '/OPT:REF', '/OPT:ICF'])
         cfg.check_boost()
     else:
         cfg.check_cxx(cxxflags='-std=c++14')
@@ -34,6 +42,20 @@ def configure(cfg):
             '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic',
             '-Wno-parentheses']))
         cfg.check_boost(lib='filesystem system')
+
+        if cfg.options.release:
+            opt=['-Ofast', '-flto', '-fno-fat-lto-objects',
+                 '-fomit-frame-pointer']
+            cfg.check_cxx(cxxflags=opt)
+
+            cfg.env.prepend_value('CXXFLAGS', opt)
+            cfg.env.prepend_value('LINKFLAGS', opt + ['-Wl,-O1'])
+
+    if cfg.options.release:
+        cfg.define('NDEBUG', 1)
+    if cfg.env.DEST_OS == 'win32':
+        cfg.define('UNICODE', 1)
+        cfg.define('_UNICODE', 1)
 
 def build(bld):
     src = [
