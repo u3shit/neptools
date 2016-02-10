@@ -18,20 +18,6 @@ void EraseIf(T& cnt, P fun)
     }
 }
 
-template <typename T>
-void MaybeRehash(T& map) noexcept
-{
-    if (map.load_factor() < map.max_load_factor() / 2)
-        try
-        {
-            map.rehash(0);
-        }
-        catch (...)
-        {
-            // uh-oh
-        }
-}
-
 // http://ficksworkshop.com/blog/14-coding/86-how-to-static-cast-std-unique-ptr
 template<typename D, typename B>
 std::unique_ptr<D> static_cast_ptr(std::unique_ptr<B>&& base)
