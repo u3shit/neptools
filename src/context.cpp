@@ -90,21 +90,13 @@ void Context::UpdatePositions()
         size = 0;
 }
 
-void Context::Dump(std::ostream& os) const
+void Context::Dump_(std::ostream& os) const
 {
     for (auto it = GetRoot(); it; it = it->GetNext())
         it->Dump(os);
 }
 
-void Context::Dump(const fs::path& path) const
+void Context::Inspect_(std::ostream& os) const
 {
-    auto path2 = path;
-    Dump(OpenOut(path2+=".tmp"));
-    fs::rename(path2, path);
-}
-
-std::ostream& operator<<(std::ostream& os, const Context& ctx)
-{
-    if (ctx.GetRoot()) os << *ctx.GetRoot();
-    return os;
+    if (GetRoot()) os << *GetRoot();
 }

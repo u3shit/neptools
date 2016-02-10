@@ -61,6 +61,7 @@ def build(bld):
     src = [
         'src/buffer.cpp',
         'src/context.cpp',
+        'src/gbnl.cpp',
         'src/item.cpp',
         'src/main.cpp',
         'src/raw_item.cpp',

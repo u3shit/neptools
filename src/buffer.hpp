@@ -2,11 +2,9 @@
 #define BUFFER_HPP
 #pragma once
 
-#include "fs.hpp"
+#include "utils.hpp"
 #include <string>
 #include <memory>
-
-using Byte = unsigned char;
 
 class Buffer
 {

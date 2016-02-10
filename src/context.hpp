@@ -3,21 +3,16 @@
 #pragma once
 
 #include "item_base.hpp"
-#include "fs.hpp"
+#include "dumpable.hpp"
 #include <memory>
 #include <string>
 #include <map>
 #include <unordered_map>
 
-class Context
+class Context : public Dumpable
 {
 public:
-    Context() = default;
-    Context(const Context&) = delete;
-    void operator=(const Context&) = delete;
-    virtual ~Context() = default;
-
-    virtual void Fixup() { UpdatePositions(); }
+    void Fixup() override { UpdatePositions(); }
 
     Item* GetRoot() noexcept { return root.get(); }
     const Item* GetRoot() const noexcept { return root.get(); }
@@ -39,9 +34,6 @@ public:
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
     void UpdatePositions();
-    void Dump(std::ostream& os) const;
-    void Dump(std::ostream&& os) const { return Dump(os); }
-    void Dump(const fs::path& path) const;
 
     // properties needed: sorted
     using PointerMap = std::map<FilePosition, Item*>;
@@ -50,6 +42,9 @@ protected:
     void SetRoot(std::unique_ptr<Item> nroot);
 
 private:
+    void Dump_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os) const override;
+
     friend class Item;
     size_t size = 0;
 
@@ -64,8 +59,6 @@ private:
     const Label* PostCreateLabel(
         std::pair<LabelsMap::iterator, bool> pair, ItemPointer ptr);
 };
-
-std::ostream& operator<<(std::ostream& os, const Context& ctx);
 
 #include "item.hpp"
 template <typename T, typename... Args>

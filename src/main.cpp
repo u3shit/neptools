@@ -28,8 +28,15 @@ struct Command
     std::string help;
 };
 
-std::tuple<std::unique_ptr<Context>, Cl3::File*, Stcm::File*>
-SmartOpen(const fs::path& fname)
+struct State
+{
+    std::unique_ptr<Dumpable> file;
+    Cl3::File* cl3;
+    Stcm::File* stcm;
+    Gbnl* gbnl;
+};
+
+State SmartOpen(const fs::path& fname)
 {
     auto buf = ReadFile(fname);
     if (buf->GetSize() < 4)
@@ -39,13 +46,21 @@ SmartOpen(const fs::path& fname)
     {
         auto cl3 = std::make_unique<Cl3::File>(buf);
         auto ret2 = cl3.get();
-        return std::make_tuple(std::move(cl3), ret2, nullptr);
+        return {std::move(cl3), ret2, nullptr, nullptr};
     }
     else if (memcmp(buf->GetPtr(), "STCM", 4) == 0)
     {
         auto stcm = std::make_unique<Stcm::File>(buf);
         auto ret2 = stcm.get();
-        return std::make_tuple(std::move(stcm), nullptr, ret2);
+        return {std::move(stcm), nullptr, ret2, nullptr};
+    }
+    else if (buf->GetSize() >= sizeof(GbnlFooter) &&
+             memcmp(buf->GetPtr() + buf->GetSize() - sizeof(GbnlFooter),
+                    "GBNL", 4) == 0)
+    {
+        auto gbnl = std::make_unique<Gbnl>(buf.get());
+        auto ret2 = gbnl.get();
+        return {std::move(gbnl), nullptr, nullptr, ret2};
     }
     else
         throw std::runtime_error("Invalid input file");
@@ -73,19 +88,19 @@ template <typename T>
 void ShellInspect(const T* item, std::deque<const char*>& args)
 { ShellDumpGen(item, args, [](auto x, auto&& y) { y << *x; }); }
 
-void EnsureStcm(Context* ctx, Stcm::File*& stcm)
+void EnsureStcm(State& st)
 {
-    if (stcm) return;
-    if (!ctx) throw std::runtime_error{"No file loaded"};
+    if (st.stcm) return;
+    if (!st.file) throw std::runtime_error{"No file loaded"};
+    if (!st.cl3) throw std::runtime_error{"Invalid file loaded"};
 
-    auto cl3 = asserted_cast<Cl3::File*>(ctx);
-    auto dat = cl3->GetFileCollection().GetFile("main.DAT");
+    auto dat = st.cl3->GetFileCollection().GetFile("main.DAT");
     if (!dat) throw std::runtime_error("Invalid CL3 file");
 
     auto ritem = asserted_cast<RawItem*>(dat->GetChildren());
-    auto nstcm = cl3->Create<ContextItem<Stcm::File>>(
+    auto nstcm = st.cl3->Create<ContextItem<Stcm::File>>(
         ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
-    stcm = nstcm.get();
+    st.stcm = nstcm.get();
     ritem->Replace(std::move(nstcm));
 }
 
@@ -102,12 +117,14 @@ Stcm::GbnlItem* FindGbnl(Item* root)
     return FindGbnl(root->GetNext());
 }
 
-Stcm::GbnlItem* FindGbnl(Context& ctx)
+void EnsureGbnl(State& st)
 {
-    auto x = FindGbnl(ctx.GetRoot());
-    if (!x)
+    if (st.gbnl) return;
+    EnsureStcm(st);
+
+    st.gbnl = FindGbnl(st.stcm->GetRoot());
+    if (!st.gbnl)
         throw std::runtime_error("No GBNL found");
-    return x;
 }
 
 template <typename Pred, typename Fun>
@@ -148,19 +165,31 @@ void DoAutoFun(const fs::path& p)
         std::cerr << "Exporting: " << cl3 << " -> " << txt << std::endl;
     }
 
-    auto x = SmartOpen(cl3);
-    EnsureStcm(std::get<0>(x).get(), std::get<2>(x));
-    auto gbnl = FindGbnl(*std::get<2>(x));
+    auto st = SmartOpen(cl3);
+    EnsureGbnl(st);
     if (import)
     {
-        gbnl->ReadTxt(OpenIn(txt));
-        std::get<2>(x)->Fixup();
-        std::get<0>(x)->Fixup();
-        std::get<0>(x)->Dump(cl3);
+        st.gbnl->ReadTxt(OpenIn(txt));
+        if (st.stcm) st.stcm->Fixup();
+        st.file->Fixup();
+        st.file->Dump(cl3);
     }
     else
-        gbnl->WriteTxt(OpenOut(txt));
+        st.gbnl->WriteTxt(OpenOut(txt));
 }
+
+bool IsBin(const fs::path& p, bool = false)
+{
+    return boost::ends_with(p.native(), ".cl3");
+    // boost::ends_with(p.native(), ".gbin");
+}
+
+bool IsTxt(const fs::path& p, bool = false)
+{
+    return boost::ends_with(p.native(), ".cl3.txt");
+    // boost::ends_with(p.native(), ".gbin.txt");
+}
+
 void DoAuto(const fs::path& path)
 {
     bool (*pred)(const fs::path&, bool);
@@ -169,23 +198,17 @@ void DoAuto(const fs::path& path)
         pred = [](auto& p, bool rec)
         {
             if (rec)
-                return (boost::ends_with(p.native(), ".cl3.txt") &&
+                return (IsTxt(p) &&
                         fs::exists(p.native().substr(0, p.native().size()-4))) ||
-                       (boost::ends_with(p.native(), ".cl3") &&
+                       (IsBin(p) &&
                         !fs::exists(fs::path(p)+=".txt"));
             else
-                return boost::ends_with(p.native(), ".cl3") ||
-                    boost::ends_with(p.native(), ".cl3.txt");
+                return IsBin(p) || IsTxt(p);
         };
     else if (do_export)
-        pred = [](auto& p, bool)
-            { return boost::ends_with(p.native(), ".cl3"); };
+        pred = IsBin;
     else
-        pred = [](auto& p, bool)
-        {
-            return boost::ends_with(p.native(), ".cl3.txt") &&
-                fs::exists(p.native().substr(0, p.native().size()-4));
-        };
+        pred = IsTxt;
     RecDo(path, pred, DoAutoFun);
 }
 
@@ -193,9 +216,7 @@ void DoAuto(const fs::path& path)
 
 int main(int argc, char** argv)
 {
-    std::unique_ptr<Context> ctx;
-    Cl3::File* cl3 = nullptr;
-    Stcm::File* stcm = nullptr;
+    State st;
 
     std::deque<const char*> args(argv+1, argv+argc);
     std::vector<Command> commands;
@@ -209,33 +230,32 @@ int main(int argc, char** argv)
     CMD("--open", [&](auto& args)
         {
             if (args.empty()) throw InvalidParameters{};
-            std::tie(ctx, cl3, stcm) = SmartOpen(args.front());
+            st = SmartOpen(args.front());
             args.pop_front();
         }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
     CMD("--save", [&](auto& args)
         {
-            if (!ctx) throw std::runtime_error{"No file loaded"};
-            ctx->Fixup();
-            ShellDump(ctx.get(), args);
+            if (!st.file) throw std::runtime_error{"No file loaded"};
+            st.file->Fixup();
+            ShellDump(st.file.get(), args);
         }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
     CMD("--create-cl3", [&](auto&)
         {
             auto c = std::make_unique<Cl3::File>();
-            cl3 = c.get();
-            stcm = nullptr;
-            ctx = std::move(c);
+            auto c2 = c.get();
+            st = {std::move(c), c2, nullptr, nullptr};
         }, "\n\tCreates an empty cl3 file\n");
     CMD("--list-files", [&](auto&)
         {
-            if (!cl3) throw std::runtime_error("No cl3 loaded");
-            for (const auto& e : cl3->GetFileCollection().entries)
+            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            for (const auto& e : st.cl3->GetFileCollection().entries)
                 std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
         }, "\n\tLists the contents of the cl3 archive\n");
     CMD("--extract-file", [&](auto& args) -> void
         {
             if (args.size() < 2) throw InvalidParameters{};
-            if (!cl3) throw std::runtime_error("No cl3 loaded");
-            const auto& col = cl3->GetFileCollection().entries;
+            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            const auto& col = st.cl3->GetFileCollection().entries;
             auto fn = args.front(); args.pop_front();
             auto it = std::find_if(col.begin(), col.end(),
                                    [fn](auto& e) { return e.name == fn; });
@@ -247,15 +267,15 @@ int main(int argc, char** argv)
     CMD("--extract-files", [&](auto& args)
         {
             if (args.empty()) throw InvalidParameters{};
-            if (!cl3) throw std::runtime_error("No cl3 loaded");
-            cl3->GetFileCollection().ExtractTo(args.front());
+            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            st.cl3->GetFileCollection().ExtractTo(args.front());
             args.pop_front();
         }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
     CMD("--replace-file", [&](auto& args)
         {
             if (args.size() < 2) throw InvalidParameters{};
-            if (!cl3) throw std::runtime_error("No cl3 loaded");
-            auto& fc = cl3->GetFileCollection();
+            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            auto& fc = st.cl3->GetFileCollection();
 
             fc.ReplaceFile(
                 args[0], fc.GetContext()->Create<RawItem>(ReadFile(args[1])));
@@ -263,33 +283,31 @@ int main(int argc, char** argv)
         }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
     CMD("--inspect", [&](auto& args)
         {
-            if (!ctx) throw std::runtime_error("No file loaded");
-            ShellInspect(ctx.get(), args);
+            if (!st.file) throw std::runtime_error("No file loaded");
+            ShellInspect(st.file.get(), args);
         }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
     CMD("--inspect-stcm", [&](auto& args)
         {
-            EnsureStcm(ctx.get(), stcm);
-            ShellInspect(stcm, args);
+            EnsureStcm(st);
+            ShellInspect(st.stcm, args);
         }, "<out>|-\n\tInspects only the stcm portion of the currently loaded file into <out> or stdout\n");
-    CMD("--parse-stcm", [&](auto&) { EnsureStcm(ctx.get(), stcm); },
+    CMD("--parse-stcm", [&](auto&) { EnsureStcm(st); },
         "\n\tParse STCM-inside-CL3 (usually done automatically)\n");
     CMD("--export-txt", [&](auto& args) -> void
         {
-            EnsureStcm(ctx.get(), stcm);
-            auto gbnl = FindGbnl(*stcm);
-            ShellDumpGen(gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
+            EnsureGbnl(st);
+            ShellDumpGen(st.gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
         }, "<out_file>|-\n\tExport text to <out_file> or stdout\n");
     CMD("--import-txt", [&](auto& args)
         {
             if (args.empty()) throw InvalidParameters{};
-            EnsureStcm(ctx.get(), stcm);
-            auto gbnl = FindGbnl(*stcm);
+            EnsureGbnl(st);
             auto fname = args.front(); args.pop_front();
             if (fname[0] == '-' && fname[1] == '\0')
-                gbnl->ReadTxt(std::cin);
+                st.gbnl->ReadTxt(std::cin);
             else
-                gbnl->ReadTxt(OpenIn(fname));
-            stcm->Fixup();
+                st.gbnl->ReadTxt(OpenIn(fname));
+            if (st.stcm) st.stcm->Fixup();
         }, "<in_file>|-\n\tRead text from <in_file> or stdin\n");
 
     try

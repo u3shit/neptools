@@ -6,6 +6,8 @@
 #include <iosfwd>
 #include <boost/assert.hpp>
 
+using Byte = unsigned char;
+
 template <typename T, typename P>
 void EraseIf(T& cnt, P fun)
 {
@@ -34,5 +36,11 @@ T asserted_cast(U* ptr)
 
 std::ofstream OpenOut(const fs::path& pth);
 std::ifstream OpenIn(const fs::path& pth);
+
+void DumpBytes(std::ostream& os, const Byte* data, size_t len);
+inline void DumpBytes(std::ostream& os, const char* data, size_t len)
+{ DumpBytes(os, reinterpret_cast<const Byte*>(data), len); }
+inline void DumpBytes(std::ostream& os, const std::string& str)
+{ DumpBytes(os, str.data(), str.size()); }
 
 #endif

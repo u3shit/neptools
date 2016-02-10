@@ -95,8 +95,11 @@ void SectionsItem::PrettyPrint(std::ostream& os) const
     Item::PrettyPrint(os);
 
     for (const auto& e : entries)
-        os << "section(" << e.name << ", " << e.count << ", @" << e.data->first
-           << ")\n";
+    {
+        os << "section(";
+        DumpBytes(os, e.name.c_str(), e.name.length());
+        os << ", " << e.count << ", @" << e.data->first << ")\n";
+    }
 }
 
 void SectionEntryItem::PrettyPrint(std::ostream& os) const
