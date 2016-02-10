@@ -3,11 +3,11 @@
 #pragma once
 
 #include "item_base.hpp"
+#include "fs.hpp"
 #include <memory>
 #include <string>
 #include <map>
 #include <unordered_map>
-#include <boost/filesystem/path.hpp>
 
 class Context
 {
@@ -41,7 +41,7 @@ public:
     void UpdatePositions();
     void Dump(std::ostream& os) const;
     void Dump(std::ostream&& os) const { return Dump(os); }
-    void Dump(const boost::filesystem::path& path) const;
+    void Dump(const fs::path& path) const;
 
     // properties needed: sorted
     using PointerMap = std::map<FilePosition, Item*>;

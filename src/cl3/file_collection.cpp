@@ -7,7 +7,6 @@
 #include <fstream>
 
 #include <boost/assert.hpp>
-#include <boost/filesystem/operations.hpp>
 
 namespace Cl3
 {
@@ -146,10 +145,10 @@ void FileCollectionItem::RedoPadding()
     while (it) it = PadItem(it);
 }
 
-void FileCollectionItem::ExtractTo(const boost::filesystem::path& dir) const
+void FileCollectionItem::ExtractTo(const fs::path& dir) const
 {
-    if (!boost::filesystem::is_directory(dir))
-        boost::filesystem::create_directories(dir);
+    if (!fs::is_directory(dir))
+        fs::create_directories(dir);
     for (const auto& e : entries)
     {
         auto os = OpenOut(dir / e.name.c_str());

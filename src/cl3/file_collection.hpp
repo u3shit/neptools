@@ -4,8 +4,8 @@
 
 #include "../fixed_string.hpp"
 #include "../raw_item.hpp"
+#include "../fs.hpp"
 #include <boost/endian/arithmetic.hpp>
-#include <boost/filesystem/path.hpp>
 
 namespace Cl3
 {
@@ -65,7 +65,7 @@ public:
     { ReplaceFile(name.c_str(), std::move(nitem)); }
     void RedoPadding();
 
-    void ExtractTo(const boost::filesystem::path& dir) const;
+    void ExtractTo(const fs::path& dir) const;
 
     struct Entry
     {

@@ -2,9 +2,9 @@
 #define BUFFER_HPP
 #pragma once
 
+#include "fs.hpp"
 #include <string>
 #include <memory>
-#include <boost/filesystem/path.hpp>
 
 using Byte = unsigned char;
 
@@ -57,6 +57,6 @@ private:
     std::string s;
 };
 
-std::shared_ptr<Buffer> ReadFile(const boost::filesystem::path& file);
+std::shared_ptr<Buffer> ReadFile(const fs::path& file);
 
 #endif

@@ -9,8 +9,8 @@
 
 template <size_t N>
 class FixedString :
-    boost::totally_ordered<FixedString<N>>,
-    boost::totally_ordered<FixedString<N>, const char*>
+    boost::totally_ordered<FixedString<N>,
+        boost::totally_ordered<FixedString<N>, const char*>>
 {
 public:
     FixedString() = default;

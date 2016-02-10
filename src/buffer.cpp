@@ -53,7 +53,7 @@ StringBuffer::StringBuffer(std::string buf)
     read_only = false;
 }
 
-std::shared_ptr<Buffer> ReadFile(const boost::filesystem::path& fname)
+std::shared_ptr<Buffer> ReadFile(const fs::path& fname)
 {
 #if !defined(_WIN32) && !defined(_WIN64)
     try

@@ -2,7 +2,7 @@
 #define UTILS_HPP
 #pragma once
 
-#include <boost/filesystem/path.hpp>
+#include "fs.hpp"
 #include <iosfwd>
 
 template <typename T, typename P>
@@ -38,7 +38,7 @@ std::unique_ptr<D> static_cast_ptr(std::unique_ptr<B>&& base)
     return std::unique_ptr<D>(static_cast<D*>(base.release()));
 }
 
-std::ofstream OpenOut(const boost::filesystem::path& pth);
-std::ifstream OpenIn(const boost::filesystem::path& pth);
+std::ofstream OpenOut(const fs::path& pth);
+std::ifstream OpenIn(const fs::path& pth);
 
 #endif

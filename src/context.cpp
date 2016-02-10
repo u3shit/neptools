@@ -2,7 +2,6 @@
 #include "item.hpp"
 #include "utils.hpp"
 #include <boost/assert.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -97,11 +96,11 @@ void Context::Dump(std::ostream& os) const
         it->Dump(os);
 }
 
-void Context::Dump(const boost::filesystem::path& path) const
+void Context::Dump(const fs::path& path) const
 {
     auto path2 = path;
     Dump(OpenOut(path2+=".tmp"));
-    boost::filesystem::rename(path2, path);
+    fs::rename(path2, path);
 }
 
 std::ostream& operator<<(std::ostream& os, const Context& ctx)

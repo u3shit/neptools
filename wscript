@@ -10,16 +10,30 @@ out = 'build'
 
 def options(opt):
     opt.load('compiler_cxx boost')
+    opt.add_option('--msvc-hack', action='store_true', default=False)
 
 def configure(cfg):
+    if cfg.options.msvc_hack:
+        if 'LINK_CXX' in cfg.environ:
+            cfg.env['LINK_CXX'] = cfg.environ['LINK_CXX']
+        cfg.load('msvc', funs='no_autodetect')
+
+        from waflib.Tools.compiler_cxx import cxx_compiler
+        from waflib import Utils
+        cxx_compiler[Utils.unversioned_sys_platform()] = ['msvc']
+
     cfg.load('compiler_cxx boost clang_compilation_database')
 
-    cfg.check_cxx(cxxflags='-std=c++14')
-    cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
-    cfg.env.append_value('CXXFLAGS', cfg.filter_flags([
-        '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses']))
-
-    cfg.check_boost(lib='filesystem system')
+    if cfg.env['COMPILER_CXX'] == 'msvc':
+        cfg.env.append_value('CXXFLAGS', ['/EHsc'])
+        cfg.check_boost()
+    else:
+        cfg.check_cxx(cxxflags='-std=c++14')
+        cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
+        cfg.env.append_value('CXXFLAGS', cfg.filter_flags([
+            '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic',
+            '-Wno-parentheses']))
+        cfg.check_boost(lib='filesystem system')
 
 def build(bld):
     src = [

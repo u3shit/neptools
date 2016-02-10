@@ -4,14 +4,12 @@
 #include "cl3/file_collection.hpp"
 #include "stcm/file.hpp"
 #include "stcm/gbnl.hpp"
+#include "fs.hpp"
 #include "utils.hpp"
 #include <iostream>
 #include <fstream>
 #include <deque>
-#include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-namespace fs = boost::filesystem;
 
 namespace
 {
@@ -235,7 +233,7 @@ int main(int argc, char** argv)
             for (const auto& e : cl3->GetFileCollection().entries)
                 std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
         }, "\n\tLists the contents of the cl3 archive\n");
-    CMD("--extract-file", [&](auto& args)
+    CMD("--extract-file", [&](auto& args) -> void
         {
             if (args.size() < 2) throw InvalidParameters{};
             if (!cl3) throw std::runtime_error("No cl3 loaded");
@@ -277,7 +275,7 @@ int main(int argc, char** argv)
         }, "<out>|-\n\tInspects only the stcm portion of the currently loaded file into <out> or stdout\n");
     CMD("--parse-stcm", [&](auto&) { EnsureStcm(ctx.get(), stcm); },
         "\n\tParse STCM-inside-CL3 (usually done automatically)\n");
-    CMD("--export-txt", [&](auto& args)
+    CMD("--export-txt", [&](auto& args) -> void
         {
             EnsureStcm(ctx.get(), stcm);
             auto gbnl = FindGbnl(*stcm);

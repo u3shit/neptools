@@ -1,9 +1,13 @@
 #include "utils.hpp"
-#include <boost/filesystem/fstream.hpp>
+#include <fstream>
 
-// BOOST_FILESYSTEM_C_STR: workaround the fact that boost::filesystem developers
-// still live in 1998.
-std::ofstream OpenOut(const boost::filesystem::path& pth)
+// workaround incompatibilities between msvc filesystem, mingw ofstream (no wide
+// char open) and linux...
+#ifndef BOOST_FILESYSTEM_C_STR
+#define BOOST_FILESYSTEM_C_STR c_str()
+#endif
+
+std::ofstream OpenOut(const fs::path& pth)
 {
     std::ofstream os;
     os.exceptions(std::ios_base::failbit | std::ios_base::badbit);
@@ -11,7 +15,7 @@ std::ofstream OpenOut(const boost::filesystem::path& pth)
     return os;
 }
 
-std::ifstream OpenIn(const boost::filesystem::path& pth)
+std::ifstream OpenIn(const fs::path& pth)
 {
     std::ifstream is;
     is.exceptions(std::ios_base::failbit | std::ios_base::badbit);
