@@ -63,7 +63,7 @@ State SmartOpen(const fs::path& fname)
         return {std::move(gbnl), nullptr, nullptr, ret2};
     }
     else
-        throw std::runtime_error("Invalid input file");
+        throw std::runtime_error{"Unknown input file"};
 }
 
 template <typename T, typename Fun>
@@ -92,10 +92,11 @@ void EnsureStcm(State& st)
 {
     if (st.stcm) return;
     if (!st.file) throw std::runtime_error{"No file loaded"};
-    if (!st.cl3) throw std::runtime_error{"Invalid file loaded"};
+    if (!st.cl3)
+        throw std::runtime_error{"Invalid file loaded: can't find STCM without CL3"};
 
     auto dat = st.cl3->GetFileCollection().GetFile("main.DAT");
-    if (!dat) throw std::runtime_error("Invalid CL3 file");
+    if (!dat) throw std::runtime_error{"Invalid CL3 file: no main.DAT"};
 
     auto ritem = asserted_cast<RawItem*>(dat->GetChildren());
     auto nstcm = st.cl3->Create<ContextItem<Stcm::File>>(
@@ -124,7 +125,7 @@ void EnsureGbnl(State& st)
 
     st.gbnl = FindGbnl(st.stcm->GetRoot());
     if (!st.gbnl)
-        throw std::runtime_error("No GBNL found");
+        throw std::runtime_error{"No GBNL found in STCM"};
 }
 
 template <typename Pred, typename Fun>
@@ -235,7 +236,7 @@ int main(int argc, char** argv)
         }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
     CMD("--save", [&](auto& args)
         {
-            if (!st.file) throw std::runtime_error{"No file loaded"};
+            if (!st.file) throw std::runtime_error{"--save: No file loaded"};
             st.file->Fixup();
             ShellDump(st.file.get(), args);
         }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
@@ -247,34 +248,38 @@ int main(int argc, char** argv)
         }, "\n\tCreates an empty cl3 file\n");
     CMD("--list-files", [&](auto&)
         {
-            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            if (!st.cl3)
+                throw std::runtime_error{"--list-files: No cl3 loaded"};
             for (const auto& e : st.cl3->GetFileCollection().entries)
                 std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
         }, "\n\tLists the contents of the cl3 archive\n");
     CMD("--extract-file", [&](auto& args) -> void
         {
             if (args.size() < 2) throw InvalidParameters{};
-            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            if (!st.cl3)
+                throw std::runtime_error{"--extract-file: No cl3 loaded"};
             const auto& col = st.cl3->GetFileCollection().entries;
             auto fn = args.front(); args.pop_front();
             auto it = std::find_if(col.begin(), col.end(),
                                    [fn](auto& e) { return e.name == fn; });
             if (it == col.end())
-                throw std::runtime_error{"specified file not found"};
+                throw std::runtime_error{"--extract-file: specified file not found"};
             else
                 ShellDump(it->data->second.item, args);
         }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
     CMD("--extract-files", [&](auto& args)
         {
             if (args.empty()) throw InvalidParameters{};
-            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            if (!st.cl3)
+                throw std::runtime_error{"--extract-file: No cl3 loaded"};
             st.cl3->GetFileCollection().ExtractTo(args.front());
             args.pop_front();
         }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
     CMD("--replace-file", [&](auto& args)
         {
             if (args.size() < 2) throw InvalidParameters{};
-            if (!st.cl3) throw std::runtime_error("No cl3 loaded");
+            if (!st.cl3)
+                throw std::runtime_error{"--replace-file: No cl3 loaded"};
             auto& fc = st.cl3->GetFileCollection();
 
             fc.ReplaceFile(
@@ -283,7 +288,7 @@ int main(int argc, char** argv)
         }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
     CMD("--inspect", [&](auto& args)
         {
-            if (!st.file) throw std::runtime_error("No file loaded");
+            if (!st.file) throw std::runtime_error{"--inspect: No file loaded"};
             ShellInspect(st.file.get(), args);
         }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
     CMD("--inspect-stcm", [&](auto& args)
