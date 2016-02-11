@@ -23,7 +23,6 @@ File::File()
         CreateLabelFallback("FILE_COLLECTION", {sec_entry.get(), 0})
     });
 
-    hdr->num_sections = 1;
     hdr->sections = CreateLabelFallback("sections", {sec.get(), 0});
 
     Item* ptr = hdr.get();

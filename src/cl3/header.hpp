@@ -26,7 +26,7 @@ class HeaderItem final : public Item
 {
 public:
     HeaderItem(Key k, Context* ctx)
-        : Item{k, ctx}, num_sections{0}, sections{nullptr} {}
+        : Item{k, ctx}, sections{nullptr} {}
     HeaderItem(Key k, Context* ctx, const Header* hdr);
     static HeaderItem* CreateAndInsert(ItemPointer ptr);
 
@@ -37,7 +37,7 @@ public:
     const SectionsItem& GetSections() const noexcept { return GetSectionsInt(); }
     SectionsItem& GetSections() noexcept { return GetSectionsInt(); }
 
-    uint32_t num_sections, field_14;
+    uint32_t field_14;
     const Label* sections;
 
 private:

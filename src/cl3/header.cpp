@@ -20,7 +20,6 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
     if (!raw->IsValid(GetContext()->GetSize()))
         throw std::runtime_error("Invalid Cl3 header");
 
-    num_sections = raw->num_sections;
     field_14 = raw->field_14;
     sections = ctx->CreateLabelFallback("sections", raw->secs_offset);
 }
@@ -28,11 +27,12 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
 HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::Get<Header>(ptr);
+    size_t num_secs = x.ptr->num_sections;
     if (x.len < sizeof(Header))
         throw std::out_of_range("Cl3 header too short");
 
     auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.ptr);
-    SectionsItem::CreateAndInsert(ret->sections->second, ret->num_sections);
+    SectionsItem::CreateAndInsert(ret->sections->second, num_secs);
     return ret;
 }
 
@@ -42,7 +42,7 @@ void HeaderItem::Dump(std::ostream& os) const
     memcpy(hdr.magic, "CL3L", 4);
     hdr.field_04 = 0;
     hdr.field_08 = 3;
-    hdr.num_sections = num_sections;
+    hdr.num_sections = sections->second.AsChecked0<SectionsItem>().entries.size();
     hdr.secs_offset = ToFilePos(sections->second);
     hdr.field_14 = field_14;
 
@@ -53,8 +53,7 @@ void HeaderItem::PrettyPrint(std::ostream& os) const
 {
     Item::PrettyPrint(os);
 
-    os << "cl3(" << num_sections << ", @" << sections->first << ", "
-       << field_14 << ')';
+    os << "cl3(@" << sections->first << ", " << field_14 << ')';
 }
 
 SectionsItem& HeaderItem::GetSectionsInt() const noexcept
