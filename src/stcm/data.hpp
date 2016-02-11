@@ -23,7 +23,6 @@ class DataItem final : public Item
 {
 public:
     DataItem(Key k, Context* ctx, const DataHeader* hdr, size_t chunk_size);
-    static void MaybeCreate(ItemPointer ptr);
     static DataItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;

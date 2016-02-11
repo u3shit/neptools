@@ -47,4 +47,14 @@ private:
     std::shared_ptr<Buffer> buf;
 };
 
+template <typename T>
+inline void MaybeCreate(ItemPointer ptr)
+{
+    auto item = ptr.Maybe<RawItem>();
+    if (item)
+        T::CreateAndInsert(ptr);
+    else
+        ptr.As0<T>(); // assert it
+}
+
 #endif

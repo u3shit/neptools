@@ -38,7 +38,7 @@ ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, size_t export_count)
         Create<ExportsItem>(e, export_count));
 
     for (const auto& e : ret->entries)
-        InstructionItem::MaybeCreate(e.second->second);
+        MaybeCreate<InstructionItem>(e.second->second);
     return ret;
 }
 

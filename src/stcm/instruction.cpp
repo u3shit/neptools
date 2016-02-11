@@ -186,15 +186,6 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
 
 static const std::set<uint32_t> no_returns{0, 6};
 
-void InstructionItem::MaybeCreate(ItemPointer ptr)
-{
-    auto item = ptr.Maybe<RawItem>();
-    if (item)
-        InstructionItem::CreateAndInsert(ptr);
-    else
-        ptr.As0<InstructionItem>(); // assert it
-}
-
 InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto& ritem = ptr.AsChecked<RawItem>();
@@ -216,16 +207,16 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 
     // recursive parse
     if (ret->is_call)
-        MaybeCreate(ret->target->second);
+        MaybeCreate<InstructionItem>(ret->target->second);
     if (ret->is_call || !no_returns.count(ret->opcode))
-        MaybeCreate({ret->GetNext(), 0});
+        MaybeCreate<InstructionItem>({ret->GetNext(), 0});
     for (const auto& p : ret->params)
     {
         if (p.type == InstructionItem::Param::MEM_OFFSET)
-            DataItem::MaybeCreate(p.param_0.label->second);
+            MaybeCreate<DataItem>(p.param_0.label->second);
         else if (p.type == InstructionItem::Param::INSTR_PTR0 ||
             p.type == InstructionItem::Param::INSTR_PTR1)
-            MaybeCreate(p.param_4.label->second);
+            MaybeCreate<InstructionItem>(p.param_4.label->second);
     }
 
     return ret;

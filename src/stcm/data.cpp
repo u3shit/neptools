@@ -24,15 +24,6 @@ DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size
     field_8 = raw->field_8;
 }
 
-void DataItem::MaybeCreate(ItemPointer ptr)
-{
-    auto item = ptr.Maybe<RawItem>();
-    if (item)
-        DataItem::CreateAndInsert(ptr);
-    else
-        ptr.As0<DataItem>(); // assert it
-}
-
 DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 {
     auto& ritem = ptr.AsChecked<RawItem>();

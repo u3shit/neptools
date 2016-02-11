@@ -83,7 +83,6 @@ class InstructionItem final : public ItemWithChildren
 public:
     InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context* ctx, const Instruction* instr);
-    static void MaybeCreate(ItemPointer ptr);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;
