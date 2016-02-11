@@ -20,9 +20,8 @@ bool FileEntry::IsValid(size_t rem_size) const noexcept
 }
 
 FileCollectionItem::FileCollectionItem(
-    Key k, Context* ctx, FilePosition pos, const FileEntry* e, size_t count,
-    SectionsItem* secs)
-    : Item{k, ctx, pos}, secs{secs}
+    Key k, Context* ctx, const FileEntry* e, size_t count, SectionsItem* secs)
+    : Item{k, ctx}, secs{secs}
 {
     entries.reserve(count);
     auto size = GetContext()->GetSize();
@@ -38,29 +37,29 @@ FileCollectionItem::FileCollectionItem(
 }
 
 FileCollectionItem* FileCollectionItem::CreateAndInsert(
-    RawItem* ritem, size_t cnt, SectionsItem* secs)
+    ItemPointer ptr, size_t cnt, SectionsItem* secs)
 {
-    auto s = reinterpret_cast<const FileEntry*>(ritem->GetPtr());
+    auto x = RawItem::Get<FileEntry>(ptr);
 
-    if (ritem->GetSize() < cnt * sizeof(FileEntry))
+    if (x.len < cnt * sizeof(FileEntry))
         throw std::out_of_range("Cl3 FILE_COLLECTION too short");
 
-    auto ret = ritem->Split(0, ritem->GetContext()->
-        Create<FileCollectionItem>(ritem->GetPosition(), s, cnt, secs));
+    auto ret = x.ritem.SplitCreate<FileCollectionItem>(
+        ptr.offset, x.ptr, cnt, secs);
 
     for (size_t i = 0; i < cnt; ++i)
     {
         auto ptr2 = ret->GetContext()->GetPointer(
-            ret->GetPosition() + s[i].data_offset);
+            ret->GetPosition() + x.ptr[i].data_offset);
         auto& ritem2 = ptr2.AsChecked<RawItem>();
-        auto it2 = ritem2.Split(ptr2.offset, s[i].data_size);
+        auto it2 = ritem2.Split(ptr2.offset, x.ptr[i].data_size);
 
         it2->InsertAfter(ret->GetContext()->
             Create<FileDataItem>(it2->GetPosition()));
         auto entr = it2->GetNext();
         entr->PrependChild(it2->Remove());
         ret->entries[i].data = ret->GetContext()->
-            CreateLabelFallback(s[i].name.c_str(), {entr, 0});
+            CreateLabelFallback(x.ptr[i].name.c_str(), {entr, 0});
     }
     return ret;
 }

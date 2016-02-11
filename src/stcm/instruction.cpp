@@ -188,22 +188,22 @@ static const std::set<uint32_t> no_returns{0, 6};
 
 InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto& ritem = ptr.AsChecked<RawItem>();
-    auto instr = reinterpret_cast<const Instruction*>(ritem.GetPtr() + ptr.offset);
-    if (ritem.GetSize() - ptr.offset < Instruction::SIZE ||
-        ritem.GetSize() - ptr.offset < instr->size)
+    auto x = RawItem::Get<Instruction>(ptr);
+    uint32_t instr_size = x.ptr->size;
+    uint32_t param_count = x.ptr->param_count;
+    if (x.len < Instruction::SIZE ||
+        x.len < instr_size)
         throw std::runtime_error("Invalid instruction: premature end of data");
 
-    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
-        Create<InstructionItem>(instr));
+    auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.ptr);
 
-    auto rem_data = instr->size - Instruction::SIZE -
-        sizeof(Instruction::Parameter) * instr->param_count;
+    auto rem_data = instr_size - Instruction::SIZE -
+        sizeof(Instruction::Parameter) * param_count;
     if (rem_data)
         ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, rem_data)->Remove());
 
-    BOOST_ASSERT(ret->GetSize() == instr->size);
+    BOOST_ASSERT(ret->GetSize() == instr_size);
 
     // recursive parse
     if (ret->is_call)

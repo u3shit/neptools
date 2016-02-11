@@ -57,6 +57,9 @@ Gbnl::Gbnl(const Byte* data, size_t len)
             0});
     }
     RecalcSize();
+
+    if (GetSize() != len)
+        throw std::runtime_error("GBNL: invalid size after repack");
 }
 
 

@@ -25,14 +25,14 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
     sections = ctx->CreateLabelFallback("sections", raw->secs_offset);
 }
 
-HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
+HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
 {
-    if (ritem->GetSize() < sizeof(Header))
+    auto x = RawItem::Get<Header>(ptr);
+    if (x.len < sizeof(Header))
         throw std::out_of_range("Cl3 header too short");
-    auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
 
-    auto ret = ritem->Split(0, ritem->GetContext()->Create<HeaderItem>(raw));
-    SectionsItem::CreateAndInsert(ret);
+    auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.ptr);
+    SectionsItem::CreateAndInsert(ret->sections->second, ret->num_sections);
     return ret;
 }
 

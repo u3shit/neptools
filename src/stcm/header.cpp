@@ -29,14 +29,14 @@ HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
         "collection_link_hdr", raw->collection_link_offset);;
 }
 
-HeaderItem* HeaderItem::CreateAndInsert(RawItem* ritem)
+HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
 {
-    if (ritem->GetSize() < sizeof(Header))
+    auto x = RawItem::Get<Header>(ptr);
+    if (x.len < sizeof(Header))
         throw std::out_of_range("STCM header too short");
-    auto raw = reinterpret_cast<const Header*>(ritem->GetPtr());
-    size_t export_count = raw->export_count;
+    size_t export_count = x.ptr->export_count;
 
-    auto ret = ritem->Split(0, ritem->GetContext()->Create<HeaderItem>(raw));
+    auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.ptr);
     CollectionLinkHeaderItem::CreateAndInsert(ret->collection_link->second);
     ExportsItem::CreateAndInsert(ret->export_sec->second, export_count);
     return ret;

@@ -2,7 +2,7 @@
 #define RAW_ITEM_HPP
 #pragma once
 
-#include "item.hpp"
+#include "context.hpp"
 #include <boost/assert.hpp>
 
 class RawItem final : public Item
@@ -33,10 +33,26 @@ public:
         return ret;
     }
 
+    template <typename T, typename... Args>
+    T* SplitCreate(size_t pos, Args&&... args)
+    { return Split(pos, GetContext()->Create<T>(std::forward<Args>(args)...)); }
+
     RawItem* Split(size_t offset, size_t size);
 
     auto GetOffset() const noexcept { return offset; }
     auto GetBuffer() const noexcept { return buf; }
+
+    template <typename T>
+    static auto Get(ItemPointer ptr)
+    {
+        auto& ritem = ptr.AsChecked<RawItem>();
+        BOOST_ASSERT(ptr.offset <= ritem.GetSize());
+        struct Ret { RawItem& ritem; const T* ptr; size_t len; };
+        return Ret{
+            std::ref(ritem),
+            reinterpret_cast<const T*>(ritem.GetPtr() + ptr.offset),
+            ritem.GetSize() - ptr.offset};
+    }
 
 protected:
     std::unique_ptr<RawItem> InternalSlice(size_t offset, size_t size);

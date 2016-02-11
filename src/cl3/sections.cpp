@@ -32,34 +32,29 @@ SectionsItem::SectionsItem(Key k, Context* ctx, const Section* s, size_t count)
     }
 }
 
-SectionsItem* SectionsItem::CreateAndInsert(const HeaderItem* hdr)
+SectionsItem* SectionsItem::CreateAndInsert(ItemPointer ptr, size_t cnt)
 {
-    auto& ptr = hdr->sections->second;
-    auto& ritem = ptr.AsChecked<RawItem>();
-    auto s = reinterpret_cast<const Section*>(ritem.GetPtr() + ptr.offset);
-
-    uint32_t cnt = hdr->num_sections;
-    if (ritem.GetSize() < cnt * sizeof(Section))
+    auto x = RawItem::Get<Section>(ptr);
+    if (x.len < cnt * sizeof(Section))
         throw std::out_of_range("Cl3 sections too short");
 
-    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
-        Create<SectionsItem>(s, cnt));
+    auto ret = x.ritem.SplitCreate<SectionsItem>(ptr.offset, x.ptr, cnt);
 
     for (size_t i = 0; i < cnt; ++i)
     {
-        auto ptr2 = ret->GetContext()->GetPointer(s[i].data_offset);
+        auto ptr2 = ret->GetContext()->GetPointer(x.ptr[i].data_offset);
         auto& ritem2 = ptr2.AsChecked<RawItem>();
-        auto it2 = ritem2.Split(ptr2.offset, s[i].data_size);
+        auto it2 = ritem2.Split(ptr2.offset, x.ptr[i].data_size);
 
         it2->InsertAfter(ret->GetContext()->
             Create<SectionEntryItem>(it2->GetPosition()));
         auto entr = it2->GetNext();
         entr->PrependChild(it2->Remove());
         ret->entries[i].data = ret->GetContext()->
-            CreateLabelFallback(s[i].name.c_str(), {entr, 0});
+            CreateLabelFallback(x.ptr[i].name.c_str(), {entr, 0});
 
-        if (s[i].name == "FILE_COLLECTION")
-            FileCollectionItem::CreateAndInsert(it2, s[i].count, ret);
+        if (x.ptr[i].name == "FILE_COLLECTION")
+            FileCollectionItem::CreateAndInsert({it2, 0}, x.ptr[i].count, ret);
     }
     return ret;
 }

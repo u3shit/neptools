@@ -10,13 +10,10 @@ GbnlItem::GbnlItem(Key k, Context* ctx, const Byte* data, size_t len)
 {
 }
 
-GbnlItem* GbnlItem::CreateAndInsert(RawItem* ritem)
+GbnlItem* GbnlItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto nitem = ritem->GetContext()->Create<GbnlItem>(
-        ritem->GetPtr(), ritem->GetSize());
-    auto ret = nitem.get();
-    ritem->Replace(std::move(nitem));
-    return ret;
+    auto x = RawItem::Get<Byte>(ptr);
+    return x.ritem.SplitCreate<GbnlItem>(ptr.offset, x.ptr, x.len);
 }
 
 }

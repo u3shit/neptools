@@ -37,10 +37,10 @@ class FileCollectionItem final : public Item
 public:
     FileCollectionItem(Key k, Context* ctx, SectionsItem* secs)
         : Item{k, ctx}, secs{secs} {}
-    FileCollectionItem(Key k, Context* ctx, FilePosition pos,
-                       const FileEntry* e, size_t count, SectionsItem* secs);
+    FileCollectionItem(Key k, Context* ctx, const FileEntry* e, size_t count,
+                       SectionsItem* secs);
     static FileCollectionItem* CreateAndInsert(
-        RawItem* ritem, size_t count, SectionsItem* secs);
+        ItemPointer ptr, size_t count, SectionsItem* secs);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;

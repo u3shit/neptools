@@ -37,15 +37,11 @@ CollectionLinkHeaderItem::CollectionLinkHeaderItem(
 CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     ItemPointer ptr)
 {
-    auto& ritem = ptr.AsChecked<RawItem>();
-    auto hdr = reinterpret_cast<const CollectionLinkHeader*>(
-        ritem.GetPtr() + ptr.offset);
-
-    size_t count = hdr->count;
-    if (ritem.GetSize() - ptr.offset < sizeof(CollectionLinkHeader))
+    auto x = RawItem::Get<CollectionLinkHeader>(ptr);
+    size_t count = x.ptr->count;
+    if (x.len < sizeof(CollectionLinkHeader))
         throw std::runtime_error("Collection link header: premature end of data");
-    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
-        Create<CollectionLinkHeaderItem>(hdr));
+    auto ret = x.ritem.SplitCreate<CollectionLinkHeaderItem>(ptr.offset, x.ptr);
 
     auto ptr2 = ret->data->second;
     auto* ritem2 = ptr2.Maybe<RawItem>();
@@ -59,13 +55,11 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
         return ret;
     }
 
-    auto e = reinterpret_cast<const CollectionLinkEntry*>(
-        ritem2->GetPtr() + ptr2.offset);
+    auto e = RawItem::Get<CollectionLinkEntry>(ptr2);
 
-    if (ritem2->GetSize() - ptr.offset < count*sizeof(CollectionLinkItem))
+    if (e.len < count*sizeof(CollectionLinkItem))
         throw std::runtime_error("Collection link: premature end of data");
-    ritem2->Split(ptr2.offset, ritem2->GetContext()->
-        Create<CollectionLinkItem>(e, count));
+    e.ritem.SplitCreate<CollectionLinkItem>(ptr2.offset, e.ptr, count);
 
     return ret;
 }

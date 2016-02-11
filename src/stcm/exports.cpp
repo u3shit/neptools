@@ -29,13 +29,11 @@ ExportsItem::ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t expor
 
 ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, size_t export_count)
 {
-    auto& ritem = ptr.AsChecked<RawItem>();
-    auto e = reinterpret_cast<const ExportEntry*>(ritem.GetPtr() + ptr.offset);
+    auto x = RawItem::Get<ExportEntry>(ptr);
 
-    if (ritem.GetSize() - ptr.offset < export_count*sizeof(ExportEntry))
+    if (x.len < export_count*sizeof(ExportEntry))
         throw std::runtime_error("Invalid export entry: premature end of data");
-    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->
-        Create<ExportsItem>(e, export_count));
+    auto ret = x.ritem.SplitCreate<ExportsItem>(ptr.offset, x.ptr, export_count);
 
     for (const auto& e : ret->entries)
         MaybeCreate<InstructionItem>(e.second->second);

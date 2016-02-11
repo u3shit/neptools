@@ -13,7 +13,7 @@ File::File(std::shared_ptr<Buffer> buf, size_t offset, size_t len)
     auto root_sav = root.get();
     SetRoot(std::move(root));
     root_sav->Split(root_sav->GetSize(), Create<EofItem>());
-    HeaderItem::CreateAndInsert(root_sav);
+    HeaderItem::CreateAndInsert({root_sav, 0});
 }
 
 }

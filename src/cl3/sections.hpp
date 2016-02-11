@@ -36,7 +36,7 @@ class SectionsItem final : public Item
 public:
     SectionsItem(Key k, Context* ctx) : Item{k, ctx} {}
     SectionsItem(Key k, Context* ctx, const Section* s, size_t count);
-    static SectionsItem* CreateAndInsert(const HeaderItem* hdr);
+    static SectionsItem* CreateAndInsert(ItemPointer ptr, size_t num_sections);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;

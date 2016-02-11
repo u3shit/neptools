@@ -35,7 +35,7 @@ class HeaderItem final : public Item
 {
 public:
     HeaderItem(Key k, Context* ctx, const Header* hdr);
-    static HeaderItem* CreateAndInsert(RawItem* ritem);
+    static HeaderItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;

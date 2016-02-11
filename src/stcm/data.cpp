@@ -26,15 +26,13 @@ DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size
 
 DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto& ritem = ptr.AsChecked<RawItem>();
-    auto hdr = reinterpret_cast<const DataHeader*>(ritem.GetPtr() + ptr.offset);
-    uint32_t data_length = hdr->length; // hdr may be invalidated by Split...
-    auto rem_size = ritem.GetSize() - ptr.offset;
-    if (rem_size < sizeof(DataHeader))
+    auto x = RawItem::Get<DataHeader>(ptr);
+    uint32_t data_length = x.ptr->length; // hdr may be invalidated by Split...
+    if (x.len < sizeof(DataHeader))
         throw std::runtime_error("Data header: premature end of data");
 
-    auto ret = ritem.Split(ptr.offset, ritem.GetContext()->Create<DataItem>(
-        hdr, rem_size - sizeof(DataHeader)));
+    auto ret = x.ritem.SplitCreate<DataItem>(
+        ptr.offset, x.ptr, x.len - sizeof(DataHeader));
     if (data_length > 0)
         ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, data_length)->Remove());
@@ -44,7 +42,7 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
     auto child = dynamic_cast<RawItem*>(ret->GetChildren());
     if (child && child->GetSize() > sizeof(GbnlFooter) &&
         memcmp(child->GetPtr() + child->GetSize() - sizeof(GbnlFooter), "GBNL", 4) == 0)
-        GbnlItem::CreateAndInsert(child);
+        GbnlItem::CreateAndInsert({child, 0});
 
     return ret;
 }
