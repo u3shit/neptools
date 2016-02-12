@@ -57,7 +57,7 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
 
     auto e = RawItem::Get<CollectionLinkEntry>(ptr2);
 
-    if (e.len < count*sizeof(CollectionLinkItem))
+    if (e.len < count*sizeof(CollectionLinkEntry))
         throw std::runtime_error("Collection link: premature end of data");
     e.ritem.SplitCreate<CollectionLinkItem>(ptr2.offset, e.ptr, count);
 
