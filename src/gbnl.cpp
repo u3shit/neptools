@@ -6,13 +6,11 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
-#include <iostream>
-
 bool GbnlFooter::IsValid(size_t chunk_size) const noexcept
 {
     return memcmp(magic, "GBNL", 4) == 0 &&
         field_04 == 1 && field_08 == 16 && field_0c == 4 &&
-        flags == 1 && descr_offset == 0 &&
+        descr_offset == 0 &&
         descr_offset + msg_descr_size * count_msgs < chunk_size &&
         field_22 == 0 &&
         offset_types + sizeof(GbnlTypeDescriptor) * count_types < chunk_size &&
@@ -20,14 +18,12 @@ bool GbnlFooter::IsValid(size_t chunk_size) const noexcept
         field_34 == 0 && field_38 == 0 && field_3c == 0;
 }
 
-static void SetUsed(std::vector<bool>& used, size_t offset, size_t len)
+static void CheckOffs(size_t& val, size_t expect, size_t size, size_t align)
 {
-    for (size_t i = 0; i < len; ++i)
-    {
-        if (used[offset+i])
-            throw std::runtime_error{"GBNL: overlapping values"};
-        used[offset+i] = true;
-    }
+    val = (val + align - 1) / align * align;
+    if (val != expect)
+        throw std::runtime_error{"GBNL: invalid type offset"};
+    val += size;
 }
 
 Gbnl::Gbnl(const Byte* data, size_t len)
@@ -39,44 +35,55 @@ Gbnl::Gbnl(const Byte* data, size_t len)
         data + len - sizeof(GbnlFooter));
     if (!foot->IsValid(len))
         throw std::runtime_error{"GBNL: invalid footer"};
+    flags = foot->flags;
     field_28 = foot->field_28;
     field_30 = foot->field_30;
 
     auto types = reinterpret_cast<const GbnlTypeDescriptor*>(
         data + foot->offset_types);
     msg_descr_size = foot->msg_descr_size;
-    std::vector<bool> used_bytes;
-    used_bytes.resize(msg_descr_size);
+    size_t calc_offs = 0;
 
-    DynamicStruct::StructTypeBuilder bld;
+    Struct::TypeBuilder bld;
     for (size_t i = 0; i < foot->count_types; ++i)
         switch (types[i].type)
         {
-        case GbnlTypeDescriptor::UINT_8:
-            SetUsed(used_bytes, types[i].offset, 1);
-            bld.Add<uint8_t>();
+        case GbnlTypeDescriptor::UINT8:
+            if (i+1 == foot->count_types || // last item
+                types[i+1].offset == types[i].offset+1)
+            {
+                // single char
+                CheckOffs(calc_offs, types[i].offset, 1, 1);
+                bld.Add<uint8_t>();
+            }
+            else
+            {
+                auto len = types[i+1].offset - types[i].offset;
+                CheckOffs(calc_offs, types[i].offset, len, 1);
+                bld.Add<FixStringTag>(len);
+            }
             break;
-        case GbnlTypeDescriptor::UINT_16:
-            SetUsed(used_bytes, types[i].offset, 2);
+        case GbnlTypeDescriptor::UINT16:
+            CheckOffs(calc_offs, types[i].offset, 2, 2);
             bld.Add<uint16_t>();
             break;
-        case GbnlTypeDescriptor::UINT_32:
-            SetUsed(used_bytes, types[i].offset, 4);
+        case GbnlTypeDescriptor::UINT32:
+            CheckOffs(calc_offs, types[i].offset, 4, 4);
             bld.Add<uint32_t>();
             break;
         case GbnlTypeDescriptor::FLOAT:
-            SetUsed(used_bytes, types[i].offset, 4);
+            CheckOffs(calc_offs, types[i].offset, 4, 4);
             bld.Add<float>();
             break;
         case GbnlTypeDescriptor::STRING:
-            SetUsed(used_bytes, types[i].offset, 4);
+            CheckOffs(calc_offs, types[i].offset, 4, 4);
             bld.Add<OffsetString>();
             break;
         default:
             throw std::runtime_error{"GBNL: invalid type"};
         }
-    if (std::find(used_bytes.begin(), used_bytes.end(), false) != used_bytes.end())
-        throw std::runtime_error{"GBNL: hole in values"};
+    if (((calc_offs + 3) & ~3) != msg_descr_size)
+        throw std::runtime_error{"GBNL: type array incomplete/bad padding"};
 
     type = bld.Build();
 
@@ -89,36 +96,52 @@ Gbnl::Gbnl(const Byte* data, size_t len)
         for (size_t i = 0; i < foot->count_types; ++i)
         {
             auto ptr = msgs + types[i].offset;
-            switch (types[i].type)
+            switch (type->items[i].idx)
             {
-            case GbnlTypeDescriptor::UINT_8:
+            case Struct::GetIndexFromType<uint8_t>():
                 m.Get<uint8_t>(i) = *reinterpret_cast<
                     const boost::endian::little_uint8_t*>(ptr);
                 break;
-            case GbnlTypeDescriptor::UINT_16:
+            case Struct::GetIndexFromType<uint16_t>():
                 m.Get<uint16_t>(i) = *reinterpret_cast<
                     const boost::endian::little_uint16_t*>(ptr);
                 break;
-            case GbnlTypeDescriptor::UINT_32:
+            case Struct::GetIndexFromType<uint32_t>():
                 m.Get<uint32_t>(i) = *reinterpret_cast<
                     const boost::endian::little_uint32_t*>(ptr);
                 break;
-            case GbnlTypeDescriptor::FLOAT:
+            case Struct::GetIndexFromType<float>():
             {
                 uint32_t x = *reinterpret_cast<
                     const boost::endian::little_uint32_t*>(ptr);
                 m.Get<float>(i) = *reinterpret_cast<float*>(&x);
                 break;
             }
-            case GbnlTypeDescriptor::STRING:
+            case Struct::GetIndexFromType<OffsetString>():
+            {
                 uint32_t offs = *reinterpret_cast<
                     const boost::endian::little_uint32_t*>(ptr);
-                if (offs > len - foot->offset_msgs)
-                    throw std::runtime_error{"GBNL: string offset too big"};
-                auto str = reinterpret_cast<const char*>(data + foot->offset_msgs + offs);
+                if (offs == 0xffffffff)
+                    m.Get<OffsetString>(i).offset = -1;
+                else
+                {
+                    if (offs > len - foot->offset_msgs)
+                        throw std::runtime_error{"GBNL: string offset too big"};
+                    auto str = reinterpret_cast<const char*>(
+                        data + foot->offset_msgs + offs);
 
-                m.Get<OffsetString>(i) = {str, 0};
+                    m.Get<OffsetString>(i) = {str, 0};
+                }
                 break;
+            }
+            case Struct::GetIndexFromType<FixStringTag>():
+            {
+                auto len = type->items[i].size;
+                auto dst = m.Get<FixStringTag>(i).str;
+                strncpy(dst, reinterpret_cast<const char*>(ptr), len-1);
+                dst[len-1] = '\0';
+                break;
+            }
             }
         }
 
@@ -134,64 +157,57 @@ namespace
 {
 struct WriteDescr
 {
+    WriteDescr(char* ptr) : ptr{ptr} {}
     char* ptr;
-    void operator()(uint8_t x)
+    size_t offs = 0;
+    void operator()(uint8_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint8_t*>(ptr) = x;
-        ptr += 1;
+        *reinterpret_cast<boost::endian::little_uint8_t*>(ptr+offs) = x;
+        offs += 1;
     }
-    void operator()(uint16_t x)
+    void operator()(uint16_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint16_t*>(ptr) = x;
-        ptr += 2;
+        offs = (offs+1) & ~1;
+        *reinterpret_cast<boost::endian::little_uint16_t*>(ptr+offs) = x;
+        offs += 2;
     }
-    void operator()(uint32_t x)
+    void operator()(uint32_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
-        ptr += 4;
+        offs = (offs+3) & ~3;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = x;
+        offs += 4;
     }
-    void operator()(float y)
+    void operator()(float y, size_t)
     {
+        offs = (offs+3) & ~3;
         uint32_t x = *reinterpret_cast<uint32_t*>(&y);
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
-        ptr += 4;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = x;
+        offs += 4;
     }
-    void operator()(const Gbnl::OffsetString& os)
+    void operator()(const Gbnl::OffsetString& os, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = os.offset;
-        ptr += 4;
+        offs = (offs+3) & ~3;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = os.offset;
+        offs += 4;
     }
-};
-
-struct GetType
-{
-    uint16_t operator()(uint8_t*)  { return GbnlTypeDescriptor::UINT_8; }
-    uint16_t operator()(uint16_t*) { return GbnlTypeDescriptor::UINT_16; }
-    uint16_t operator()(uint32_t*) { return GbnlTypeDescriptor::UINT_32; }
-    uint16_t operator()(float*)    { return GbnlTypeDescriptor::FLOAT; }
-    uint16_t operator()(Gbnl::OffsetString*) { return GbnlTypeDescriptor::STRING; }
-};
-
-struct GetSize
-{
-    size_t operator()(Gbnl::OffsetString*) { return 4; }
-    template <typename T> size_t operator()(T*) { return sizeof(T); }
-};
-
-struct SumSize
-{
-    size_t len = 0;
-    template <typename T> void operator()(T* x) { len += GetSize{}(x); }
+    void operator()(const Gbnl::FixStringTag& fs, size_t len)
+    {
+        memset(ptr+offs, 0, len);
+        strncpy(ptr+offs, fs.str, len-1);
+        offs += len;
+    }
 };
 }
 
 static char ZEROS[16];
 void Gbnl::Dump_(std::ostream& os) const
 {
-    char msgd[msg_descr_size] = {0};
+    char* msgd = static_cast<char*>(alloca(msg_descr_size));
+    memset(msgd, 0, msg_descr_size);
+
     for (const auto& m : messages)
     {
-        m.ForEach<uint8_t, uint16_t, uint32_t, OffsetString>(WriteDescr{msgd});
+        m.ForEach(WriteDescr{msgd});
         os.write(msgd, msg_descr_size);
     }
 
@@ -203,9 +219,43 @@ void Gbnl::Dump_(std::ostream& os) const
     uint16_t offs = 0;
     for (size_t i = 0; i < type->item_count; ++i)
     {
-        ctrl.type = type->Visit<size_t, uint8_t, uint16_t, uint32_t, float, OffsetString>(i, GetType{});
-        ctrl.offset = offs;
-        offs += type->Visit<size_t, uint8_t, uint16_t, uint32_t, float, OffsetString>(i, ::GetSize{});
+        switch (type->items[i].idx)
+        {
+        case Struct::GetIndexFromType<uint8_t>():
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::UINT8;
+            offs += 1;
+            break;
+        case Struct::GetIndexFromType<uint16_t>():
+            offs = (offs+1) & ~1;
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::UINT16;
+            offs += 2;
+            break;
+        case Struct::GetIndexFromType<uint32_t>():
+            offs = (offs+3) & ~3;
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::UINT32;
+            offs += 4;
+            break;
+        case Struct::GetIndexFromType<float>():
+            offs = (offs+3) & ~3;
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::FLOAT;
+            offs += 4;
+            break;
+        case Struct::GetIndexFromType<OffsetString>():
+            offs = (offs+3) & ~3;
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::STRING;
+            offs += 4;
+            break;
+        case Struct::GetIndexFromType<FixStringTag>():
+            ctrl.offset = offs;
+            ctrl.type = GbnlTypeDescriptor::UINT8;
+            offs += type->items[i].size;
+            break;
+        };
         os.write(reinterpret_cast<char*>(&ctrl), sizeof(GbnlTypeDescriptor));
     }
     auto control_end = msgs_end_round + sizeof(GbnlTypeDescriptor) * type->item_count;
@@ -215,7 +265,7 @@ void Gbnl::Dump_(std::ostream& os) const
     size_t offset = 0;
     for (const auto& m : messages)
         for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.GetType(i) == typeid(OffsetString))
+            if (m.Is<OffsetString>(i))
             {
                 auto& ofs = m.Get<OffsetString>(i);
                 if (ofs.offset == offset)
@@ -234,7 +284,7 @@ void Gbnl::Dump_(std::ostream& os) const
     foot.field_04 = 1;
     foot.field_08 = 16;
     foot.field_0c = 4;
-    foot.flags = 1;
+    foot.flags = flags;
     foot.descr_offset = 0;
     foot.count_msgs = messages.size();
     foot.msg_descr_size = msg_descr_size;
@@ -242,7 +292,7 @@ void Gbnl::Dump_(std::ostream& os) const
     foot.field_22 = 0;
     foot.offset_types = msgs_end_round;
     foot.field_28 = field_28;
-    foot.offset_msgs = control_end_round;
+    foot.offset_msgs = msgs_size ? control_end_round : 0;
     foot.field_30 = field_30;
     foot.field_34 = 0;
     foot.field_38 = 0;
@@ -252,31 +302,40 @@ void Gbnl::Dump_(std::ostream& os) const
 
 namespace
 {
-struct PrettyType
-{
-    const char* operator()(uint8_t*)  { return "uint8"; }
-    const char* operator()(uint16_t*) { return "uint16"; }
-    const char* operator()(uint32_t*) { return "uint32"; }
-    const char* operator()(float*)    { return "float"; }
-    const char* operator()(Gbnl::OffsetString*) { return "string"; }
-};
-
 struct Print
 {
     std::ostream& os;
-    void operator()(const Gbnl::OffsetString& ofs) { DumpBytes(os, ofs.str); }
-    template <typename T> void operator()(T x) { os << x; }
+    void operator()(const Gbnl::OffsetString& ofs, size_t)
+    {
+        if (ofs.offset == static_cast<size_t>(-1))
+            os << "null";
+        else
+            DumpBytes(os, ofs.str);
+    }
+    void operator()(const Gbnl::FixStringTag& fs, size_t) { DumpBytes(os, fs.str); }
+    void operator()(uint8_t x, size_t) { os << static_cast<unsigned>(x); }
+    template <typename T> void operator()(T x, size_t) { os << x; }
 };
 }
 
 void Gbnl::Inspect_(std::ostream& os) const
 {
-    os << "gbnl(" << field_28 << ", " << field_30 << ", types[";
+    os << "gbnl(" << flags << ", " << field_28 << ", " << field_30 << ", types[";
 
     for (size_t i = 0; i < type->item_count; ++i)
     {
         if (i != 0) os << ", ";
-        os << type->Visit<const char*, uint8_t, uint16_t, uint32_t, float, OffsetString>(i, PrettyType{});
+        switch (type->items[i].idx)
+        {
+        case Struct::GetIndexFromType<uint8_t>():      os << "uint8";  break;
+        case Struct::GetIndexFromType<uint16_t>():     os << "uint16"; break;
+        case Struct::GetIndexFromType<uint32_t>():     os << "uint32"; break;
+        case Struct::GetIndexFromType<float>():        os << "float";  break;
+        case Struct::GetIndexFromType<OffsetString>(): os << "string"; break;
+        case Struct::GetIndexFromType<FixStringTag>():
+            os << "fix_string(" << type->items[i].size << ")";
+            break;
+        }
     }
 
     os << "], messages[\n";
@@ -286,7 +345,7 @@ void Gbnl::Inspect_(std::ostream& os) const
         for (size_t i = 0; i < m.GetSize(); ++i)
         {
             if (i != 0) os << ", ";
-            m.Visit<void, uint8_t, uint16_t, uint32_t, float, OffsetString>(i, Print{os});
+            m.Visit<void>(i, Print{os});
         }
         os << ")\n";
     }
@@ -295,9 +354,18 @@ void Gbnl::Inspect_(std::ostream& os) const
 
 void Gbnl::RecalcSize()
 {
-    SumSize ss;
-    type->ForEach<uint8_t, uint16_t, uint32_t, float, OffsetString>(ss);
-    msg_descr_size = ss.len;
+    size_t len = 0;
+    for (size_t i = 0; i < type->item_count; ++i)
+        switch (type->items[i].idx)
+        {
+        case Struct::GetIndexFromType<uint8_t>():      len += 1; break;
+        case Struct::GetIndexFromType<uint16_t>():     len = (len+2+1) & ~1; break;
+        case Struct::GetIndexFromType<uint32_t>():     len = (len+4+3) & ~3; break;
+        case Struct::GetIndexFromType<float>():        len = (len+4+3) & ~3; break;
+        case Struct::GetIndexFromType<OffsetString>(): len = (len+4+3) & ~3; break;
+        case Struct::GetIndexFromType<FixStringTag>(): len += type->items[i].size; break;
+        }
+    msg_descr_size = (len+3) & ~3;
 
     std::map<std::string, size_t> offset_map;
     size_t offset = 0;
@@ -305,9 +373,10 @@ void Gbnl::RecalcSize()
     {
         BOOST_ASSERT(m.GetRawType() == type);
         for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.GetType(i) == typeid(OffsetString))
+            if (m.Is<OffsetString>(i))
             {
                 auto& os = m.Get<OffsetString>(i);
+                if (os.offset == static_cast<size_t>(-1)) continue;
                 auto x = offset_map.emplace(os.str, offset);
                 if (x.second) // new item inserted
                     offset += os.str.size() + 1;
@@ -332,24 +401,52 @@ const char SEP_DASH[] = {
     ' '
 };
 
+static uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t k)
+{
+    if (i == 8 && m.GetSize() == 9 && m.Is<uint32_t>(0)) // todo
+        return m.Get<uint32_t>(0);
+    else
+        return k*10000+j;
+}
+
 void Gbnl::WriteTxt(std::ostream& os) const
 {
-    /*
+    size_t j = 0;
     for (const auto& m : messages)
     {
-        os.write(SEP_DASH, sizeof(SEP_DASH));
-        os << m.message_id << "\r\n"
-           << boost::replace_all_copy(m.text, "\n", "\r\n") << "\r\n";
+        size_t k = 0;
+        for (size_t i = 0; i < m.GetSize(); ++i)
+            if (m.Is<OffsetString>(i))
+            {
+                os.write(SEP_DASH, sizeof(SEP_DASH));
+                os << GetId(m, i, j, ++k) << "\r\n"
+                   << boost::replace_all_copy(m.Get<OffsetString>(i).str, "\n", "\r\n")
+                   << "\r\n";
+            }
+        ++j;
     }
     os.write(SEP_DASH, sizeof(SEP_DASH));
     os << "EOF";
-    */
+}
+
+static Gbnl::OffsetString* FindDst(
+    uint32_t id, std::vector<Gbnl::Struct>& messages)
+{
+    size_t j = 0;
+    for (auto& m : messages)
+    {
+        size_t k = 0;
+        for (size_t i = 0; i < m.GetSize(); ++i)
+            if (m.Is<Gbnl::OffsetString>(i) && GetId(m, i, j, ++k) == id)
+                return &m.Get<Gbnl::OffsetString>(i);
+        ++j;
+    }
+    return nullptr;
 }
 
 void Gbnl::ReadTxt(std::istream& is)
 {
-    /*
-    std::vector<Message>::iterator it{};
+    OffsetString* dst = nullptr;
     std::string line, msg;
 
     while (is.good())
@@ -358,10 +455,10 @@ void Gbnl::ReadTxt(std::istream& is)
 
         if (line.compare(0, sizeof(SEP_DASH), SEP_DASH, sizeof(SEP_DASH)) == 0)
         {
-            if (it != std::vector<Message>::iterator{})
+            if (dst)
             {
                 boost::trim_right(msg);
-                it->text = std::move(msg);
+                dst->str = std::move(msg);
                 msg.clear();
             }
 
@@ -371,19 +468,17 @@ void Gbnl::ReadTxt(std::istream& is)
                 return;
             }
             auto id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
-            it = std::find_if(messages.begin(), messages.end(),
-                              [id](const auto& m) { return m.message_id == id; });
-            if (it == messages.end())
+            dst = FindDst(id, messages);
+            if (!dst)
                 throw std::runtime_error("GbnlTxt: invalid id in input");
         }
         else
         {
-            if (it == std::vector<Message>::iterator{})
+            if (!dst)
                 throw std::runtime_error("GbnlTxt: data before separator");
             boost::trim_right(line);
             msg.append(line).append(1, '\n');
         }
     }
     throw std::runtime_error("GbnlTxt: EOF");
-    */
 }

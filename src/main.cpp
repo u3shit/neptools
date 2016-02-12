@@ -181,14 +181,14 @@ void DoAutoFun(const fs::path& p)
 
 bool IsBin(const fs::path& p, bool = false)
 {
-    return boost::ends_with(p.native(), ".cl3");
-    // boost::ends_with(p.native(), ".gbin");
+    return boost::ends_with(p.native(), ".cl3") ||
+        boost::ends_with(p.native(), ".gbin");
 }
 
 bool IsTxt(const fs::path& p, bool = false)
 {
-    return boost::ends_with(p.native(), ".cl3.txt");
-    // boost::ends_with(p.native(), ".gbin.txt");
+    return boost::ends_with(p.native(), ".cl3.txt") ||
+        boost::ends_with(p.native(), ".gbin.txt");
 }
 
 void DoAuto(const fs::path& path)

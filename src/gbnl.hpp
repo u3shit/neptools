@@ -12,11 +12,11 @@ struct GbnlTypeDescriptor
 {
     enum Type
     {
-        UINT_32 = 0,
-        UINT_8  = 1,
-        UINT_16 = 2,
-        FLOAT   = 3,
-        STRING  = 5,
+        UINT32 = 0,
+        UINT8  = 1,
+        UINT16 = 2,
+        FLOAT  = 3,
+        STRING = 5,
     };
     boost::endian::little_uint16_t type;
     boost::endian::little_uint16_t offset;
@@ -31,7 +31,7 @@ struct GbnlFooter
     boost::endian::little_uint32_t field_04;
     boost::endian::little_uint32_t field_08;
     boost::endian::little_uint32_t field_0c;
-    boost::endian::little_uint32_t flags;
+    boost::endian::little_uint32_t flags; // 1 if there's a string, 0 otherwise?
     boost::endian::little_uint32_t descr_offset;
     boost::endian::little_uint32_t count_msgs;
     boost::endian::little_uint32_t msg_descr_size;
@@ -68,9 +68,13 @@ public:
         size_t offset;
     };
 
-    uint32_t field_28, field_30;
-    std::vector<DynamicStruct::Struct> messages;
-    DynamicStruct::StructTypePtr type;
+    struct FixStringTag { char str[1]; };
+    using Struct = DynamicStruct<
+        uint8_t, uint16_t, uint32_t, float, OffsetString, FixStringTag>;
+
+    uint32_t flags, field_28, field_30;
+    std::vector<Struct> messages;
+    Struct::TypePtr type;
 
     void RecalcSize();
     size_t GetSize() const noexcept;
