@@ -4,31 +4,24 @@
 
 #include "dumpable.hpp"
 #include "buffer.hpp"
+#include "dynamic_struct.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 
-struct GbnlMessageDescriptor
+struct GbnlTypeDescriptor
 {
-    boost::endian::little_uint32_t message_id;
-    boost::endian::little_uint32_t lipsync_chara_id;
-    boost::endian::little_uint32_t field_08;
-    boost::endian::little_uint32_t field_0c;
-    boost::endian::little_uint32_t field_10;
-    boost::endian::little_uint32_t name_id;
-    boost::endian::little_uint32_t field_18;
-    boost::endian::little_uint32_t audio_id;
-    boost::endian::little_uint32_t text_offset;
-
-    bool IsValid(size_t chunk_size) const noexcept;
+    enum Type
+    {
+        UINT_32 = 0,
+        UINT_8  = 1,
+        UINT_16 = 2,
+        FLOAT   = 3,
+        STRING  = 5,
+    };
+    boost::endian::little_uint16_t type;
+    boost::endian::little_uint16_t offset;
 };
-static_assert(sizeof(GbnlMessageDescriptor) == 0x24, "");
-
-struct GbnlControlDescriptor
-{
-    boost::endian::little_uint16_t first;
-    boost::endian::little_uint16_t second;
-};
-static_assert(sizeof(GbnlControlDescriptor) == 0x04, "");
+static_assert(sizeof(GbnlTypeDescriptor) == 0x04, "");
 
 struct GbnlFooter
 {
@@ -42,9 +35,9 @@ struct GbnlFooter
     boost::endian::little_uint32_t descr_offset;
     boost::endian::little_uint32_t count_msgs;
     boost::endian::little_uint32_t msg_descr_size;
-    boost::endian::little_uint16_t count_control;
+    boost::endian::little_uint16_t count_types;
     boost::endian::little_uint16_t field_22;
-    boost::endian::little_uint32_t offset_control;
+    boost::endian::little_uint32_t offset_types;
     boost::endian::little_uint32_t field_28;
     boost::endian::little_uint32_t offset_msgs;
     boost::endian::little_uint32_t field_30;
@@ -69,17 +62,15 @@ public:
     void ReadTxt(std::istream& is);
     void ReadTxt(std::istream&& is) { ReadTxt(is); }
 
-    struct Message
+    struct OffsetString
     {
-        uint32_t message_id, lipsync_chara_id, field_08, field_0c, field_10,
-            field_18, name_id, audio_id;
-        std::string text;
+        std::string str;
         size_t offset;
     };
 
     uint32_t field_28, field_30;
-    std::vector<Message> messages;
-    std::vector<std::pair<uint16_t, uint16_t>> control;
+    std::vector<DynamicStruct::Struct> messages;
+    DynamicStruct::StructTypePtr type;
 
     void RecalcSize();
     size_t GetSize() const noexcept;
@@ -88,7 +79,7 @@ private:
     void Dump_(std::ostream& os) const override;
     void Inspect_(std::ostream& os) const override;
 
-    size_t msgs_size;
+    size_t msg_descr_size, msgs_size;
 };
 
 
