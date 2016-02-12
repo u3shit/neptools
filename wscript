@@ -29,11 +29,13 @@ def configure(cfg):
     cfg.load('compiler_cxx boost clang_compilation_database')
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
-        cfg.env.append_value('CXXFLAGS', ['/EHsc', '/Za', '/MD'])
+        cfg.env.append_value('CXXFLAGS', [
+            '/EHsc', '/MD', '/Zc:rvalueCast', '/Zc:strictStrings', '/Zc:inline'])
         if cfg.options.release:
             cfg.env.prepend_value('CXXFLAGS', [
                 '/O2', '/Gv', '/GL', '/Gw', '/Gy'])
             cfg.env.prepend_value('LINKFLAGS', ['/LTCG', '/OPT:REF', '/OPT:ICF'])
+            cfg.env.prepend_value('ARFLAGS', ['/LTCG'])
         cfg.check_boost()
     else:
         cfg.check_cxx(cxxflags='-std=c++14')
@@ -64,7 +66,6 @@ def build(bld):
         'src/dumpable.cpp',
         'src/gbnl.cpp',
         'src/item.cpp',
-        'src/main.cpp',
         'src/raw_item.cpp',
         'src/utils.cpp',
         'src/cl3/file.cpp',
@@ -79,8 +80,14 @@ def build(bld):
         'src/stcm/header.cpp',
         'src/stcm/instruction.cpp',
     ]
-    bld.program(source = src,
+
+    bld.stlib(source = src,
+              uselib = 'BOOST',
+              target = 'common')
+
+    bld.program(source = 'src/programs/stcm-editor.cpp',
                 uselib = 'BOOST',
+                use = 'common',
                 target = APPNAME)
 
 
