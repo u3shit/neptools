@@ -5,3 +5,6 @@
 build
 .lock-waf_*
 .waf*
+
+compile_commands.json
+.clang_complete
