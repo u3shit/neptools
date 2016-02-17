@@ -27,7 +27,7 @@ struct Section
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(Section) == 0x50, "");
+STATIC_ASSERT(sizeof(Section) == 0x50);
 
 class HeaderItem;
 class SectionEntryItem;

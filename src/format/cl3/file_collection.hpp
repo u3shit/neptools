@@ -28,7 +28,7 @@ struct FileEntry
 
     bool IsValid(size_t rem_size) const noexcept;
 };
-static_assert(sizeof(FileEntry) == 0x230, "");
+STATIC_ASSERT(sizeof(FileEntry) == 0x230);
 
 class FileDataItem;
 class SectionsItem;

@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <vector>
 
+#include "../utils.hpp"
+
 using OperatorNewPtr = void* (__cdecl *)(size_t size);
 extern OperatorNewPtr operator_new;
 using OperatorDeletePtr = void (__cdecl *)(void* ptr);
@@ -31,7 +33,7 @@ struct PakEntry
     unsigned is_compressed;
     unsigned field_11c;
 };
-static_assert(sizeof(PakEntry) == 0x120, "");
+STATIC_ASSERT(sizeof(PakEntry) == 0x120);
 
 struct CpkHandlerFileInfo
 {
@@ -45,7 +47,7 @@ struct CpkHandlerFileInfo
     void* block;
     int decoded_block_index;
 };
-static_assert(sizeof(CpkHandlerFileInfo) == 0x140, "");
+STATIC_ASSERT(sizeof(CpkHandlerFileInfo) == 0x140);
 
 struct CpkHandler
 {
@@ -74,7 +76,7 @@ struct CpkHandler
 
     static void Hook();
 };
-static_assert(sizeof(CpkHandler) == 0x50, "");
+STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
 
 
 #endif

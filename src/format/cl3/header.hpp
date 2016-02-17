@@ -19,7 +19,7 @@ struct Header
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(Header) == 0x18, "");
+STATIC_ASSERT(sizeof(Header) == 0x18);
 
 class SectionsItem;
 class HeaderItem final : public Item

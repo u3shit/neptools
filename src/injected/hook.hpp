@@ -11,7 +11,7 @@ void* Hook(void* hook, void* dst, size_t copy);
 template <typename T>
 inline T Hook(void* hook, T dst, size_t copy)
 {
-    static_assert(sizeof(T) == 4, "");
+    STATIC_ASSERT(sizeof(T) == 4);
     union
     {
         T t;

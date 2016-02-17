@@ -17,7 +17,7 @@ struct ExportEntry
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(ExportEntry) == 0x28, "");
+STATIC_ASSERT(sizeof(ExportEntry) == 0x28);
 
 class HeaderItem;
 class ExportsItem final : public Item

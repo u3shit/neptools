@@ -22,7 +22,7 @@ struct IndexOf<Item, Head, Rest...>
     static constexpr const size_t value = 1 + IndexOf<Item, Rest...>::value;
 };
 
-static_assert(IndexOf<int, float, double, int>::value == 2, "eek");
+STATIC_ASSERT(IndexOf<int, float, double, int>::value == 2);
 
 template <typename Item, typename... Rest>
 constexpr const size_t IndexOf<Item, Item, Rest...>::value;

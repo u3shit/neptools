@@ -29,7 +29,7 @@ struct CollectionLinkHeader
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(CollectionLinkHeader) == 0x40, "");
+STATIC_ASSERT(sizeof(CollectionLinkHeader) == 0x40);
 
 struct CollectionLinkEntry
 {
@@ -44,7 +44,7 @@ struct CollectionLinkEntry
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(CollectionLinkEntry) == 0x20, "");
+STATIC_ASSERT(sizeof(CollectionLinkEntry) == 0x20);
 
 class CollectionLinkHeaderItem final : public Item
 {

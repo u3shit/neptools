@@ -29,7 +29,7 @@ struct Header
 
     bool IsValid(size_t file_size) const noexcept;
 };
-static_assert(sizeof(Header) == 0x30, "");
+STATIC_ASSERT(sizeof(Header) == 0x30);
 
 class HeaderItem final : public Item
 {

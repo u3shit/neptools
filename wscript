@@ -116,7 +116,7 @@ def build(bld):
         ]
         bld.shlib(source = src_inject,
                   target = 'server',
-                  uselib = 'USER32')
+                  uselib = 'BOOST USER32')
 
 from waflib.Configure import conf
 @conf

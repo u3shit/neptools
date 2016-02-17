@@ -21,7 +21,7 @@ struct GbnlTypeDescriptor
     boost::endian::little_uint16_t type;
     boost::endian::little_uint16_t offset;
 };
-static_assert(sizeof(GbnlTypeDescriptor) == 0x04, "");
+STATIC_ASSERT(sizeof(GbnlTypeDescriptor) == 0x04);
 
 struct GbnlFooter
 {
@@ -47,7 +47,7 @@ struct GbnlFooter
 
     bool IsValid(size_t chunk_size) const noexcept;
 };
-static_assert(sizeof(GbnlFooter) == 0x40, "");
+STATIC_ASSERT(sizeof(GbnlFooter) == 0x40);
 
 class Gbnl : public Dumpable
 {

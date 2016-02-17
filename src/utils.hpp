@@ -43,4 +43,6 @@ inline void DumpBytes(std::ostream& os, const char* data, size_t len)
 inline void DumpBytes(std::ostream& os, const std::string& str)
 { DumpBytes(os, str.data(), str.size()); }
 
+#define STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
+
 #endif

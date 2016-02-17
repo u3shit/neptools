@@ -75,8 +75,8 @@ struct Instruction
     bool IsValid(size_t file_size) const noexcept;
     static constexpr size_t SIZE = 0x10;
 };
-static_assert(sizeof(Instruction::Parameter) == 0xc, "");
-static_assert(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10, "");
+STATIC_ASSERT(sizeof(Instruction::Parameter) == 0xc);
+STATIC_ASSERT(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10);
 
 class InstructionItem final : public ItemWithChildren
 {

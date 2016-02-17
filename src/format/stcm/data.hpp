@@ -17,7 +17,7 @@ struct DataHeader
 
     bool IsValid(size_t chunk_size) const noexcept;
 };
-static_assert(sizeof(DataHeader) == 0x10, "");
+STATIC_ASSERT(sizeof(DataHeader) == 0x10);
 
 class DataItem final : public Item
 {
