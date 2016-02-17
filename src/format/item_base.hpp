@@ -1,10 +1,10 @@
-#ifndef ITEM_BASE_HPP
-#define ITEM_BASE_HPP
+#ifndef UUID_02043882_EC07_4CCA_BD13_1BB9F5C7DB9F
+#define UUID_02043882_EC07_4CCA_BD13_1BB9F5C7DB9F
 #pragma once
 
 #include <cstdint>
 #include <functional>
-#include "utils.hpp"
+#include "../utils.hpp"
 
 class Item;
 class Context;

@@ -1,5 +1,5 @@
-#ifndef STCM_DATA_HPP
-#define STCM_DATA_HPP
+#ifndef UUID_CB40AD6D_5157_4C96_A9A9_371A9F215955
+#define UUID_CB40AD6D_5157_4C96_A9A9_371A9F215955
 #pragma once
 
 #include "../item.hpp"

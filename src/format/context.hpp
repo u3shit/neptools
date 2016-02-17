@@ -1,5 +1,5 @@
-#ifndef CONTEXT_HPP
-#define CONTEXT_HPP
+#ifndef UUID_C2DF26B7_DE7D_47B8_BAEE_9F6EEBB12891
+#define UUID_C2DF26B7_DE7D_47B8_BAEE_9F6EEBB12891
 #pragma once
 
 #include "item_base.hpp"

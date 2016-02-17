@@ -1,5 +1,5 @@
-#ifndef EOF_ITEM_HPP
-#define EOF_ITEM_HPP
+#ifndef UUID_2E2EE447_59EF_4611_B8B5_40180CC6FBCC
+#define UUID_2E2EE447_59EF_4611_B8B5_40180CC6FBCC
 #pragma once
 
 #include "item.hpp"

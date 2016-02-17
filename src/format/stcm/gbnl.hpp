@@ -1,5 +1,5 @@
-#ifndef STCL_GBNL_HPP
-#define STCL_GBNL_HPP
+#ifndef UUID_C8313FD1_2CD9_4882_BDAD_E751A14AA2DF
+#define UUID_C8313FD1_2CD9_4882_BDAD_E751A14AA2DF
 #pragma once
 
 #include "../item.hpp"

@@ -1,10 +1,10 @@
-#ifndef CL3_FILE_COLLECTION_HPP
-#define CL3_FILE_COLLECTION_HPP
+#ifndef UUID_6BEB4DB8_E039_485A_9500_E3FBCEA47041
+#define UUID_6BEB4DB8_E039_485A_9500_E3FBCEA47041
 #pragma once
 
-#include "../fixed_string.hpp"
+#include "../../fixed_string.hpp"
 #include "../raw_item.hpp"
-#include "../fs.hpp"
+#include "../../fs.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 namespace Cl3

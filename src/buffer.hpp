@@ -1,5 +1,5 @@
-#ifndef BUFFER_HPP
-#define BUFFER_HPP
+#ifndef UUID_7E43A5C4_EF27_4794_AEF1_202C9776DD6D
+#define UUID_7E43A5C4_EF27_4794_AEF1_202C9776DD6D
 #pragma once
 
 #include "utils.hpp"

@@ -1,5 +1,5 @@
-#ifndef CL3_HEADER_HPP
-#define CL3_HEADER_HPP
+#ifndef UUID_3D8C2AC2_6B76_435C_94AE_18A797C4BE4D
+#define UUID_3D8C2AC2_6B76_435C_94AE_18A797C4BE4D
 #pragma once
 
 #include "../raw_item.hpp"

@@ -1,8 +1,8 @@
-#ifndef STCM_HEADER_HPP
-#define STCM_HEADER_HPP
+#ifndef UUID_B9D3C4DA_158C_4858_903C_9EBDD92C2CBC
+#define UUID_B9D3C4DA_158C_4858_903C_9EBDD92C2CBC
 #pragma once
 
-#include "../fixed_string.hpp"
+#include "../../fixed_string.hpp"
 #include "../raw_item.hpp"
 #include <boost/endian/arithmetic.hpp>
 

@@ -1,8 +1,8 @@
-#ifndef DUMPABLE_HPP
-#define DUMPABLE_HPP
+#ifndef UUID_C9446864_0020_4D2F_8E96_CBC6ADCCA3BE
+#define UUID_C9446864_0020_4D2F_8E96_CBC6ADCCA3BE
 #pragma once
 
-#include "utils.hpp"
+#include "../utils.hpp"
 
 class Dumpable
 {

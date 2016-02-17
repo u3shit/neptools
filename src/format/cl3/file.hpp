@@ -1,8 +1,8 @@
-#ifndef CL3_FILE_HPP
-#define CL3_FILE_HPP
+#ifndef UUID_830A2646_22D6_49BF_A2D9_7E03977404C7
+#define UUID_830A2646_22D6_49BF_A2D9_7E03977404C7
 #pragma once
 
-#include "../buffer.hpp"
+#include "../../buffer.hpp"
 #include "../context.hpp"
 
 namespace Cl3

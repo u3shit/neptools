@@ -1,5 +1,5 @@
-#ifndef RAW_ITEM_HPP
-#define RAW_ITEM_HPP
+#ifndef UUID_49BE292D_0E45_47B1_8901_97A22C0190F6
+#define UUID_49BE292D_0E45_47B1_8901_97A22C0190F6
 #pragma once
 
 #include "context.hpp"

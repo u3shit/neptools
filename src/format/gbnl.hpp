@@ -1,10 +1,10 @@
-#ifndef GBNL_HPP
-#define GBNL_HPP
+#ifndef UUID_9037C300_D4EF_473C_8387_A1A9797069A7
+#define UUID_9037C300_D4EF_473C_8387_A1A9797069A7
 #pragma once
 
 #include "dumpable.hpp"
-#include "buffer.hpp"
-#include "dynamic_struct.hpp"
+#include "../buffer.hpp"
+#include "../dynamic_struct.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 

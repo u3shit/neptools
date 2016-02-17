@@ -1,9 +1,9 @@
-#ifndef STCM_EXPORTS_HPP
-#define STCM_EXPORTS_HPP
+#ifndef UUID_3260390C_7569_4E66_B6BA_CC5CC7E58F9A
+#define UUID_3260390C_7569_4E66_B6BA_CC5CC7E58F9A
 #pragma once
 
 #include "../item.hpp"
-#include "../fixed_string.hpp"
+#include "../../fixed_string.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 namespace Stcm

@@ -1,9 +1,9 @@
-#ifndef ITEM_HPP
-#define ITEM_HPP
+#ifndef UUID_294A7F35_D9EC_4A07_961F_A74307C4FA29
+#define UUID_294A7F35_D9EC_4A07_961F_A74307C4FA29
 #pragma once
 
 #include "item_base.hpp"
-#include "buffer.hpp"
+#include "../buffer.hpp"
 #include <iosfwd>
 #include <vector>
 #include <map>

@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef UUID_9AE0723F_DD0B_434B_8880_D7981FAF1F20
+#define UUID_9AE0723F_DD0B_434B_8880_D7981FAF1F20
 #pragma once
 
 #include "fs.hpp"
