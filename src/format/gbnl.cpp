@@ -467,16 +467,20 @@ void Gbnl::WriteTxt(std::ostream& os) const
 }
 
 static Gbnl::OffsetString* FindDst(
-    uint32_t id, std::vector<Gbnl::Struct>& messages)
+    uint32_t id, std::vector<Gbnl::Struct>& messages, size_t& index)
 {
-    size_t j = 0;
-    for (auto& m : messages)
+    auto size = messages.size();
+    for (size_t j = 0; j < size; ++j)
     {
+        auto j2 = (index+j) % size;
+        auto& m = messages[j2];
         size_t k = 0;
         for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.Is<Gbnl::OffsetString>(i) && GetId(m, i, j, ++k) == id)
+            if (m.Is<Gbnl::OffsetString>(i) && GetId(m, i, j2, ++k) == id)
+            {
+                index = j2;
                 return &m.Get<Gbnl::OffsetString>(i);
-        ++j;
+            }
     }
     return nullptr;
 }
@@ -485,6 +489,7 @@ void Gbnl::ReadTxt(std::istream& is)
 {
     OffsetString* dst = nullptr;
     std::string line, msg;
+    size_t last_index = 0;
 
     while (is.good())
     {
@@ -506,7 +511,7 @@ void Gbnl::ReadTxt(std::istream& is)
                 return;
             }
             auto id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
-            dst = FindDst(id, messages);
+            dst = FindDst(id, messages, last_index);
             if (!dst)
                 throw std::runtime_error("GbnlTxt: invalid id in input");
         }
