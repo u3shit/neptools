@@ -72,6 +72,7 @@ public:
     using Struct = DynamicStruct<
         uint8_t, uint16_t, uint32_t, float, OffsetString, FixStringTag>;
 
+    bool is_gstl;
     uint32_t flags, field_28, field_30;
     std::vector<Struct> messages;
     Struct::TypePtr type;
@@ -81,7 +82,9 @@ public:
 
 private:
     void Dump_(std::ostream& os) const override;
+    void DumpHeader(std::ostream& os) const;
     void Inspect_(std::ostream& os) const override;
+    size_t Align(size_t x) const noexcept;
 
     size_t msg_descr_size, msgs_size;
 };

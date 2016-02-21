@@ -55,8 +55,9 @@ State SmartOpen(const fs::path& fname)
         return {std::move(stcm), nullptr, ret2, nullptr};
     }
     else if (buf->GetSize() >= sizeof(GbnlFooter) &&
-             memcmp(buf->GetPtr() + buf->GetSize() - sizeof(GbnlFooter),
-                    "GBNL", 4) == 0)
+             (memcmp(buf->GetPtr(), "GSTL", 4) == 0 ||
+              memcmp(buf->GetPtr() + buf->GetSize() - sizeof(GbnlFooter),
+                     "GBNL", 4) == 0))
     {
         auto gbnl = std::make_unique<Gbnl>(buf.get());
         auto ret2 = gbnl.get();
@@ -182,13 +183,15 @@ void DoAutoFun(const fs::path& p)
 bool IsBin(const fs::path& p, bool = false)
 {
     return boost::ends_with(p.native(), ".cl3") ||
-        boost::ends_with(p.native(), ".gbin");
+        boost::ends_with(p.native(), ".gbin") ||
+        boost::ends_with(p.native(), ".gstr");
 }
 
 bool IsTxt(const fs::path& p, bool = false)
 {
     return boost::ends_with(p.native(), ".cl3.txt") ||
-        boost::ends_with(p.native(), ".gbin.txt");
+        boost::ends_with(p.native(), ".gbin.txt") ||
+        boost::ends_with(p.native(), ".gstr.txt");
 }
 
 void DoAuto(const fs::path& path)

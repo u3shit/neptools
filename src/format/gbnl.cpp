@@ -4,18 +4,24 @@
 #include <boost/preprocessor/repetition/repeat.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/trim.hpp>
 
 bool GbnlFooter::IsValid(size_t chunk_size) const noexcept
 {
-    return memcmp(magic, "GBNL", 4) == 0 &&
+    if (!(
         field_04 == 1 && field_08 == 16 && field_0c == 4 &&
-        descr_offset == 0 &&
         descr_offset + msg_descr_size * count_msgs < chunk_size &&
         field_22 == 0 &&
         offset_types + sizeof(GbnlTypeDescriptor) * count_types < chunk_size &&
         offset_msgs < chunk_size &&
-        field_34 == 0 && field_38 == 0 && field_3c == 0;
+        field_34 == 0 && field_38 == 0 && field_3c == 0))
+        return false;
+
+    if (memcmp(magic, "GBNL", 4) == 0)
+        return descr_offset == 0;
+    else if (memcmp(magic, "GSTL", 4) == 0)
+        return descr_offset == sizeof(GbnlFooter);
+    else
+        return false;
 }
 
 static void CheckOffs(size_t& val, size_t expect, size_t size, size_t align)
@@ -31,8 +37,19 @@ Gbnl::Gbnl(const Byte* data, size_t len)
     if (len < sizeof(GbnlFooter))
         throw std::runtime_error{"GBNL: section too short"};
 
-    auto foot = reinterpret_cast<const GbnlFooter*>(
-        data + len - sizeof(GbnlFooter));
+    const GbnlFooter* foot;
+    if (memcmp(data, "GSTL", 4) == 0)
+    {
+        foot = reinterpret_cast<const GbnlFooter*>(data);
+        is_gstl = true;
+    }
+    else
+    {
+        foot = reinterpret_cast<const GbnlFooter*>(
+            data + len - sizeof(GbnlFooter));
+        is_gstl = false;
+    }
+
     if (!foot->IsValid(len))
         throw std::runtime_error{"GBNL: invalid footer"};
     flags = foot->flags;
@@ -202,6 +219,8 @@ struct WriteDescr
 static char ZEROS[16];
 void Gbnl::Dump_(std::ostream& os) const
 {
+    if (is_gstl) DumpHeader(os);
+
     char* msgd = static_cast<char*>(alloca(msg_descr_size));
     memset(msgd, 0, msg_descr_size);
 
@@ -212,7 +231,7 @@ void Gbnl::Dump_(std::ostream& os) const
     }
 
     auto msgs_end = msg_descr_size * messages.size();
-    auto msgs_end_round = (msgs_end + 15) / 16 * 16;
+    auto msgs_end_round = Align(msgs_end);
     os.write(ZEROS, msgs_end_round - msgs_end);
 
     GbnlTypeDescriptor ctrl;
@@ -259,7 +278,7 @@ void Gbnl::Dump_(std::ostream& os) const
         os.write(reinterpret_cast<char*>(&ctrl), sizeof(GbnlTypeDescriptor));
     }
     auto control_end = msgs_end_round + sizeof(GbnlTypeDescriptor) * type->item_count;
-    auto control_end_round = (control_end + 15) / 16 * 16;
+    auto control_end_round = Align(control_end);
     os.write(ZEROS, control_end_round - control_end);
 
     size_t offset = 0;
@@ -276,22 +295,34 @@ void Gbnl::Dump_(std::ostream& os) const
             }
 
     BOOST_ASSERT(offset == msgs_size);
-    auto offset_round = (offset + 15) / 16 * 16;
+    auto offset_round = Align(offset);
     os.write(ZEROS, offset_round - offset);
 
+    BOOST_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
+    BOOST_ASSERT(control_end_round == Align(msgs_end_round +
+        sizeof(GbnlTypeDescriptor) * type->item_count));
+    if (!is_gstl) DumpHeader(os);
+}
+
+void Gbnl::DumpHeader(std::ostream& os) const
+{
     GbnlFooter foot;
-    memcpy(foot.magic, "GBNL", 4);
+    memcpy(foot.magic, is_gstl ? "GSTL" : "GBNL", 4);
     foot.field_04 = 1;
     foot.field_08 = 16;
     foot.field_0c = 4;
     foot.flags = flags;
-    foot.descr_offset = 0;
+    auto offset = is_gstl ? sizeof(GbnlFooter) : 0;
+    foot.descr_offset = offset;
     foot.count_msgs = messages.size();
     foot.msg_descr_size = msg_descr_size;
     foot.count_types = type->item_count;
     foot.field_22 = 0;
-    foot.offset_types = msgs_end_round;
+    auto msgs_end_round = Align(offset + msg_descr_size * messages.size());
+    foot.offset_types = msgs_end_round;;
     foot.field_28 = field_28;
+    auto control_end_round = Align(msgs_end_round +
+        sizeof(GbnlTypeDescriptor) * type->item_count);
     foot.offset_msgs = msgs_size ? control_end_round : 0;
     foot.field_30 = field_30;
     foot.field_34 = 0;
@@ -320,7 +351,8 @@ struct Print
 
 void Gbnl::Inspect_(std::ostream& os) const
 {
-    os << "gbnl(" << flags << ", " << field_28 << ", " << field_30 << ", types[";
+    os << (is_gstl ? "gstl(" : "gbnl(") << flags << ", " << field_28 << ", "
+       << field_30 << ", types[";
 
     for (size_t i = 0; i < type->item_count; ++i)
     {
@@ -389,10 +421,15 @@ void Gbnl::RecalcSize()
 size_t Gbnl::GetSize() const noexcept
 {
     size_t ret = msg_descr_size * messages.size();
-    ret = (ret + 15) / 16 * 16 + sizeof(GbnlTypeDescriptor) * type->item_count;
-    ret = (ret + 15) / 16 * 16 + msgs_size;
-    ret = (ret + 15) / 16 * 16 + sizeof(GbnlFooter);
+    ret = Align(ret) + sizeof(GbnlTypeDescriptor) * type->item_count;
+    ret = Align(ret) + msgs_size;
+    ret = Align(ret) + sizeof(GbnlFooter);
     return ret;
+}
+
+size_t Gbnl::Align(size_t x) const noexcept
+{
+    return is_gstl ? x : ((x+15) & ~15);
 }
 
 const char SEP_DASH[] = {
@@ -457,7 +494,8 @@ void Gbnl::ReadTxt(std::istream& is)
         {
             if (dst)
             {
-                boost::trim_right(msg);
+                BOOST_ASSERT(msg.back() == '\n');
+                msg.pop_back();
                 dst->str = std::move(msg);
                 msg.clear();
             }
@@ -476,7 +514,7 @@ void Gbnl::ReadTxt(std::istream& is)
         {
             if (!dst)
                 throw std::runtime_error("GbnlTxt: data before separator");
-            boost::trim_right(line);
+            if (!line.empty() && line.back() == '\r') line.pop_back();
             msg.append(line).append(1, '\n');
         }
     }
