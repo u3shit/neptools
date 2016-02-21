@@ -11,6 +11,10 @@ sometimes damages the `.cl3` files in a way that this tool can't handle.
 Usage
 =====
 
+First, if you downloaded the binary Windows version, you'll need to install
+[MSVC 2015 Update 1 redistributables](https://www.microsoft.com/en-us/download/details.aspx?id=49984),
+if you haven't done so already (download `VC_redist.x86.exe`).
+
 The main functionality of this program is to dump out the text script inside the
 `.cl3` files, and then reimport modifications. You should be able to do that by
 just dragging the `.cl3` file onto the executable to extract the .txt files, and
