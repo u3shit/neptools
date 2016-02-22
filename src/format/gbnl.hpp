@@ -86,6 +86,10 @@ private:
     void Inspect_(std::ostream& os) const override;
     size_t Align(size_t x) const noexcept;
 
+    uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
+    size_t FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,
+                   size_t& index) const;
+
     size_t msg_descr_size, msgs_size;
 };
 
