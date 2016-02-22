@@ -109,6 +109,12 @@ def build(bld):
                     uselib = 'KERNEL32 SHELL32 USER32',
                     linkflags = ld)
 
+        # server.dll has no implib (doesn't export anything)
+        from waflib.TaskGen import taskgen_method
+        @taskgen_method
+        def apply_implib(self):
+            pass
+
         src_inject = [
             'src/injected/cpk.cpp',
             'src/injected/hook.cpp',
