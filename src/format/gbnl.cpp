@@ -5,6 +5,8 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+//#define STRTOOL_COMPAT
+
 bool GbnlFooter::IsValid(size_t chunk_size) const noexcept
 {
     if (!(
@@ -67,7 +69,7 @@ Gbnl::Gbnl(const Byte* data, size_t len)
         {
         case GbnlTypeDescriptor::UINT8:
             if (i+1 == foot->count_types || // last item
-                types[i+1].offset == types[i].offset+1)
+                types[i+1].offset == ((types[i].offset+4) & ~3))
             {
                 // single char
                 CheckOffs(calc_offs, types[i].offset, 1, 1);
@@ -438,12 +440,32 @@ const char SEP_DASH[] = {
     ' '
 };
 
-static uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t k)
+static uint32_t GetId(
+    const Gbnl::Struct& m, size_t i, size_t j, size_t& k, bool is_gstl)
 {
-    if (i == 8 && m.GetSize() == 9 && m.Is<uint32_t>(0)) // todo
-        return m.Get<uint32_t>(0);
+    size_t this_k;
+    if (m.Is<Gbnl::OffsetString>(i))
+    {
+        if (m.Get<Gbnl::OffsetString>(i).offset == static_cast<size_t>(-1))
+            return -1;
+        this_k = ++k;
+    }
+    else if (m.Is<Gbnl::FixStringTag>(i))
+        this_k = 10000;
     else
-        return k*10000+j;
+        return -1;
+
+    if (!is_gstl && i == 8 && m.GetSize() == 9 && m.Is<uint32_t>(0)) // todo
+        return m.Get<uint32_t>(0);
+    else if (is_gstl && m.GetSize() == 3 && m.Is<uint32_t>(1))
+    {
+#ifdef STRTOOL_COMPAT
+        if (i == 0) return -1;
+#endif
+        return m.Get<uint32_t>(1) + 100000*(i==0);
+    }
+    else
+        return this_k*10000+j;
 }
 
 void Gbnl::WriteTxt(std::ostream& os) const
@@ -453,21 +475,35 @@ void Gbnl::WriteTxt(std::ostream& os) const
     {
         size_t k = 0;
         for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.Is<OffsetString>(i))
+        {
+            auto id = GetId(m, i, j, k, is_gstl);
+            if (id != static_cast<uint32_t>(-1))
             {
-                os.write(SEP_DASH, sizeof(SEP_DASH));
-                os << GetId(m, i, j, ++k) << "\r\n"
-                   << boost::replace_all_copy(m.Get<OffsetString>(i).str, "\n", "\r\n")
-                   << "\r\n";
+                std::string str;
+                if (m.Is<FixStringTag>(i))
+                    str = m.Get<FixStringTag>(i).str;
+                else
+                    str = m.Get<OffsetString>(i).str;
+                boost::replace_all(str, "\n", "\r\n");
+
+#ifdef STRTOOL_COMPAT
+                boost::replace_all(str, "#n", "\r\n");
+                if (!str.empty())
+#endif
+                {
+                    os.write(SEP_DASH, sizeof(SEP_DASH));
+                    os << id << "\r\n" << str << "\r\n";
+                }
             }
+        }
         ++j;
     }
     os.write(SEP_DASH, sizeof(SEP_DASH));
     os << "EOF";
 }
 
-static Gbnl::OffsetString* FindDst(
-    uint32_t id, std::vector<Gbnl::Struct>& messages, size_t& index)
+static std::pair<size_t, size_t> FindDst(
+    uint32_t id, std::vector<Gbnl::Struct>& messages, size_t& index, bool is_gstl)
 {
     auto size = messages.size();
     for (size_t j = 0; j < size; ++j)
@@ -476,18 +512,21 @@ static Gbnl::OffsetString* FindDst(
         auto& m = messages[j2];
         size_t k = 0;
         for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.Is<Gbnl::OffsetString>(i) && GetId(m, i, j2, ++k) == id)
+        {
+            auto tid = GetId(m, i, j, k, is_gstl);
+            if (tid == id)
             {
                 index = j2;
-                return &m.Get<Gbnl::OffsetString>(i);
+                return {j, i};
             }
+        }
     }
-    return nullptr;
+    return {-1, -1};
 }
 
 void Gbnl::ReadTxt(std::istream& is)
 {
-    OffsetString* dst = nullptr;
+    std::pair<size_t, size_t> pos{-1, -1};
     std::string line, msg;
     size_t last_index = 0;
 
@@ -497,11 +536,16 @@ void Gbnl::ReadTxt(std::istream& is)
 
         if (line.compare(0, sizeof(SEP_DASH), SEP_DASH, sizeof(SEP_DASH)) == 0)
         {
-            if (dst)
+            if (pos.first != static_cast<size_t>(-1))
             {
                 BOOST_ASSERT(msg.back() == '\n');
                 msg.pop_back();
-                dst->str = std::move(msg);
+                auto& m = messages[pos.first];
+                if (m.Is<OffsetString>(pos.second))
+                    m.Get<OffsetString>(pos.second).str = std::move(msg);
+                else
+                    strncpy(m.Get<FixStringTag>(pos.second).str, msg.c_str(),
+                            m.GetSize(pos.second)-1);
                 msg.clear();
             }
 
@@ -511,13 +555,13 @@ void Gbnl::ReadTxt(std::istream& is)
                 return;
             }
             auto id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
-            dst = FindDst(id, messages, last_index);
-            if (!dst)
+            pos = FindDst(id, messages, last_index, is_gstl);
+            if (pos.first == static_cast<size_t>(-1))
                 throw std::runtime_error("GbnlTxt: invalid id in input");
         }
         else
         {
-            if (!dst)
+            if (pos.first == static_cast<size_t>(-1))
                 throw std::runtime_error("GbnlTxt: data before separator");
             if (!line.empty() && line.back() == '\r') line.pop_back();
             msg.append(line).append(1, '\n');
