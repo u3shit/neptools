@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 
 # the following two variables are used by the target "waf dist"
-VERSION='0.2.3'
+VERSION='0.2.4'
 APPNAME='stcm-editor'
 
 # these variables are mandatory ('/' are converted automatically)
