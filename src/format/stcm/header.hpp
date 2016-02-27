@@ -34,7 +34,7 @@ STATIC_ASSERT(sizeof(Header) == 0x30);
 class HeaderItem final : public Item
 {
 public:
-    HeaderItem(Key k, Context* ctx, const Header* hdr);
+    HeaderItem(Key k, Context* ctx, const Header& hdr);
     static HeaderItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;

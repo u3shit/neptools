@@ -13,7 +13,7 @@ static inline char FilterPrintable(Byte c)
 
 void RawItem::Dump(std::ostream& os) const
 {
-    os.write(reinterpret_cast<const char*>(GetPtr()), GetSize());
+    src.Dump(os);
 }
 
 void RawItem::PrettyPrint(std::ostream& os) const
@@ -34,20 +34,23 @@ void RawItem::PrettyPrint(std::ostream& os) const
         os << std::setw(8) << std::setfill('0') << GetPosition() + i
            << ' ';
 
+        Byte buf[16];
+        src.Pread(i, buf, std::min<uint64_t>(max-i, 16));
+
         // numbers
         size_t j = 0;
         for (; j < 8 && i+j < max; ++j)
-            os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
+            os << ' ' << std::setw(2) << static_cast<unsigned>(buf[j]);
         os << ' ';
         for (; j < 16 && i+j < max; ++j)
-            os << ' ' << std::setw(2) << static_cast<unsigned>((*this)[i+j]);
+            os << ' ' << std::setw(2) << static_cast<unsigned>(buf[j]);
         for (; j < 16; ++j) os << "   ";
 
         os << " |";
         // chars
         j = 0;
         for (; j < 16 && i+j < max; ++j)
-            os << FilterPrintable((*this)[i+j]);
+            os << FilterPrintable(buf[j]);
         os << '|';
         if ((i+=j) >= GetSize()) break;
         os << '\n';
@@ -58,8 +61,8 @@ void RawItem::PrettyPrint(std::ostream& os) const
 
 std::unique_ptr<RawItem> RawItem::InternalSlice(size_t spos, size_t slen)
 {
-    BOOST_ASSERT(spos+slen <= len);
-    return GetContext()->Create<RawItem>(buf, offset+spos, slen, position+spos);
+    BOOST_ASSERT(spos+slen <= GetSize());
+    return GetContext()->Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
@@ -88,11 +91,10 @@ void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
     if (pos == 0)
     {
         BOOST_ASSERT(rem_len > 0);
-        this->offset += len;
-        this->len = rem_len;
+        src.Slice(len, rem_len);
     }
     else
-        this->len = pos;
+        src.Slice(0, pos);
 }
 
 RawItem* RawItem::Split(size_t offset, size_t size)

@@ -3,7 +3,6 @@
 #pragma once
 
 #include "item_base.hpp"
-#include "../buffer.hpp"
 #include <iosfwd>
 #include <vector>
 #include <map>

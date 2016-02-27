@@ -70,17 +70,14 @@ def configure(cfg):
 
 def build(bld):
     src = [
-        'src/buffer.cpp',
+        'src/dumpable.cpp',
+        'src/source.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
-        'src/format/dumpable.cpp',
         'src/format/gbnl.cpp',
         'src/format/item.cpp',
         'src/format/raw_item.cpp',
-        'src/format/cl3/file.cpp',
-        'src/format/cl3/file_collection.cpp',
-        'src/format/cl3/header.cpp',
-        'src/format/cl3/sections.cpp',
+        'src/format/cl3.cpp',
         'src/format/stcm/collection_link.cpp',
         'src/format/stcm/data.cpp',
         'src/format/stcm/exports.cpp',

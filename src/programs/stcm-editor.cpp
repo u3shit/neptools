@@ -1,7 +1,6 @@
 #include "../format/item.hpp"
 #include "../format/context_item.hpp"
-#include "../format/cl3/file.hpp"
-#include "../format/cl3/file_collection.hpp"
+#include "../format/cl3.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 #include "../fs.hpp"
@@ -31,35 +30,37 @@ struct Command
 struct State
 {
     std::unique_ptr<Dumpable> file;
-    Cl3::File* cl3;
+    Cl3* cl3;
     Stcm::File* stcm;
     Gbnl* gbnl;
 };
 
 State SmartOpen(const fs::path& fname)
 {
-    auto buf = ReadFile(fname);
-    if (buf->GetSize() < 4)
+    auto src = Source::FromFile(fname.native());
+    if (src.GetSize() < 4)
         throw std::runtime_error("Input file too short");
 
-    if (memcmp(buf->GetPtr(), "CL3L", 4) == 0)
+    char buf[4];
+    src.Pread(0, buf, 4);
+    if (memcmp(buf, "CL3L", 4) == 0)
     {
-        auto cl3 = std::make_unique<Cl3::File>(buf);
+        auto cl3 = std::make_unique<Cl3>(src);
         auto ret2 = cl3.get();
         return {std::move(cl3), ret2, nullptr, nullptr};
     }
-    else if (memcmp(buf->GetPtr(), "STCM", 4) == 0)
+    else if (memcmp(buf, "STCM", 4) == 0)
     {
-        auto stcm = std::make_unique<Stcm::File>(buf);
+        auto stcm = std::make_unique<Stcm::File>(src);
         auto ret2 = stcm.get();
         return {std::move(stcm), nullptr, ret2, nullptr};
     }
-    else if (buf->GetSize() >= sizeof(GbnlFooter) &&
-             (memcmp(buf->GetPtr(), "GSTL", 4) == 0 ||
-              memcmp(buf->GetPtr() + buf->GetSize() - sizeof(GbnlFooter),
-                     "GBNL", 4) == 0))
+    else if (src.GetSize() >= sizeof(GbnlFooter) &&
+             (memcmp(buf, "GSTL", 4) == 0 ||
+              (src.Pread(src.GetSize() - sizeof(GbnlFooter), buf, 4),
+               memcmp(buf, "GBNL", 4) == 0)))
     {
-        auto gbnl = std::make_unique<Gbnl>(buf.get());
+        auto gbnl = std::make_unique<Gbnl>(src);
         auto ret2 = gbnl.get();
         return {std::move(gbnl), nullptr, nullptr, ret2};
     }
@@ -96,14 +97,13 @@ void EnsureStcm(State& st)
     if (!st.cl3)
         throw std::runtime_error{"Invalid file loaded: can't find STCM without CL3"};
 
-    auto dat = st.cl3->GetFileCollection().GetFile("main.DAT");
+    auto dat = st.cl3->GetFile("main.DAT");
     if (!dat) throw std::runtime_error{"Invalid CL3 file: no main.DAT"};
 
-    auto ritem = asserted_cast<RawItem*>(dat->GetChildren());
-    auto nstcm = st.cl3->Create<ContextItem<Stcm::File>>(
-        ritem->GetBuffer(), ritem->GetOffset(), ritem->GetSize());
+    auto src = asserted_cast<DumpableSource*>(dat->src.get());
+    auto nstcm = std::make_unique<Stcm::File>(*src);
     st.stcm = nstcm.get();
-    ritem->Replace(std::move(nstcm));
+    dat->src = std::move(nstcm);
 }
 
 Stcm::GbnlItem* FindGbnl(Item* root)
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
         }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
     CMD("--create-cl3", [&](auto&)
         {
-            auto c = std::make_unique<Cl3::File>();
+            auto c = std::make_unique<Cl3>();
             auto c2 = c.get();
             st = {std::move(c), c2, nullptr, nullptr};
         }, "\n\tCreates an empty cl3 file\n");
@@ -253,29 +253,27 @@ int main(int argc, char** argv)
         {
             if (!st.cl3)
                 throw std::runtime_error{"--list-files: No cl3 loaded"};
-            for (const auto& e : st.cl3->GetFileCollection().entries)
-                std::cout << e.name << '\t' << e.data->second.item->GetSize() << '\n';
+            for (const auto& e : st.cl3->entries)
+                std::cout << e.name << '\t' << e.src->GetSize() << '\n';
         }, "\n\tLists the contents of the cl3 archive\n");
     CMD("--extract-file", [&](auto& args) -> void
         {
             if (args.size() < 2) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--extract-file: No cl3 loaded"};
-            const auto& col = st.cl3->GetFileCollection().entries;
-            auto fn = args.front(); args.pop_front();
-            auto it = std::find_if(col.begin(), col.end(),
-                                   [fn](auto& e) { return e.name == fn; });
-            if (it == col.end())
+            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+
+            if (!e)
                 throw std::runtime_error{"--extract-file: specified file not found"};
             else
-                ShellDump(it->data->second.item, args);
+                ShellDump(e->src.get(), args);
         }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
     CMD("--extract-files", [&](auto& args)
         {
             if (args.empty()) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--extract-file: No cl3 loaded"};
-            st.cl3->GetFileCollection().ExtractTo(args.front());
+            st.cl3->ExtractTo(args.front());
             args.pop_front();
         }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
     CMD("--replace-file", [&](auto& args)
@@ -283,10 +281,10 @@ int main(int argc, char** argv)
             if (args.size() < 2) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--replace-file: No cl3 loaded"};
-            auto& fc = st.cl3->GetFileCollection();
 
-            fc.ReplaceFile(
-                args[0], fc.GetContext()->Create<RawItem>(ReadFile(args[1])));
+            auto& e = st.cl3->GetOrCreateFile(args[0]);
+            e.src = std::make_unique<DumpableSource>(Source::FromFile(args[1]));
+
             args.pop_front(); args.pop_front();
         }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
     CMD("--inspect", [&](auto& args)

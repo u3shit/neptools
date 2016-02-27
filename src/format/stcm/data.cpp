@@ -13,36 +13,37 @@ bool DataHeader::IsValid(size_t chunk_size) const noexcept
     return type < 0xff && length <= chunk_size;
 }
 
-DataItem::DataItem(Key k, Context* ctx, const DataHeader* raw, size_t chunk_size)
+DataItem::DataItem(Key k, Context* ctx, const DataHeader& raw, size_t chunk_size)
     : Item{k, ctx}
 {
-    if (!raw->IsValid(chunk_size))
+    if (!raw.IsValid(chunk_size))
         throw std::runtime_error("Invalid data header");
 
-    type = raw->type;
-    offset_unit = raw->offset_unit;
-    field_8 = raw->field_8;
+    type = raw.type;
+    offset_unit = raw.offset_unit;
+    field_8 = raw.field_8;
 }
 
 DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::Get<DataHeader>(ptr);
-    uint32_t data_length = x.ptr->length; // hdr may be invalidated by Split...
-    if (x.len < sizeof(DataHeader))
-        throw std::runtime_error("Data header: premature end of data");
 
     auto ret = x.ritem.SplitCreate<DataItem>(
-        ptr.offset, x.ptr, x.len - sizeof(DataHeader));
-    if (data_length > 0)
+        ptr.offset, x.t, x.ritem.GetSize() - ptr.offset - sizeof(DataHeader));
+    if (x.t.length > 0)
         ret->PrependChild(asserted_cast<RawItem*>(
-            ret->GetNext())->Split(0, data_length)->Remove());
-    BOOST_ASSERT(ret->GetSize() == sizeof(DataHeader) + data_length);
+            ret->GetNext())->Split(0, x.t.length)->Remove());
+    BOOST_ASSERT(ret->GetSize() == sizeof(DataHeader) + x.t.length);
 
     // hack
     auto child = dynamic_cast<RawItem*>(ret->GetChildren());
-    if (child && child->GetSize() > sizeof(GbnlFooter) &&
-        memcmp(child->GetPtr() + child->GetSize() - sizeof(GbnlFooter), "GBNL", 4) == 0)
-        GbnlItem::CreateAndInsert({child, 0});
+    if (child && child->GetSize() > sizeof(GbnlFooter))
+    {
+        char buf[4];
+        child->GetSource().Pread(child->GetSize() - sizeof(GbnlFooter), buf, 4);
+        if (memcmp(buf, "GBNL", 4) == 0)
+            GbnlItem::CreateAndInsert({child, 0});
+    }
 
     return ret;
 }

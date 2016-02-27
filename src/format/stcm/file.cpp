@@ -7,9 +7,9 @@
 namespace Stcm
 {
 
-File::File(std::shared_ptr<Buffer> buf, size_t offset, size_t len)
+File::File(Source src)
 {
-    auto root = Create<RawItem>(std::move(buf), offset, len);
+    auto root = Create<RawItem>(std::move(src));
     auto root_sav = root.get();
     SetRoot(std::move(root));
     root_sav->Split(root_sav->GetSize(), Create<EofItem>());

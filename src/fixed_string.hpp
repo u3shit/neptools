@@ -14,13 +14,18 @@ class FixedString :
 {
 public:
     FixedString() = default;
-    explicit FixedString(const char* cstr)
-    { strncpy(str, cstr, N-1); str[N-1] = '\0'; }
-    explicit FixedString(const std::string& sstr)
+    explicit FixedString(const char* cstr) { *this = cstr; }
+    explicit FixedString(const std::string& sstr) { *this = sstr; }
+
+    FixedString& operator=(const char* cstr)
+    { strncpy(str, cstr, N-1); str[N-1] = '\0'; return *this; }
+
+    FixedString& operator=(const std::string& sstr)
     {
         auto copied = std::min(sstr.size(), N-1);
         memcpy(str, sstr.data(), copied);
         memset(str+copied, 0, N-copied);
+        return *this;
     }
 
     bool is_valid() const noexcept

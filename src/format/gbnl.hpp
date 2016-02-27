@@ -2,8 +2,8 @@
 #define UUID_9037C300_D4EF_473C_8387_A1A9797069A7
 #pragma once
 
-#include "dumpable.hpp"
-#include "../buffer.hpp"
+#include "../dumpable.hpp"
+#include "../source.hpp"
 #include "../dynamic_struct.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
@@ -52,8 +52,8 @@ STATIC_ASSERT(sizeof(GbnlFooter) == 0x40);
 class Gbnl : public Dumpable
 {
 public:
-    Gbnl(const Byte* data, size_t len);
-    Gbnl(const Buffer* buf) : Gbnl{buf->GetPtr(), buf->GetSize()} {}
+    Gbnl(Source src);
+    //Gbnl(const Byte* data, size_t len);
 
     void Fixup() override { RecalcSize(); }
 
@@ -78,7 +78,7 @@ public:
     Struct::TypePtr type;
 
     void RecalcSize();
-    size_t GetSize() const noexcept;
+    uint64_t GetSize() const noexcept override;
 
 private:
     void Dump_(std::ostream& os) const override;

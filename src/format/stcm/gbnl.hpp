@@ -13,7 +13,7 @@ namespace Stcm
 class GbnlItem final : public Item, public Gbnl
 {
 public:
-    GbnlItem(Key k, Context* ctx, const Byte* data, size_t len);
+    GbnlItem(Key k, Context* ctx, Source src);
     static GbnlItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override { Gbnl::Dump(os); }

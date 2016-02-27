@@ -17,28 +17,25 @@ bool Header::IsValid(size_t file_size) const noexcept
         collection_link_offset < file_size;
 }
 
-HeaderItem::HeaderItem(Key k, Context* ctx, const Header* raw)
+HeaderItem::HeaderItem(Key k, Context* ctx, const Header& hdr)
     : Item{k, ctx}
 {
-    if (!raw->IsValid(GetContext()->GetSize()))
+    if (!hdr.IsValid(GetContext()->GetSize()))
         throw std::runtime_error("Invalid STCM header");
 
-    msg = raw->msg;
-    export_sec = ctx->CreateLabelFallback("exports", raw->export_offset);
+    msg = hdr.msg;
+    export_sec = ctx->CreateLabelFallback("exports", hdr.export_offset);
     collection_link = ctx->CreateLabelFallback(
-        "collection_link_hdr", raw->collection_link_offset);;
+        "collection_link_hdr", hdr.collection_link_offset);;
 }
 
 HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::Get<Header>(ptr);
-    if (x.len < sizeof(Header))
-        throw std::out_of_range("STCM header too short");
-    size_t export_count = x.ptr->export_count;
 
-    auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.ptr);
+    auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.t);
     CollectionLinkHeaderItem::CreateAndInsert(ret->collection_link->second);
-    ExportsItem::CreateAndInsert(ret->export_sec->second, export_count);
+    ExportsItem::CreateAndInsert(ret->export_sec->second, x.t.export_count);
     return ret;
 }
 

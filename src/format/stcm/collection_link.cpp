@@ -25,41 +25,36 @@ bool CollectionLinkEntry::IsValid(size_t file_size) const noexcept
 }
 
 CollectionLinkHeaderItem::CollectionLinkHeaderItem(
-    Key k, Context* ctx, const CollectionLinkHeader* s)
+    Key k, Context* ctx, const CollectionLinkHeader& s)
     : Item{k, ctx}
 {
-    if (!s->IsValid(GetContext()->GetSize()))
+    if (!s.IsValid(GetContext()->GetSize()))
         throw std::runtime_error("Invalid collection link header");
 
-    data = GetContext()->CreateLabelFallback("collection_link", s->offset);
+    data = GetContext()->CreateLabelFallback("collection_link", s.offset);
 }
 
 CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     ItemPointer ptr)
 {
     auto x = RawItem::Get<CollectionLinkHeader>(ptr);
-    size_t count = x.ptr->count;
-    if (x.len < sizeof(CollectionLinkHeader))
-        throw std::runtime_error("Collection link header: premature end of data");
-    auto ret = x.ritem.SplitCreate<CollectionLinkHeaderItem>(ptr.offset, x.ptr);
+    auto ret = x.ritem.SplitCreate<CollectionLinkHeaderItem>(ptr.offset, x.t);
 
     auto ptr2 = ret->data->second;
     auto* ritem2 = ptr2.Maybe<RawItem>();
     if (!ritem2)
     {
         // HACK!
-        if (ptr2.offset != 0 || count != 0)
+        if (ptr2.offset != 0 || x.t.count != 0)
             throw std::runtime_error("Collection link: invalid entry pointer");
         auto& eof = ptr2.AsChecked0<EofItem>();
-        eof.Replace(eof.GetContext()->Create<CollectionLinkItem>(nullptr, 0));
+        eof.Replace(eof.GetContext()->Create<CollectionLinkItem>());
         return ret;
     }
 
-    auto e = RawItem::Get<CollectionLinkEntry>(ptr2);
+    auto e = RawItem::GetSource(ptr2, x.t.count*sizeof(CollectionLinkEntry));
 
-    if (e.len < count*sizeof(CollectionLinkEntry))
-        throw std::runtime_error("Collection link: premature end of data");
-    e.ritem.SplitCreate<CollectionLinkItem>(ptr2.offset, e.ptr, count);
+    e.ritem.SplitCreate<CollectionLinkItem>(ptr2.offset, e.src, x.t.count);
 
     return ret;
 }
@@ -79,17 +74,18 @@ void CollectionLinkHeaderItem::PrettyPrint(std::ostream& os) const
 }
 
 CollectionLinkItem::CollectionLinkItem(
-        Key k, Context* ctx, const CollectionLinkEntry* e, size_t count)
+    Key k, Context* ctx, Source src, size_t count)
     : Item{k, ctx}
 {
     entries.reserve(count);
     for (size_t i = 0; i < count; ++i)
     {
-        if (!e[i].IsValid(GetContext()->GetSize()))
+        auto e = src.Read<CollectionLinkEntry>();
+        if (!e.IsValid(GetContext()->GetSize()))
             throw std::runtime_error("Invalid collection link entry");
         entries.push_back({
-            GetContext()->GetLabelTo(e[i].name_0),
-            GetContext()->GetLabelTo(e[i].name_1)});
+            GetContext()->GetLabelTo(e.name_0),
+            GetContext()->GetLabelTo(e.name_1)});
     }
 }
 

@@ -44,59 +44,64 @@ static size_t GetSize(uint16_t type)
     }
 }
 
-Gbnl::Gbnl(const Byte* data, size_t len)
+Gbnl::Gbnl(Source src)
 {
-    if (len < sizeof(GbnlFooter))
+    if (src.GetSize() < sizeof(GbnlFooter))
         throw std::runtime_error{"GBNL: section too short"};
 
-    const GbnlFooter* foot;
-    if (memcmp(data, "GSTL", 4) == 0)
+    auto foot = src.Pread<GbnlFooter>(0);
+    if (memcmp(foot.magic, "GSTL", 4) == 0)
     {
-        foot = reinterpret_cast<const GbnlFooter*>(data);
         is_gstl = true;
     }
     else
     {
-        foot = reinterpret_cast<const GbnlFooter*>(
-            data + len - sizeof(GbnlFooter));
+        src.Pread(src.GetSize() - sizeof(GbnlFooter), foot);
         is_gstl = false;
     }
 
-    if (!foot->IsValid(len))
+    if (!foot.IsValid(src.GetSize()))
         throw std::runtime_error{"GBNL: invalid footer"};
-    flags = foot->flags;
-    field_28 = foot->field_28;
-    field_30 = foot->field_30;
+    flags = foot.flags;
+    field_28 = foot.field_28;
+    field_30 = foot.field_30;
 
-    auto types = reinterpret_cast<const GbnlTypeDescriptor*>(
-        data + foot->offset_types);
-    msg_descr_size = foot->msg_descr_size;
+    src.Seek(foot.offset_types);
+    msg_descr_size = foot.msg_descr_size;
     size_t calc_offs = 0;
 
+    std::vector<uint16_t> offsets;
+    offsets.reserve(foot.count_types);
     Struct::TypeBuilder bld;
-    for (size_t i = 0; i < foot->count_types; ++i)
+    for (size_t i = 0; i < foot.count_types; ++i)
     {
-        auto bytes = ::GetSize(types[i].type);
+        auto type = src.Read<GbnlTypeDescriptor>();
+
+        auto bytes = ::GetSize(type.type);
         calc_offs = ::Align(calc_offs, bytes);
-        if (calc_offs != types[i].offset)
+        if (calc_offs != type.offset)
             throw std::runtime_error{"GBNL: invalid type offset"};
         calc_offs += bytes;
+        offsets.push_back(type.offset);
 
-        switch (types[i].type)
+        switch (type.type)
         {
         case GbnlTypeDescriptor::UINT8:
-            if (i+1 == foot->count_types || // last item
-                types[i+1].offset == ::Align(types[i].offset+1, ::GetSize(types[i+1].type)))
+            if (i+1 != foot.count_types)
             {
-                // single char
-                bld.Add<uint8_t>();
+                auto t2 = src.Pread<GbnlTypeDescriptor>(src.Tell());
+                // if it longer than 1, make it a string
+                if (t2.offset != ::Align(type.offset+1, ::GetSize(t2.type)))
+                {
+                    auto len = t2.offset - type.offset;
+                    calc_offs += len-1;
+                    bld.Add<FixStringTag>(len);
+                    break;
+                }
             }
-            else
-            {
-                auto len = types[i+1].offset - types[i].offset;
-                calc_offs += len-1;
-                bld.Add<FixStringTag>(len);
-            }
+
+            // single char
+            bld.Add<uint8_t>();
             break;
         case GbnlTypeDescriptor::UINT16:
             bld.Add<uint16_t>();
@@ -119,50 +124,45 @@ Gbnl::Gbnl(const Byte* data, size_t len)
 
     type = bld.Build();
 
-    auto msgs = data + foot->descr_offset;
-    messages.reserve(foot->count_msgs);
-    for (size_t i = 0; i < foot->count_msgs; ++i)
+    auto msgs = foot.descr_offset;
+    messages.reserve(foot.count_msgs);
+    for (size_t i = 0; i < foot.count_msgs; ++i)
     {
         messages.emplace_back(type);
         auto& m = messages.back();
-        for (size_t i = 0; i < foot->count_types; ++i)
+        for (size_t i = 0; i < foot.count_types; ++i)
         {
-            auto ptr = msgs + types[i].offset;
+            src.Seek(msgs + offsets[i]);
             switch (type->items[i].idx)
             {
             case Struct::GetIndexFromType<uint8_t>():
-                m.Get<uint8_t>(i) = *reinterpret_cast<
-                    const boost::endian::little_uint8_t*>(ptr);
+                m.Get<uint8_t>(i) = src.GetLittleUint8();
                 break;
             case Struct::GetIndexFromType<uint16_t>():
-                m.Get<uint16_t>(i) = *reinterpret_cast<
-                    const boost::endian::little_uint16_t*>(ptr);
+                m.Get<uint16_t>(i) = src.GetLittleUint16();
                 break;
             case Struct::GetIndexFromType<uint32_t>():
-                m.Get<uint32_t>(i) = *reinterpret_cast<
-                    const boost::endian::little_uint32_t*>(ptr);
+                m.Get<uint32_t>(i) = src.GetLittleUint32();
                 break;
             case Struct::GetIndexFromType<float>():
             {
-                uint32_t x = *reinterpret_cast<
-                    const boost::endian::little_uint32_t*>(ptr);
-                m.Get<float>(i) = *reinterpret_cast<float*>(&x);
+                union { float f; uint32_t i; } x;
+                x.i = src.GetLittleUint32();
+                m.Get<float>(i) = x.f;
                 break;
             }
             case Struct::GetIndexFromType<OffsetString>():
             {
-                uint32_t offs = *reinterpret_cast<
-                    const boost::endian::little_uint32_t*>(ptr);
+                uint32_t offs = src.GetLittleUint32();
                 if (offs == 0xffffffff)
                     m.Get<OffsetString>(i).offset = -1;
                 else
                 {
-                    if (offs > len - foot->offset_msgs)
+                    if (offs > src.GetSize() - foot.offset_msgs)
                         throw std::runtime_error{"GBNL: string offset too big"};
-                    auto str = reinterpret_cast<const char*>(
-                        data + foot->offset_msgs + offs);
+                    auto str = foot.offset_msgs + offs;
 
-                    m.Get<OffsetString>(i) = {str, 0};
+                    m.Get<OffsetString>(i) = {src.GetCstring(str), 0};
                 }
                 break;
             }
@@ -170,8 +170,7 @@ Gbnl::Gbnl(const Byte* data, size_t len)
             {
                 auto len = type->items[i].size;
                 auto dst = m.Get<FixStringTag>(i).str;
-                strncpy(dst, reinterpret_cast<const char*>(ptr), len-1);
-                dst[len-1] = '\0';
+                src.Read(dst, len);
                 break;
             }
             }
@@ -181,7 +180,7 @@ Gbnl::Gbnl(const Byte* data, size_t len)
     }
     RecalcSize();
 
-    if (msg_descr_size != foot->msg_descr_size || GetSize() != len)
+    if (msg_descr_size != foot.msg_descr_size || GetSize() != src.GetSize())
         throw std::runtime_error("GBNL: invalid size after repack");
 }
 

@@ -2,7 +2,7 @@
 #define UUID_C9446864_0020_4D2F_8E96_CBC6ADCCA3BE
 #pragma once
 
-#include "../utils.hpp"
+#include "utils.hpp"
 
 class Dumpable
 {
@@ -13,6 +13,8 @@ public:
     virtual ~Dumpable() = default;
 
     virtual void Fixup() = 0;
+    virtual uint64_t GetSize() const = 0;
+
     void Dump(std::ostream& os) const { return Dump_(os); }
     void Dump(std::ostream&& os) const { return Dump_(os); }
     void Dump(const fs::path& path) const;

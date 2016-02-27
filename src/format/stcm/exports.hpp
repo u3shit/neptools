@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../source.hpp"
 #include "../../fixed_string.hpp"
 #include <boost/endian/arithmetic.hpp>
 
@@ -23,7 +24,7 @@ class HeaderItem;
 class ExportsItem final : public Item
 {
 public:
-    ExportsItem(Key k, Context* ctx, const ExportEntry* e, size_t export_count);
+    ExportsItem(Key k, Context* ctx, Source src, size_t export_count);
     static ExportsItem* CreateAndInsert(ItemPointer ptr, size_t export_count);
 
     void Dump(std::ostream& os) const override;

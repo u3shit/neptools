@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 namespace Stcm
@@ -49,7 +50,7 @@ STATIC_ASSERT(sizeof(CollectionLinkEntry) == 0x20);
 class CollectionLinkHeaderItem final : public Item
 {
 public:
-    CollectionLinkHeaderItem(Key k, Context* ctx, const CollectionLinkHeader* s);
+    CollectionLinkHeaderItem(Key k, Context* ctx, const CollectionLinkHeader& s);
     static CollectionLinkHeaderItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;
@@ -63,8 +64,8 @@ public:
 class CollectionLinkItem final : public Item
 {
 public:
-    CollectionLinkItem(
-        Key k, Context* ctx, const CollectionLinkEntry* e, size_t count);
+    CollectionLinkItem(Key k, Context* ctx) : Item{k, ctx} {}
+    CollectionLinkItem(Key k, Context* ctx, Source src, size_t count);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;

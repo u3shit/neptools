@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 class RawItem;
@@ -24,65 +25,64 @@ struct Instruction
         SYSTEM_OPCODES_END   = 0xffffff14,
     };
 
-    struct Parameter
-    {
-        struct Type0
-        {
-            static constexpr uint32_t MEM_OFFSET = 0;
-            static constexpr uint32_t UNK = 1;
-            static constexpr uint32_t INDIRECT = 2;
-            static constexpr uint32_t SPECIAL = 3;
-        };
-
-        struct Type0Special
-        {
-            static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
-            static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
-            static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
-            static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
-            static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
-            static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
-            static constexpr uint32_t COLL_LINK      = 0xffffff42;
-        };
-
-        struct Type48
-        {
-            static constexpr uint32_t MEM_OFFSET = 0;
-            static constexpr uint32_t IMMEDIATE = 1;
-            static constexpr uint32_t INDIRECT = 2;
-            static constexpr uint32_t SPECIAL = 3;
-        };
-
-        struct Type48Special
-        {
-            static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
-            static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
-            static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
-            static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
-        };
-
-        boost::endian::little_uint32_t param_0;
-        boost::endian::little_uint32_t param_4;
-        boost::endian::little_uint32_t param_8;
-
-        static constexpr inline uint32_t TypeTag(uint32_t x) { return x >> 30; }
-        static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
-        static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
-        { return (tag << 30) | val; }
-        bool IsValid(size_t file_size) const noexcept;
-    } params[1];
-
     bool IsValid(size_t file_size) const noexcept;
-    static constexpr size_t SIZE = 0x10;
 };
-STATIC_ASSERT(sizeof(Instruction::Parameter) == 0xc);
-STATIC_ASSERT(sizeof(Instruction) - sizeof(Instruction::Parameter) == 0x10);
+STATIC_ASSERT(sizeof(Instruction) == 0x10);
+
+struct Parameter
+{
+    struct Type0
+    {
+        static constexpr uint32_t MEM_OFFSET = 0;
+        static constexpr uint32_t UNK = 1;
+        static constexpr uint32_t INDIRECT = 2;
+        static constexpr uint32_t SPECIAL = 3;
+    };
+
+    struct Type0Special
+    {
+        static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
+        static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
+        static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
+        static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
+        static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
+        static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
+        static constexpr uint32_t COLL_LINK      = 0xffffff42;
+    };
+
+    struct Type48
+    {
+        static constexpr uint32_t MEM_OFFSET = 0;
+        static constexpr uint32_t IMMEDIATE = 1;
+        static constexpr uint32_t INDIRECT = 2;
+        static constexpr uint32_t SPECIAL = 3;
+    };
+
+    struct Type48Special
+    {
+        static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
+        static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
+        static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
+        static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
+    };
+
+    boost::endian::little_uint32_t param_0;
+    boost::endian::little_uint32_t param_4;
+    boost::endian::little_uint32_t param_8;
+
+    static constexpr inline uint32_t TypeTag(uint32_t x) { return x >> 30; }
+    static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
+    static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
+    { return (tag << 30) | val; }
+    bool IsValid(size_t file_size) const noexcept;
+};
+STATIC_ASSERT(sizeof(Parameter) == 0xc);
 
 class InstructionItem final : public ItemWithChildren
 {
 public:
     InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
-    InstructionItem(Key k, Context* ctx, const Instruction* instr);
+    InstructionItem(Key k, Context* ctx, Source src);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;
@@ -136,7 +136,7 @@ public:
 
 private:
     void Dump48(boost::endian::little_uint32_t& out, const Param48& in) const noexcept;
-    void ConvertParam(Param& out, const Instruction::Parameter& in);
+    void ConvertParam(Param& out, const Parameter& in);
     void ConvertParam48(Param48& out, uint32_t in);
 };
 
