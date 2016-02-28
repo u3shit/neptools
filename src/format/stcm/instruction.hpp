@@ -25,7 +25,7 @@ struct Instruction
         SYSTEM_OPCODES_END   = 0xffffff14,
     };
 
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(Instruction) == 0x10);
 
@@ -74,7 +74,7 @@ struct Parameter
     static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
     static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
     { return (tag << 30) | val; }
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(Parameter) == 0xc);
 
@@ -87,8 +87,8 @@ public:
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override;
-    size_t UpdatePositions(FilePosition npos) override;
+    FilePosition GetSize() const noexcept override;
+    FilePosition UpdatePositions(FilePosition npos) override;
 
     bool is_call;
     union

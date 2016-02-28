@@ -9,7 +9,7 @@
 namespace Stcm
 {
 
-static bool Param48Valid(uint32_t param, size_t file_size) noexcept
+static bool Param48Valid(uint32_t param, FilePosition file_size) noexcept
 {
     switch (Parameter::TypeTag(param))
     {
@@ -27,7 +27,7 @@ static bool Param48Valid(uint32_t param, size_t file_size) noexcept
     }
 }
 
-bool Parameter::IsValid(size_t file_size) const noexcept
+bool Parameter::IsValid(FilePosition file_size) const noexcept
 {
     switch (TypeTag(param_0))
     {
@@ -54,7 +54,7 @@ bool Parameter::IsValid(size_t file_size) const noexcept
     }
 }
 
-bool Instruction::IsValid(size_t file_size) const noexcept
+bool Instruction::IsValid(FilePosition file_size) const noexcept
 {
     if ((is_call != 0 && is_call != 1) ||
         param_count >= 16 ||
@@ -224,7 +224,7 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 }
 
 
-size_t InstructionItem::GetSize() const noexcept
+FilePosition InstructionItem::GetSize() const noexcept
 {
     return sizeof(Instruction) + params.size() * sizeof(Parameter) +
         ItemWithChildren::GetSize();
@@ -254,7 +254,7 @@ void InstructionItem::Dump48(
     BOOST_ASSERT(false);
 }
 
-size_t InstructionItem::UpdatePositions(FilePosition npos)
+FilePosition InstructionItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(

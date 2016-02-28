@@ -13,12 +13,12 @@ public:
         : Item{k, ctx, pos}, src{std::move(src)} {}
 
     const Source& GetSource() const noexcept { return src; }
-    uint64_t GetSize() const noexcept override { return src.GetSize(); }
+    FilePosition GetSize() const noexcept override { return src.GetSize(); }
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
 
     template <typename T>
-    T* Split(size_t pos, std::unique_ptr<T> nitem)
+    T* Split(FilePosition pos, std::unique_ptr<T> nitem)
     {
         T* ret = nitem.get();
         Split2(pos, std::move(nitem));
@@ -26,10 +26,10 @@ public:
     }
 
     template <typename T, typename... Args>
-    T* SplitCreate(size_t pos, Args&&... args)
+    T* SplitCreate(FilePosition pos, Args&&... args)
     { return Split(pos, GetContext()->Create<T>(std::forward<Args>(args)...)); }
 
-    RawItem* Split(size_t offset, size_t size);
+    RawItem* Split(FilePosition offset, FilePosition size);
 
     template <typename T>
     static auto Get(ItemPointer ptr)
@@ -45,11 +45,11 @@ public:
             ritem.src.Pread<T>(ptr.offset)};
     }
 
-    static auto GetSource(ItemPointer ptr, uint64_t len)
+    static auto GetSource(ItemPointer ptr, FilePosition len)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
         BOOST_ASSERT(ptr.offset <= ritem.GetSize());
-        if (len == uint64_t(-1)) len = ritem.GetSize() - ptr.offset;
+        if (len == FilePosition(-1)) len = ritem.GetSize() - ptr.offset;
 
         if (ptr.offset + len > ritem.GetSize())
             throw std::runtime_error{"Premature end of data"};
@@ -58,8 +58,9 @@ public:
     }
 
 protected:
-    std::unique_ptr<RawItem> InternalSlice(size_t offset, size_t size);
-    void Split2(size_t pos, std::unique_ptr<Item> nitem);
+    std::unique_ptr<RawItem> InternalSlice(
+        FilePosition offset, FilePosition size);
+    void Split2(FilePosition pos, std::unique_ptr<Item> nitem);
 
 private:
     DumpableSource src;

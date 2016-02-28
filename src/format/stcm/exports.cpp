@@ -7,17 +7,17 @@
 namespace Stcm
 {
 
-bool ExportEntry::IsValid(size_t file_size) const noexcept
+bool ExportEntry::IsValid(FilePosition file_size) const noexcept
 {
     return field_0 == 0 && name.is_valid() && offset < file_size;
 }
 
-ExportsItem::ExportsItem(Key k, Context* ctx, Source src, size_t export_count)
+ExportsItem::ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count)
     : Item{k, ctx}
 {
     entries.reserve(export_count);
     auto size = GetContext()->GetSize();
-    for (size_t i = 0; i < export_count; ++i)
+    for (uint32_t i = 0; i < export_count; ++i)
     {
         auto e = src.Read<ExportEntry>();
         if (!e.IsValid(size))
@@ -28,11 +28,12 @@ ExportsItem::ExportsItem(Key k, Context* ctx, Source src, size_t export_count)
     }
 }
 
-ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, size_t export_count)
+ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count)
 {
     auto x = RawItem::GetSource(ptr, export_count*sizeof(ExportEntry));
 
-    auto ret = x.ritem.SplitCreate<ExportsItem>(ptr.offset, x.src, export_count);
+    auto ret = x.ritem.SplitCreate<ExportsItem>(
+        ptr.offset, x.src, export_count);
 
     for (const auto& e : ret->entries)
         MaybeCreate<InstructionItem>(e.second->second);

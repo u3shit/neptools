@@ -8,7 +8,7 @@
 namespace Stcm
 {
 
-bool DataHeader::IsValid(size_t chunk_size) const noexcept
+bool DataHeader::IsValid(FilePosition chunk_size) const noexcept
 {
     return type < 0xff && length <= chunk_size;
 }
@@ -69,15 +69,15 @@ void DataItem::PrettyPrint(std::ostream& os) const
     os << '}';
 }
 
-size_t DataItem::GetSize() const noexcept
+FilePosition DataItem::GetSize() const noexcept
 {
-    size_t ret = sizeof(DataHeader);
+    FilePosition ret = sizeof(DataHeader);
     for (auto it = GetChildren(); it; it = it->GetNext())
         ret += it->GetSize();
     return ret;
 }
 
-size_t DataItem::UpdatePositions(FilePosition npos)
+FilePosition DataItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(

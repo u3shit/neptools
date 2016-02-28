@@ -16,7 +16,7 @@ struct ExportEntry
     FixedString<0x20> name;
     boost::endian::little_uint32_t offset;
 
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(ExportEntry) == 0x28);
 
@@ -24,12 +24,12 @@ class HeaderItem;
 class ExportsItem final : public Item
 {
 public:
-    ExportsItem(Key k, Context* ctx, Source src, size_t export_count);
-    static ExportsItem* CreateAndInsert(ItemPointer ptr, size_t export_count);
+    ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
+    static ExportsItem* CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override
+    FilePosition GetSize() const noexcept override
     { return sizeof(ExportEntry) * entries.size(); }
 
     using EntryType = std::pair<FixedString<0x20>, const Label*>;

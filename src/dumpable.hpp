@@ -13,7 +13,7 @@ public:
     virtual ~Dumpable() = default;
 
     virtual void Fixup() = 0;
-    virtual uint64_t GetSize() const = 0;
+    virtual FilePosition GetSize() const = 0;
 
     void Dump(std::ostream& os) const { return Dump_(os); }
     void Dump(std::ostream&& os) const { return Dump_(os); }

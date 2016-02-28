@@ -6,7 +6,7 @@
 namespace Stcm
 {
 
-bool CollectionLinkHeader::IsValid(size_t file_size) const noexcept
+bool CollectionLinkHeader::IsValid(FilePosition file_size) const noexcept
 {
     return field_00 == 0 &&
         offset <= file_size &&
@@ -17,7 +17,7 @@ bool CollectionLinkHeader::IsValid(size_t file_size) const noexcept
         field_30 == 0 && field_34 == 0 && field_38 == 0 && field_3c == 0;
 }
 
-bool CollectionLinkEntry::IsValid(size_t file_size) const noexcept
+bool CollectionLinkEntry::IsValid(FilePosition file_size) const noexcept
 {
     return name_0 <= file_size && name_1 <= file_size && ptr == 0 &&
         field_0c == 0 &&
@@ -74,11 +74,11 @@ void CollectionLinkHeaderItem::PrettyPrint(std::ostream& os) const
 }
 
 CollectionLinkItem::CollectionLinkItem(
-    Key k, Context* ctx, Source src, size_t count)
+    Key k, Context* ctx, Source src, uint32_t count)
     : Item{k, ctx}
 {
     entries.reserve(count);
-    for (size_t i = 0; i < count; ++i)
+    for (uint32_t i = 0; i < count; ++i)
     {
         auto e = src.Read<CollectionLinkEntry>();
         if (!e.IsValid(GetContext()->GetSize()))

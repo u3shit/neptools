@@ -59,18 +59,19 @@ void RawItem::PrettyPrint(std::ostream& os) const
     os.flags(flags);
 }
 
-std::unique_ptr<RawItem> RawItem::InternalSlice(size_t spos, size_t slen)
+std::unique_ptr<RawItem> RawItem::InternalSlice(
+    FilePosition spos, FilePosition slen)
 {
     BOOST_ASSERT(spos+slen <= GetSize());
     return GetContext()->Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
-void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
+void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
 {
-    size_t len = nitem->GetSize();
+    auto len = nitem->GetSize();
     BOOST_ASSERT(pos <= GetSize() && pos+len <= GetSize());
-    size_t rem_len = GetSize() - len - pos;
+    auto rem_len = GetSize() - len - pos;
 
     if (pos == 0 && rem_len == 0)
     {
@@ -97,7 +98,7 @@ void RawItem::Split2(size_t pos, std::unique_ptr<Item> nitem)
         src.Slice(0, pos);
 }
 
-RawItem* RawItem::Split(size_t offset, size_t size)
+RawItem* RawItem::Split(FilePosition offset, FilePosition size)
 {
     auto it = InternalSlice(offset, size);
     auto ret = it.get();

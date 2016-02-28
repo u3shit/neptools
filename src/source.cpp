@@ -1,4 +1,3 @@
-#define _FILE_OFFSET_BITS 64
 #include "source.hpp"
 
 #include <sys/types.h>
@@ -40,7 +39,7 @@ Source Source::FromFile(fs::path fname)
         catch (...) { close(fd); throw; }
     }
     catch (...) { close(fd); throw; }
-    return {std::move(p), static_cast<uint64_t>(buf.st_size)};
+    return {std::move(p), static_cast<FilePosition>(buf.st_size)};
 }
 
 template <typename T>
@@ -53,7 +52,7 @@ Source::UnixLike<T>::~UnixLike()
 }
 
 template <typename T>
-void Source::UnixLike<T>::Pread(uint64_t offs, Byte* buf, size_t len)
+void Source::UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
 {
     BOOST_ASSERT(fd != -1);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
@@ -67,8 +66,8 @@ void Source::UnixLike<T>::Pread(uint64_t offs, Byte* buf, size_t len)
     while (len)
     {
         EnsureChunk(offs);
-        size_t buf_offs = offs - lru[0].offset;
-        size_t to_cpy = std::min(len, lru[0].size - buf_offs);
+        auto buf_offs = offs - lru[0].offset;
+        auto to_cpy = std::min(len, lru[0].size - buf_offs);
         memcpy(buf, lru[0].ptr + buf_offs, to_cpy);
         buf += to_cpy;
         offs += to_cpy;
@@ -77,7 +76,7 @@ void Source::UnixLike<T>::Pread(uint64_t offs, Byte* buf, size_t len)
 }
 
 template <typename T>
-void Source::UnixLike<T>::EnsureChunk(uint64_t offs)
+void Source::UnixLike<T>::EnsureChunk(FilePosition offs)
 {
     auto const CHUNK_SIZE = static_cast<T*>(this)->CHUNK_SIZE;
     auto ch_offs = offs/CHUNK_SIZE*CHUNK_SIZE;
@@ -100,8 +99,8 @@ void Source::UnixLike<T>::EnsureChunk(uint64_t offs)
     lru[0].size = size;
 }
 
-size_t Source::MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
-Source::MmapProvider::MmapProvider(int fd, fs::path file_name, uint64_t size)
+FileMemSize Source::MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
+Source::MmapProvider::MmapProvider(int fd, fs::path file_name, FilePosition size)
     : UnixLike{fd, std::move(file_name), size}
 {
     size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
@@ -120,7 +119,7 @@ Source::MmapProvider::MmapProvider(int fd, fs::path file_name, uint64_t size)
     lru[0].size = to_map;
 }
 
-void* Source::MmapProvider::ReadChunk(uint64_t offs, size_t size)
+void* Source::MmapProvider::ReadChunk(FilePosition offs, FileMemSize size)
 {
     auto x = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, offs);
     if (x == MAP_FAILED)
@@ -133,9 +132,9 @@ void Source::MmapProvider::DeleteChunk(size_t i)
     munmap(lru[i].ptr, lru[i].size);
 }
 
-size_t Source::UnixProvider::CHUNK_SIZE = READ_CHUNK;
+FilePosition Source::UnixProvider::CHUNK_SIZE = READ_CHUNK;
 
-void* Source::UnixProvider::ReadChunk(uint64_t offs, size_t size)
+void* Source::UnixProvider::ReadChunk(FilePosition offs, FileMemSize size)
 {
     auto x = new Byte[size];
     if (size_t(pread(fd, x, size, offs)) != size)
@@ -162,7 +161,7 @@ void DumpableSource::Inspect_(std::ostream& os) const
 
 void DumpableSource::Dump_(std::ostream& os) const
 {
-    uint64_t offset = GetOffset();
+    auto offset = GetOffset();
     auto rem_size = GetSize();
     while (rem_size)
     {

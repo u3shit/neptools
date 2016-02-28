@@ -15,7 +15,7 @@ struct DataHeader
     boost::endian::little_uint32_t field_8;
     boost::endian::little_uint32_t length;
 
-    bool IsValid(size_t chunk_size) const noexcept;
+    bool IsValid(FilePosition chunk_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(DataHeader) == 0x10);
 
@@ -27,8 +27,8 @@ public:
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override;
-    size_t UpdatePositions(FilePosition npos) override;
+    FilePosition GetSize() const noexcept override;
+    FilePosition UpdatePositions(FilePosition npos) override;
 
     uint32_t type, offset_unit, field_8;
 };

@@ -8,7 +8,7 @@
 namespace Stcm
 {
 
-bool Header::IsValid(size_t file_size) const noexcept
+bool Header::IsValid(FilePosition file_size) const noexcept
 {
     return memcmp(msg.data(), "STCM2L", 6) == 0 &&
         msg.is_valid() &&

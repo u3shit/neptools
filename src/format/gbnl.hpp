@@ -65,7 +65,7 @@ public:
     struct OffsetString
     {
         std::string str;
-        size_t offset;
+        uint32_t offset;
     };
 
     struct FixStringTag { char str[1]; };
@@ -78,13 +78,13 @@ public:
     Struct::TypePtr type;
 
     void RecalcSize();
-    uint64_t GetSize() const noexcept override;
+    FilePosition GetSize() const noexcept override;
 
 private:
     void Dump_(std::ostream& os) const override;
     void DumpHeader(std::ostream& os) const;
     void Inspect_(std::ostream& os) const override;
-    size_t Align(size_t x) const noexcept;
+    FilePosition Align(FilePosition x) const noexcept;
 
     uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
     size_t FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,

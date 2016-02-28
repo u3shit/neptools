@@ -27,7 +27,7 @@ struct Header
     boost::endian::little_uint32_t field_28;
     boost::endian::little_uint32_t collection_link_offset;
 
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(Header) == 0x30);
 
@@ -39,7 +39,7 @@ public:
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override { return sizeof(Header); }
+    FilePosition GetSize() const noexcept override { return sizeof(Header); }
 
     FixedString<0x20> msg;
     const Label* export_sec;

@@ -28,7 +28,7 @@ struct CollectionLinkHeader
     boost::endian::little_uint32_t field_38;
     boost::endian::little_uint32_t field_3c;
 
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(CollectionLinkHeader) == 0x40);
 
@@ -43,7 +43,7 @@ struct CollectionLinkEntry
     boost::endian::little_uint32_t field_18;
     boost::endian::little_uint32_t field_1c;
 
-    bool IsValid(size_t file_size) const noexcept;
+    bool IsValid(FilePosition file_size) const noexcept;
 };
 STATIC_ASSERT(sizeof(CollectionLinkEntry) == 0x20);
 
@@ -55,7 +55,7 @@ public:
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override
+    FilePosition GetSize() const noexcept override
     { return sizeof(CollectionLinkHeader); }
 
     const Label* data;
@@ -65,11 +65,11 @@ class CollectionLinkItem final : public Item
 {
 public:
     CollectionLinkItem(Key k, Context* ctx) : Item{k, ctx} {}
-    CollectionLinkItem(Key k, Context* ctx, Source src, size_t count);
+    CollectionLinkItem(Key k, Context* ctx, Source src, uint32_t count);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
-    size_t GetSize() const noexcept override
+    FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(CollectionLinkEntry); }
 
     struct Entry

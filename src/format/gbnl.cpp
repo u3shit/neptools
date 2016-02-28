@@ -352,7 +352,7 @@ struct Print
     std::ostream& os;
     void operator()(const Gbnl::OffsetString& ofs, size_t)
     {
-        if (ofs.offset == static_cast<size_t>(-1))
+        if (ofs.offset == static_cast<uint32_t>(-1))
             os << "null";
         else
             DumpBytes(os, ofs.str);
@@ -422,7 +422,7 @@ void Gbnl::RecalcSize()
             if (m.Is<OffsetString>(i))
             {
                 auto& os = m.Get<OffsetString>(i);
-                if (os.offset == static_cast<size_t>(-1)) continue;
+                if (os.offset == static_cast<uint32_t>(-1)) continue;
                 auto x = offset_map.emplace(os.str, offset);
                 if (x.second) // new item inserted
                     offset += os.str.size() + 1;
@@ -432,16 +432,16 @@ void Gbnl::RecalcSize()
     msgs_size = offset;
 }
 
-size_t Gbnl::GetSize() const noexcept
+FilePosition Gbnl::GetSize() const noexcept
 {
-    size_t ret = msg_descr_size * messages.size();
+    FilePosition ret = msg_descr_size * messages.size();
     ret = Align(ret) + sizeof(GbnlTypeDescriptor) * type->item_count;
     ret = Align(ret) + msgs_size;
     ret = Align(ret) + sizeof(GbnlFooter);
     return ret;
 }
 
-size_t Gbnl::Align(size_t x) const noexcept
+FilePosition Gbnl::Align(FilePosition x) const noexcept
 {
     return is_gstl ? x : ((x+15) & ~15);
 }
@@ -457,7 +457,7 @@ uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
     size_t this_k;
     if (m.Is<Gbnl::OffsetString>(i))
     {
-        if (m.Get<Gbnl::OffsetString>(i).offset == static_cast<size_t>(-1))
+        if (m.Get<Gbnl::OffsetString>(i).offset == static_cast<uint32_t>(-1))
             return -1;
         this_k = ++k;
     }

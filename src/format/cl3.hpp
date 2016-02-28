@@ -18,7 +18,7 @@ public:
         boost::endian::little_uint32_t sections_offset;
         boost::endian::little_uint32_t field_14;
 
-        void Validate(uint64_t file_size) const;
+        void Validate(FilePosition file_size) const;
     };
     STATIC_ASSERT(sizeof(Header) == 0x18);
 
@@ -38,7 +38,7 @@ public:
         boost::endian::little_uint32_t field_48;
         boost::endian::little_uint32_t field_4c;
 
-        void Validate(uint64_t file_size) const;
+        void Validate(FilePosition file_size) const;
     };
     STATIC_ASSERT(sizeof(Section) == 0x50);
 
@@ -81,7 +81,7 @@ public:
     Cl3(Source src);
 
     void Fixup() override;
-    uint64_t GetSize() const override;
+    FilePosition GetSize() const override;
 
     uint32_t field_14;
 
@@ -111,7 +111,7 @@ public:
     void ExtractTo(const fs::path& dir) const;
 
 private:
-    uint64_t data_size;
+    FilePosition data_size;
     unsigned link_count;
 
     void Dump_(std::ostream& os) const override;

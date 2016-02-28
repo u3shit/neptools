@@ -9,7 +9,6 @@
 class Item;
 class Context;
 
-using FilePosition = std::uint32_t;
 struct ItemPointer
 {
     Item* item;

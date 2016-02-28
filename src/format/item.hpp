@@ -20,8 +20,8 @@ public:
 
     virtual void Dump(std::ostream& os) const = 0;
     virtual void PrettyPrint(std::ostream& os) const = 0;
-    virtual size_t GetSize() const noexcept = 0;
-    virtual size_t UpdatePositions(FilePosition npos);
+    virtual FilePosition GetSize() const noexcept = 0;
+    virtual FilePosition UpdatePositions(FilePosition npos);
 
     Context* GetContext() noexcept { return ctx; }
     Item* GetParent() noexcept   { return parent; }
@@ -79,8 +79,8 @@ public:
     using Item::Item;
 
     void Dump(std::ostream& os) const override;
-    size_t GetSize() const noexcept override;
-    size_t UpdatePositions(FilePosition npos) override;
+    FilePosition GetSize() const noexcept override;
+    FilePosition UpdatePositions(FilePosition npos) override;
 };
 
 #endif

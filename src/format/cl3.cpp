@@ -2,7 +2,7 @@
 
 #define VALIDATE(x) while (!(x)) throw std::runtime_error(#x);
 
-void Cl3::Header::Validate(uint64_t file_size) const
+void Cl3::Header::Validate(FilePosition file_size) const
 {
     VALIDATE(memcmp(magic, "CL3L", 4) == 0);
     VALIDATE(field_04 == 0);
@@ -10,7 +10,7 @@ void Cl3::Header::Validate(uint64_t file_size) const
     VALIDATE(sections_offset + sections_count * sizeof(Section) <= file_size);
 }
 
-void Cl3::Section::Validate(uint64_t file_size) const
+void Cl3::Section::Validate(FilePosition file_size) const
 {
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= file_size);
@@ -111,9 +111,9 @@ void Cl3::Fixup()
     }
 }
 
-uint64_t Cl3::GetSize() const
+FilePosition Cl3::GetSize() const
 {
-    uint64_t ret = (sizeof(Header)+PAD) & ~PAD;
+    FilePosition ret = (sizeof(Header)+PAD) & ~PAD;
     ret = (ret+sizeof(Section)*2+PAD) & ~PAD;
     ret = (ret+sizeof(FileEntry)*entries.size()+PAD) & ~PAD;
     ret += data_size+sizeof(LinkEntry)*link_count;

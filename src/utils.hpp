@@ -8,6 +8,12 @@
 
 using Byte = unsigned char;
 
+// if you want to change it to 64-bit: change FileMemSize to size_t,
+// #define _FILE_OFFSET_BITS 64
+// to the beginning of source.cpp
+using FilePosition = std::uint32_t;
+using FileMemSize = std::uint32_t; // min(FilePos, size_t)
+
 template <typename T, typename P>
 void EraseIf(T& cnt, P fun)
 {

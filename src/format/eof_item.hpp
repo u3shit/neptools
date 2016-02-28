@@ -11,7 +11,7 @@ public:
 
     void Dump(std::ostream&) const override {}
     void PrettyPrint(std::ostream& os) const override { Item::PrettyPrint(os); }
-    size_t GetSize() const noexcept override { return 0; }
+    FilePosition GetSize() const noexcept override { return 0; }
 };
 
 #endif

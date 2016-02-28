@@ -17,7 +17,7 @@ public:
     Item* GetRoot() noexcept { return root.get(); }
     const Item* GetRoot() const noexcept { return root.get(); }
 
-    size_t GetSize() const noexcept { return size; }
+    FilePosition GetSize() const noexcept override { return size; }
 
     template <typename T, typename... Args>
     std::unique_ptr<T> Create(Args&&... args);
@@ -46,7 +46,7 @@ private:
     void Inspect_(std::ostream& os) const override;
 
     friend class Item;
-    size_t size = 0;
+    FilePosition size = 0;
 
     // properties needed: stable pointers
     using LabelsMap = std::unordered_map<std::string, ItemPointer>;

@@ -24,7 +24,7 @@ void Item::PrettyPrint(std::ostream& os) const
     }
 }
 
-size_t Item::UpdatePositions(FilePosition npos)
+FilePosition Item::UpdatePositions(FilePosition npos)
 {
     position = npos;
     if (GetNext())
@@ -232,15 +232,15 @@ void ItemWithChildren::Dump(std::ostream& os) const
         it->Dump(os);
 }
 
-size_t ItemWithChildren::GetSize() const noexcept
+FilePosition ItemWithChildren::GetSize() const noexcept
 {
-    size_t ret = 0;
+    FilePosition ret = 0;
     for (auto it = GetChildren(); it; it = it->GetNext())
         ret += it->GetSize();
     return ret;
 }
 
-size_t ItemWithChildren::UpdatePositions(FilePosition npos)
+FilePosition ItemWithChildren::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(npos);

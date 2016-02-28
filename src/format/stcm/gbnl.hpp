@@ -18,7 +18,7 @@ public:
 
     void Dump(std::ostream& os) const override { Gbnl::Dump(os); }
     void PrettyPrint(std::ostream& os) const override { Gbnl::Inspect(os); }
-    size_t GetSize() const noexcept override { return Gbnl::GetSize(); }
+    FilePosition GetSize() const noexcept override { return Gbnl::GetSize(); }
 };
 
 }
