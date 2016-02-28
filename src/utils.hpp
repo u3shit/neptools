@@ -10,7 +10,7 @@ using Byte = unsigned char;
 
 // if you want to change it to 64-bit: change FileMemSize to size_t,
 // #define _FILE_OFFSET_BITS 64
-// to the beginning of source.cpp
+// to the beginning of source.cpp, and fix braindead winapi
 using FilePosition = std::uint32_t;
 using FileMemSize = std::uint32_t; // min(FilePos, size_t)
 

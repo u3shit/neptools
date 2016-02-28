@@ -1,13 +1,94 @@
 #include "source.hpp"
 
+#ifdef WINDOWS
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#endif
 
 #include <iostream>
 #include <iomanip>
+
+#ifdef WINDOWS
+#define SYSERROR() throw std::system_error{std::error_code{ \
+            int(GetLastError()), std::system_category()}}
+static inline HANDLE Open(const wchar_t* fname)
+{
+    auto h = CreateFileW(
+        fname, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, nullptr,
+        OPEN_EXISTING, 0, nullptr);
+    if (h == INVALID_HANDLE_VALUE) SYSERROR();
+    return h;
+}
+static inline FilePosition GetSize(HANDLE h)
+{
+    auto ret = GetFileSize(h, nullptr);
+    if (ret == INVALID_FILE_SIZE) SYSERROR();
+    return ret;
+}
+#define Close CloseHandle
+
+static inline HANDLE PrepareMmap(HANDLE file)
+{
+    auto map = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, nullptr);
+    if (map == nullptr) SYSERROR();
+    return map;
+}
+static inline void* Mmap(HANDLE h, FilePosition offs, FilePosition size)
+{
+    auto ret = MapViewOfFile(h, FILE_MAP_READ, offs >> 16 >> 16, offs, size);
+    if (ret == nullptr) SYSERROR();
+    return ret;
+}
+#define Munmap(ptr,len) UnmapViewOfFile(ptr)
+static inline void Pread(HANDLE h, void* buf, FileMemSize len, FilePosition offs)
+{
+    DWORD size;
+    OVERLAPPED o;
+    memset(&o, 0, sizeof(OVERLAPPED));
+    o.Offset = offs;
+    o.OffsetHigh = offs >> 16 >> 16;
+
+    if (!ReadFile(h, buf, len, &size, &o) || size != len) SYSERROR();
+}
+
+#else
+#define SYSERROR() throw std::system_error{std::error_code{\
+            errno, std::system_category()}}
+static inline int Open(const char* fname)
+{
+    int fd = open(fname, O_RDONLY);
+    if (fd == -1) SYSERROR();
+    return fd;
+}
+static inline FilePosition GetSize(int fd)
+{
+    struct stat buf;
+    if (fstat(fd, &buf) < 0) SYSERROR();
+    return buf.st_size;
+}
+#define Close close
+
+#define PrepareMmap(fd) fd
+static inline void* Mmap(int fd, FilePosition offs, FilePosition size)
+{
+    auto ptr = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, offs);
+    if (ptr == MAP_FAILED) SYSERROR();
+    return ptr;
+}
+#define Munmap munmap
+
+static inline void Pread(int fd, void* buf, FileMemSize len, FilePosition offs)
+{
+    if (pread(fd, buf, len, offs) != len) SYSERROR();
+}
+#endif
 
 constexpr size_t READ_CHUNK = 8*1024; // 8KiB
 constexpr size_t MMAP_CHUNK = 128*1024; // 128KiB
@@ -15,37 +96,32 @@ constexpr size_t MMAP_LIMIT = 1*1024*1024; // 1MiB
 
 Source Source::FromFile(fs::path fname)
 {
-    int fd = open(fname.c_str(), O_RDONLY);
-    if (fd == -1)
-        throw std::system_error{std::error_code{errno, std::system_category()}};
+    auto fd = Open(fname.c_str());
 
-    struct stat buf;
-    if (fstat(fd, &buf) < 0)
-    {
-        close(fd);
-        throw std::system_error{std::error_code{errno, std::system_category()}};
-    }
+    FilePosition size;
+    try { size = ::GetSize(fd); }
+    catch (...) { Close(fd); throw; }
 
     std::shared_ptr<SourceProvider> p;
-    try { p = std::make_shared<MmapProvider>(fd, fname, buf.st_size); }
+    try { p = std::make_shared<MmapProvider>(fd, fname.string(), size); }
     catch (const std::system_error& e)
     {
         std::cerr << "Mmap failed: " << e.what() << std::endl;
         try
         {
             p = std::make_shared<UnixProvider>(
-                fd, std::move(fname), buf.st_size);
+                fd, fname.string(), size);
         }
-        catch (...) { close(fd); throw; }
+        catch (...) { Close(fd); throw; }
     }
-    catch (...) { close(fd); throw; }
-    return {std::move(p), static_cast<FilePosition>(buf.st_size)};
+    catch (...) { Close(fd); throw; }
+    return {std::move(p), size};
 }
 
 template <typename T>
 Source::UnixLike<T>::~UnixLike()
 {
-    if (fd != -1) close(fd);
+    if (fd != reinterpret_cast<FdType>(-1)) Close(fd);
     for (size_t i = 0; i < lru.size(); ++i)
         if (lru[i].size)
             static_cast<T*>(this)->DeleteChunk(i);
@@ -54,13 +130,9 @@ Source::UnixLike<T>::~UnixLike()
 template <typename T>
 void Source::UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
 {
-    BOOST_ASSERT(fd != -1);
+    BOOST_ASSERT(fd != reinterpret_cast<FdType>(-1));
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
-    {
-        if (size_t(pread(fd, buf, len, offs)) != len)
-            throw std::system_error{std::error_code{errno, std::system_category()}};
-        return;
-    }
+        return ::Pread(fd, buf, len, offs);
 
     if (len == 0) EnsureChunk(offs); // TODO: GetTemporaryEntry hack
     while (len)
@@ -100,49 +172,56 @@ void Source::UnixLike<T>::EnsureChunk(FilePosition offs)
 }
 
 FileMemSize Source::MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
-Source::MmapProvider::MmapProvider(int fd, fs::path file_name, FilePosition size)
-    : UnixLike{fd, std::move(file_name), size}
+Source::MmapProvider::MmapProvider(
+    FdType in_fd, fs::path file_name, FilePosition size)
+    : UnixLike{PrepareMmap(in_fd), std::move(file_name), size}
 {
     size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
 
-    auto ptr = mmap(nullptr, to_map, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (ptr == MAP_FAILED)
-        throw std::system_error{std::error_code{errno, std::system_category()}};
+#ifdef WINDOWS
+    real_fd = in_fd;
+    void* ptr;
+    try { ptr = Mmap(fd, 0, to_map); }
+    catch(...) { Close(fd); throw; }
+#else
+    auto ptr = Mmap(fd, 0, to_map);
     if (to_map == size)
     {
         close(fd);
         this->fd = -1;
     }
+#endif
 
     lru[0].ptr = static_cast<Byte*>(ptr);
     lru[0].offset = 0;
     lru[0].size = to_map;
 }
 
+Source::MmapProvider::~MmapProvider()
+{
+#ifdef WINDOWS
+    Close(real_fd);
+#endif
+}
+
 void* Source::MmapProvider::ReadChunk(FilePosition offs, FileMemSize size)
 {
-    auto x = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, offs);
-    if (x == MAP_FAILED)
-        throw std::system_error{std::error_code{errno, std::system_category()}};
-    return x;
+    return Mmap(fd, offs, size);
 }
 
 void Source::MmapProvider::DeleteChunk(size_t i)
 {
-    munmap(lru[i].ptr, lru[i].size);
+    if (lru[i].ptr)
+        Munmap(lru[i].ptr, lru[i].size);
 }
 
 FilePosition Source::UnixProvider::CHUNK_SIZE = READ_CHUNK;
 
 void* Source::UnixProvider::ReadChunk(FilePosition offs, FileMemSize size)
 {
-    auto x = new Byte[size];
-    if (size_t(pread(fd, x, size, offs)) != size)
-    {
-        delete[] x;
-        throw std::system_error{std::error_code{errno, std::system_category()}};
-    }
-    return x;
+    std::unique_ptr<Byte[]> x{new Byte[size]};
+    ::Pread(fd, x.get(), size, offs);
+    return x.release();
 }
 
 void Source::UnixProvider::DeleteChunk(size_t i)

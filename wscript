@@ -61,6 +61,7 @@ def configure(cfg):
     if cfg.options.release:
         cfg.define('NDEBUG', 1)
     if cfg.env.DEST_OS == 'win32':
+        cfg.define('WINDOWS', 1)
         cfg.define('UNICODE', 1)
         cfg.define('_UNICODE', 1)
 

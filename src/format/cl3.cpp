@@ -1,4 +1,5 @@
 #include "cl3.hpp"
+#include <fstream>
 
 #define VALIDATE(x) while (!(x)) throw std::runtime_error(#x);
 
@@ -78,10 +79,10 @@ Cl3::Cl3(Source src)
         auto e = src.Read<FileEntry>();
         e.Validate(file_size);
 
-        entries.push_back(Entry{
-            e.name.c_str(), e.field_200, {},
+        entries.emplace_back(
+            e.name.c_str(), e.field_200,
             std::make_unique<DumpableSource>(
-                src, file_offset+e.data_offset, e.data_size)});
+                src, file_offset+e.data_offset, e.data_size));
 
         auto& ls = entries.back().links;
         uint32_t lbase = e.link_start;

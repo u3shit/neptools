@@ -5,6 +5,13 @@
 #include <array>
 #include <boost/endian/arithmetic.hpp>
 #include "dumpable.hpp"
+#include "fs.hpp"
+
+#if defined(_WIN32) || defined(_WIN64)
+using FdType = void*;
+#else
+using FdType = int;
+#endif
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
 class Source
@@ -165,26 +172,31 @@ private:
     template <typename T>
     struct UnixLike : public SourceProvider
     {
-        UnixLike(int fd, fs::path file_name, FilePosition size)
+        UnixLike(FdType fd, fs::path file_name, FilePosition size)
             : SourceProvider{std::move(file_name), size}, fd{fd} {}
         ~UnixLike();
 
         void Pread(FilePosition offs, Byte* buf, FileMemSize len) override;
         void EnsureChunk(FilePosition i);
 
-        int fd;
+        FdType fd;
     };
 
     struct MmapProvider final : public UnixLike<MmapProvider>
     {
-        MmapProvider(int fd, fs::path file_name, FilePosition size);
+        MmapProvider(FdType fd, fs::path file_name, FilePosition size);
+        ~MmapProvider();
 
         static FileMemSize CHUNK_SIZE;
         void* ReadChunk(FilePosition offs, FileMemSize size);
         void DeleteChunk(size_t i);
+
+#ifdef WINDOWS
+        FdType real_fd;
+#endif
     };
 
-    struct UnixProvider final : public UnixLike<MmapProvider>
+    struct UnixProvider final : public UnixLike<UnixProvider>
     {
         using UnixLike::UnixLike;
 

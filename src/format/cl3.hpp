@@ -2,9 +2,11 @@
 #define UUID_4CADE91E_2AF1_47AF_8425_9AA799509BFD
 #pragma once
 
+#include <vector>
+#include <boost/endian/arithmetic.hpp>
+
 #include "../source.hpp"
 #include "../fixed_string.hpp"
-#include <boost/endian/arithmetic.hpp>
 
 class Cl3 : public Dumpable
 {
@@ -92,6 +94,10 @@ public:
         std::vector<uint32_t> links;
 
         std::unique_ptr<Dumpable> src;
+
+        Entry() = default;
+        Entry(std::string name, uint32_t field_200, std::unique_ptr<Dumpable> src)
+            : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
     };
     std::vector<Entry> entries;
 
