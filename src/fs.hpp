@@ -5,7 +5,23 @@
 #ifdef _MSC_VER
 
 #include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <random>
+
+namespace fs
+{
+using namespace std::experimental::filesystem;
+
+inline path unique_path()
+{
+    std::random_device rd;
+    std::uniform_int_distribution<int> dist('a', 'z');
+
+    char buf[16];
+    for (size_t i = 0; i < 16; ++i)
+        buf[i] = dist(rd);
+    return path{buf, buf+16};
+}
+}
 
 #else
 

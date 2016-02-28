@@ -29,13 +29,13 @@ void DeleteOnExit(fs::path pth)
 void Dumpable::Dump(const fs::path& path) const
 {
     auto path2 = path;
-    Dump(OpenOut(path2+=".tmp"));
+    Dump(OpenOut(path2+=fs::unique_path()));
 
 #ifdef WINDOWS
     if (fs::is_regular_file(path))
     {
         auto path3 = path;
-        fs::rename(path, path3+=".old");
+        fs::rename(path, path3+=fs::unique_path());
         if (!DeleteFileW(path3.c_str()) && GetLastError() == ERROR_ACCESS_DENIED)
             DeleteOnExit(std::move(path3));
     }
