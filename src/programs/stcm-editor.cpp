@@ -1,5 +1,4 @@
 #include "../format/item.hpp"
-#include "../format/context_item.hpp"
 #include "../format/cl3.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
