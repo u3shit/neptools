@@ -148,6 +148,23 @@ void Cl3::ExtractTo(const fs::path& dir) const
     }
 }
 
+void Cl3::DeleteFile(size_t i)
+{
+    entries.erase(entries.begin() + i);
+    for (auto& e : entries)
+        for (auto it = e.links.begin(); it != e.links.end(); )
+        {
+            if (*it == i)
+            {
+                it = e.links.erase(it);
+                continue;
+            }
+            else if (*it > i)
+                --*it;
+            ++it;
+        }
+}
+
 void Cl3::Inspect_(std::ostream& os) const
 {
     os << "cl3(" << field_14 << ", files[\n";

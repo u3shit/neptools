@@ -287,6 +287,17 @@ int main(int argc, char** argv)
 
             args.pop_front(); args.pop_front();
         }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
+    CMD("--remove-file", [&](auto& args)
+        {
+            if (args.empty()) throw InvalidParameters{};
+            if (!st.cl3)
+                throw std::runtime_error{"--remove-file: No cl3 loaded"};
+            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+            if (!e)
+                throw std::runtime_error{"--remove-file: specified file not found"};
+            else
+                st.cl3->DeleteFile(*e);
+        }, "<name>\n\tRemoves <name> from cl3 archive\n");
     CMD("--inspect", [&](auto& args)
         {
             if (!st.file) throw std::runtime_error{"--inspect: No file loaded"};

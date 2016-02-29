@@ -116,6 +116,9 @@ public:
 
     void ExtractTo(const fs::path& dir) const;
 
+    void DeleteFile(size_t i);
+    void DeleteFile(Entry& e) { DeleteFile(&e - &entries.front()); }
+
 private:
     FilePosition data_size;
     unsigned link_count;
