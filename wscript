@@ -8,6 +8,12 @@ APPNAME='stcm-editor'
 top = '.'
 out = 'build'
 
+try:
+    with open('wscript_user.py', 'r') as f:
+        exec(f.read())
+except IOError:
+    pass
+
 def options(opt):
     opt.load('compiler_c compiler_cxx boost')
     opt.add_option('--msvc-hack', action='store_true', default=False,
