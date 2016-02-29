@@ -24,8 +24,8 @@ def options(opt):
 def configure(cfg):
     if cfg.options.msvc_hack:
         cfg.env.DEST_OS = 'win32'
-        if 'LINK_CXX' in cfg.environ:
-            cfg.env['LINK_CXX'] = cfg.environ['LINK_CXX']
+        cfg.find_program('link', var='LINK_CXX')
+        cfg.find_program('lib', var='AR')
         cfg.load('msvc', funs='no_autodetect')
 
         from waflib.Tools.compiler_cxx import cxx_compiler
@@ -37,6 +37,13 @@ def configure(cfg):
     cfg.load('compiler_c compiler_cxx boost clang_compilation_database')
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
+        if cfg.env.DEST_OS == 'win32' and not \
+           cfg.check_cxx(fragment='int main() { return _M_IX86; }',
+                         msg='Checking for i386', features='cxx',
+                         mandatory=False):
+            cfg.env.DEST_OS = 'winwhatever'
+
+
         cfg.env.append_value('CXXFLAGS', [
             '/EHsc', '/MD', '/Zc:rvalueCast', '/Zc:strictStrings', '/Zc:inline'])
 
@@ -66,7 +73,7 @@ def configure(cfg):
 
     if cfg.options.release:
         cfg.define('NDEBUG', 1)
-    if cfg.env.DEST_OS == 'win32':
+    if cfg.env.DEST_OS[0:3] == 'win':
         cfg.define('WINDOWS', 1)
         cfg.define('UNICODE', 1)
         cfg.define('_UNICODE', 1)
@@ -103,11 +110,9 @@ def build(bld):
                 use = 'common',
                 target = APPNAME)
 
-    if bld.env['COMPILER_CXX'] == 'msvc':
-        if bld.env['COMPILER_CXX'] == 'msvc':
-            ld = ['/LTCG:OFF', '/FIXED', '/NXCOMPAT:NO', '/IGNORE:4254']
-        else:
-            ld = ['-nostartfiles', '-Wl,-e_start', '-fno-stack-check']
+    if bld.env['COMPILER_CXX'] == 'msvc' and bld.env.DEST_OS == 'win32':
+        # technically launcher can be compiled for 64bits, but it makes no sense
+        ld = ['/LTCG:OFF', '/FIXED', '/NXCOMPAT:NO', '/IGNORE:4254']
         bld.program(source = 'src/programs/launcher.c',
                     target = 'launcher',
                     uselib = 'KERNEL32 SHELL32 USER32',
