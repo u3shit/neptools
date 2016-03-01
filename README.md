@@ -5,7 +5,7 @@ This tool allows you to edit dialogues in Hyperdimension Neptunia Re;Birth 3: V
 Century. The file format is compatible with nr2_strool/nr3_strtool's.
 
 Note: if you've used strtool before, you should delete the modified `.cl3` files
-and reimport the `.txt`s using the original, unmodifed `.cl3` files. Strtool
+and reimport the `.txt`s using the original, unmodified `.cl3` files. Strtool
 sometimes damages the `.cl3` files in a way that this tool can't handle.
 
 Usage
@@ -20,8 +20,16 @@ The main functionality of this program is to dump out the text script inside the
 just dragging the `.cl3` file onto the executable to extract the .txt files, and
 drop the `.txt` files to import back. You can also mass-convert directories by
 dropping them. By default it will export every `.cl3` which doesn't have a
-corresponding `.txt`, and import where `.txt` exitst. You can override it with
-the `--export-only` and `--import-only` options to only import or export.
+corresponding `.txt`, and import where `.txt` exist. You can override it with
+the `--mode export-strtool` and `--mode import-strtool` options to only import
+or export.
+
+You can also unpack and repack `.cl3` files. The easiest way to do this is to
+copy/rename `stcm-editor.exe` to `cl3-tool.exe` (simply `cl3-tool` on Linux),
+and drop the `.cl3` file onto the executable. It'll extract into a `.cl3.out`
+directory, drop the directory onto the executable to repack. Alternatively you
+can use `--mode auto-cl3`, `--mode unpack-cl3` and `--mode pack-cl3` options to
+achieve this functionality without changing the filename.
 
 Advanced usage
 --------------
