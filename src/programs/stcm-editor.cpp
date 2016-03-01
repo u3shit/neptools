@@ -252,8 +252,14 @@ int main(int argc, char** argv)
         {
             if (!st.cl3)
                 throw std::runtime_error{"--list-files: No cl3 loaded"};
+            size_t i = 0;
             for (const auto& e : st.cl3->entries)
-                std::cout << e.name << '\t' << e.src->GetSize() << '\n';
+            {
+                std::cout << i++ << '\t' << e.name << '\t' << e.src->GetSize()
+                          << "\tlinks:";
+                for (auto l : e.links) std::cout << ' ' << l;
+                std::cout << std::endl;
+            }
         }, "\n\tLists the contents of the cl3 archive\n");
     CMD("--extract-file", [&](auto& args) -> void
         {
@@ -297,6 +303,37 @@ int main(int argc, char** argv)
             else
                 st.cl3->DeleteFile(*e);
         }, "<name>\n\tRemoves <name> from cl3 archive\n");
+    CMD("--set-link", [&](auto& args)
+        {
+            if (args.size() < 3) throw InvalidParameters{};
+            if (!st.cl3)
+                throw std::runtime_error{"--remove-file: No cl3 loaded"};
+            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+            auto i = std::stoul(args.front()); args.pop_front();
+            auto e2 = st.cl3->GetFile(args[1]); args.pop_front();
+            if (!e || !e2)
+                throw std::runtime_error{"--remove-file: specified file not found"};
+
+            if (i < e->links.size())
+                e->links[i] = e2 - &st.cl3->entries.front();
+            else if (i == e->links.size())
+                e->links.push_back(e2 - &st.cl3->entries.front());
+            else
+                throw std::runtime_error{"--set-link: invalid link id"};
+        }, "<name> <id> <dst>\n\tSets link at <name>, <id> to <dst>");
+    CMD("--remove-link", [&](auto& args)
+        {
+            if (args.size() < 2) throw InvalidParameters{};
+            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+            auto i = std::stoul(args.front()); args.pop_front();
+            if (!e)
+                throw std::runtime_error{"--remove-file: specified file not found"};
+
+            if (i < e->links.size())
+                e->links.erase(e->links.begin() + i);
+            else
+                throw std::runtime_error{"--remove-link: invalid link id"};
+        }, "<name> <id>\n\tRemove link <id> from <name>");
     CMD("--inspect", [&](auto& args)
         {
             if (!st.file) throw std::runtime_error{"--inspect: No file loaded"};
