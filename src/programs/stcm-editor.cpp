@@ -9,6 +9,10 @@
 #include <deque>
 #include <boost/algorithm/string/predicate.hpp>
 
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
+
 namespace
 {
 
@@ -131,10 +135,7 @@ void EnsureGbnl(State& st)
 template <typename Pred, typename Fun>
 void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
 {
-    if (fs::is_directory(path))
-        for (auto& e: fs::directory_iterator(path))
-            RecDo(e, p, f, true);
-    else if (p(path, rec))
+    if (p(path, rec))
     {
         try { f(path); }
         catch (const std::runtime_error& e)
@@ -142,11 +143,28 @@ void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
             std::cerr << "Failed: " << e.what() << std::endl;
         }
     }
+    else if (fs::is_directory(path))
+        for (auto& e: fs::directory_iterator(path))
+            RecDo(e, p, f, true);
     else if (!rec)
         std::cerr << "Invalid filename: " << path << std::endl;
 }
 
-bool do_import = true, do_export = true;
+enum class Mode
+{
+#define MODE_PARS(X)                                                            \
+    X(AUTO_STRTOOL,   "auto-strtool",   "import/export .cl3/.gbin/.gstr texts") \
+    X(EXPORT_STRTOOL, "export-strtool", "export .cl3/.gbin/.gstr to .txt")      \
+    X(IMPORT_STRTOOL, "import-strtool", "import .cl3/.gbin/.gstr from .txt")    \
+    X(AUTO_CL3,       "auto-cl3",       "unpack/pack .cl3 files")               \
+    X(UNPACK_CL3,     "unpack-cl3",     "unpack .cl3 files")                    \
+    X(PACK_CL3,       "pack-cl3",       "pack .cl3 files")                      \
+    X(MANUAL,         "manual",         "manual processing (set automatically)")
+#define GEN_ENUM(name, shit1, shit2) name,
+    MODE_PARS(GEN_ENUM)
+#undef GEN_ENUM
+} mode = Mode::AUTO_STRTOOL;
+
 void DoAutoFun(const fs::path& p)
 {
     fs::path cl3, txt;
@@ -179,25 +197,66 @@ void DoAutoFun(const fs::path& p)
         st.gbnl->WriteTxt(OpenOut(txt));
 }
 
+void DoAutoCl3(const fs::path& p)
+{
+    if (fs::is_directory(p))
+    {
+        fs::path cl3_file = p.native().substr(0, p.native().size() - 4);
+        std::cerr << "Packing " << cl3_file << std::endl;
+        Cl3 cl3{Source::FromFile(cl3_file)};
+        cl3.UpdateFromDir(p);
+        cl3.Fixup();
+        cl3.Dump(cl3_file);
+    }
+    else
+    {
+        std::cerr << "Extracting " << p << std::endl;
+        Cl3 cl3{Source::FromFile(p)};
+        auto out = p;
+        cl3.ExtractTo(out += ".out");
+    }
+}
+
+inline bool is_file(const fs::path& pth)
+{
+    auto stat = fs::status(pth);
+    return fs::is_regular_file(stat) || fs::is_symlink(stat);
+}
+
 bool IsBin(const fs::path& p, bool = false)
 {
-    return boost::ends_with(p.native(), ".cl3") ||
+    return is_file(p) && (
+        boost::ends_with(p.native(), ".cl3") ||
         boost::ends_with(p.native(), ".gbin") ||
-        boost::ends_with(p.native(), ".gstr");
+        boost::ends_with(p.native(), ".gstr"));
 }
 
 bool IsTxt(const fs::path& p, bool = false)
 {
-    return boost::ends_with(p.native(), ".cl3.txt") ||
+    return is_file(p) && (
+        boost::ends_with(p.native(), ".cl3.txt") ||
         boost::ends_with(p.native(), ".gbin.txt") ||
-        boost::ends_with(p.native(), ".gstr.txt");
+        boost::ends_with(p.native(), ".gstr.txt"));
+}
+
+bool IsCl3(const fs::path& p, bool = false)
+{
+    return is_file(p) && boost::ends_with(p.native(), ".cl3");
+}
+
+bool IsCl3Dir(const fs::path& p, bool = false)
+{
+    return fs::is_directory(p) && boost::ends_with(p.native(), ".cl3.out");
 }
 
 void DoAuto(const fs::path& path)
 {
     bool (*pred)(const fs::path&, bool);
+    void (*fun)(const fs::path& p);
 
-    if (do_import && do_export)
+    switch (mode)
+    {
+    case Mode::AUTO_STRTOOL:
         pred = [](auto& p, bool rec)
         {
             if (rec)
@@ -208,11 +267,44 @@ void DoAuto(const fs::path& path)
             else
                 return IsBin(p) || IsTxt(p);
         };
-    else if (do_export)
+        fun = DoAutoFun;
+        break;
+
+    case Mode::EXPORT_STRTOOL:
         pred = IsBin;
-    else
+        fun = DoAutoFun;
+        break;
+    case Mode::IMPORT_STRTOOL:
         pred = IsTxt;
-    RecDo(path, pred, DoAutoFun);
+        fun = DoAutoFun;
+        break;
+
+    case Mode::AUTO_CL3:
+        pred = [](auto& p, bool rec)
+        {
+            if (rec)
+                return IsCl3Dir(p) ||
+                    (IsCl3(p) && !fs::exists(fs::path(p)+=".out"));
+            else
+                return IsCl3(p) || IsCl3Dir(p);
+        };
+        fun = DoAutoCl3;
+        break;
+
+    case Mode::UNPACK_CL3:
+        pred = IsCl3;
+        fun = DoAutoCl3;
+        break;
+    case Mode::PACK_CL3:
+        pred = IsCl3Dir;
+        fun = DoAutoCl3;
+        break;
+
+    case Mode::MANUAL:
+        std::cerr << "Can't use auto files in manual mode" << std::endl;
+        throw InvalidParameters{};
+    }
+    RecDo(path, pred, fun);
 }
 
 }
@@ -225,31 +317,58 @@ int main(int argc, char** argv)
     std::vector<Command> commands;
 #define CMD(...) commands.emplace_back(__VA_ARGS__)
     CMD("--help", [](auto&){ throw InvalidParameters{}; }, "\n\tShow this help message\n");
-    CMD("--export-only", [&](auto&) { do_import = false; do_export = true; },
-        "\n\tOnly export txt (.cl3->.cl3.txt)\n");
-    CMD("--import-only", [&](auto&) { do_import = true; do_export = false; },
-        "\n\tOnly import txt (.cl3.txt->.cl3)\n\nAdvanced operations (see README):\n");
+#define GEN_IFS(c, str, _) else if (strcmp(args.front(), str) == 0) mode = Mode::c;
+#define GEN_HELP(_, key, help) "\t\t" key ": " help "\n"
+    CMD("--mode", [](auto& args)
+        {
+            if (args.empty()) throw InvalidParameters{};
+            if (0);
+            MODE_PARS(GEN_IFS)
+            else throw InvalidParameters{};
+            args.pop_front();
+        },
+        "\n\tSet operating mode:\n"
+        MODE_PARS(GEN_HELP));
+#undef GEN_IFS
+#undef GEN_HELP
+
+    CMD("--export-only", [&](auto&)
+        {
+            std::cerr << "--export-only deprecated, use --mode export-strtool\n";
+            mode = Mode::EXPORT_STRTOOL;
+        },
+        "\n\tDeprecated, same as --mode export-strtool\n");
+    CMD("--import-only", [&](auto&)
+        {
+            std::cerr << "--import-only deprecated, use --mode import-strtool\n";
+            mode = Mode::IMPORT_STRTOOL;
+        },
+        "\n\tDeprecated, same as --mode import-strtool\n\nAdvanced operations (see README):\n");
 
     CMD("--open", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.empty()) throw InvalidParameters{};
             st = SmartOpen(args.front());
             args.pop_front();
         }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
     CMD("--save", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (!st.file) throw std::runtime_error{"--save: No file loaded"};
             st.file->Fixup();
             ShellDump(st.file.get(), args);
         }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
     CMD("--create-cl3", [&](auto&)
         {
+            mode = Mode::MANUAL;
             auto c = std::make_unique<Cl3>();
             auto c2 = c.get();
             st = {std::move(c), c2, nullptr, nullptr};
         }, "\n\tCreates an empty cl3 file\n");
     CMD("--list-files", [&](auto&)
         {
+            mode = Mode::MANUAL;
             if (!st.cl3)
                 throw std::runtime_error{"--list-files: No cl3 loaded"};
             size_t i = 0;
@@ -263,6 +382,7 @@ int main(int argc, char** argv)
         }, "\n\tLists the contents of the cl3 archive\n");
     CMD("--extract-file", [&](auto& args) -> void
         {
+            mode = Mode::MANUAL;
             if (args.size() < 2) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--extract-file: No cl3 loaded"};
@@ -275,6 +395,7 @@ int main(int argc, char** argv)
         }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
     CMD("--extract-files", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.empty()) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--extract-file: No cl3 loaded"};
@@ -283,6 +404,7 @@ int main(int argc, char** argv)
         }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
     CMD("--replace-file", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.size() < 2) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--replace-file: No cl3 loaded"};
@@ -294,6 +416,7 @@ int main(int argc, char** argv)
         }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
     CMD("--remove-file", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.empty()) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--remove-file: No cl3 loaded"};
@@ -305,6 +428,7 @@ int main(int argc, char** argv)
         }, "<name>\n\tRemoves <name> from cl3 archive\n");
     CMD("--set-link", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.size() < 3) throw InvalidParameters{};
             if (!st.cl3)
                 throw std::runtime_error{"--remove-file: No cl3 loaded"};
@@ -323,6 +447,7 @@ int main(int argc, char** argv)
         }, "<name> <id> <dst>\n\tSets link at <name>, <id> to <dst>");
     CMD("--remove-link", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.size() < 2) throw InvalidParameters{};
             auto e = st.cl3->GetFile(args.front()); args.pop_front();
             auto i = std::stoul(args.front()); args.pop_front();
@@ -336,23 +461,31 @@ int main(int argc, char** argv)
         }, "<name> <id>\n\tRemove link <id> from <name>");
     CMD("--inspect", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (!st.file) throw std::runtime_error{"--inspect: No file loaded"};
             ShellInspect(st.file.get(), args);
         }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
     CMD("--inspect-stcm", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             EnsureStcm(st);
             ShellInspect(st.stcm, args);
         }, "<out>|-\n\tInspects only the stcm portion of the currently loaded file into <out> or stdout\n");
-    CMD("--parse-stcm", [&](auto&) { EnsureStcm(st); },
+    CMD("--parse-stcm", [&](auto&)
+        {
+            mode = Mode::MANUAL;
+            EnsureStcm(st);
+        },
         "\n\tParse STCM-inside-CL3 (usually done automatically)\n");
     CMD("--export-txt", [&](auto& args) -> void
         {
+            mode = Mode::MANUAL;
             EnsureGbnl(st);
             ShellDumpGen(st.gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
         }, "<out_file>|-\n\tExport text to <out_file> or stdout\n");
     CMD("--import-txt", [&](auto& args)
         {
+            mode = Mode::MANUAL;
             if (args.empty()) throw InvalidParameters{};
             EnsureGbnl(st);
             auto fname = args.front(); args.pop_front();
@@ -362,6 +495,14 @@ int main(int argc, char** argv)
                 st.gbnl->ReadTxt(OpenIn(fname));
             if (st.stcm) st.stcm->Fixup();
         }, "<in_file>|-\n\tRead text from <in_file> or stdin\n");
+
+    fs::path self{argv[0]};
+    if (boost::iequals(self.filename().string(), "cl3-tool")
+#ifdef WINDOWS
+        || boost::iequals(self.filename().string(), "cl3-tool.exe")
+#endif
+        )
+        mode = Mode::AUTO_CL3;
 
     try
     {

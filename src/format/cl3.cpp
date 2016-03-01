@@ -148,6 +148,19 @@ void Cl3::ExtractTo(const fs::path& dir) const
     }
 }
 
+void Cl3::UpdateFromDir(const fs::path& dir)
+{
+    for (auto& e : fs::directory_iterator(dir))
+        GetOrCreateFile(e.path().filename().string()).src =
+            std::make_unique<DumpableSource>(Source::FromFile(e));
+
+    for (size_t i = 0; i < entries.size(); )
+        if (!fs::exists(dir / entries[i].name))
+            DeleteFile(i);
+        else
+            ++i;
+}
+
 void Cl3::DeleteFile(size_t i)
 {
     entries.erase(entries.begin() + i);

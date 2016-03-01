@@ -95,7 +95,7 @@ public:
 
         std::unique_ptr<Dumpable> src;
 
-        Entry() = default;
+        Entry(std::string name) : name{std::move(name)} {}
         Entry(std::string name, uint32_t field_200, std::unique_ptr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
     };
@@ -107,7 +107,7 @@ public:
         for (size_t i = 0; i < entries.size(); ++i)
             if (entries[i].name == fname)
                 return entries[i];
-        entries.emplace_back();
+        entries.emplace_back(std::forward<T>(fname));
         return entries.back();
     }
 
@@ -115,6 +115,7 @@ public:
     Entry* GetFile(const std::string& fname);
 
     void ExtractTo(const fs::path& dir) const;
+    void UpdateFromDir(const fs::path& dir);
 
     void DeleteFile(size_t i);
     void DeleteFile(Entry& e) { DeleteFile(&e - &entries.front()); }
