@@ -1,8 +1,16 @@
 # -*- mode: python -*-
 
 # the following two variables are used by the target "waf dist"
-VERSION='0.2.4'
 APPNAME='stcm-editor'
+
+import subprocess
+try:
+    VERSION = subprocess.check_output(
+        ['git', 'describe', '--tags', '--always'],
+        stderr = subprocess.PIPE,
+        universal_newlines = True).strip('\n').lstrip('v')
+except:
+    VERSION = '0.3.0'
 
 # these variables are mandatory ('/' are converted automatically)
 top = '.'
@@ -10,7 +18,7 @@ out = 'build'
 
 try:
     with open('wscript_user.py', 'r') as f:
-        exec(f.read())
+        exec(compile(f.read(), 'wscript_user.py', 'exec'))
 except IOError:
     pass
 
@@ -83,6 +91,11 @@ def configure(cfg):
         cfg.check_cxx(lib='user32')
 
 def build(bld):
+    bld(features = 'subst',
+        source = 'src/version.hpp.in',
+        target = 'src/version.hpp',
+        VERSION = VERSION)
+
     src = [
         'src/dumpable.cpp',
         'src/source.cpp',
@@ -106,6 +119,7 @@ def build(bld):
               target = 'common')
 
     bld.program(source = 'src/programs/stcm-editor.cpp',
+                includes = 'src', # for version.hpp
                 uselib = 'BOOST',
                 use = 'common',
                 target = APPNAME)
