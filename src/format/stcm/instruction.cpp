@@ -10,31 +10,33 @@
 namespace Stcm
 {
 
+#define IP InstructionItem::Parameter
+
 static void Param48Validate(uint32_t param, FilePosition file_size)
 {
 #define VALIDATE(x) VALIDATE_FIELD("Stcm Param48", x)
-    switch (Parameter::TypeTag(param))
+    switch (IP::TypeTag(param))
     {
-    case Parameter::Type48::MEM_OFFSET:
-        VALIDATE((Parameter::Value(param) + 16) < file_size);
+    case IP::Type48::MEM_OFFSET:
+        VALIDATE((IP::Value(param) + 16) < file_size);
         return;
-    case Parameter::Type48::IMMEDIATE:
+    case IP::Type48::IMMEDIATE:
         return;
-    case Parameter::Type48::INDIRECT:
+    case IP::Type48::INDIRECT:
         return; // ??
     default:
-        VALIDATE((param >= Parameter::Type48Special::READ_STACK_MIN &&
-                  param <= Parameter::Type48Special::READ_STACK_MAX) ||
-                 (param >= Parameter::Type48Special::READ_4AC_MIN &&
-                  param <= Parameter::Type48Special::READ_4AC_MAX));
+        VALIDATE((param >= IP::Type48Special::READ_STACK_MIN &&
+                  param <= IP::Type48Special::READ_STACK_MAX) ||
+                 (param >= IP::Type48Special::READ_4AC_MIN &&
+                  param <= IP::Type48Special::READ_4AC_MAX));
         return;
     }
 #undef VALIDATE
 }
 
-void Parameter::Validate(FilePosition file_size) const
+void InstructionItem::Parameter::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::Parameter", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::InstructionItem::Parameter", x)
     switch (TypeTag(param_0))
     {
     case Type0::MEM_OFFSET:
@@ -76,12 +78,12 @@ void Parameter::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-void Instruction::Validate(FilePosition file_size) const
+void InstructionItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::Instruction", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::InstructionItem::Header", x)
     VALIDATE(is_call == 0 || is_call == 1);
     VALIDATE(param_count < 16);
-    VALIDATE(size >= sizeof(Instruction) + param_count*sizeof(Parameter));
+    VALIDATE(size >= sizeof(Header) + param_count*sizeof(Parameter));
 
     if (is_call)
         VALIDATE(opcode < file_size);
@@ -99,7 +101,7 @@ InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
 
 void InstructionItem::Parse_(Source& src)
 {
-    auto instr = src.Read<Instruction>();
+    auto instr = src.Read<Header>();
     instr.Validate(GetContext()->GetSize());
 
     is_call = instr.is_call;
@@ -215,16 +217,16 @@ static const std::set<uint32_t> no_returns{0, 6};
 InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
-    if (x.src.GetSize() < sizeof(Instruction))
+    if (x.src.GetSize() < sizeof(Header))
         THROW(DecodeError{"Invalid instruction: premature end of data"});
 
-    auto inst = x.src.Pread<Instruction>(0);
+    auto inst = x.src.Pread<Header>(0);
     if (x.src.GetSize() < inst.size)
         THROW(DecodeError{"Invalid instruction: premature end of data"});
 
     auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
 
-    auto rem_data = inst.size - sizeof(Instruction) -
+    auto rem_data = inst.size - sizeof(Header) -
         sizeof(Parameter) * inst.param_count;
     if (rem_data)
         ret->PrependChild(asserted_cast<RawItem*>(
@@ -252,7 +254,7 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 
 FilePosition InstructionItem::GetSize() const noexcept
 {
-    return sizeof(Instruction) + params.size() * sizeof(Parameter) +
+    return sizeof(Header) + params.size() * sizeof(Parameter) +
         ItemWithChildren::GetSize();
 }
 
@@ -284,22 +286,22 @@ FilePosition InstructionItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(
-            npos + sizeof(Instruction) + params.size() * sizeof(Parameter));
+            npos + sizeof(Header) + params.size() * sizeof(Parameter));
     return Item::UpdatePositions(npos);
 }
 
 void InstructionItem::Dump(std::ostream& os) const
 {
-    Instruction ins;
-    ins.is_call = is_call;
+    Header hdr;
+    hdr.is_call = is_call;
 
     if (is_call)
-        ins.opcode = ToFilePos(target->second);
+        hdr.opcode = ToFilePos(target->second);
     else
-        ins.opcode = opcode;
-    ins.param_count = params.size();
-    ins.size = GetSize();
-    os.write(reinterpret_cast<char*>(&ins), sizeof(Instruction));
+        hdr.opcode = opcode;
+    hdr.param_count = params.size();
+    hdr.size = GetSize();
+    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
 
     Parameter pp;
     for (const auto& p : params)

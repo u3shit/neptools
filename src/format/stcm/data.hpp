@@ -8,21 +8,22 @@
 namespace Stcm
 {
 
-struct DataHeader
-{
-    boost::endian::little_uint32_t type;
-    boost::endian::little_uint32_t offset_unit;
-    boost::endian::little_uint32_t field_8;
-    boost::endian::little_uint32_t length;
-
-    void Validate(FilePosition chunk_size) const;
-};
-STATIC_ASSERT(sizeof(DataHeader) == 0x10);
-
 class DataItem final : public Item
 {
 public:
-    DataItem(Key k, Context* ctx, const DataHeader& hdr, size_t chunk_size);
+    struct Header
+    {
+        boost::endian::little_uint32_t type;
+        boost::endian::little_uint32_t offset_unit;
+        boost::endian::little_uint32_t field_8;
+        boost::endian::little_uint32_t length;
+
+        void Validate(FilePosition chunk_size) const;
+    };
+    STATIC_ASSERT(sizeof(Header) == 0x10);
+
+
+    DataItem(Key k, Context* ctx, const Header& hdr, size_t chunk_size);
     static DataItem* CreateAndInsert(ItemPointer ptr);
 
     void Dump(std::ostream& os) const override;

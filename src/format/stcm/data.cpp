@@ -8,15 +8,15 @@
 namespace Stcm
 {
 
-void DataHeader::Validate(FilePosition chunk_size) const
+void DataItem::Header::Validate(FilePosition chunk_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::DateHeader", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::DataItem::Header", x)
     VALIDATE(type < 0xff);
     VALIDATE(length <= chunk_size);
 #undef VALIDATE
 }
 
-DataItem::DataItem(Key k, Context* ctx, const DataHeader& raw, size_t chunk_size)
+DataItem::DataItem(Key k, Context* ctx, const Header& raw, size_t chunk_size)
     : Item{k, ctx}
 {
     raw.Validate(chunk_size);
@@ -28,21 +28,21 @@ DataItem::DataItem(Key k, Context* ctx, const DataHeader& raw, size_t chunk_size
 
 DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 {
-    auto x = RawItem::Get<DataHeader>(ptr);
+    auto x = RawItem::Get<Header>(ptr);
 
     auto ret = x.ritem.SplitCreate<DataItem>(
-        ptr.offset, x.t, x.ritem.GetSize() - ptr.offset - sizeof(DataHeader));
+        ptr.offset, x.t, x.ritem.GetSize() - ptr.offset - sizeof(Header));
     if (x.t.length > 0)
         ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, x.t.length)->Remove());
-    BOOST_ASSERT(ret->GetSize() == sizeof(DataHeader) + x.t.length);
+    BOOST_ASSERT(ret->GetSize() == sizeof(Header) + x.t.length);
 
     // hack
     auto child = dynamic_cast<RawItem*>(ret->GetChildren());
-    if (child && child->GetSize() > sizeof(GbnlFooter))
+    if (child && child->GetSize() > sizeof(Gbnl::Header))
     {
         char buf[4];
-        child->GetSource().Pread(child->GetSize() - sizeof(GbnlFooter), buf, 4);
+        child->GetSource().Pread(child->GetSize() - sizeof(Gbnl::Header), buf, 4);
         if (memcmp(buf, "GBNL", 4) == 0)
             GbnlItem::CreateAndInsert({child, 0});
     }
@@ -52,12 +52,12 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
 
 void DataItem::Dump(std::ostream& os) const
 {
-    DataHeader hdr;
+    Header hdr;
     hdr.type = type;
     hdr.offset_unit = offset_unit;
     hdr.field_8 = field_8;
-    hdr.length = GetSize() - sizeof(DataHeader);
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(DataHeader));
+    hdr.length = GetSize() - sizeof(Header);
+    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
 
     for (auto it = GetChildren(); it; it = it->GetNext())
         it->Dump(os);
@@ -73,7 +73,7 @@ void DataItem::PrettyPrint(std::ostream& os) const
 
 FilePosition DataItem::GetSize() const noexcept
 {
-    FilePosition ret = sizeof(DataHeader);
+    FilePosition ret = sizeof(Header);
     for (auto it = GetChildren(); it; it = it->GetNext())
         ret += it->GetSize();
     return ret;
@@ -83,7 +83,7 @@ FilePosition DataItem::UpdatePositions(FilePosition npos)
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(
-            npos + sizeof(DataHeader));
+            npos + sizeof(Header));
     return Item::UpdatePositions(npos);
 }
 

@@ -8,50 +8,51 @@
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 
-struct GbnlTypeDescriptor
-{
-    enum Type
-    {
-        UINT32 = 0,
-        UINT8  = 1,
-        UINT16 = 2,
-        FLOAT  = 3,
-        STRING = 5,
-    };
-    boost::endian::little_uint16_t type;
-    boost::endian::little_uint16_t offset;
-};
-STATIC_ASSERT(sizeof(GbnlTypeDescriptor) == 0x04);
-
-struct GbnlFooter
-{
-    char magic[3];
-    char version;
-
-    boost::endian::little_uint32_t field_04;
-    boost::endian::little_uint32_t field_08;
-    boost::endian::little_uint32_t field_0c;
-    boost::endian::little_uint32_t flags; // 1 if there's a string, 0 otherwise?
-    boost::endian::little_uint32_t descr_offset;
-    boost::endian::little_uint32_t count_msgs;
-    boost::endian::little_uint32_t msg_descr_size;
-    boost::endian::little_uint16_t count_types;
-    boost::endian::little_uint16_t field_22;
-    boost::endian::little_uint32_t offset_types;
-    boost::endian::little_uint32_t field_28;
-    boost::endian::little_uint32_t offset_msgs;
-    boost::endian::little_uint32_t field_30;
-    boost::endian::little_uint32_t field_34;
-    boost::endian::little_uint32_t field_38;
-    boost::endian::little_uint32_t field_3c;
-
-    void Validate(size_t chunk_size) const;
-};
-STATIC_ASSERT(sizeof(GbnlFooter) == 0x40);
-
 class Gbnl : public Dumpable
 {
 public:
+    struct Header // or Footer
+    {
+        char magic[3];
+        char version;
+
+        boost::endian::little_uint32_t field_04;
+        boost::endian::little_uint32_t field_08;
+        boost::endian::little_uint32_t field_0c;
+        boost::endian::little_uint32_t flags; // 1 if there's a string, 0 otherwise?
+        boost::endian::little_uint32_t descr_offset;
+        boost::endian::little_uint32_t count_msgs;
+        boost::endian::little_uint32_t msg_descr_size;
+        boost::endian::little_uint16_t count_types;
+        boost::endian::little_uint16_t field_22;
+        boost::endian::little_uint32_t offset_types;
+        boost::endian::little_uint32_t field_28;
+        boost::endian::little_uint32_t offset_msgs;
+        boost::endian::little_uint32_t field_30;
+        boost::endian::little_uint32_t field_34;
+        boost::endian::little_uint32_t field_38;
+        boost::endian::little_uint32_t field_3c;
+
+        void Validate(size_t chunk_size) const;
+    };
+    STATIC_ASSERT(sizeof(Header) == 0x40);
+
+    struct TypeDescriptor
+    {
+        enum Type
+        {
+            UINT32 = 0,
+            UINT8  = 1,
+            UINT16 = 2,
+            FLOAT  = 3,
+            STRING = 5,
+        };
+        boost::endian::little_uint16_t type;
+        boost::endian::little_uint16_t offset;
+    };
+    STATIC_ASSERT(sizeof(TypeDescriptor) == 0x04);
+
+
     Gbnl(Source src);
 
     void Fixup() override { RecalcSize(); }

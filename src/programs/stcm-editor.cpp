@@ -59,9 +59,9 @@ State SmartOpen_(const fs::path& fname)
         auto ret2 = stcm.get();
         return {std::move(stcm), nullptr, ret2, nullptr};
     }
-    else if (src.GetSize() >= sizeof(GbnlFooter) &&
+    else if (src.GetSize() >= sizeof(Gbnl::Header) &&
              (memcmp(buf, "GSTL", 4) == 0 ||
-              (src.Pread(src.GetSize() - sizeof(GbnlFooter), buf, 4),
+              (src.Pread(src.GetSize() - sizeof(Gbnl::Header), buf, 4),
                memcmp(buf, "GBNL", 4) == 0)))
     {
         auto gbnl = std::make_unique<Gbnl>(src);

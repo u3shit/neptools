@@ -9,31 +9,32 @@
 namespace Stcm
 {
 
-struct Header
-{
-    struct MsgParts
-    {
-        char magic[5];
-        char version;
-        char rest[0x20-5-1];
-    };
-    union
-    {
-        FixedString<0x20> msg;
-        MsgParts parts;
-    };
-    boost::endian::little_uint32_t export_offset;
-    boost::endian::little_uint32_t export_count;
-    boost::endian::little_uint32_t field_28;
-    boost::endian::little_uint32_t collection_link_offset;
-
-    void Validate(FilePosition file_size) const;
-};
-STATIC_ASSERT(sizeof(Header) == 0x30);
-
 class HeaderItem final : public Item
 {
 public:
+    struct Header
+    {
+        struct MsgParts
+        {
+            char magic[5];
+            char version;
+            char rest[0x20-5-1];
+        };
+        union
+        {
+            FixedString<0x20> msg;
+            MsgParts parts;
+        };
+        boost::endian::little_uint32_t export_offset;
+        boost::endian::little_uint32_t export_count;
+        boost::endian::little_uint32_t field_28;
+        boost::endian::little_uint32_t collection_link_offset;
+
+        void Validate(FilePosition file_size) const;
+    };
+    STATIC_ASSERT(sizeof(Header) == 0x30);
+
+
     HeaderItem(Key k, Context* ctx, const Header& hdr);
     static HeaderItem* CreateAndInsert(ItemPointer ptr);
 

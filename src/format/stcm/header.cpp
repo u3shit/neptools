@@ -8,9 +8,9 @@
 namespace Stcm
 {
 
-void Header::Validate(FilePosition file_size) const
+void HeaderItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::Header", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
     VALIDATE(memcmp(msg.data(), "STCM2L", 6) == 0);
     VALIDATE(msg.is_valid());
     VALIDATE(export_offset < file_size - 0x28*export_count);

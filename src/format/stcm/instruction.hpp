@@ -11,76 +11,76 @@ class RawItem;
 namespace Stcm
 {
 
-struct Instruction
-{
-    boost::endian::little_uint32_t is_call;
-    boost::endian::little_uint32_t opcode;
-    boost::endian::little_uint32_t param_count;
-    boost::endian::little_uint32_t size;
-
-    enum Opcode
-    {
-        USER_OPCODES = 0x1000,
-        SYSTEM_OPCODES_BEGIN = 0xffffff00,
-        SYSTEM_OPCODES_END   = 0xffffff14,
-    };
-
-    void Validate(FilePosition file_size) const;
-};
-STATIC_ASSERT(sizeof(Instruction) == 0x10);
-
-struct Parameter
-{
-    struct Type0
-    {
-        static constexpr uint32_t MEM_OFFSET = 0;
-        static constexpr uint32_t UNK = 1;
-        static constexpr uint32_t INDIRECT = 2;
-        static constexpr uint32_t SPECIAL = 3;
-    };
-
-    struct Type0Special
-    {
-        static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
-        static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
-        static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
-        static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
-        static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
-        static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
-        static constexpr uint32_t COLL_LINK      = 0xffffff42;
-    };
-
-    struct Type48
-    {
-        static constexpr uint32_t MEM_OFFSET = 0;
-        static constexpr uint32_t IMMEDIATE = 1;
-        static constexpr uint32_t INDIRECT = 2;
-        static constexpr uint32_t SPECIAL = 3;
-    };
-
-    struct Type48Special
-    {
-        static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
-        static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
-        static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
-        static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
-    };
-
-    boost::endian::little_uint32_t param_0;
-    boost::endian::little_uint32_t param_4;
-    boost::endian::little_uint32_t param_8;
-
-    static constexpr inline uint32_t TypeTag(uint32_t x) { return x >> 30; }
-    static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
-    static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
-    { return (tag << 30) | val; }
-    void Validate(FilePosition file_size) const;
-};
-STATIC_ASSERT(sizeof(Parameter) == 0xc);
-
 class InstructionItem final : public ItemWithChildren
 {
 public:
+    struct Header
+    {
+        boost::endian::little_uint32_t is_call;
+        boost::endian::little_uint32_t opcode;
+        boost::endian::little_uint32_t param_count;
+        boost::endian::little_uint32_t size;
+
+        enum Opcode
+        {
+            USER_OPCODES = 0x1000,
+            SYSTEM_OPCODES_BEGIN = 0xffffff00,
+            SYSTEM_OPCODES_END   = 0xffffff14,
+        };
+
+        void Validate(FilePosition file_size) const;
+    };
+    STATIC_ASSERT(sizeof(Header) == 0x10);
+
+    struct Parameter
+    {
+        struct Type0
+        {
+            static constexpr uint32_t MEM_OFFSET = 0;
+            static constexpr uint32_t UNK = 1;
+            static constexpr uint32_t INDIRECT = 2;
+            static constexpr uint32_t SPECIAL = 3;
+        };
+
+        struct Type0Special
+        {
+            static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
+            static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
+            static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
+            static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
+            static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
+            static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
+            static constexpr uint32_t COLL_LINK      = 0xffffff42;
+        };
+
+        struct Type48
+        {
+            static constexpr uint32_t MEM_OFFSET = 0;
+            static constexpr uint32_t IMMEDIATE = 1;
+            static constexpr uint32_t INDIRECT = 2;
+            static constexpr uint32_t SPECIAL = 3;
+        };
+
+        struct Type48Special
+        {
+            static constexpr uint32_t READ_STACK_MIN = 0xffffff00;
+            static constexpr uint32_t READ_STACK_MAX = 0xffffff0f;
+            static constexpr uint32_t READ_4AC_MIN   = 0xffffff20;
+            static constexpr uint32_t READ_4AC_MAX   = 0xffffff27;
+        };
+
+        boost::endian::little_uint32_t param_0;
+        boost::endian::little_uint32_t param_4;
+        boost::endian::little_uint32_t param_8;
+
+        static constexpr inline uint32_t TypeTag(uint32_t x) { return x >> 30; }
+        static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
+        static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
+        { return (tag << 30) | val; }
+        void Validate(FilePosition file_size) const;
+    };
+    STATIC_ASSERT(sizeof(Parameter) == 0xc);
+
     InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context* ctx, Source src);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);

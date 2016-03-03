@@ -10,27 +10,27 @@
 namespace Stcm
 {
 
-struct ExportEntry
-{
-    boost::endian::little_uint32_t field_0;
-    FixedString<0x20> name;
-    boost::endian::little_uint32_t offset;
-
-    void Validate(FilePosition file_size) const;
-};
-STATIC_ASSERT(sizeof(ExportEntry) == 0x28);
-
 class HeaderItem;
 class ExportsItem final : public Item
 {
 public:
+    struct Entry
+    {
+        boost::endian::little_uint32_t field_0;
+        FixedString<0x20> name;
+        boost::endian::little_uint32_t offset;
+
+        void Validate(FilePosition file_size) const;
+    };
+    STATIC_ASSERT(sizeof(Entry) == 0x28);
+
     ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
     static ExportsItem* CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
     void Dump(std::ostream& os) const override;
     void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override
-    { return sizeof(ExportEntry) * entries.size(); }
+    { return sizeof(Entry) * entries.size(); }
 
     using EntryType = std::pair<FixedString<0x20>, const Label*>;
     std::vector<EntryType> entries;

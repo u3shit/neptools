@@ -7,9 +7,9 @@
 namespace Stcm
 {
 
-void ExportEntry::Validate(FilePosition file_size) const
+void ExportsItem::Entry::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::ExportEntry", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
     VALIDATE(field_0 == 0);
     VALIDATE(name.is_valid());
     VALIDATE(offset < file_size);
@@ -28,7 +28,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
     auto size = GetContext()->GetSize();
     for (uint32_t i = 0; i < export_count; ++i)
     {
-        auto e = src.Read<ExportEntry>();
+        auto e = src.Read<Entry>();
         e.Validate(size);
         entries.emplace_back(
             e.name,
@@ -38,7 +38,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
 
 ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count)
 {
-    auto x = RawItem::GetSource(ptr, export_count*sizeof(ExportEntry));
+    auto x = RawItem::GetSource(ptr, export_count*sizeof(Entry));
 
     auto ret = x.ritem.SplitCreate<ExportsItem>(
         ptr.offset, x.src, export_count);
@@ -50,14 +50,14 @@ ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
 
 void ExportsItem::Dump(std::ostream& os) const
 {
-    ExportEntry ee;
+    Entry ee;
     ee.field_0 = 0;
 
     for (auto& e : entries)
     {
         ee.name = e.first;
         ee.offset = ToFilePos(e.second->second);
-        os.write(reinterpret_cast<char*>(&ee), sizeof(ExportEntry));
+        os.write(reinterpret_cast<char*>(&ee), sizeof(Entry));
     }
 }
 

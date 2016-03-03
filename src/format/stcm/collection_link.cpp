@@ -6,12 +6,12 @@
 namespace Stcm
 {
 
-void CollectionLinkHeader::Validate(FilePosition file_size) const
+void CollectionLinkHeaderItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkHeader", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkHeaderItem::Header", x)
     VALIDATE(field_00 == 0);
     VALIDATE(offset <= file_size);
-    VALIDATE(offset + sizeof(CollectionLinkEntry)*count <= file_size);
+    VALIDATE(offset + sizeof(CollectionLinkItem::Entry)*count <= file_size);
     VALIDATE(field_0c == 0);
     VALIDATE(field_10 == 0 && field_14 == 0 && field_18 == 0 && field_1c == 0);
     VALIDATE(field_20 == 0 && field_24 == 0 && field_28 == 0 && field_2c == 0);
@@ -19,9 +19,9 @@ void CollectionLinkHeader::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-void CollectionLinkEntry::Validate(FilePosition file_size) const
+void CollectionLinkItem::Entry::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkEntry", x)
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkItem::Entry", x)
     VALIDATE(name_0 <= file_size);
     VALIDATE(name_1 <= file_size);
     VALIDATE(ptr == 0);
@@ -31,7 +31,7 @@ void CollectionLinkEntry::Validate(FilePosition file_size) const
 }
 
 CollectionLinkHeaderItem::CollectionLinkHeaderItem(
-    Key k, Context* ctx, const CollectionLinkHeader& s)
+    Key k, Context* ctx, const Header& s)
     : Item{k, ctx}
 {
     s.Validate(GetContext()->GetSize());
@@ -42,7 +42,7 @@ CollectionLinkHeaderItem::CollectionLinkHeaderItem(
 CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     ItemPointer ptr)
 {
-    auto x = RawItem::Get<CollectionLinkHeader>(ptr);
+    auto x = RawItem::Get<Header>(ptr);
     auto ret = x.ritem.SplitCreate<CollectionLinkHeaderItem>(ptr.offset, x.t);
 
     auto ptr2 = ret->data->second;
@@ -57,7 +57,7 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
         return ret;
     }
 
-    auto e = RawItem::GetSource(ptr2, x.t.count*sizeof(CollectionLinkEntry));
+    auto e = RawItem::GetSource(ptr2, x.t.count*sizeof(CollectionLinkItem::Entry));
 
     e.ritem.SplitCreate<CollectionLinkItem>(ptr2.offset, e.src, x.t.count);
 
@@ -66,10 +66,10 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
 
 void CollectionLinkHeaderItem::Dump(std::ostream& os) const
 {
-    CollectionLinkHeader hdr{};
+    Header hdr{};
     hdr.offset = ToFilePos(data->second);
     hdr.count = data->second.As0<CollectionLinkItem>().entries.size();
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(CollectionLinkHeader));
+    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
 }
 
 void CollectionLinkHeaderItem::PrettyPrint(std::ostream& os) const
@@ -90,7 +90,7 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
     entries.reserve(count);
     for (uint32_t i = 0; i < count; ++i)
     {
-        auto e = src.Read<CollectionLinkEntry>();
+        auto e = src.Read<Entry>();
         e.Validate(GetContext()->GetSize());
         entries.push_back({
             GetContext()->GetLabelTo(e.name_0),
@@ -100,12 +100,12 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
 
 void CollectionLinkItem::Dump(std::ostream& os) const
 {
-    CollectionLinkEntry ee{};
+    Entry ee{};
     for (const auto& e : entries)
     {
         ee.name_0 = ToFilePos(e.name_0->second);
         ee.name_1 = ToFilePos(e.name_1->second);
-        os.write(reinterpret_cast<char*>(&ee), sizeof(CollectionLinkEntry));
+        os.write(reinterpret_cast<char*>(&ee), sizeof(Entry));
     }
 }
 
@@ -113,8 +113,8 @@ void CollectionLinkItem::PrettyPrint(std::ostream& os) const
 {
     bool good_labels = true;
     for (auto lbl : GetLabels())
-        if (lbl.first % sizeof(CollectionLinkEntry) != 0 ||
-            lbl.first / sizeof(CollectionLinkEntry) >= entries.size())
+        if (lbl.first % sizeof(Entry) != 0 ||
+            lbl.first / sizeof(Entry) >= entries.size())
         {
             good_labels = false;
             break;
@@ -130,7 +130,7 @@ void CollectionLinkItem::PrettyPrint(std::ostream& os) const
             auto x = GetLabels().equal_range(i);
             for (auto it = x.first; it != x.second; ++it)
                 os << '@' << it->second->first << ":\n";
-            i += sizeof(CollectionLinkEntry);
+            i += sizeof(Entry);
         }
 
 

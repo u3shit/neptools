@@ -8,20 +8,20 @@
 
 //#define STRTOOL_COMPAT
 
-void GbnlFooter::Validate(size_t chunk_size) const
+void Gbnl::Header::Validate(size_t chunk_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Gbnl::Footer", x)
+#define VALIDATE(x) VALIDATE_FIELD("Gbnl::Header", x)
     VALIDATE(field_04 == 1 && field_08 == 16 && field_0c == 4);
     VALIDATE(descr_offset + msg_descr_size * count_msgs < chunk_size);
     VALIDATE(field_22 == 0);
-    VALIDATE(offset_types + sizeof(GbnlTypeDescriptor) * count_types < chunk_size);
+    VALIDATE(offset_types + sizeof(TypeDescriptor) * count_types < chunk_size);
     VALIDATE(offset_msgs < chunk_size);
     VALIDATE(field_34 == 0 && field_38 == 0 && field_3c == 0);
 
     if (memcmp(magic, "GBNL", 4) == 0)
         VALIDATE(descr_offset == 0);
     else if (memcmp(magic, "GSTL", 4) == 0)
-        VALIDATE(descr_offset == sizeof(GbnlFooter));
+        VALIDATE(descr_offset == sizeof(Header));
     else
         VALIDATE(!"Invalid magic");
 #undef VALIDATE
@@ -36,11 +36,11 @@ static size_t GetSize(uint16_t type)
 {
     switch (type)
     {
-    case GbnlTypeDescriptor::UINT8: return 1;
-    case GbnlTypeDescriptor::UINT16: return 2;
-    case GbnlTypeDescriptor::UINT32: return 4;
-    case GbnlTypeDescriptor::FLOAT: return 4;
-    case GbnlTypeDescriptor::STRING: return 4;
+    case Gbnl::TypeDescriptor::UINT8: return 1;
+    case Gbnl::TypeDescriptor::UINT16: return 2;
+    case Gbnl::TypeDescriptor::UINT32: return 4;
+    case Gbnl::TypeDescriptor::FLOAT: return 4;
+    case Gbnl::TypeDescriptor::STRING: return 4;
     default: THROW(DecodeError{"Gbnl: invalid type"});
     }
 }
@@ -53,17 +53,17 @@ Gbnl::Gbnl(Source src)
 void Gbnl::Parse_(Source& src)
 {
 #define VALIDATE(msg, x) VALIDATE_FIELD("Gbnl" msg, x)
-    if (src.GetSize() < sizeof(GbnlFooter))
+    if (src.GetSize() < sizeof(Header))
         THROW(DecodeError{"GBNL: section too short"});
 
-    auto foot = src.Pread<GbnlFooter>(0);
+    auto foot = src.Pread<Header>(0);
     if (memcmp(foot.magic, "GSTL", 4) == 0)
     {
         is_gstl = true;
     }
     else
     {
-        src.Pread(src.GetSize() - sizeof(GbnlFooter), foot);
+        src.Pread(src.GetSize() - sizeof(Header), foot);
         is_gstl = false;
     }
 
@@ -81,7 +81,7 @@ void Gbnl::Parse_(Source& src)
     Struct::TypeBuilder bld;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
-        auto type = src.Read<GbnlTypeDescriptor>();
+        auto type = src.Read<TypeDescriptor>();
 
         auto bytes = ::GetSize(type.type);
         calc_offs = ::Align(calc_offs, bytes);
@@ -91,10 +91,10 @@ void Gbnl::Parse_(Source& src)
 
         switch (type.type)
         {
-        case GbnlTypeDescriptor::UINT8:
+        case TypeDescriptor::UINT8:
             if (i+1 != foot.count_types)
             {
-                auto t2 = src.Pread<GbnlTypeDescriptor>(src.Tell());
+                auto t2 = src.Pread<TypeDescriptor>(src.Tell());
                 // if it longer than 1, make it a string
                 if (t2.offset != ::Align(type.offset+1, ::GetSize(t2.type)))
                 {
@@ -108,16 +108,16 @@ void Gbnl::Parse_(Source& src)
             // single char
             bld.Add<uint8_t>();
             break;
-        case GbnlTypeDescriptor::UINT16:
+        case TypeDescriptor::UINT16:
             bld.Add<uint16_t>();
             break;
-        case GbnlTypeDescriptor::UINT32:
+        case TypeDescriptor::UINT32:
             bld.Add<uint32_t>();
             break;
-        case GbnlTypeDescriptor::FLOAT:
+        case TypeDescriptor::FLOAT:
             bld.Add<float>();
             break;
-        case GbnlTypeDescriptor::STRING:
+        case TypeDescriptor::STRING:
             bld.Add<OffsetString>();
             break;
         default:
@@ -253,7 +253,7 @@ void Gbnl::Dump_(std::ostream& os) const
     auto msgs_end_round = Align(msgs_end);
     os.write(ZEROS, msgs_end_round - msgs_end);
 
-    GbnlTypeDescriptor ctrl;
+    TypeDescriptor ctrl;
     uint16_t offs = 0;
     for (size_t i = 0; i < type->item_count; ++i)
     {
@@ -261,42 +261,42 @@ void Gbnl::Dump_(std::ostream& os) const
         {
         case Struct::GetIndexFromType<uint8_t>():
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::UINT8;
+            ctrl.type = TypeDescriptor::UINT8;
             offs += 1;
             break;
         case Struct::GetIndexFromType<uint16_t>():
             offs = (offs+1) & ~1;
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::UINT16;
+            ctrl.type = TypeDescriptor::UINT16;
             offs += 2;
             break;
         case Struct::GetIndexFromType<uint32_t>():
             offs = (offs+3) & ~3;
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::UINT32;
+            ctrl.type = TypeDescriptor::UINT32;
             offs += 4;
             break;
         case Struct::GetIndexFromType<float>():
             offs = (offs+3) & ~3;
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::FLOAT;
+            ctrl.type = TypeDescriptor::FLOAT;
             offs += 4;
             break;
         case Struct::GetIndexFromType<OffsetString>():
             offs = (offs+3) & ~3;
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::STRING;
+            ctrl.type = TypeDescriptor::STRING;
             offs += 4;
             break;
         case Struct::GetIndexFromType<FixStringTag>():
             ctrl.offset = offs;
-            ctrl.type = GbnlTypeDescriptor::UINT8;
+            ctrl.type = TypeDescriptor::UINT8;
             offs += type->items[i].size;
             break;
         };
-        os.write(reinterpret_cast<char*>(&ctrl), sizeof(GbnlTypeDescriptor));
+        os.write(reinterpret_cast<char*>(&ctrl), sizeof(TypeDescriptor));
     }
-    auto control_end = msgs_end_round + sizeof(GbnlTypeDescriptor) * type->item_count;
+    auto control_end = msgs_end_round + sizeof(TypeDescriptor) * type->item_count;
     auto control_end_round = Align(control_end);
     os.write(ZEROS, control_end_round - control_end);
 
@@ -319,35 +319,35 @@ void Gbnl::Dump_(std::ostream& os) const
 
     BOOST_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
     BOOST_ASSERT(control_end_round == Align(msgs_end_round +
-        sizeof(GbnlTypeDescriptor) * type->item_count));
+        sizeof(TypeDescriptor) * type->item_count));
     if (!is_gstl) DumpHeader(os);
 }
 
 void Gbnl::DumpHeader(std::ostream& os) const
 {
-    GbnlFooter foot;
-    memcpy(foot.magic, is_gstl ? "GSTL" : "GBNL", 4);
-    foot.field_04 = 1;
-    foot.field_08 = 16;
-    foot.field_0c = 4;
-    foot.flags = flags;
-    auto offset = is_gstl ? sizeof(GbnlFooter) : 0;
-    foot.descr_offset = offset;
-    foot.count_msgs = messages.size();
-    foot.msg_descr_size = msg_descr_size;
-    foot.count_types = type->item_count;
-    foot.field_22 = 0;
+    Header head;
+    memcpy(head.magic, is_gstl ? "GSTL" : "GBNL", 4);
+    head.field_04 = 1;
+    head.field_08 = 16;
+    head.field_0c = 4;
+    head.flags = flags;
+    auto offset = is_gstl ? sizeof(Header) : 0;
+    head.descr_offset = offset;
+    head.count_msgs = messages.size();
+    head.msg_descr_size = msg_descr_size;
+    head.count_types = type->item_count;
+    head.field_22 = 0;
     auto msgs_end_round = Align(offset + msg_descr_size * messages.size());
-    foot.offset_types = msgs_end_round;;
-    foot.field_28 = field_28;
+    head.offset_types = msgs_end_round;;
+    head.field_28 = field_28;
     auto control_end_round = Align(msgs_end_round +
-        sizeof(GbnlTypeDescriptor) * type->item_count);
-    foot.offset_msgs = msgs_size ? control_end_round : 0;
-    foot.field_30 = field_30;
-    foot.field_34 = 0;
-    foot.field_38 = 0;
-    foot.field_3c = 0;
-    os.write(reinterpret_cast<char*>(&foot), sizeof(GbnlFooter));
+        sizeof(TypeDescriptor) * type->item_count);
+    head.offset_msgs = msgs_size ? control_end_round : 0;
+    head.field_30 = field_30;
+    head.field_34 = 0;
+    head.field_38 = 0;
+    head.field_3c = 0;
+    os.write(reinterpret_cast<char*>(&head), sizeof(Header));
 }
 
 namespace
@@ -440,9 +440,9 @@ void Gbnl::RecalcSize()
 FilePosition Gbnl::GetSize() const noexcept
 {
     FilePosition ret = msg_descr_size * messages.size();
-    ret = Align(ret) + sizeof(GbnlTypeDescriptor) * type->item_count;
+    ret = Align(ret) + sizeof(TypeDescriptor) * type->item_count;
     ret = Align(ret) + msgs_size;
-    ret = Align(ret) + sizeof(GbnlFooter);
+    ret = Align(ret) + sizeof(Header);
     return ret;
 }
 
