@@ -1,4 +1,5 @@
 #include "hook.hpp"
+#include "../except.hpp"
 #include <new>
 #include <stdexcept>
 #include <cstdlib>
@@ -19,7 +20,7 @@ void* Hook(void* fun, void* dst, size_t copy)
     if (copy)
     {
         ret = static_cast<char*>(HeapAlloc(heap, 0, copy + JMP_SIZE));
-        if (!ret) throw std::bad_alloc{};
+        if (!ret) THROW(std::bad_alloc{});
         memcpy(ret, addr, copy);
         ret[copy] = 0xe9; // jmp
         auto base = ret + copy + JMP_SIZE;
@@ -45,7 +46,7 @@ void* Hook(void* fun, void* dst, size_t copy)
 Unprotect::Unprotect(void* ptr, size_t len) : ptr{ptr}, len{len}
 {
     if (!VirtualProtect(ptr, len, PAGE_READWRITE, &orig_prot))
-        throw std::runtime_error{"Unprotect: VirtualProtect"};
+        THROW(std::runtime_error{"Unprotect: VirtualProtect"});
 }
 
 Unprotect::~Unprotect()

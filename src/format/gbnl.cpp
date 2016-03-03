@@ -1,4 +1,5 @@
 #include "gbnl.hpp"
+#include "../except.hpp"
 #include <map>
 #include <boost/assert.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
@@ -7,23 +8,23 @@
 
 //#define STRTOOL_COMPAT
 
-bool GbnlFooter::IsValid(size_t chunk_size) const noexcept
+void GbnlFooter::Validate(size_t chunk_size) const
 {
-    if (!(
-        field_04 == 1 && field_08 == 16 && field_0c == 4 &&
-        descr_offset + msg_descr_size * count_msgs < chunk_size &&
-        field_22 == 0 &&
-        offset_types + sizeof(GbnlTypeDescriptor) * count_types < chunk_size &&
-        offset_msgs < chunk_size &&
-        field_34 == 0 && field_38 == 0 && field_3c == 0))
-        return false;
+#define VALIDATE(x) VALIDATE_FIELD("Gbnl::Footer", x)
+    VALIDATE(field_04 == 1 && field_08 == 16 && field_0c == 4);
+    VALIDATE(descr_offset + msg_descr_size * count_msgs < chunk_size);
+    VALIDATE(field_22 == 0);
+    VALIDATE(offset_types + sizeof(GbnlTypeDescriptor) * count_types < chunk_size);
+    VALIDATE(offset_msgs < chunk_size);
+    VALIDATE(field_34 == 0 && field_38 == 0 && field_3c == 0);
 
     if (memcmp(magic, "GBNL", 4) == 0)
-        return descr_offset == 0;
+        VALIDATE(descr_offset == 0);
     else if (memcmp(magic, "GSTL", 4) == 0)
-        return descr_offset == sizeof(GbnlFooter);
+        VALIDATE(descr_offset == sizeof(GbnlFooter));
     else
-        return false;
+        VALIDATE(!"Invalid magic");
+#undef VALIDATE
 }
 
 static constexpr size_t Align(size_t val, size_t align)
@@ -40,14 +41,20 @@ static size_t GetSize(uint16_t type)
     case GbnlTypeDescriptor::UINT32: return 4;
     case GbnlTypeDescriptor::FLOAT: return 4;
     case GbnlTypeDescriptor::STRING: return 4;
-    default: throw std::runtime_error{"GBNL: invalid type"};
+    default: THROW(DecodeError{"Gbnl: invalid type"});
     }
 }
 
 Gbnl::Gbnl(Source src)
 {
+    AddInfo(&Gbnl::Parse_, ADD_SOURCE(src), this, src);
+}
+
+void Gbnl::Parse_(Source& src)
+{
+#define VALIDATE(msg, x) VALIDATE_FIELD("Gbnl" msg, x)
     if (src.GetSize() < sizeof(GbnlFooter))
-        throw std::runtime_error{"GBNL: section too short"};
+        THROW(DecodeError{"GBNL: section too short"});
 
     auto foot = src.Pread<GbnlFooter>(0);
     if (memcmp(foot.magic, "GSTL", 4) == 0)
@@ -60,8 +67,7 @@ Gbnl::Gbnl(Source src)
         is_gstl = false;
     }
 
-    if (!foot.IsValid(src.GetSize()))
-        throw std::runtime_error{"GBNL: invalid footer"};
+    foot.Validate(src.GetSize());
     flags = foot.flags;
     field_28 = foot.field_28;
     field_30 = foot.field_30;
@@ -79,8 +85,7 @@ Gbnl::Gbnl(Source src)
 
         auto bytes = ::GetSize(type.type);
         calc_offs = ::Align(calc_offs, bytes);
-        if (calc_offs != type.offset)
-            throw std::runtime_error{"GBNL: invalid type offset"};
+        VALIDATE("", calc_offs == type.offset);
         calc_offs += bytes;
         offsets.push_back(type.offset);
 
@@ -116,11 +121,11 @@ Gbnl::Gbnl(Source src)
             bld.Add<OffsetString>();
             break;
         default:
-            throw std::runtime_error{"GBNL: invalid type"};
+            THROW(DecodeError{"GBNL: invalid type"});
         }
     }
-    if (((calc_offs + 3) & ~3) != msg_descr_size)
-        throw std::runtime_error{"GBNL: type array incomplete/bad padding"};
+    VALIDATE(" type array incomplete/bad padding",
+             ((calc_offs + 3) & ~3) == msg_descr_size);
 
     type = bld.Build();
 
@@ -158,8 +163,7 @@ Gbnl::Gbnl(Source src)
                     m.Get<OffsetString>(i).offset = -1;
                 else
                 {
-                    if (offs > src.GetSize() - foot.offset_msgs)
-                        throw std::runtime_error{"GBNL: string offset too big"};
+                    VALIDATE("", offs < src.GetSize() - foot.offset_msgs);
                     auto str = foot.offset_msgs + offs;
 
                     m.Get<OffsetString>(i) = {src.GetCstring(str), 0};
@@ -180,8 +184,9 @@ Gbnl::Gbnl(Source src)
     }
     RecalcSize();
 
-    if (msg_descr_size != foot.msg_descr_size || GetSize() != src.GetSize())
-        throw std::runtime_error("GBNL: invalid size after repack");
+    VALIDATE(" invalid size after repack", msg_descr_size == foot.msg_descr_size);
+    VALIDATE(" invalid size after repack", GetSize() == src.GetSize());
+#undef VALIDATE
 }
 
 namespace
@@ -569,16 +574,16 @@ void Gbnl::ReadTxt(std::istream& is)
             if (pos == static_cast<size_t>(-1))
             {
                 std::cerr << id << std::endl;
-                throw std::runtime_error("GbnlTxt: invalid id in input");
+                THROW(DecodeError{"GbnlTxt: invalid id in input"});
             }
         }
         else
         {
             if (pos == static_cast<size_t>(-1))
-                throw std::runtime_error("GbnlTxt: data before separator");
+                THROW(DecodeError{"GbnlTxt: data before separator"});
             if (!line.empty() && line.back() == '\r') line.pop_back();
             msg.append(line).append(1, '\n');
         }
     }
-    throw std::runtime_error("GbnlTxt: EOF");
+    THROW(DecodeError{"GbnlTxt: EOF"});
 }

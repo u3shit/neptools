@@ -9,6 +9,11 @@ namespace Stcm
 
 File::File(Source src)
 {
+    AddInfo(&File::Parse_, ADD_SOURCE(src), this, src);
+}
+
+void File::Parse_(Source& src)
+{
     auto root = Create<RawItem>(std::move(src));
     auto root_sav = root.get();
     SetRoot(std::move(root));

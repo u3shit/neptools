@@ -8,16 +8,18 @@
 namespace Stcm
 {
 
-bool DataHeader::IsValid(FilePosition chunk_size) const noexcept
+void DataHeader::Validate(FilePosition chunk_size) const
 {
-    return type < 0xff && length <= chunk_size;
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::DateHeader", x)
+    VALIDATE(type < 0xff);
+    VALIDATE(length <= chunk_size);
+#undef VALIDATE
 }
 
 DataItem::DataItem(Key k, Context* ctx, const DataHeader& raw, size_t chunk_size)
     : Item{k, ctx}
 {
-    if (!raw.IsValid(chunk_size))
-        throw std::runtime_error("Invalid data header");
+    raw.Validate(chunk_size);
 
     type = raw.type;
     offset_unit = raw.offset_unit;

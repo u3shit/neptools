@@ -124,6 +124,7 @@ private:
     FilePosition data_size;
     unsigned link_count;
 
+    void Parse_(Source& src);
     void Dump_(std::ostream& os) const override;
     void Inspect_(std::ostream& os) const override;
 };

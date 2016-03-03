@@ -27,7 +27,7 @@ struct Header
     boost::endian::little_uint32_t field_28;
     boost::endian::little_uint32_t collection_link_offset;
 
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(Header) == 0x30);
 

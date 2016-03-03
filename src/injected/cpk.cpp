@@ -1,6 +1,7 @@
 #include "cpk.hpp"
 #include "hook.hpp"
 #include "../fs.hpp"
+#include "../except.hpp"
 
 OperatorNewPtr operator_new;
 OperatorDeletePtr operator_delete;
@@ -85,13 +86,13 @@ char CpkHandler::Read(unsigned index, char* dst, int dst_size,
 void CpkHandler::Hook()
 {
     auto h = GetModuleHandleW(L"msvcr120.dll");
-    if (!h) throw std::runtime_error{"Failed to load msvcr120.dll"};
+    if (!h) THROW(std::runtime_error{"Failed to load msvcr120.dll"});
     operator_new = reinterpret_cast<OperatorNewPtr>(
         GetProcAddress(h, "??2@YAPAXI@Z"));
     operator_delete = reinterpret_cast<OperatorDeletePtr>(
         GetProcAddress(h, "??3@YAXPAX@Z"));
     if (!operator_new || !operator_delete)
-        throw std::runtime_error{"Failed to bind operator new/delete"};
+        THROW(std::runtime_error{"Failed to bind operator new/delete"});
 
     orig_open_file = ::Hook(image_base + 0x2ede90, &CpkHandler::OpenFile, 5);
     orig_close_file = ::Hook(image_base + 0x2ee1b0, &CpkHandler::CloseFile, 5);

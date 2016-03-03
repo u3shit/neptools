@@ -2,6 +2,7 @@
 #include "data.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
+#include "../../except.hpp"
 #include <boost/assert.hpp>
 #include <set>
 #include <iostream>
@@ -9,75 +10,101 @@
 namespace Stcm
 {
 
-static bool Param48Valid(uint32_t param, FilePosition file_size) noexcept
+static void Param48Validate(uint32_t param, FilePosition file_size)
 {
+#define VALIDATE(x) VALIDATE_FIELD("Stcm Param48", x)
     switch (Parameter::TypeTag(param))
     {
     case Parameter::Type48::MEM_OFFSET:
-        return (Parameter::Value(param) + 16) < file_size;
+        VALIDATE((Parameter::Value(param) + 16) < file_size);
+        return;
     case Parameter::Type48::IMMEDIATE:
-        return true;
+        return;
     case Parameter::Type48::INDIRECT:
-        return true; // ??
+        return; // ??
     default:
-        return (param >= Parameter::Type48Special::READ_STACK_MIN &&
-                param <= Parameter::Type48Special::READ_STACK_MAX) ||
-               (param >= Parameter::Type48Special::READ_4AC_MIN &&
-                param <= Parameter::Type48Special::READ_4AC_MAX);
+        VALIDATE((param >= Parameter::Type48Special::READ_STACK_MIN &&
+                  param <= Parameter::Type48Special::READ_STACK_MAX) ||
+                 (param >= Parameter::Type48Special::READ_4AC_MIN &&
+                  param <= Parameter::Type48Special::READ_4AC_MAX));
+        return;
     }
+#undef VALIDATE
 }
 
-bool Parameter::IsValid(FilePosition file_size) const noexcept
+void Parameter::Validate(FilePosition file_size) const
 {
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::Parameter", x)
     switch (TypeTag(param_0))
     {
     case Type0::MEM_OFFSET:
-        return Value(param_0) < file_size && Param48Valid(param_4, file_size) &&
-            Param48Valid(param_8, file_size);
+        VALIDATE(Value(param_0) < file_size);
+        Param48Validate(param_4, file_size);
+        Param48Validate(param_8, file_size);
+        return;
+
     //case Type0::UNK: todo
     case Type0::INDIRECT:
-        return Value(param_0) < 256 && param_4 == 0x40000000 &&
-            Param48Valid(param_8, file_size);
+        VALIDATE(Value(param_0) < 256 && param_4 == 0x40000000);
+        Param48Validate(param_8, file_size);
+        return;
+
     case Type0::SPECIAL:
         if ((param_0 >= Type0Special::READ_STACK_MIN && param_0 <= Type0Special::READ_STACK_MAX) ||
             (param_0 >= Type0Special::READ_4AC_MIN && param_0 <= Type0Special::READ_4AC_MAX))
-            return param_4 == 0x40000000 && param_8 == 0x40000000;
+        {
+            VALIDATE(param_4 == 0x40000000);
+            VALIDATE(param_8 == 0x40000000);
+        }
         else if (param_0 == Type0Special::INSTR_PTR0 ||
                  param_0 == Type0Special::INSTR_PTR1)
-            return param_4 < file_size && param_8 == 0x40000000;
+        {
+            VALIDATE(param_4 < file_size);
+            VALIDATE(param_8 == 0x40000000);
+        }
         else if (param_0 == Type0Special::COLL_LINK)
-            return param_4 + 8 < file_size && param_8 == 0;
+        {
+            VALIDATE(param_4 + 8 < file_size);
+            VALIDATE(param_8 == 0);
+        }
         else
-            return false;
+            VALIDATE(!"Unknown special");
+        return;
     default:
-        return false;
+        VALIDATE(!"Unknown type0");
     }
+#undef VALIDATE
 }
 
-bool Instruction::IsValid(FilePosition file_size) const noexcept
+void Instruction::Validate(FilePosition file_size) const
 {
-    if ((is_call != 0 && is_call != 1) ||
-        param_count >= 16 ||
-        size < sizeof(Instruction) + param_count*sizeof(Parameter))
-        return false;
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::Instruction", x)
+    VALIDATE(is_call == 0 || is_call == 1);
+    VALIDATE(param_count < 16);
+    VALIDATE(size >= sizeof(Instruction) + param_count*sizeof(Parameter));
 
     if (is_call)
-        return opcode < file_size;
+        VALIDATE(opcode < file_size);
     else
-        return opcode < USER_OPCODES ||
-            (opcode >= SYSTEM_OPCODES_BEGIN && opcode <= SYSTEM_OPCODES_END);
+        VALIDATE(opcode < USER_OPCODES ||
+                 (opcode >= SYSTEM_OPCODES_BEGIN && opcode <= SYSTEM_OPCODES_END));
+#undef VALIDATE
 }
 
 InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
     : ItemWithChildren{k, ctx}
 {
+    AddInfo(&InstructionItem::Parse_, ADD_SOURCE(src), this, src);
+}
+
+void InstructionItem::Parse_(Source& src)
+{
     auto instr = src.Read<Instruction>();
-    if (!instr.IsValid(ctx->GetSize()))
-        throw std::runtime_error("invalid instruction");
+    instr.Validate(GetContext()->GetSize());
 
     is_call = instr.is_call;
     if (is_call)
-        target = ctx->GetLabelTo(instr.opcode);
+        target = GetContext()->GetLabelTo(instr.opcode);
     else
         opcode = instr.opcode;
 
@@ -85,8 +112,7 @@ InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
     for (size_t i = 0; i < instr.param_count; ++i)
     {
         auto p = src.Read<Parameter>();
-        if (!p.IsValid(ctx->GetSize()))
-            throw std::runtime_error{"invalid instruction parameter"};
+        p.Validate(GetContext()->GetSize());
         ConvertParam(params[i], p);
     }
 }
@@ -138,11 +164,11 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
             out.param_4.label = GetContext()->GetLabelTo(in.param_4);
         }
         else
-            BOOST_ASSERT(false);
+            UNREACHABLE("Invalid special parameter type");
         break;
 
     default:
-        BOOST_ASSERT(false);
+        UNREACHABLE("Invalid parameter type");
     }
 }
 
@@ -176,11 +202,11 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
             out.num = in - Parameter::Type48Special::READ_4AC_MIN;
         }
         else
-            BOOST_ASSERT(false);
+            UNREACHABLE("Invalid 48Special param");
         break;
 
     default:
-        BOOST_ASSERT(false);
+        UNREACHABLE("Invalid 48 param");
     }
 }
 
@@ -190,11 +216,11 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
     if (x.src.GetSize() < sizeof(Instruction))
-        throw std::runtime_error("Invalid instruction: premature end of data");
+        THROW(DecodeError{"Invalid instruction: premature end of data"});
 
     auto inst = x.src.Pread<Instruction>(0);
     if (x.src.GetSize() < inst.size)
-        throw std::runtime_error("Invalid instruction: premature end of data");
+        THROW(DecodeError{"Invalid instruction: premature end of data"});
 
     auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
 
@@ -251,7 +277,7 @@ void InstructionItem::Dump48(
         out = Parameter::Type48Special::READ_4AC_MIN + in.num;
         return;
     }
-    BOOST_ASSERT(false);
+    UNREACHABLE("Invalid Param48 Type stored");
 }
 
 FilePosition InstructionItem::UpdatePositions(FilePosition npos)

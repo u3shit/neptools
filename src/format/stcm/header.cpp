@@ -8,20 +8,21 @@
 namespace Stcm
 {
 
-bool Header::IsValid(FilePosition file_size) const noexcept
+void Header::Validate(FilePosition file_size) const
 {
-    return memcmp(msg.data(), "STCM2L", 6) == 0 &&
-        msg.is_valid() &&
-        export_offset < file_size - 0x28*export_count &&
-        field_28 == 1 &&
-        collection_link_offset < file_size;
+#define VALIDATE(x) VALIDATE_FIELD("Stcm::Header", x)
+    VALIDATE(memcmp(msg.data(), "STCM2L", 6) == 0);
+    VALIDATE(msg.is_valid());
+    VALIDATE(export_offset < file_size - 0x28*export_count);
+    VALIDATE(field_28 == 1);
+    VALIDATE(collection_link_offset < file_size);
+#undef VALIDATE
 }
 
 HeaderItem::HeaderItem(Key k, Context* ctx, const Header& hdr)
     : Item{k, ctx}
 {
-    if (!hdr.IsValid(GetContext()->GetSize()))
-        throw std::runtime_error("Invalid STCM header");
+    hdr.Validate(GetContext()->GetSize());
 
     msg = hdr.msg;
     export_sec = ctx->CreateLabelFallback("exports", hdr.export_offset);

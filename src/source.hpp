@@ -4,6 +4,8 @@
 
 #include <array>
 #include <boost/endian/arithmetic.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/get_error_info.hpp>
 #include "dumpable.hpp"
 #include "fs.hpp"
 
@@ -24,12 +26,12 @@ public:
         FileMemSize size = 0;
     };
 
-    Source(const Source& s, FilePosition offset, FilePosition size)
+    Source(const Source& s, FilePosition offset, FilePosition size) noexcept
         : Source{s} { Slice(offset, size); get = 0; }
 
     static Source FromFile(fs::path fname);
 
-    void Slice(FilePosition offset, FilePosition size)
+    void Slice(FilePosition offset, FilePosition size) noexcept
     {
         BOOST_ASSERT(offset <= this->size &&
                      offset + size <= this->size);
@@ -76,26 +78,7 @@ public:
 
     void Read(Byte* buf, size_t len) { Pread(get, buf, len); get += len; }
     void Read(char* buf, size_t len) { Pread(get, buf, len); get += len; }
-    void Pread(FilePosition offs, Byte* buf, FileMemSize len) const
-    {
-        BOOST_ASSERT(offs <= size && offs+len <= size);
-        offs += offset;
-        while (len)
-        {
-            if (GetEntry(offs))
-            {
-                auto& x = p->lru[0];
-                auto buf_offs = offs - x.offset;
-                auto to_cpy = std::min(len, x.size - buf_offs);
-                memcpy(buf, x.ptr + buf_offs, to_cpy);
-                offs += to_cpy;
-                buf += to_cpy;
-                len -= to_cpy;
-            }
-            else
-                return p->Pread(offs, buf, len);
-        }
-    }
+    void Pread(FilePosition offs, Byte* buf, FileMemSize len) const;
     void Pread(FilePosition offs, char* buf, FileMemSize len) const
     { Pread(offs, reinterpret_cast<Byte*>(buf), len); }
 
@@ -136,6 +119,8 @@ private:
     struct SourceProvider;
     Source(std::shared_ptr<SourceProvider> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
+
+    static Source FromFile_(fs::path fname);
 
     FilePosition offset = 0, size, get = 0;
     bool GetEntry(FilePosition offs) const
@@ -220,5 +205,17 @@ private:
     void Dump_(std::ostream& os) const override;
     void Inspect_(std::ostream& os) const override;
 };
+
+#define ADD_SOURCE(src)                                 \
+    [&](auto& e)                                        \
+    {                                                   \
+        if (!::boost::get_error_info<UsedSource>(e))    \
+            e << UsedSource{src};                       \
+    }
+
+using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
+using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
+using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
+std::string to_string(const UsedSource& src);
 
 #endif

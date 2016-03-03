@@ -3,21 +3,21 @@
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 #include "../fs.hpp"
+#include "../except.hpp"
 #include "../utils.hpp"
 #include "version.hpp"
 #include <iostream>
 #include <fstream>
 #include <deque>
 #include <boost/algorithm/string/predicate.hpp>
-
-#ifdef _MSC_VER
-#define strcasecmp _stricmp
-#endif
+#include <boost/exception/errinfo_file_name.hpp>
 
 namespace
 {
 
 struct InvalidParameters {};
+struct ParamError : public std::runtime_error
+{ using std::runtime_error::runtime_error; };
 
 struct Command
 {
@@ -39,11 +39,11 @@ struct State
     Gbnl* gbnl;
 };
 
-State SmartOpen(const fs::path& fname)
+State SmartOpen_(const fs::path& fname)
 {
     auto src = Source::FromFile(fname.native());
     if (src.GetSize() < 4)
-        throw std::runtime_error("Input file too short");
+        THROW(DecodeError{"Input file too short"});
 
     char buf[4];
     src.Pread(0, buf, 4);
@@ -69,13 +69,21 @@ State SmartOpen(const fs::path& fname)
         return {std::move(gbnl), nullptr, nullptr, ret2};
     }
     else
-        throw std::runtime_error{"Unknown input file"};
+        THROW(DecodeError{"Unknown input file"});
+}
+
+State SmartOpen(const fs::path& fname)
+{
+    return AddInfo(
+        SmartOpen_,
+        [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
+        fname);
 }
 
 template <typename T, typename Fun>
 void ShellDumpGen(const T* item, std::deque<const char*>& args, Fun f)
 {
-    if (args.empty()) throw InvalidParameters{};
+    if (args.empty()) throw ParamError{"missing argument"};
 
     auto fname = args.front(); args.pop_front();
     if (fname[0] == '-' && fname[1] == '\0')
@@ -97,12 +105,12 @@ void ShellInspect(const T* item, std::deque<const char*>& args)
 void EnsureStcm(State& st)
 {
     if (st.stcm) return;
-    if (!st.file) throw std::runtime_error{"No file loaded"};
+    if (!st.file) throw ParamError{"no file loaded"};
     if (!st.cl3)
-        throw std::runtime_error{"Invalid file loaded: can't find STCM without CL3"};
+        throw ParamError{"invalid file loaded: can't find STCM without CL3"};
 
     auto dat = st.cl3->GetFile("main.DAT");
-    if (!dat) throw std::runtime_error{"Invalid CL3 file: no main.DAT"};
+    if (!dat) THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
 
     auto src = asserted_cast<DumpableSource*>(dat->src.get());
     auto nstcm = std::make_unique<Stcm::File>(*src);
@@ -130,18 +138,21 @@ void EnsureGbnl(State& st)
 
     st.gbnl = FindGbnl(st.stcm->GetRoot());
     if (!st.gbnl)
-        throw std::runtime_error{"No GBNL found in STCM"};
+        THROW(DecodeError{"No GBNL found in STCM"});
 }
 
+bool auto_failed = false;
 template <typename Pred, typename Fun>
 void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
 {
     if (p(path, rec))
     {
         try { f(path); }
-        catch (const std::runtime_error& e)
+        catch (const std::exception& e)
         {
-            std::cerr << "Failed: " << e.what() << std::endl;
+            auto_failed = true;
+            std::cerr << "Failed: ";
+            PrintException(std::cerr);
         }
     }
     else if (fs::is_directory(path))
@@ -302,8 +313,7 @@ void DoAuto(const fs::path& path)
         break;
 
     case Mode::MANUAL:
-        std::cerr << "Can't use auto files in manual mode" << std::endl;
-        throw InvalidParameters{};
+        throw ParamError{"Can't use auto files in manual mode"};
     }
     RecDo(path, pred, fun);
 }
@@ -322,10 +332,10 @@ int main(int argc, char** argv)
 #define GEN_HELP(_, key, help) "\t\t" key ": " help "\n"
     CMD("--mode", [](auto& args)
         {
-            if (args.empty()) throw InvalidParameters{};
+            if (args.empty()) throw ParamError{"missing argument"};
             if (0);
             MODE_PARS(GEN_IFS)
-            else throw InvalidParameters{};
+            else throw ParamError{"invalid parameter"};
             args.pop_front();
         },
         "\n\tSet operating mode:\n"
@@ -349,14 +359,14 @@ int main(int argc, char** argv)
     CMD("--open", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw InvalidParameters{};
+            if (args.empty()) throw ParamError{"missing argument"};
             st = SmartOpen(args.front());
             args.pop_front();
         }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
     CMD("--save", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw std::runtime_error{"--save: No file loaded"};
+            if (!st.file) throw ParamError{"no file loaded"};
             st.file->Fixup();
             ShellDump(st.file.get(), args);
         }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
@@ -370,8 +380,7 @@ int main(int argc, char** argv)
     CMD("--list-files", [&](auto&)
         {
             mode = Mode::MANUAL;
-            if (!st.cl3)
-                throw std::runtime_error{"--list-files: No cl3 loaded"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             size_t i = 0;
             for (const auto& e : st.cl3->entries)
             {
@@ -384,22 +393,20 @@ int main(int argc, char** argv)
     CMD("--extract-file", [&](auto& args) -> void
         {
             mode = Mode::MANUAL;
-            if (args.size() < 2) throw InvalidParameters{};
-            if (!st.cl3)
-                throw std::runtime_error{"--extract-file: No cl3 loaded"};
+            if (args.size() < 2) throw ParamError{"missing arguments"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             auto e = st.cl3->GetFile(args.front()); args.pop_front();
 
             if (!e)
-                throw std::runtime_error{"--extract-file: specified file not found"};
+                throw ParamError{"specified file not found"};
             else
                 ShellDump(e->src.get(), args);
         }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
     CMD("--extract-files", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw InvalidParameters{};
-            if (!st.cl3)
-                throw std::runtime_error{"--extract-file: No cl3 loaded"};
+            if (args.empty()) throw ParamError{"missing argument"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             st.cl3->ExtractTo(args.front());
             args.pop_front();
         }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
@@ -407,8 +414,7 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             if (args.size() < 2) throw InvalidParameters{};
-            if (!st.cl3)
-                throw std::runtime_error{"--replace-file: No cl3 loaded"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
 
             auto& e = st.cl3->GetOrCreateFile(args[0]);
             e.src = std::make_unique<DumpableSource>(Source::FromFile(args[1]));
@@ -418,52 +424,49 @@ int main(int argc, char** argv)
     CMD("--remove-file", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw InvalidParameters{};
-            if (!st.cl3)
-                throw std::runtime_error{"--remove-file: No cl3 loaded"};
+            if (args.empty()) throw ParamError{"missing argument"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             auto e = st.cl3->GetFile(args.front()); args.pop_front();
             if (!e)
-                throw std::runtime_error{"--remove-file: specified file not found"};
+                throw ParamError{"specified file not found"};
             else
                 st.cl3->DeleteFile(*e);
         }, "<name>\n\tRemoves <name> from cl3 archive\n");
     CMD("--set-link", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 3) throw InvalidParameters{};
-            if (!st.cl3)
-                throw std::runtime_error{"--remove-file: No cl3 loaded"};
+            if (args.size() < 3) throw ParamError{"missing arguments"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             auto e = st.cl3->GetFile(args.front()); args.pop_front();
             auto i = std::stoul(args.front()); args.pop_front();
             auto e2 = st.cl3->GetFile(args[1]); args.pop_front();
-            if (!e || !e2)
-                throw std::runtime_error{"--remove-file: specified file not found"};
+            if (!e || !e2) throw ParamError{"specified file not found"};
 
             if (i < e->links.size())
                 e->links[i] = e2 - &st.cl3->entries.front();
             else if (i == e->links.size())
                 e->links.push_back(e2 - &st.cl3->entries.front());
             else
-                throw std::runtime_error{"--set-link: invalid link id"};
+                throw ParamError{"invalid link id"};
         }, "<name> <id> <dst>\n\tSets link at <name>, <id> to <dst>");
     CMD("--remove-link", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 2) throw InvalidParameters{};
+            if (args.size() < 2) throw ParamError{"missing arguments"};
+            if (!st.cl3) throw ParamError{"no cl3 loaded"};
             auto e = st.cl3->GetFile(args.front()); args.pop_front();
             auto i = std::stoul(args.front()); args.pop_front();
-            if (!e)
-                throw std::runtime_error{"--remove-file: specified file not found"};
+            if (!e) throw ParamError{"specified file not found"};
 
             if (i < e->links.size())
                 e->links.erase(e->links.begin() + i);
             else
-                throw std::runtime_error{"--remove-link: invalid link id"};
+                throw ParamError{"invalid link id"};
         }, "<name> <id>\n\tRemove link <id> from <name>");
     CMD("--inspect", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw std::runtime_error{"--inspect: No file loaded"};
+            if (!st.file) throw ParamError{"No file loaded"};
             ShellInspect(st.file.get(), args);
         }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
     CMD("--inspect-stcm", [&](auto& args)
@@ -487,7 +490,7 @@ int main(int argc, char** argv)
     CMD("--import-txt", [&](auto& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw InvalidParameters{};
+            if (args.empty()) throw ParamError{"missing arguments"};
             EnsureGbnl(st);
             auto fname = args.front(); args.pop_front();
             if (fname[0] == '-' && fname[1] == '\0')
@@ -519,7 +522,8 @@ int main(int argc, char** argv)
                 auto it = std::find_if(
                     commands.begin(), commands.end(),
                     [cmd](const auto& x) { return x.name == cmd; });
-                if (it == commands.end()) throw InvalidParameters{};
+                if (it == commands.end())
+                    throw ParamError{"unknown parameter"};
 
                 it->fun(args);
             }
@@ -545,5 +549,17 @@ int main(int argc, char** argv)
 
         return -1;
     }
-    return 0;
+    catch (const ParamError& e)
+    {
+        std::cerr << args[0] << ": " << e.what() << "\nRun " << argv[0]
+                  << " --help to list available parameters" << std::endl;
+        return 3;
+    }
+    catch (...)
+    {
+        std::cerr << "Fatal error, aborting\n";
+        PrintException(std::cerr);
+        return 4;
+    }
+    return auto_failed;;
 }

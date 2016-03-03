@@ -45,7 +45,7 @@ struct GbnlFooter
     boost::endian::little_uint32_t field_38;
     boost::endian::little_uint32_t field_3c;
 
-    bool IsValid(size_t chunk_size) const noexcept;
+    void Validate(size_t chunk_size) const;
 };
 STATIC_ASSERT(sizeof(GbnlFooter) == 0x40);
 
@@ -53,7 +53,6 @@ class Gbnl : public Dumpable
 {
 public:
     Gbnl(Source src);
-    //Gbnl(const Byte* data, size_t len);
 
     void Fixup() override { RecalcSize(); }
 
@@ -81,6 +80,7 @@ public:
     FilePosition GetSize() const noexcept override;
 
 private:
+    void Parse_(Source& src);
     void Dump_(std::ostream& os) const override;
     void DumpHeader(std::ostream& os) const;
     void Inspect_(std::ostream& os) const override;

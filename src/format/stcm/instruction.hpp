@@ -25,7 +25,7 @@ struct Instruction
         SYSTEM_OPCODES_END   = 0xffffff14,
     };
 
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(Instruction) == 0x10);
 
@@ -74,7 +74,7 @@ struct Parameter
     static constexpr inline uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
     static constexpr inline uint32_t Tag(uint32_t tag, uint32_t val)
     { return (tag << 30) | val; }
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(Parameter) == 0xc);
 
@@ -135,6 +135,8 @@ public:
     std::vector<Param> params;
 
 private:
+    void Parse_(Source& src);
+
     void Dump48(boost::endian::little_uint32_t& out, const Param48& in) const noexcept;
     void ConvertParam(Param& out, const Parameter& in);
     void ConvertParam48(Param48& out, uint32_t in);

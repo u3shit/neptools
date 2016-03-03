@@ -15,7 +15,7 @@ struct DataHeader
     boost::endian::little_uint32_t field_8;
     boost::endian::little_uint32_t length;
 
-    bool IsValid(FilePosition chunk_size) const noexcept;
+    void Validate(FilePosition chunk_size) const;
 };
 STATIC_ASSERT(sizeof(DataHeader) == 0x10);
 

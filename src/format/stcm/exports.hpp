@@ -16,7 +16,7 @@ struct ExportEntry
     FixedString<0x20> name;
     boost::endian::little_uint32_t offset;
 
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(ExportEntry) == 0x28);
 
@@ -34,6 +34,9 @@ public:
 
     using EntryType = std::pair<FixedString<0x20>, const Label*>;
     std::vector<EntryType> entries;
+
+private:
+    void Parse_(Source& src, uint32_t export_count);
 };
 
 }

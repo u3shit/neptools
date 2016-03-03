@@ -4,6 +4,7 @@
 
 #include "item_base.hpp"
 #include "../dumpable.hpp"
+#include <boost/exception/info.hpp>
 #include <memory>
 #include <string>
 #include <map>
@@ -59,6 +60,8 @@ private:
     const Label* PostCreateLabel(
         std::pair<LabelsMap::iterator, bool> pair, ItemPointer ptr);
 };
+
+using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
 
 #include "item.hpp"
 template <typename T, typename... Args>

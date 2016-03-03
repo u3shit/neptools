@@ -97,6 +97,7 @@ def build(bld):
         VERSION = VERSION)
 
     src = [
+        'src/except.cpp',
         'src/dumpable.cpp',
         'src/source.cpp',
         'src/utils.cpp',

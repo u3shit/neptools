@@ -1,48 +1,60 @@
 #include "cl3.hpp"
+#include "../except.hpp"
 #include <fstream>
-
-#define VALIDATE(x) while (!(x)) throw std::runtime_error(#x);
 
 void Cl3::Header::Validate(FilePosition file_size) const
 {
+#define VALIDATE(x) VALIDATE_FIELD("Cl3::Header", x)
     VALIDATE(memcmp(magic, "CL3L", 4) == 0);
     VALIDATE(field_04 == 0);
     VALIDATE(field_08 == 3);
     VALIDATE(sections_offset + sections_count * sizeof(Section) <= file_size);
+#undef VALIDATE
 }
 
 void Cl3::Section::Validate(FilePosition file_size) const
 {
+#define VALIDATE(x) VALIDATE_FIELD("Cl3::Section", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= file_size);
     VALIDATE(data_offset + data_size <= file_size);
     VALIDATE(field_2c == 0);
     VALIDATE(field_30 == 0 && field_34 == 0 && field_38 == 0 && field_3c == 0);
     VALIDATE(field_40 == 0 && field_44 == 0 && field_48 == 0 && field_4c == 0);
+#undef VALIDATE
 }
 
 void Cl3::FileEntry::Validate(uint32_t block_size) const
 {
+#define VALIDATE(x) VALIDATE_FIELD("Cl3::FileEntry", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= block_size);
     VALIDATE(data_offset + data_size <= block_size);
     VALIDATE(field_214 == 0 && field_218 == 0 && field_21c == 0);
     VALIDATE(field_220 == 0 && field_224 == 0 && field_228 == 0 && field_22c == 0);
+#undef VALIDATE
 }
 
 void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
 {
+#define VALIDATE(x) VALIDATE_FIELD("Cl3::LinkEntry", x)
     VALIDATE(field_00 == 0);
     VALIDATE(linked_file_id < file_count);
     VALIDATE(link_id == i);
     VALIDATE(field_0c == 0);
     VALIDATE(field_10 == 0 && field_14 == 0 && field_18 == 0 && field_1c == 0);
+#undef VALIDATE
 }
 
 Cl3::Cl3(Source src)
 {
+    AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
+}
+
+void Cl3::Parse_(Source& src)
+{
     if (src.GetSize() < sizeof(Header))
-        throw std::runtime_error{"CL3: file too short"};
+        THROW(DecodeError{"CL3: file too short"});
 
     auto hdr = src.Pread<Header>(0);
     hdr.Validate(src.GetSize());
@@ -69,7 +81,8 @@ Cl3::Cl3(Source src)
         {
             link_offset = sec.data_offset;
             link_count = sec.count;
-            VALIDATE(sec.data_size == link_count * sizeof(LinkEntry));
+            VALIDATE_FIELD("Cl3::Section",
+                           sec.data_size == link_count * sizeof(LinkEntry));
         }
     }
 

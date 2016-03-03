@@ -12,6 +12,9 @@ class File : public Context
 {
 public:
     File(Source src);
+
+private:
+    void Parse_(Source& src);
 };
 
 }

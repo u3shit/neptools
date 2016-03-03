@@ -28,7 +28,7 @@ struct CollectionLinkHeader
     boost::endian::little_uint32_t field_38;
     boost::endian::little_uint32_t field_3c;
 
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(CollectionLinkHeader) == 0x40);
 
@@ -43,7 +43,7 @@ struct CollectionLinkEntry
     boost::endian::little_uint32_t field_18;
     boost::endian::little_uint32_t field_1c;
 
-    bool IsValid(FilePosition file_size) const noexcept;
+    void Validate(FilePosition file_size) const;
 };
 STATIC_ASSERT(sizeof(CollectionLinkEntry) == 0x20);
 
@@ -78,6 +78,9 @@ public:
         const Label* name_1;
     };
     std::vector<Entry> entries;
+
+private:
+    void Parse_(Source& src, uint32_t count);
 };
 
 }

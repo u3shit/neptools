@@ -1,4 +1,7 @@
 #include "source.hpp"
+#include "except.hpp"
+#include <boost/exception/errinfo_api_function.hpp>
+#include <boost/exception/errinfo_file_name.hpp>
 
 #ifdef WINDOWS
 #define NOMINMAX
@@ -16,20 +19,22 @@
 #include <iomanip>
 
 #ifdef WINDOWS
-#define SYSERROR() throw std::system_error{std::error_code{ \
-            int(GetLastError()), std::system_category()}}
+#define SYSERROR(x) \
+    THROW(boost::enable_error_info(std::system_error{std::error_code{   \
+                    int(GetLastError()), std::system_category()}}) <<   \
+        boost::errinfo_api_function{x})
 static inline HANDLE Open(const wchar_t* fname)
 {
     auto h = CreateFileW(
         fname, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, nullptr,
         OPEN_EXISTING, 0, nullptr);
-    if (h == INVALID_HANDLE_VALUE) SYSERROR();
+    if (h == INVALID_HANDLE_VALUE) SYSERROR("CreateFile");
     return h;
 }
 static inline FilePosition GetSize(HANDLE h)
 {
     auto ret = GetFileSize(h, nullptr);
-    if (ret == INVALID_FILE_SIZE) SYSERROR();
+    if (ret == INVALID_FILE_SIZE) SYSERROR("GetFileSize");
     return ret;
 }
 #define Close CloseHandle
@@ -37,13 +42,13 @@ static inline FilePosition GetSize(HANDLE h)
 static inline HANDLE PrepareMmap(HANDLE file)
 {
     auto map = CreateFileMapping(file, NULL, PAGE_READONLY, 0, 0, nullptr);
-    if (map == nullptr) SYSERROR();
+    if (map == nullptr) SYSERROR("CreateFileMapping");
     return map;
 }
 static inline void* Mmap(HANDLE h, FilePosition offs, FilePosition size)
 {
     auto ret = MapViewOfFile(h, FILE_MAP_READ, offs >> 16 >> 16, offs, size);
-    if (ret == nullptr) SYSERROR();
+    if (ret == nullptr) SYSERROR("MapViewOfFile");
     return ret;
 }
 #define Munmap(ptr,len) UnmapViewOfFile(ptr)
@@ -55,22 +60,24 @@ static inline void Pread(HANDLE h, void* buf, FileMemSize len, FilePosition offs
     o.Offset = offs;
     o.OffsetHigh = offs >> 16 >> 16;
 
-    if (!ReadFile(h, buf, len, &size, &o) || size != len) SYSERROR();
+    if (!ReadFile(h, buf, len, &size, &o) || size != len) SYSERROR("ReadFile");
 }
 
 #else
-#define SYSERROR() throw std::system_error{std::error_code{\
-            errno, std::system_category()}}
+#define SYSERROR(x)                                                       \
+    THROW(boost::enable_error_info(std::system_error{std::error_code{     \
+                    errno, std::system_category()}}) <<                   \
+        boost::errinfo_api_function{x})
 static inline int Open(const char* fname)
 {
     int fd = open(fname, O_RDONLY);
-    if (fd == -1) SYSERROR();
+    if (fd == -1) SYSERROR("open");
     return fd;
 }
 static inline FilePosition GetSize(int fd)
 {
     struct stat buf;
-    if (fstat(fd, &buf) < 0) SYSERROR();
+    if (fstat(fd, &buf) < 0) SYSERROR("fstat");
     return buf.st_size;
 }
 #define Close close
@@ -79,14 +86,14 @@ static inline FilePosition GetSize(int fd)
 static inline void* Mmap(int fd, FilePosition offs, FilePosition size)
 {
     auto ptr = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, offs);
-    if (ptr == MAP_FAILED) SYSERROR();
+    if (ptr == MAP_FAILED) SYSERROR("mmap");
     return ptr;
 }
 #define Munmap munmap
 
 static inline void Pread(int fd, void* buf, FileMemSize len, FilePosition offs)
 {
-    if (pread(fd, buf, len, offs) != len) SYSERROR();
+    if (pread(fd, buf, len, offs) != len) SYSERROR("pread");
 }
 #endif
 
@@ -95,6 +102,14 @@ constexpr size_t MMAP_CHUNK = 128*1024; // 128KiB
 constexpr size_t MMAP_LIMIT = 1*1024*1024; // 1MiB
 
 Source Source::FromFile(fs::path fname)
+{
+    return AddInfo(
+        &FromFile_,
+        [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
+        fname);
+}
+
+Source Source::FromFile_(fs::path fname)
 {
     auto fd = Open(fname.c_str());
 
@@ -106,7 +121,8 @@ Source Source::FromFile(fs::path fname)
     try { p = std::make_shared<MmapProvider>(fd, fname.string(), size); }
     catch (const std::system_error& e)
     {
-        std::cerr << "Mmap failed: " << e.what() << std::endl;
+        std::cerr << "Mmap failed: ";
+        PrintException(std::cerr);
         try
         {
             p = std::make_shared<UnixProvider>(
@@ -116,6 +132,34 @@ Source Source::FromFile(fs::path fname)
     }
     catch (...) { Close(fd); throw; }
     return {std::move(p), size};
+}
+
+void Source::Pread(FilePosition offs, Byte* buf, FileMemSize len) const
+{
+    AddInfo([&]
+    {
+        BOOST_ASSERT(offs <= size && offs+len <= size);
+        offs += offset;
+        while (len)
+        {
+            if (GetEntry(offs))
+            {
+                auto& x = p->lru[0];
+                auto buf_offs = offs - x.offset;
+                auto to_cpy = std::min(len, x.size - buf_offs);
+                memcpy(buf, x.ptr + buf_offs, to_cpy);
+                offs += to_cpy;
+                buf += to_cpy;
+                len -= to_cpy;
+            }
+            else
+                return p->Pread(offs, buf, len);
+        }
+    },
+    [=] (auto& e)
+    {
+        e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
+    });
 }
 
 template <typename T>
@@ -252,4 +296,13 @@ void DumpableSource::Dump_(std::ostream& os) const
         offset += size;
         rem_size -= size;
     }
+}
+
+std::string to_string(const UsedSource& src)
+{
+    std::stringstream ss;
+    ss << "[Source] = ";
+    DumpableSource{src.value()}.Inspect(ss);
+    ss << ", pos: " << src.value().Tell() << '\n';
+    return ss.str();
 }

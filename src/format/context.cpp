@@ -1,6 +1,7 @@
 #include "context.hpp"
 #include "item.hpp"
 #include "../utils.hpp"
+#include "../except.hpp"
 #include <boost/assert.hpp>
 #include <iomanip>
 #include <fstream>
@@ -20,7 +21,8 @@ const Label* Context::GetLabel(const std::string& name) const
 {
     auto it = labels.find(name);
     if (it == labels.end())
-        throw std::out_of_range("Context::GetLabel");
+        THROW(boost::enable_error_info(std::out_of_range{"Context::GetLabel"})
+              << AffectedLabel{name});
     return &*it;
 }
 
@@ -28,7 +30,8 @@ const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
 {
     auto pair = labels.insert({std::move(name), ptr});
     if (!pair.second)
-        throw std::out_of_range("label already exists");
+        THROW(boost::enable_error_info(std::out_of_range{"label already exists"})
+              << AffectedLabel(name));
 
     return PostCreateLabel(pair, ptr);
 }
