@@ -54,13 +54,15 @@ def configure(cfg):
     if cfg.env['COMPILER_CXX'] == 'msvc':
         cfg.define('_CRT_SECURE_NO_WARNINGS', 1)
         cfg.env.append_value('CXXFLAGS', [
-            '/EHsc', '/MD', '/Zc:rvalueCast', '/Zc:strictStrings', '/Zc:inline'])
+            '-Xclang', '-std=c++14',
+            '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
+            '-EHsc', '-MD'])
         cfg.env.prepend_value('CFLAGS', '/Gs9999999')
 
         if cfg.options.release:
             cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
             cfg.env.prepend_value('CXXFLAGS', [
-                '/O2', '/Gw', '/Gy', '-Xclang', '-emit-llvm-bc'])
+                '-O2', '-Xclang', '-emit-llvm-bc'])
             cfg.env.prepend_value('LINKFLAGS', ['/OPT:REF', '/OPT:ICF'])
     else:
         cfg.check_cxx(cxxflags='-std=c++14')

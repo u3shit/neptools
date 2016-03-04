@@ -8,20 +8,6 @@
 
 #include "../utils.hpp"
 
-using OperatorNewPtr = void* (__cdecl *)(size_t size);
-extern OperatorNewPtr operator_new;
-using OperatorDeletePtr = void (__cdecl *)(void* ptr);
-extern OperatorDeletePtr operator_delete;
-
-template <class T>
-struct HostAllocator
-{
-    using value_type = T;
-
-    T* allocate(size_t n) { return static_cast<T*>(operator_new(n)); }
-    void deallocate(T* p, size_t) { operator_delete(p); }
-};
-
 struct PakEntry
 {
     unsigned field_000;
@@ -52,11 +38,8 @@ STATIC_ASSERT(sizeof(CpkHandlerFileInfo) == 0x140);
 struct CpkHandler
 {
     unsigned vect0_begin, vect0_end, vect0_capacity;
-#if _MSC_VER != 1900
-#error Check MSC ver
-#endif
     using FileInfo = CpkHandlerFileInfo;
-    std::vector<FileInfo*, HostAllocator<FileInfo*>> entry_vect;
+    std::vector<FileInfo*> entry_vect;
     unsigned vect2_begin, vect2_end, vect2_capacity;
     char* data;
     char* hash_entries;

@@ -1,10 +1,6 @@
 #include "cpk.hpp"
 #include "hook.hpp"
 #include "../fs.hpp"
-#include "../except.hpp"
-
-OperatorNewPtr operator_new;
-OperatorDeletePtr operator_delete;
 
 static CpkHandler::OpenFilePtr orig_open_file;
 static CpkHandler::CloseFilePtr orig_close_file;
@@ -13,7 +9,7 @@ static CpkHandler::ReadPtr orig_read;
 #include <iostream>
 char CpkHandler::OpenFile(const char* fname, int* out)
 {
-    std::cout << "OpenFile " << basename << fname;
+    std::cout << "OpenFile " << basename << '/' << fname;
     fs::path pth{"kitfolder"};
     pth /= basename;
     pth /= fname;
@@ -32,8 +28,7 @@ char CpkHandler::OpenFile(const char* fname, int* out)
     if (it == entry_vect.end())
     {
         entry_vect.reserve(entry_vect.size() + 1);
-        auto ne =
-            static_cast<CpkHandlerFileInfo*>(operator_new(sizeof(CpkHandlerFileInfo)));
+        auto ne = new CpkHandlerFileInfo;
         ne->huffmann_hdr = nullptr;
         ne->block = nullptr;
         ne->is_valid = false;
@@ -85,15 +80,6 @@ char CpkHandler::Read(unsigned index, char* dst, int dst_size,
 
 void CpkHandler::Hook()
 {
-    auto h = GetModuleHandleW(L"msvcr120.dll");
-    if (!h) THROW(std::runtime_error{"Failed to load msvcr120.dll"});
-    operator_new = reinterpret_cast<OperatorNewPtr>(
-        GetProcAddress(h, "??2@YAPAXI@Z"));
-    operator_delete = reinterpret_cast<OperatorDeletePtr>(
-        GetProcAddress(h, "??3@YAXPAX@Z"));
-    if (!operator_new || !operator_delete)
-        THROW(std::runtime_error{"Failed to bind operator new/delete"});
-
     orig_open_file = ::Hook(image_base + 0x2ede90, &CpkHandler::OpenFile, 5);
     orig_close_file = ::Hook(image_base + 0x2ee1b0, &CpkHandler::CloseFile, 5);
     orig_read = ::Hook(image_base + 0x2ee630, &CpkHandler::Read, 5);

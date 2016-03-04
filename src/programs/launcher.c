@@ -2,7 +2,8 @@
 #include <windows.h>
 #include <shellapi.h>
 
-#define MSVC_URL "https://www.microsoft.com/en-us/download/details.aspx?id=49984"
+
+#define MSVC_URL "https://www.microsoft.com/en-us/download/details.aspx?id=40784"
 
 // set shit that's possible here
 #pragma comment(linker, "/merge:.text=.data")
@@ -51,11 +52,11 @@ static int inject_dll(HANDLE proc, wchar_t* fname)
 
 static int mymain(void)
 {
-    HANDLE h = LoadLibraryExA("msvcp140.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    HANDLE h = LoadLibraryExA("msvcp120.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
     if (h == NULL)
     {
         int ret = MessageBoxA(
-            NULL, "Please install MSVC 2015 runtime\n\nOpen download page?",
+            NULL, "Please install MSVC 2013 runtime\n\nOpen download page?",
             NULL, MB_YESNO | MB_ICONERROR);
         if (ret == IDYES)
             ShellExecuteA(NULL, NULL, MSVC_URL, NULL, NULL, SW_SHOWNORMAL);
