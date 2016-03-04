@@ -5,9 +5,6 @@
 #define MSVC_URL "https://www.microsoft.com/en-us/download/details.aspx?id=49984"
 
 // set shit that's possible here
-#pragma comment(linker, "/ENTRY:start")
-#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
-
 #pragma comment(linker, "/merge:.text=.data")
 #pragma comment(linker, "/merge:.rdata=.data")
 

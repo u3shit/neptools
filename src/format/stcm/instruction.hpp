@@ -21,7 +21,7 @@ public:
         boost::endian::little_uint32_t param_count;
         boost::endian::little_uint32_t size;
 
-        enum Opcode
+        enum Opcode : uint32_t
         {
             USER_OPCODES = 0x1000,
             SYSTEM_OPCODES_BEGIN = 0xffffff00,

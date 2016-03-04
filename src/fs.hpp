@@ -2,7 +2,7 @@
 #define UUID_4AD3415D_8161_4CDF_928B_06CB81FD6097
 #pragma once
 
-#ifdef _MSC_VER
+#ifdef HAVE_EXPERIMENTAL_FILESYSTEM
 
 #include <experimental/filesystem>
 #include <random>
