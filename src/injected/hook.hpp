@@ -3,8 +3,18 @@
 #pragma once
 
 #include <cstddef>
+#include "../except.hpp"
+#include "../utils.hpp"
 
-extern char* image_base;
+extern Byte* image_base;
+
+Byte* Find(const Byte* pattern, const Byte* mask, size_t length) noexcept;
+inline Byte* FindOrDie(const Byte* pattern, const Byte* mask, size_t length)
+{
+    auto ret = Find(pattern, mask, length);
+    if (!ret) THROW(std::runtime_error{"Couldn't find pattern"});
+    return ret;
+}
 
 void* Hook(void* hook, void* dst, size_t copy);
 

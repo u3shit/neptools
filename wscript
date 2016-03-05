@@ -56,7 +56,7 @@ def configure(cfg):
         cfg.env.append_value('CXXFLAGS', [
             '-Xclang', '-std=c++14',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
-            '-EHsc', '-MD'])
+            '-EHsc', '-MD', '-Wno-gnu-string-literal-operator-template'])
         cfg.env.prepend_value('CFLAGS', '/Gs9999999')
 
         if cfg.options.release:

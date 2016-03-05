@@ -1,12 +1,24 @@
 #include "cpk.hpp"
 #include "hook.hpp"
 #include "../fs.hpp"
+#include "pattern_parse.hpp"
+#include <iostream>
 
 static CpkHandler::OpenFilePtr orig_open_file;
 static CpkHandler::CloseFilePtr orig_close_file;
 static CpkHandler::ReadPtr orig_read;
 
-#include <iostream>
+auto OPEN_FILE  = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 81 ec 3c "
+                  "06 00 00"_pattern;
+auto FILE_CLOSE = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 "
+                  "57 a1 ?? ?? ?? ?? 33 c5 50 8d 45 f4 64 a3 00 00 00 00 8b f9 "
+                  "8d 77 38 56 89 75 f0 ff 15 ?? ?? ?? ?? c7 45 fc 00 00 00 00 "
+                  "8b 47 10"_pattern;
+auto FILE_READ  = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 "
+                  "57 a1 ?? ?? ?? ?? 33 c5 50 8d 45 f4 64 a3 00 00 00 00 8b d9 "
+                  "8d 73 38 56 89 75 f0 ff 15 ?? ?? ?? ?? c7 45 fc 00 00 00 00 "
+                  "8b 55 08"_pattern;
+
 char CpkHandler::OpenFile(const char* fname, int* out)
 {
     std::cout << "OpenFile " << basename << '/' << fname;
@@ -80,7 +92,7 @@ char CpkHandler::Read(unsigned index, char* dst, int dst_size,
 
 void CpkHandler::Hook()
 {
-    orig_open_file = ::Hook(image_base + 0x2ede90, &CpkHandler::OpenFile, 5);
-    orig_close_file = ::Hook(image_base + 0x2ee1b0, &CpkHandler::CloseFile, 5);
-    orig_read = ::Hook(image_base + 0x2ee630, &CpkHandler::Read, 5);
+    orig_open_file = ::Hook(FindOrDie(OPEN_FILE), &CpkHandler::OpenFile, 5);
+    orig_close_file = ::Hook(FindOrDie(FILE_CLOSE), &CpkHandler::CloseFile, 5);
+    orig_read = ::Hook(FindOrDie(FILE_READ), &CpkHandler::Read, 5);
 }
