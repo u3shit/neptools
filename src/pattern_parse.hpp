@@ -2,7 +2,10 @@
 #define UUID_5F4B4145_C89A_4241_8A9C_B8DBBB568F43
 #pragma once
 
-#include "../utils.hpp"
+#include "pattern.hpp"
+
+namespace PatternParse
+{
 
 template <char C, typename Enable = void>
 struct HexValue;
@@ -32,8 +35,9 @@ struct FromHex<Acc>
 
 template <Byte... Bytes> struct ByteSequence
 {
-    static constexpr Byte seq[] = { Bytes... };
     static constexpr size_t size = sizeof...(Bytes);
+    // fucking retards, why can't I have a zero sized stack based array
+    static constexpr Byte seq[size==0?1:size] = { Bytes... };
 
     template <Byte C>
     using Append = ByteSequence<Bytes..., C>;
@@ -41,11 +45,13 @@ template <Byte... Bytes> struct ByteSequence
 template <Byte... Bytes> constexpr Byte ByteSequence<Bytes...>::seq[];
 
 template <typename PatternBytes, typename MaskBytes>
-struct Pattern
+struct Pattern : public ::Pattern
 {
     template <Byte Pat, Byte Mask>
     using Append = Pattern<typename PatternBytes::template Append<Pat>,
                            typename MaskBytes::template Append<Mask>>;
+
+    constexpr Pattern() noexcept : ::Pattern{pattern, mask, size} {}
 
     static constexpr auto pattern = PatternBytes::seq;
     static constexpr auto mask    = MaskBytes::seq;
@@ -102,13 +108,9 @@ template <Byte... Bytes>
 using DoPatternParse = typename PatternParse<
     Pattern<ByteSequence<>, ByteSequence<>>, Bytes..., ' '>::value;
 
+}
+
 template <typename CharT, CharT... Chars>
-inline auto operator""_pattern() { return DoPatternParse<Chars...>{}; }
-
-template <typename T>
-inline auto FindOrDie(T) { return FindOrDie(T::pattern, T::mask, T::size); }
-
-template <typename T>
-inline auto Find(T) { return Find(T::pattern, T::mask, T::size); }
+inline auto operator""_pattern() { return PatternParse::DoPatternParse<Chars...>{}; }
 
 #endif

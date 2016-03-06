@@ -1,7 +1,7 @@
 #include "cpk.hpp"
 #include "hook.hpp"
 #include "../fs.hpp"
-#include "pattern_parse.hpp"
+#include "../pattern_parse.hpp"
 #include <iostream>
 
 static CpkHandler::OpenFilePtr orig_open_file;
@@ -92,7 +92,7 @@ char CpkHandler::Read(unsigned index, char* dst, int dst_size,
 
 void CpkHandler::Hook()
 {
-    orig_open_file = ::Hook(FindOrDie(OPEN_FILE), &CpkHandler::OpenFile, 5);
-    orig_close_file = ::Hook(FindOrDie(FILE_CLOSE), &CpkHandler::CloseFile, 5);
-    orig_read = ::Hook(FindOrDie(FILE_READ), &CpkHandler::Read, 5);
+    orig_open_file = ::Hook(FindImage(OPEN_FILE), &CpkHandler::OpenFile, 5);
+    orig_close_file = ::Hook(FindImage(FILE_CLOSE), &CpkHandler::CloseFile, 5);
+    orig_read = ::Hook(FindImage(FILE_READ), &CpkHandler::Read, 5);
 }

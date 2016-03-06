@@ -3,18 +3,15 @@
 #pragma once
 
 #include <cstddef>
-#include "../except.hpp"
-#include "../utils.hpp"
+#include "../pattern.hpp"
 
 extern Byte* image_base;
+size_t GetImageSize() noexcept;
 
-Byte* Find(const Byte* pattern, const Byte* mask, size_t length) noexcept;
-inline Byte* FindOrDie(const Byte* pattern, const Byte* mask, size_t length)
-{
-    auto ret = Find(pattern, mask, length);
-    if (!ret) THROW(std::runtime_error{"Couldn't find pattern"});
-    return ret;
-}
+inline Byte* MaybeFindImage(const Pattern& pat) noexcept
+{ return pat.MaybeFind(image_base, GetImageSize()); }
+inline Byte* FindImage(const Pattern& pat)
+{ return pat.Find(image_base, GetImageSize()); }
 
 void* Hook(void* hook, void* dst, size_t copy);
 

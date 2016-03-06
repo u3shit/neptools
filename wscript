@@ -121,7 +121,7 @@ int main()
         cfg.check_cxx(lib='shell32')
         cfg.check_cxx(lib='user32')
 
-def build(bld):
+def build_common(bld):
     bld(features = 'subst',
         source = 'src/version.hpp.in',
         target = 'src/version.hpp',
@@ -130,6 +130,7 @@ def build(bld):
     src = [
         'src/except.cpp',
         'src/dumpable.cpp',
+        'src/pattern.cpp',
         'src/source.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
@@ -149,6 +150,9 @@ def build(bld):
     bld.stlib(source = src,
               uselib = 'BOOST',
               target = 'common')
+
+def build(bld):
+    build_common(bld)
 
     bld.program(source = 'src/programs/stcm-editor.cpp',
                 includes = 'src', # for version.hpp
@@ -178,7 +182,97 @@ def build(bld):
         ]
         bld.shlib(source = src_inject,
                   target = 'server',
+                  use    = 'common',
                   uselib = 'BOOST USER32')
+
+from waflib.Build import BuildContext
+class TestContext(BuildContext):
+    cmd = 'test'
+    fun = 'test'
+
+def test(bld):
+    build_common(bld)
+
+    # feature fail_cxx: expect compilation failure
+    import sys
+    from waflib import Logs
+    from waflib.Task import Task
+    from waflib.TaskGen import extension, feature
+    from waflib.Tools import c_preproc
+    @extension('.cpp')
+    def fail_cxx_ext(self, node):
+        if 'fail_cxx' in self.features:
+            return self.create_compiled_task('fail_cxx', node)
+        else:
+            return self.create_compiled_task('cxx', node)
+
+    class fail_cxx(Task):
+        #run_str = '${CXX} ${ARCH_ST:ARCH} ${CXXFLAGS} ${CPPFLAGS} ${FRAMEWORKPATH_ST:FRAMEWORKPATH} ${CPPPATH_ST:INCPATHS} ${DEFINES_ST:DEFINES} ${CXX_SRC_F}${SRC} ${CXX_TGT_F}${TGT[0].abspath()}'
+        def run(tsk):
+            env = tsk.env
+            gen = tsk.generator
+            bld = gen.bld
+            cwdx = getattr(bld, 'cwdx', bld.bldnode) # TODO single cwd value in waf 1.9
+            wd = getattr(tsk, 'cwd', None)
+            def to_list(xx):
+                if isinstance(xx, str): return [xx]
+                return xx
+            tsk.last_cmd = lst = []
+            lst.extend(to_list(env['CXX']))
+            lst.extend(tsk.colon('ARCH_ST', 'ARCH'))
+            lst.extend(to_list(env['CXXFLAGS']))
+            lst.extend(to_list(env['CPPFLAGS']))
+            lst.extend(tsk.colon('FRAMEWORKPATH_ST', 'FRAMEWORKPATH'))
+            lst.extend(tsk.colon('CPPPATH_ST', 'INCPATHS'))
+            lst.extend(tsk.colon('DEFINES_ST', 'DEFINES'))
+            lst.extend(to_list(env['CXX_SRC_F']))
+            lst.extend([a.path_from(cwdx) for a in tsk.inputs])
+            lst.extend(to_list(env['CXX_TGT_F']))
+            lst.append(tsk.outputs[0].abspath())
+            lst = [x for x in lst if x]
+            try:
+                (out,err) = bld.cmd_and_log(
+                    lst, cwd=bld.variant_dir, env=env.env or None,
+                    quiet=0, output=0)
+                Logs.error("%s compiled successfully, but it shouldn't" % tsk.inputs[0])
+                Logs.info(out, extra={'stream':sys.stdout, 'c1': ''})
+                Logs.info(err, extra={'stream':sys.stderr, 'c1': ''})
+                return -1
+            except Exception as e:
+                # create output to silence missing file errors
+                open(tsk.outputs[0].abspath(), 'w').close()
+                return 0
+
+        vars    = ['CXXDEPS'] # unused variable to depend on, just in case
+        ext_in  = ['.h'] # set the build order easily by using ext_out=['.h']
+        scan    = c_preproc.scan
+
+    # test pattern parser
+    bld(features='cxx',
+        source='test/pattern_fail.cpp',
+        uselib='BOOST',
+        includes='src',
+        defines=['TEST_PATTERN="b2 ff"_pattern'])
+    bld(features='cxx fail_cxx',
+        source='test/pattern_fail.cpp',
+        uselib='BOOST',
+        includes='src',
+        defines=['TEST_PATTERN="bz ff"_pattern'])
+
+    src = [
+        'test/main.cpp',
+        'test/pattern.cpp',
+    ]
+    bld.program(source   = src,
+                includes = 'src ext/catch/include',
+                uselib   = 'BOOST',
+                use      = 'common',
+                target   = 'run-tests')
+    bld.add_post_fun(lambda ctx:
+        ctx.exec_command([
+            bld.bldnode.find_or_declare('run-tests').abspath(),
+            '--use-colour', 'yes']) == 0 or ctx.fatal('Test failure')
+    )
 
 from waflib.Configure import conf
 @conf

@@ -1,6 +1,6 @@
 #include "../injected/cpk.hpp"
 #include "../injected/hook.hpp"
-#include "../injected/pattern_parse.hpp"
+#include "../pattern_parse.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -40,7 +40,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
     if (reason != DLL_PROCESS_ATTACH) return true;
 
     image_base = reinterpret_cast<Byte*>(GetModuleHandle(nullptr));
-    auto call_base = Find(MAIN_CALL);
+    auto call_base = FindImage(MAIN_CALL);
     if (!call_base)
     {
         MessageBoxA(nullptr, "Failed to find entry point", nullptr, MB_OK);
