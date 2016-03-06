@@ -45,18 +45,23 @@ def configure(cfg):
 
     cfg.load('compiler_cxx boost clang_compilation_database')
 
-    flags = cfg.filter_flags([
-        '-fcolor-diagnostics', '-Wall', '-Wextra', '-pedantic',
-        '-Wno-parentheses'])
-    cfg.env.append_value('CFLAGS', flags)
-    cfg.env.append_value('CXXFLAGS', flags)
+    flags = cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], [
+        # error on unknown arguments, including unknown options that turns
+        # unknown argument warnings into error. どうして？
+        '-Werror=unknown-warning-option',
+        '-Werror=ignored-optimization-argument',
+        '-Werror=unknown-argument',
+
+        '-fcolor-diagnostics', '-fdiagnostics-show-option',
+        '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
+        '-Wno-gnu-string-literal-operator-template'])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
         cfg.define('_CRT_SECURE_NO_WARNINGS', 1)
         cfg.env.append_value('CXXFLAGS', [
             '-Xclang', '-std=c++14',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
-            '-EHsc', '-MD', '-Wno-gnu-string-literal-operator-template'])
+            '-EHsc', '-MD'])
         cfg.env.prepend_value('CFLAGS', '/Gs9999999')
 
         if cfg.options.release:
@@ -69,11 +74,11 @@ def configure(cfg):
         cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
 
         if cfg.options.release:
-            opt=cfg.filter_flags(['-Ofast', '-flto', '-fno-fat-lto-objects',
+            cfg.filter_flags(['CXXFLAGS', 'LINKFLAGS'], [
+                '-Ofast', '-flto', '-fno-fat-lto-objects',
                  '-fomit-frame-pointer'])
 
-            cfg.env.prepend_value('CXXFLAGS', opt)
-            cfg.env.prepend_value('LINKFLAGS', opt + ['-Wl,-O1'])
+            cfg.env.append_value('LINKFLAGS', '-Wl,-O1')
 
     def chkdef(cfg, defn):
         return cfg.check_cxx(fragment='''
@@ -177,14 +182,22 @@ def build(bld):
 
 from waflib.Configure import conf
 @conf
-def filter_flags(cfg, flags):
+def filter_flags(cfg, vars, flags):
     ret = []
 
     for flag in flags:
         try:
-            cfg.check_cxx(cxxflags=['-Werror', flag], features='cxx',
-                          msg='Checking for compiler flag '+flag)
+            # gcc ignores unknown -Wno-foo flags but not -Wfoo, but warns if
+            # there are other warnings. with clang, just depend on
+            # -Werror=ignored-*-option, -Werror=unknown-*-option
+            testflag = flag
+            if flag[0:5] == '-Wno-':
+                testflag = '-W'+flag[5:]
+            cfg.check_cxx(cxxflags=[testflag], features='cxx',
+                          msg='Checking for compiler flag '+testflag)
             ret.append(flag)
+            for var in vars:
+                cfg.env.append_value(var, flag)
         except:
             pass
 
