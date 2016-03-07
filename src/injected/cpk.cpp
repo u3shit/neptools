@@ -21,7 +21,9 @@ auto FILE_READ  = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 "
 
 char CpkHandler::OpenFile(const char* fname, int* out)
 {
+#ifndef NDEBUG
     std::cout << "OpenFile " << basename << '/' << fname;
+#endif
     fs::path pth{"kitfolder"};
     pth /= basename;
     pth /= fname;
@@ -30,11 +32,15 @@ char CpkHandler::OpenFile(const char* fname, int* out)
     if (!fs::exists(pth))
     {
         auto ret = (this->*orig_open_file)(fname, out);
+#ifndef NDEBUG
         std::cout << " -> " << int(ret) << ", " << *out << std::endl;
+#endif
         return ret;
     }
 
+#ifndef NDEBUG
     std::cout << " -- hooking it" << std::endl;
+#endif
     auto it = std::find_if(entry_vect.begin(), entry_vect.end(),
                            [](auto& x) { return x->is_valid == 0; });
     if (it == entry_vect.end())
@@ -79,14 +85,18 @@ char CpkHandler::OpenFile(const char* fname, int* out)
 
 char CpkHandler::CloseFile(unsigned index)
 {
+#ifndef NDEBUG
     std::cout << "CloseFile " << index << std::endl;
+#endif
     return (this->*orig_close_file)(index);
 }
 
 char CpkHandler::Read(unsigned index, char* dst, int dst_size,
                       int* out_size_read)
 {
+#ifndef NDEBUG
     //std::cout << "Read " << index << " " << dst_size << std::endl;
+#endif
     return (this->*orig_read)(index, dst, dst_size, out_size_read);
 }
 

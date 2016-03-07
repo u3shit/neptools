@@ -14,12 +14,16 @@ static int CALLBACK NewWinMain(
 {
     try
     {
+#ifndef NDEBUG
         AllocConsole();
         freopen("CONOUT$", "w", stdout);
         freopen("CONOUT$", "w", stderr);
         std::cerr << "Console init" << std::endl;
+#endif
         CpkHandler::Hook();
+#ifndef NDEBUG
         std::cerr << "Hook done" << std::endl;
+#endif
     }
     catch (const std::exception& e)
     {
