@@ -573,8 +573,8 @@ void Gbnl::ReadTxt(std::istream& is)
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {
-                std::cerr << id << std::endl;
-                THROW(DecodeError{"GbnlTxt: invalid id in input"});
+                THROW(DecodeError{"GbnlTxt: invalid id in input"} <<
+                      FailedId{id});
             }
         }
         else

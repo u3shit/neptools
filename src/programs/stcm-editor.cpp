@@ -508,13 +508,14 @@ int main(int argc, char** argv)
         )
         mode = Mode::AUTO_CL3;
 
+    const char* cmd = nullptr;
     try
     {
         if (args.empty()) throw InvalidParameters{};
 
         while (!args.empty())
         {
-            auto cmd = args.front(); args.pop_front();
+            cmd = args.front(); args.pop_front();
             if (cmd[0] == '-' && cmd[1] == '-' && cmd[2] == '\0') break;
 
             if (cmd[0] == '-')
@@ -551,7 +552,7 @@ int main(int argc, char** argv)
     }
     catch (const ParamError& e)
     {
-        std::cerr << args[0] << ": " << e.what() << "\nRun " << argv[0]
+        std::cerr << cmd << ": " << e.what() << "\nRun " << argv[0]
                   << " --help to list available parameters" << std::endl;
         return 3;
     }
