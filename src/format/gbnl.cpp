@@ -193,8 +193,8 @@ namespace
 {
 struct WriteDescr
 {
-    WriteDescr(char* ptr) : ptr{ptr} {}
-    char* ptr;
+    WriteDescr(Byte* ptr) : ptr{ptr} {}
+    Byte* ptr;
     size_t offs = 0;
     void operator()(uint8_t x, size_t)
     {
@@ -229,29 +229,28 @@ struct WriteDescr
     void operator()(const Gbnl::FixStringTag& fs, size_t len)
     {
         memset(ptr+offs, 0, len);
-        strncpy(ptr+offs, fs.str, len-1);
+        strncpy(reinterpret_cast<char*>(ptr+offs), fs.str, len-1);
         offs += len;
     }
 };
 }
 
-static char ZEROS[16];
-void Gbnl::Dump_(std::ostream& os) const
+void Gbnl::Dump_(Sink& sink) const
 {
-    if (is_gstl) DumpHeader(os);
+    if (is_gstl) DumpHeader(sink);
 
-    char* msgd = static_cast<char*>(alloca(msg_descr_size));
+    Byte msgd[msg_descr_size];
     memset(msgd, 0, msg_descr_size);
 
     for (const auto& m : messages)
     {
         m.ForEach(WriteDescr{msgd});
-        os.write(msgd, msg_descr_size);
+        sink.Write(msgd, msg_descr_size);
     }
 
     auto msgs_end = msg_descr_size * messages.size();
     auto msgs_end_round = Align(msgs_end);
-    os.write(ZEROS, msgs_end_round - msgs_end);
+    sink.Pad(msgs_end_round - msgs_end);
 
     TypeDescriptor ctrl;
     uint16_t offs = 0;
@@ -294,11 +293,11 @@ void Gbnl::Dump_(std::ostream& os) const
             offs += type->items[i].size;
             break;
         };
-        os.write(reinterpret_cast<char*>(&ctrl), sizeof(TypeDescriptor));
+        sink.Write(ctrl);
     }
     auto control_end = msgs_end_round + sizeof(TypeDescriptor) * type->item_count;
     auto control_end_round = Align(control_end);
-    os.write(ZEROS, control_end_round - control_end);
+    sink.Pad(control_end_round - control_end);
 
     size_t offset = 0;
     for (const auto& m : messages)
@@ -308,22 +307,22 @@ void Gbnl::Dump_(std::ostream& os) const
                 auto& ofs = m.Get<OffsetString>(i);
                 if (ofs.offset == offset)
                 {
-                    os.write(ofs.str.c_str(), ofs.str.size() + 1);
+                    sink.WriteCString(ofs.str);
                     offset += ofs.str.size() + 1;
                 }
             }
 
     BOOST_ASSERT(offset == msgs_size);
     auto offset_round = Align(offset);
-    os.write(ZEROS, offset_round - offset);
+    sink.Pad(offset_round - offset);
 
     BOOST_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
     BOOST_ASSERT(control_end_round == Align(msgs_end_round +
         sizeof(TypeDescriptor) * type->item_count));
-    if (!is_gstl) DumpHeader(os);
+    if (!is_gstl) DumpHeader(sink);
 }
 
-void Gbnl::DumpHeader(std::ostream& os) const
+void Gbnl::DumpHeader(Sink& sink) const
 {
     Header head;
     memcpy(head.magic, is_gstl ? "GSTL" : "GBNL", 4);
@@ -347,7 +346,7 @@ void Gbnl::DumpHeader(std::ostream& os) const
     head.field_34 = 0;
     head.field_38 = 0;
     head.field_3c = 0;
-    os.write(reinterpret_cast<char*>(&head), sizeof(Header));
+    sink.Write(head);
 }
 
 namespace

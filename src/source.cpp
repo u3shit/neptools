@@ -202,7 +202,7 @@ void DumpableSource::Inspect_(std::ostream& os) const
     os.flags(flags);
 }
 
-void DumpableSource::Dump_(std::ostream& os) const
+void DumpableSource::Dump_(Sink& sink) const
 {
     auto offset = GetOffset();
     auto rem_size = GetSize();
@@ -212,7 +212,7 @@ void DumpableSource::Dump_(std::ostream& os) const
         BOOST_ASSERT(x.offset <= offset);
         auto ptroff = offset - x.offset;
         auto size = std::min(rem_size, x.size - ptroff);
-        os.write(reinterpret_cast<char*>(x.ptr + ptroff), size);
+        sink.Write(x.ptr + ptroff, size);
         offset += size;
         rem_size -= size;
     }

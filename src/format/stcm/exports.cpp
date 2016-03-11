@@ -48,7 +48,7 @@ ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
     return ret;
 }
 
-void ExportsItem::Dump(std::ostream& os) const
+void ExportsItem::Dump_(Sink& sink) const
 {
     Entry ee;
     ee.field_0 = 0;
@@ -57,13 +57,13 @@ void ExportsItem::Dump(std::ostream& os) const
     {
         ee.name = e.first;
         ee.offset = ToFilePos(e.second->second);
-        os.write(reinterpret_cast<char*>(&ee), sizeof(Entry));
+        sink.Write(ee);
     }
 }
 
-void ExportsItem::PrettyPrint(std::ostream& os) const
+void ExportsItem::Inspect_(std::ostream& os) const
 {
-    Item::PrettyPrint(os);
+    Item::Inspect_(os);
 
     for (auto& e : entries)
         os << e.first << " -> @" << e.second->first << '\n';

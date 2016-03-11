@@ -40,7 +40,7 @@ HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
     return ret;
 }
 
-void HeaderItem::Dump(std::ostream& os) const
+void HeaderItem::Dump_(Sink& sink) const
 {
     Header hdr;
     hdr.msg = msg;
@@ -49,12 +49,12 @@ void HeaderItem::Dump(std::ostream& os) const
     hdr.field_28 = 1;
     hdr.collection_link_offset = ToFilePos(collection_link->second);
 
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
+    sink.Write(hdr);
 }
 
-void HeaderItem::PrettyPrint(std::ostream& os) const
+void HeaderItem::Inspect_(std::ostream& os) const
 {
-    Item::PrettyPrint(os);
+    Item::Inspect_(os);
 
     os << "Msg: " << msg << "\nVars: @" << export_sec->first << ", @"
        << collection_link->first;

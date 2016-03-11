@@ -9,8 +9,8 @@ class EofItem final : public Item
 public:
     using Item::Item;
 
-    void Dump(std::ostream&) const override {}
-    void PrettyPrint(std::ostream& os) const override { Item::PrettyPrint(os); }
+    void Dump_(Sink&) const override {}
+    void Inspect_(std::ostream& os) const override { Item::Inspect_(os); }
     FilePosition GetSize() const noexcept override { return 0; }
 };
 

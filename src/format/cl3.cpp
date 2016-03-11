@@ -111,7 +111,6 @@ void Cl3::Parse_(Source& src)
 
 static constexpr unsigned PAD_BYTES = 0x40;
 static constexpr unsigned PAD = 0x3f;
-static char ZERO_BUF[PAD];
 void Cl3::Fixup()
 {
     data_size = 0;
@@ -156,8 +155,8 @@ void Cl3::ExtractTo(const fs::path& dir) const
 
     for (const auto& e : entries)
     {
-        auto os = OpenOut(dir / e.name.c_str());
-        e.src->Dump(os);
+        auto sink = Sink::ToFile(dir / e.name.c_str(), e.src->GetSize());
+        e.src->Dump(*sink);
     }
 }
 
@@ -213,7 +212,7 @@ void Cl3::Inspect_(std::ostream& os) const
     }
 }
 
-void Cl3::Dump_(std::ostream& os) const
+void Cl3::Dump_(Sink& sink) const
 {
     auto sections_offset = (sizeof(Header)+PAD) & ~PAD;
     auto files_offset = (sections_offset+sizeof(Section)*2+PAD) & ~PAD;
@@ -227,8 +226,8 @@ void Cl3::Dump_(std::ostream& os) const
     hdr.sections_count = 2;
     hdr.sections_offset = sections_offset;
     hdr.field_14 = field_14;
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
-    os.write(ZERO_BUF, sections_offset-sizeof(Header));
+    sink.Write(hdr);
+    sink.Pad(sections_offset-sizeof(Header));
 
     Section sec;
     memset(&sec, 0, sizeof(Section));
@@ -236,14 +235,14 @@ void Cl3::Dump_(std::ostream& os) const
     sec.count = entries.size();
     sec.data_size = link_offset - files_offset;
     sec.data_offset = files_offset;
-    os.write(reinterpret_cast<char*>(&sec), sizeof(Section));
+    sink.Write(sec);
 
     sec.name = "FILE_LINK";
     sec.count = link_count;
     sec.data_size = link_count * sizeof(LinkEntry);
     sec.data_offset = link_offset;
-    os.write(reinterpret_cast<char*>(&sec), sizeof(Section));
-    os.write(ZERO_BUF, (PAD_BYTES - ((2*sizeof(Section)) & PAD)) & PAD);
+    sink.Write(sec);
+    sink.Pad((PAD_BYTES - ((2*sizeof(Section)) & PAD)) & PAD);
 
     FileEntry fe;
     fe.field_214 = fe.field_218 = fe.field_21c = 0;
@@ -260,18 +259,18 @@ void Cl3::Dump_(std::ostream& os) const
         fe.data_size = size;
         fe.link_start = link_i;
         fe.link_count = e.links.size();
-        os.write(reinterpret_cast<char*>(&fe), sizeof(FileEntry));
+        sink.Write(fe);
 
         offset = (offset+size+PAD) & ~PAD;
         link_i += e.links.size();
     }
-    os.write(ZERO_BUF, (PAD_BYTES - ((entries.size()*sizeof(FileEntry)) & PAD)) & PAD);
+    sink.Pad((PAD_BYTES - ((entries.size()*sizeof(FileEntry)) & PAD)) & PAD);
 
     // file data
     for (auto& e : entries)
     {
-        e.src->Dump(os);
-        os.write(ZERO_BUF, (PAD_BYTES - (e.src->GetSize() & PAD)) & PAD);
+        e.src->Dump(sink);
+        sink.Pad((PAD_BYTES - (e.src->GetSize() & PAD)) & PAD);
     }
 
     // links
@@ -284,7 +283,7 @@ void Cl3::Dump_(std::ostream& os) const
         {
             le.linked_file_id = l;
             le.link_id = i++;
-            os.write(reinterpret_cast<char*>(&le), sizeof(LinkEntry));
+            sink.Write(le);
         }
     }
 }

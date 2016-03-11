@@ -34,6 +34,17 @@ LowIo::LowIo(const wchar_t* fname, bool write)
     if (fd == INVALID_HANDLE_VALUE) SYSERROR("CreateFile");
 }
 
+LowIo LowIo::OpenStdOut()
+{
+    auto h = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (h == INVALID_HANDLE_VALUE || h == nullptr) SYSERROR("GetStdHandle");
+    HANDLE ret;
+    if (DuplicateHandle(GetCurrentProcess(), h, GetCurrentProcess(), &ret, 0,
+                        FALSE, DUPLICATE_SAME_ACCESS) == 0)
+        SYSERROR("DuplicateHandle");
+    return LowIo{ret};
+}
+
 LowIo::~LowIo()
 {
     CloseHandle(mmap_fd);
@@ -120,6 +131,13 @@ LowIo::LowIo(const char* fname, bool write)
     : fd{open(fname, write ? O_CREAT | O_TRUNC | O_RDWR : O_RDONLY, 0666)}
 {
     if (fd == -1) SYSERROR("open");
+}
+
+LowIo LowIo::OpenStdOut()
+{
+    int fd = dup(1);
+    if (fd == -1) SYSERROR("dup");
+    return LowIo{fd};
 }
 
 LowIo::~LowIo()

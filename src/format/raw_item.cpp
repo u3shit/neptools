@@ -11,12 +11,12 @@ static inline char FilterPrintable(Byte c)
         return '.';
 }
 
-void RawItem::Dump(std::ostream& os) const
+void RawItem::Dump_(Sink& sink) const
 {
-    src.Dump(os);
+    src.Dump(sink);
 }
 
-void RawItem::PrettyPrint(std::ostream& os) const
+void RawItem::Inspect_(std::ostream& os) const
 {
     auto flags = os.flags();
     os << std::hex;

@@ -50,22 +50,22 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
     return ret;
 }
 
-void DataItem::Dump(std::ostream& os) const
+void DataItem::Dump_(Sink& sink) const
 {
     Header hdr;
     hdr.type = type;
     hdr.offset_unit = offset_unit;
     hdr.field_8 = field_8;
     hdr.length = GetSize() - sizeof(Header);
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
+    sink.Write(hdr);
 
     for (auto it = GetChildren(); it; it = it->GetNext())
-        it->Dump(os);
+        it->Dump(sink);
 }
 
-void DataItem::PrettyPrint(std::ostream& os) const
+void DataItem::Inspect_(std::ostream& os) const
 {
-    Item::PrettyPrint(os);
+    Item::Inspect_(os);
     os << "data(" << type << ", " << offset_unit << ", " << field_8 << ") {";
     if (GetChildren()) os << '\n' << *GetChildren();
     os << '}';
@@ -79,12 +79,10 @@ FilePosition DataItem::GetSize() const noexcept
     return ret;
 }
 
-FilePosition DataItem::UpdatePositions(FilePosition npos)
+void DataItem::Fixup()
 {
     if (GetChildren())
-        GetChildren()->UpdatePositions(
-            npos + sizeof(Header));
-    return Item::UpdatePositions(npos);
+        GetChildren()->UpdatePositions(position + sizeof(Header));
 }
 
 }

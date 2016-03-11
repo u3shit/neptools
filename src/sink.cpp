@@ -91,11 +91,12 @@ void MmapSink::MapNext(FileMemSize len)
     // (linux doesn't care...)
     if (offset < size)
     {
-        void* nbuf = io.Mmap(
-            offset, std::min<FileMemSize>(MMAP_CHUNK, size-offset), true);
+        auto nbuf_size = std::min<FileMemSize>(MMAP_CHUNK, size-offset);
+        void* nbuf = io.Mmap(offset, nbuf_size, true);
         io.Munmap(buf, buf_size);
         buf = static_cast<Byte*>(nbuf);
         buf_put = len;
+        buf_size = nbuf_size;
     }
     else
     {
@@ -185,4 +186,9 @@ std::unique_ptr<Sink> Sink::ToFile(
             }
         },
         [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; });
+}
+
+std::unique_ptr<Sink> Sink::ToStdOut()
+{
+    return std::make_unique<SimpleSink>(LowIo::OpenStdOut(), -1);
 }

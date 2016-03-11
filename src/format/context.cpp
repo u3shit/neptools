@@ -93,10 +93,10 @@ void Context::UpdatePositions()
         size = 0;
 }
 
-void Context::Dump_(std::ostream& os) const
+void Context::Dump_(Sink& sink) const
 {
     for (auto it = GetRoot(); it; it = it->GetNext())
-        it->Dump(os);
+        it->Dump(sink);
 }
 
 void Context::Inspect_(std::ostream& os) const

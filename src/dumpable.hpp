@@ -2,7 +2,7 @@
 #define UUID_C9446864_0020_4D2F_8E96_CBC6ADCCA3BE
 #pragma once
 
-#include "utils.hpp"
+#include "sink.hpp"
 
 class Dumpable
 {
@@ -12,11 +12,11 @@ public:
     void operator=(const Dumpable&) = delete;
     virtual ~Dumpable() = default;
 
-    virtual void Fixup() = 0;
+    virtual void Fixup() {};
     virtual FilePosition GetSize() const = 0;
 
-    void Dump(std::ostream& os) const { return Dump_(os); }
-    void Dump(std::ostream&& os) const { return Dump_(os); }
+    void Dump(Sink& os) const { return Dump_(os); }
+    void Dump(Sink&& os) const { return Dump_(os); }
     void Dump(const fs::path& path) const;
 
     void Inspect(std::ostream& os) const { return Inspect_(os); }
@@ -24,7 +24,7 @@ public:
     void Inspect(const fs::path& path) const;
 
 private:
-    virtual void Dump_(std::ostream& os) const = 0;
+    virtual void Dump_(Sink& sink) const = 0;
     virtual void Inspect_(std::ostream& os) const = 0;
 };
 

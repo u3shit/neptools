@@ -27,8 +27,6 @@ public:
     ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
     static ExportsItem* CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override
     { return sizeof(Entry) * entries.size(); }
 
@@ -36,6 +34,8 @@ public:
     std::vector<EntryType> entries;
 
 private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
     void Parse_(Source& src, uint32_t export_count);
 };
 

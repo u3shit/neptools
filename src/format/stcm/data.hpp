@@ -26,12 +26,14 @@ public:
     DataItem(Key k, Context* ctx, const Header& hdr, size_t chunk_size);
     static DataItem* CreateAndInsert(ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override;
-    FilePosition UpdatePositions(FilePosition npos) override;
+    void Fixup() override;
 
     uint32_t type, offset_unit, field_8;
+
+private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
 };
 
 }

@@ -26,6 +26,8 @@ struct LowIo final
     LowIo(FileName fname, bool write);
     ~LowIo();
 
+    static LowIo OpenStdOut();
+
     LowIo(LowIo&& o)
         : fd{o.fd}
 #ifdef WINDOWS

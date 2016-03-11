@@ -80,8 +80,22 @@ State SmartOpen(const fs::path& fname)
         fname);
 }
 
+template <typename T>
+void ShellDump(const T* item, std::deque<const char*>& args)
+{
+    if (args.empty()) throw ParamError{"missing argument"};
+
+    auto fname = args.front(); args.pop_front();
+    std::unique_ptr<Sink> sink;
+    if (fname[0] == '-' && fname[1] == '\0')
+        sink = Sink::ToStdOut();
+    else
+        sink = Sink::ToFile(fname, item->GetSize());
+    item->Dump(*sink);
+}
+
 template <typename T, typename Fun>
-void ShellDumpGen(const T* item, std::deque<const char*>& args, Fun f)
+void ShellInspectGen(const T* item, std::deque<const char*>& args, Fun f)
 {
     if (args.empty()) throw ParamError{"missing argument"};
 
@@ -89,18 +103,12 @@ void ShellDumpGen(const T* item, std::deque<const char*>& args, Fun f)
     if (fname[0] == '-' && fname[1] == '\0')
         f(item, std::cout);
     else
-    {
         f(item, OpenOut(fname));
-    }
 }
 
 template <typename T>
-void ShellDump(const T* item, std::deque<const char*>& args)
-{ ShellDumpGen(item, args, [](auto x, auto&& y) { x->Dump(y); }); }
-
-template <typename T>
 void ShellInspect(const T* item, std::deque<const char*>& args)
-{ ShellDumpGen(item, args, [](auto x, auto&& y) { y << *x; }); }
+{ ShellInspectGen(item, args, [](auto x, auto&& y) { y << *x; }); }
 
 void EnsureStcm(State& st)
 {
@@ -485,7 +493,7 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             EnsureGbnl(st);
-            ShellDumpGen(st.gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
+            ShellInspectGen(st.gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
         }, "<out_file>|-\n\tExport text to <out_file> or stdout\n");
     CMD("--import-txt", [&](auto& args)
         {

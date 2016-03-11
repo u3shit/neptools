@@ -85,10 +85,8 @@ public:
     InstructionItem(Key k, Context* ctx, Source src);
     static InstructionItem* CreateAndInsert(ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override;
-    FilePosition UpdatePositions(FilePosition npos) override;
+    void Fixup() override;
 
     bool is_call;
     union
@@ -135,6 +133,8 @@ public:
     std::vector<Param> params;
 
 private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
     void Parse_(Source& src);
 
     void Dump48(boost::endian::little_uint32_t& out, const Param48& in) const noexcept;

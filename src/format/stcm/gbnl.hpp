@@ -16,9 +16,12 @@ public:
     GbnlItem(Key k, Context* ctx, Source src);
     static GbnlItem* CreateAndInsert(ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override { Gbnl::Dump(os); }
-    void PrettyPrint(std::ostream& os) const override { Gbnl::Inspect(os); }
+    void Fixup() override { Gbnl::Fixup(); }
     FilePosition GetSize() const noexcept override { return Gbnl::GetSize(); }
+
+private:
+    void Dump_(Sink& sink) const override { Gbnl::Dump_(sink); }
+    void Inspect_(std::ostream& os) const override { Gbnl::Inspect_(os); }
 };
 
 }

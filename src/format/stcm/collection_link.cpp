@@ -64,17 +64,17 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     return ret;
 }
 
-void CollectionLinkHeaderItem::Dump(std::ostream& os) const
+void CollectionLinkHeaderItem::Dump_(Sink& sink) const
 {
     Header hdr{};
     hdr.offset = ToFilePos(data->second);
     hdr.count = data->second.As0<CollectionLinkItem>().entries.size();
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
+    sink.Write(hdr);
 }
 
-void CollectionLinkHeaderItem::PrettyPrint(std::ostream& os) const
+void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
 {
-    Item::PrettyPrint(os);
+    Item::Inspect_(os);
     os << "collection_link_header(@" << data->first << ")";
 }
 
@@ -98,18 +98,18 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
     }
 }
 
-void CollectionLinkItem::Dump(std::ostream& os) const
+void CollectionLinkItem::Dump_(Sink& sink) const
 {
     Entry ee{};
     for (const auto& e : entries)
     {
         ee.name_0 = ToFilePos(e.name_0->second);
         ee.name_1 = ToFilePos(e.name_1->second);
-        os.write(reinterpret_cast<char*>(&ee), sizeof(Entry));
+        sink.Write(ee);
     }
 }
 
-void CollectionLinkItem::PrettyPrint(std::ostream& os) const
+void CollectionLinkItem::Inspect_(std::ostream& os) const
 {
     bool good_labels = true;
     for (auto lbl : GetLabels())
@@ -120,7 +120,7 @@ void CollectionLinkItem::PrettyPrint(std::ostream& os) const
             break;
         }
     if (!good_labels)
-        Item::PrettyPrint(os);
+        Item::Inspect_(os);
 
     size_t i = 0;
     for (const auto& e : entries)

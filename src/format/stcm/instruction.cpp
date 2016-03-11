@@ -282,15 +282,14 @@ void InstructionItem::Dump48(
     UNREACHABLE("Invalid Param48 Type stored");
 }
 
-FilePosition InstructionItem::UpdatePositions(FilePosition npos)
+void InstructionItem::Fixup()
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(
-            npos + sizeof(Header) + params.size() * sizeof(Parameter));
-    return Item::UpdatePositions(npos);
+            position + sizeof(Header) + params.size() * sizeof(Parameter));
 }
 
-void InstructionItem::Dump(std::ostream& os) const
+void InstructionItem::Dump_(Sink& sink) const
 {
     Header hdr;
     hdr.is_call = is_call;
@@ -301,7 +300,7 @@ void InstructionItem::Dump(std::ostream& os) const
         hdr.opcode = opcode;
     hdr.param_count = params.size();
     hdr.size = GetSize();
-    os.write(reinterpret_cast<char*>(&hdr), sizeof(Header));
+    sink.Write(hdr);
 
     Parameter pp;
     for (const auto& p : params)
@@ -351,15 +350,15 @@ void InstructionItem::Dump(std::ostream& os) const
             pp.param_8 = 0;
             break;
         }
-        os.write(reinterpret_cast<char*>(&pp), sizeof(Parameter));
+        sink.Write(pp);
     }
 
-    ItemWithChildren::Dump(os);
+    ItemWithChildren::Dump_(sink);
 }
 
-void InstructionItem::PrettyPrint(std::ostream &os) const
+void InstructionItem::Inspect_(std::ostream &os) const
 {
-    Item::PrettyPrint(os);
+    Item::Inspect_(os);
 
     if (is_call)
         os << "call @" << target->first;

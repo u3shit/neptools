@@ -38,13 +38,15 @@ public:
     HeaderItem(Key k, Context* ctx, const Header& hdr);
     static HeaderItem* CreateAndInsert(ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override { return sizeof(Header); }
 
     FixedString<0x20> msg;
     const Label* export_sec;
     const Label* collection_link;
+
+private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
 };
 
 }

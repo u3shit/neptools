@@ -13,12 +13,16 @@ public:
     virtual ~Sink() = default;
     static std::unique_ptr<Sink> ToFile(
         fs::path fname, FilePosition size, bool try_mmap = true);
+    static std::unique_ptr<Sink> ToStdOut();
 
     FilePosition Tell() const noexcept { return offset + buf_put; }
 
     template <typename T>
     void Write(const T& x)
     { Write(reinterpret_cast<const Byte*>(&x), sizeof(T)); }
+    void Write(const char* data, FileMemSize len)
+    { Write(reinterpret_cast<const Byte*>(data), len); }
+
     void Write(const Byte* data, FileMemSize len)
     {
         auto cp = std::min(len, buf_size - buf_put);
@@ -45,6 +49,8 @@ public:
     void WriteLittleUint8 (boost::endian::little_uint8_t  i) { Write(i); }
     void WriteLittleUint16(boost::endian::little_uint16_t i) { Write(i); }
     void WriteLittleUint32(boost::endian::little_uint32_t i) { Write(i); }
+    void WriteCString(const std::string& str) { Write(str.c_str(), str.size()+1); }
+    void WriteCString(const char* str) { Write(str, strlen(str)+1); }
 
 protected:
     Sink(FileMemSize size) : size{size} {}

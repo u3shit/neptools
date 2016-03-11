@@ -43,7 +43,7 @@ protected:
     void SetRoot(std::unique_ptr<Item> nroot);
 
 private:
-    void Dump_(std::ostream& os) const override;
+    void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
 
     friend class Item;

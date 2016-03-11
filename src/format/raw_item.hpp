@@ -15,8 +15,6 @@ public:
 
     const Source& GetSource() const noexcept { return src; }
     FilePosition GetSize() const noexcept override { return src.GetSize(); }
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
 
     template <typename T>
     T* Split(FilePosition pos, std::unique_ptr<T> nitem)
@@ -64,6 +62,9 @@ protected:
     void Split2(FilePosition pos, std::unique_ptr<Item> nitem);
 
 private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
+
     DumpableSource src;
 };
 

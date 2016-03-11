@@ -29,7 +29,9 @@ void DeleteOnExit(fs::path pth)
 void Dumpable::Dump(const fs::path& path) const
 {
     auto path2 = path;
-    Dump(OpenOut(path2+=fs::unique_path()));
+    auto sink = Sink::ToFile(path2+=fs::unique_path(), GetSize());
+    Dump(*sink);
+    sink.reset();
 
 #ifdef WINDOWS
     if (fs::is_regular_file(path))

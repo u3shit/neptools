@@ -13,7 +13,7 @@ Item::~Item()
         ctx->pmap.erase(it);
 }
 
-void Item::PrettyPrint(std::ostream& os) const
+void Item::Inspect_(std::ostream& os) const
 {
     for (const auto& it : GetLabels())
     {
@@ -27,6 +27,7 @@ void Item::PrettyPrint(std::ostream& os) const
 FilePosition Item::UpdatePositions(FilePosition npos)
 {
     position = npos;
+    Fixup();
     if (GetNext())
         return GetNext()->UpdatePositions(npos + GetSize());
     else
@@ -220,16 +221,16 @@ std::ostream& operator<<(std::ostream& os, const Item& item)
 {
     for (auto it = &item; it; it = it->GetNext())
     {
-        it->PrettyPrint(os);
+        it->Inspect(os);
         os << '\n';
     }
     return os;
 }
 
-void ItemWithChildren::Dump(std::ostream& os) const
+void ItemWithChildren::Dump_(Sink& sink) const
 {
     for (auto it = GetChildren(); it; it = it->GetNext())
-        it->Dump(os);
+        it->Dump(sink);
 }
 
 FilePosition ItemWithChildren::GetSize() const noexcept
@@ -240,9 +241,8 @@ FilePosition ItemWithChildren::GetSize() const noexcept
     return ret;
 }
 
-FilePosition ItemWithChildren::UpdatePositions(FilePosition npos)
+void ItemWithChildren::Fixup()
 {
     if (GetChildren())
-        GetChildren()->UpdatePositions(npos);
-    return Item::UpdatePositions(npos);
+        GetChildren()->UpdatePositions(position);
 }

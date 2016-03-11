@@ -81,11 +81,15 @@ public:
     FilePosition GetSize() const noexcept override;
 
     using FailedId = boost::error_info<struct FailedIdTag, uint32_t>;
+
+protected:
+    // todo: private after removing GbnlItem
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
+
 private:
     void Parse_(Source& src);
-    void Dump_(std::ostream& os) const override;
-    void DumpHeader(std::ostream& os) const;
-    void Inspect_(std::ostream& os) const override;
+    void DumpHeader(Sink& sink) const;
     FilePosition Align(FilePosition x) const noexcept;
 
     uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;

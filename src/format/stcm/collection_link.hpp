@@ -38,12 +38,14 @@ public:
     CollectionLinkHeaderItem(Key k, Context* ctx, const Header& s);
     static CollectionLinkHeaderItem* CreateAndInsert(ItemPointer ptr);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override
     { return sizeof(Header); }
 
     const Label* data;
+
+private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
 };
 
 class CollectionLinkItem final : public Item
@@ -67,8 +69,6 @@ public:
     CollectionLinkItem(Key k, Context* ctx) : Item{k, ctx} {}
     CollectionLinkItem(Key k, Context* ctx, Source src, uint32_t count);
 
-    void Dump(std::ostream& os) const override;
-    void PrettyPrint(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }
 
@@ -80,6 +80,8 @@ public:
     std::vector<LinkEntry> entries;
 
 private:
+    void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os) const override;
     void Parse_(Source& src, uint32_t count);
 };
 

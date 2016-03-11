@@ -3,11 +3,12 @@
 #pragma once
 
 #include "item_base.hpp"
+#include "../dumpable.hpp"
 #include <iosfwd>
 #include <vector>
 #include <map>
 
-class Item
+class Item : public Dumpable
 {
 protected:
     struct Key {};
@@ -18,10 +19,7 @@ public:
     void operator=(const Item&) = delete;
     virtual ~Item();
 
-    virtual void Dump(std::ostream& os) const = 0;
-    virtual void PrettyPrint(std::ostream& os) const = 0;
-    virtual FilePosition GetSize() const noexcept = 0;
-    virtual FilePosition UpdatePositions(FilePosition npos);
+    FilePosition UpdatePositions(FilePosition npos);
 
     Context* GetContext() noexcept { return ctx; }
     Item* GetParent() noexcept   { return parent; }
@@ -50,6 +48,8 @@ public:
     const LabelsContainer& GetLabels() const { return labels; }
 
 protected:
+    void Inspect_(std::ostream& os) const override = 0;
+
     using SlicePair = std::pair<std::unique_ptr<Item>, FilePosition>;
     using SliceSeq = std::vector<SlicePair>;
     void Slice(SliceSeq seq);
@@ -78,9 +78,11 @@ class ItemWithChildren : public Item
 public:
     using Item::Item;
 
-    void Dump(std::ostream& os) const override;
     FilePosition GetSize() const noexcept override;
-    FilePosition UpdatePositions(FilePosition npos) override;
+    void Fixup() override;
+
+protected:
+    void Dump_(Sink& sink) const override;
 };
 
 #endif
