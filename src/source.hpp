@@ -8,12 +8,7 @@
 #include <boost/exception/get_error_info.hpp>
 #include "dumpable.hpp"
 #include "fs.hpp"
-
-#if defined(_WIN32) || defined(_WIN64)
-using FdType = void*;
-#else
-using FdType = int;
-#endif
+#include "low_io.hpp"
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
 class Source
@@ -76,8 +71,8 @@ public:
     T Pread(FilePosition offs) const
     { T ret; Pread(offs, ret); return ret; }
 
-    void Read(Byte* buf, size_t len) { Pread(get, buf, len); get += len; }
-    void Read(char* buf, size_t len) { Pread(get, buf, len); get += len; }
+    void Read(Byte* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
+    void Read(char* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
     void Pread(FilePosition offs, Byte* buf, FileMemSize len) const;
     void Pread(FilePosition offs, char* buf, FileMemSize len) const
     { Pread(offs, reinterpret_cast<Byte*>(buf), len); }
@@ -115,11 +110,25 @@ public:
         return str;
     }
 
-private:
-    struct SourceProvider;
-    Source(std::shared_ptr<SourceProvider> p, FilePosition size)
+
+    struct Provider
+    {
+        Provider(fs::path file_name, FilePosition size)
+            : file_name{std::move(file_name)}, size{size} {}
+        Provider(const Provider&) = delete;
+        void operator=(const Provider&) = delete;
+        virtual ~Provider() = default;
+
+        virtual void Pread(FilePosition offs, Byte* buf, FileMemSize len) = 0;
+
+        std::array<BufEntry, 4> lru;
+        fs::path file_name;
+        FilePosition size;
+    };
+    Source(std::shared_ptr<Provider> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
+private:
     static Source FromFile_(fs::path fname);
 
     FilePosition offset = 0, size, get = 0;
@@ -138,57 +147,7 @@ private:
         return false;
     }
 
-    struct SourceProvider
-    {
-        SourceProvider(fs::path file_name, FilePosition size)
-            : file_name{std::move(file_name)}, size{size} {}
-        SourceProvider(const SourceProvider&) = delete;
-        void operator=(const SourceProvider&) = delete;
-        virtual ~SourceProvider() = default;
-
-        virtual void Pread(FilePosition offs, Byte* buf, FileMemSize len) = 0;
-
-        std::array<BufEntry, 4> lru;
-        fs::path file_name;
-        FilePosition size;
-    };
-    std::shared_ptr<SourceProvider> p;
-
-    template <typename T>
-    struct UnixLike : public SourceProvider
-    {
-        UnixLike(FdType fd, fs::path file_name, FilePosition size)
-            : SourceProvider{std::move(file_name), size}, fd{fd} {}
-        ~UnixLike();
-
-        void Pread(FilePosition offs, Byte* buf, FileMemSize len) override;
-        void EnsureChunk(FilePosition i);
-
-        FdType fd;
-    };
-
-    struct MmapProvider final : public UnixLike<MmapProvider>
-    {
-        MmapProvider(FdType fd, fs::path file_name, FilePosition size);
-        ~MmapProvider();
-
-        static FileMemSize CHUNK_SIZE;
-        void* ReadChunk(FilePosition offs, FileMemSize size);
-        void DeleteChunk(size_t i);
-
-#ifdef WINDOWS
-        FdType real_fd;
-#endif
-    };
-
-    struct UnixProvider final : public UnixLike<UnixProvider>
-    {
-        using UnixLike::UnixLike;
-
-        static FileMemSize CHUNK_SIZE;
-        void* ReadChunk(FilePosition offs, FileMemSize size);
-        void DeleteChunk(size_t i);
-    };
+    std::shared_ptr<Provider> p;
 };
 
 class DumpableSource : public Dumpable, public Source

@@ -130,7 +130,9 @@ def build_common(bld):
     src = [
         'src/except.cpp',
         'src/dumpable.cpp',
+        'src/low_io.cpp',
         'src/pattern.cpp',
+        'src/sink.cpp',
         'src/source.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
@@ -262,6 +264,7 @@ def test(bld):
     src = [
         'test/main.cpp',
         'test/pattern.cpp',
+        'test/sink.cpp',
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',
@@ -271,7 +274,7 @@ def test(bld):
     bld.add_post_fun(lambda ctx:
         ctx.exec_command([
             bld.bldnode.find_or_declare('run-tests').abspath(),
-            '--use-colour', 'yes']) == 0 or ctx.fatal('Test failure')
+            '--use-colour', 'yes'], cwd=bld.variant_dir) == 0 or ctx.fatal('Test failure')
     )
 
 from waflib.Configure import conf
