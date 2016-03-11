@@ -47,7 +47,7 @@ Byte data[] = {
     /* 30 */ 0x82, 0xf4, 0xca, 0x11, 0x47, 0x22, 0xcf, 0x98,
     /* 38 */ 0x40, 0xfe, 0x18, 0x0e, 0x2e, 0xb9, 0xfc, 0xce,
 };
-TEST_CASE("simple patterns")
+TEST_CASE("simple patterns", "[pattern]")
 {
     Pattern p = "a8 fe 0 1c"_pattern; //middle
     CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x1b);
@@ -61,20 +61,20 @@ TEST_CASE("simple patterns")
     CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x3a);
     CHECK(p.Find(data, sizeof(data)) == data + 0x3a);
 }
-TEST_CASE("simple not match")
+TEST_CASE("simple not match", "[pattern]")
 {
     auto p = "12 34 56 76"_pattern;
     CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
     CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
 }
-TEST_CASE("multiple match")
+TEST_CASE("multiple match", "[pattern]")
 {
     auto p = "58 ec 21"_pattern;
     CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
     CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
 }
 
-TEST_CASE("wildcards")
+TEST_CASE("wildcards", "[pattern]")
 {
     Pattern p = "48 ? c5 ? ? be"_pattern; // mid
     CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x22);
@@ -101,7 +101,7 @@ TEST_CASE("wildcards")
     CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x3b);
     CHECK(p.Find(data, sizeof(data)) == data + 0x3b);
 }
-TEST_CASE("wildcards not match")
+TEST_CASE("wildcards not match", "[pattern]")
 {
     Pattern p = "12 34 ?? 56 ?? 78"_pattern;
     CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
@@ -115,7 +115,7 @@ TEST_CASE("wildcards not match")
     CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
     CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
 }
-TEST_CASE("wildcards multiple match")
+TEST_CASE("wildcards multiple match", "[pattern]")
 {
     Pattern p = "58 ? 21"_pattern;
     CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
@@ -130,7 +130,7 @@ TEST_CASE("wildcards multiple match")
     CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
 }
 
-TEST_CASE("mask")
+TEST_CASE("mask", "[pattern]")
 {
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x28, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x2f, 0x3f };
@@ -139,7 +139,7 @@ TEST_CASE("mask")
     CHECK(p.Find(data, sizeof(data)) == data + 0x18);
 }
 
-TEST_CASE("mask no match")
+TEST_CASE("mask no match", "[pattern]")
 {
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x18, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x1f, 0x3f };
@@ -148,7 +148,7 @@ TEST_CASE("mask no match")
     CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
 }
 
-TEST_CASE("mask no 0xff")
+TEST_CASE("mask no 0xff", "[pattern]")
 {
     Byte pat[]  = { 0x58, 0xe0, 0x20, 0x28, 0x3e };
     Byte mask[] = { 0x5f, 0xf0, 0xf2, 0x2f, 0x3f };
