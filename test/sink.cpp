@@ -171,6 +171,29 @@ TEST_CASE("large pad", "[Sink]")
     REQUIRE(is.eof());
 }
 
+TEST_CASE("sink helpers", "[Sink]")
+{
+    auto sink = Sink::ToFile("tmp", 15, MAYBE);
+    sink->WriteLittleUint8(247);
+    sink->WriteLittleUint16(1234);
+    sink->WriteLittleUint32(98765);
+    sink->WriteCString("asd");
+    sink->WriteCString(std::string{"def"});
+    sink.reset();
+
+    Byte exp[15] = { 247, 0xd2, 0x04, 0xcd, 0x81, 0x01, 0x00,
+                     'a', 's', 'd', 0, 'd', 'e', 'f', 0 };
+    char act[15];
+
+    std::ifstream is{"tmp", std::ios_base::binary};
+    is.read(act, 15);
+    REQUIRE(is.good());
+    REQUIRE(memcmp(exp, act, 15) == 0);
+
+    is.get();
+    REQUIRE(is.eof());
+}
+
 TEST_CASE("memory one write", "[MemorySink]")
 {
     Byte buf[16] = {15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30};
