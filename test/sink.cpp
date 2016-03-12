@@ -1,8 +1,9 @@
 #include "sink.hpp"
 #include <catch.hpp>
+#include <fstream>
 
 #define MAYBE GENERATE(Catch::Generators::between(false, true))
-TEST_CASE("small simple write", "[sink]")
+TEST_CASE("small simple write", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     auto sink = Sink::ToFile("tmp", 16, MAYBE);
@@ -21,7 +22,7 @@ TEST_CASE("small simple write", "[sink]")
     REQUIRE(is.eof());
 }
 
-TEST_CASE("many small writes", "[sink]")
+TEST_CASE("many small writes", "[Sink]")
 {
     int buf[6] = {0,77,-123,98,77,-1};
     STATIC_ASSERT(sizeof(buf) == 24);
@@ -53,7 +54,7 @@ TEST_CASE("many small writes", "[sink]")
     REQUIRE(is.eof());
 }
 
-TEST_CASE("big write", "[sink]")
+TEST_CASE("big write", "[Sink]")
 {
     static constexpr FilePosition SIZE = 2*1024*1024;
     std::unique_ptr<Byte[]> buf{new Byte[SIZE]};
@@ -76,7 +77,7 @@ TEST_CASE("big write", "[sink]")
     REQUIRE(is.eof());
 }
 
-TEST_CASE("small pad", "[sink]")
+TEST_CASE("small pad", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     auto sink = Sink::ToFile("tmp", 16*3, MAYBE);
@@ -107,7 +108,7 @@ TEST_CASE("small pad", "[sink]")
     REQUIRE(is.eof());
 }
 
-TEST_CASE("many small pad", "[sink]")
+TEST_CASE("many small pad", "[Sink]")
 {
     char buf[10] = {4,5,6,7,8,9,10,11,12,13};
     static constexpr FilePosition SIZE = 2*1024*1024 / 24 * 24;
@@ -138,7 +139,7 @@ TEST_CASE("many small pad", "[sink]")
     REQUIRE(is.eof());
 }
 
-TEST_CASE("large pad", "[sink]")
+TEST_CASE("large pad", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     static constexpr FilePosition ZERO_SIZE = 2*1024*1024;
@@ -168,4 +169,54 @@ TEST_CASE("large pad", "[sink]")
 
     is.get();
     REQUIRE(is.eof());
+}
+
+TEST_CASE("memory one write", "[MemorySink]")
+{
+    Byte buf[16] = {15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30};
+    Byte buf2[16];
+    {
+        MemorySink sink{buf2, 16};
+        sink.Write(buf);
+    }
+
+    REQUIRE(memcmp(buf, buf2, 16) == 0);
+}
+
+TEST_CASE("memory multiple writes", "[MemorySink]")
+{
+    Byte buf[8] = {42,43,44,45,46,47,48,49};
+    Byte buf_out[32];
+    Byte buf_exp[32];
+    {
+        MemorySink sink{buf_out, 32};
+        for (size_t i = 0; i < 32; i+=8)
+        {
+            memcpy(buf_exp+i, buf, 8);
+            sink.Write(buf);
+            buf[0] = i;
+        }
+    }
+
+    REQUIRE(memcmp(buf_out, buf_exp, 32) == 0);
+}
+
+TEST_CASE("memory pad", "[MemorySink]")
+{
+    Byte buf[8] = {77,78,79,80,81,82,83,84};
+    Byte buf_out[32];
+    Byte buf_exp[32];
+    {
+        MemorySink sink{buf_out, 32};
+        memcpy(buf_exp, buf, 8);
+        sink.Write(buf);
+
+        memset(buf_exp+8, 0, 16);
+        sink.Pad(16);
+
+        memcpy(buf_exp+24, buf, 8);
+        sink.Write(buf);
+    }
+
+    REQUIRE(memcmp(buf_out, buf_exp, 32) == 0);
 }

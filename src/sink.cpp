@@ -192,3 +192,8 @@ std::unique_ptr<Sink> Sink::ToStdOut()
 {
     return std::make_unique<SimpleSink>(LowIo::OpenStdOut(), -1);
 }
+
+void MemorySink::Write_(const Byte*, FileMemSize)
+{ UNREACHABLE("MemorySink::Write_ called"); }
+void MemorySink::Pad_(FileMemSize)
+{ UNREACHABLE("MemorySink::Pad_ called"); }

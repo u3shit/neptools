@@ -64,4 +64,15 @@ private:
     virtual void Pad_(FileMemSize len) = 0;
 };
 
+class MemorySink : public Sink
+{
+public:
+    MemorySink(Byte* buffer, FileMemSize size) : Sink{size}
+    { this->buf = buffer; this->buf_size = size; }
+
+private:
+    void Write_(const Byte*, FileMemSize) override;
+    void Pad_(FileMemSize) override;
+};
+
 #endif
