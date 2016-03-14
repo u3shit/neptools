@@ -81,6 +81,21 @@ static int mymain(void)
     }
     strwcpy(last_slash + 1, L"NeptuniaReBirth3.exe");
 
+    for (int i = '3';; --i)
+    {
+        last_slash[16] = i;
+        unsigned attrib = GetFileAttributesW(buf);
+        if (attrib != INVALID_FILE_ATTRIBUTES &&
+            !(attrib & FILE_ATTRIBUTE_ENCRYPTED))
+            break;
+        if (i == '1')
+        {
+            MessageBoxA(NULL, "Couldn't find NeptuniaReBirth[123].exe",
+                        NULL, MB_OK | MB_ICONERROR);
+            return 2;
+        }
+    }
+
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
     memset(&si, 0, sizeof(si));
