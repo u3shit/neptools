@@ -108,7 +108,7 @@ static int mymain(void)
         return 2;
     }
 
-    strwcpy(last_slash + 1, L"server.dll");
+    strwcpy(last_slash + 1, L"neptools-server.dll");
     if (!inject_dll(pi.hProcess, buf))
     {
         TerminateProcess(pi.hProcess, 0);

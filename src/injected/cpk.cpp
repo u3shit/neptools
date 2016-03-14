@@ -99,7 +99,7 @@ char CpkHandler::OpenFile(const char* fname, size_t* out)
 #ifndef NDEBUG
     std::cerr << "OpenFile " << basename << fname;
 #endif
-    fs::path pth{"kitfolder"};
+    fs::path pth{"neptools"};
     pth /= basename;
     pth /= fname;
 

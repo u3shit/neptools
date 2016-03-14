@@ -1,19 +1,23 @@
-stcm-editor
-===========
+NepTools
+========
 
-This tool allows you to edit dialogues in Hyperdimension Neptunia Re;Birth 3: V
-Century. The file format is compatible with nr2_strool/nr3_strtool's.
+This is a collection tools to mod in Hyperdimension Neptunia Re;Birth 3: V
+Century (and probably RB 1 and 2 too). It contains a `.cl3` extractor/importer,
+a text editor for `.cl3`/`.gstr`/`.gbin`, and a tool to use these files in the
+game without repacking the `.pac` files (like KitServer).
+
+stcm-editor/cl3-tool
+====================
+
+This tool allows you to edit dialogues and some other text files. The file
+format is compatible with nr2_strool/nr3_strtool's.
 
 Note: if you've used strtool before, you should delete the modified `.cl3` files
 and reimport the `.txt`s using the original, unmodified `.cl3` files. Strtool
 sometimes damages the `.cl3` files in a way that this tool can't handle.
 
 Usage
-=====
-
-First, if you downloaded the binary Windows version, you'll need to install
-[MSVC 2015 Update 1 redistributables](https://www.microsoft.com/en-us/download/details.aspx?id=49984),
-if you haven't done so already (download `VC_redist.x86.exe`).
+-----
 
 The main functionality of this program is to dump out the text script inside the
 `.cl3` files, and then reimport modifications. You should be able to do that by
@@ -58,14 +62,34 @@ Some examples:
     stcm-editor --open foo.cl3 --replace-file bar.tid new.tid --import-txt foo.txt --open bar.cl3 --export-files dir
     # and so on...
 
-A note on cl3 editing and `--create-cl3`
-----------------------------------------
+Server
+======
 
-Cl3 files have a `FILE_LINK` section that describes links between different
-files. This information is currently not exported (and you can't edit them yet),
-but updating an existing cl3 file will preserve them. So for the time being you
-should only replace existing files in existing cl3 archives.
+This is like KitServer, except it's open source and modifies some internal game
+functions instead of creating virtual files that look like the original `.pac`
+files. The main differences between KitServer and NepTools' server:
 
+* No tid_tool integration (for now). You have to convert your pngs to tid if you
+  want to use them.
+* Integrated stcm-editor: just drop the `.cl3.txt` (and `.gbin.txt` and
+  `.gstr.txt`) files into the corresponding directory, it'll import them on the
+  fly. *Note*: if there's an import error it'll silently fall back to the
+  builtin file. Get the debug version if you want to see the error message or
+  try running `stcm-editor` on the file.
+* Use `neptools` instead of `KitFolder`, remove the last 5 digits from folder
+  names inside `data`.
+* Very early release version: anything may change at any time, nothing is
+  guaranteed to work...
+
+Usage
+-----
+
+Extract `launcher.exe` and `neptools-server.dll` into the game directory. Create
+a directory named `neptools`. If you want to replace (for example)
+`database/stitem.gbin` inside `data/SYSTEM00000`, place it into
+`neptools/data/SYSTEM/database/stitem.gbin` (that five zeros you normally get is
+actually an artifact of the current `.cpk`/`.pac` extractor doesn't handle the
+format correctly, I will rant more about it someday...)
 
 Compilation
 ===========

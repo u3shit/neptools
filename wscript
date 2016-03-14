@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 
 # the following two variables are used by the target "waf dist"
-APPNAME='stcm-editor'
+APPNAME='neptools'
 
 import subprocess
 try:
@@ -10,7 +10,7 @@ try:
         stderr = subprocess.PIPE,
         universal_newlines = True).strip('\n').lstrip('v')
 except:
-    VERSION = '0.3.0'
+    VERSION = '0.3.1'
 
 # these variables are mandatory ('/' are converted automatically)
 top = '.'
@@ -161,7 +161,7 @@ def build(bld):
                 includes = 'src', # for version.hpp
                 uselib = 'BOOST',
                 use = 'common',
-                target = APPNAME)
+                target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32':
         # technically launcher can be compiled for 64bits, but it makes no sense
@@ -184,7 +184,7 @@ def build(bld):
             'src/programs/server.cpp',
         ]
         bld.shlib(source = src_inject,
-                  target = 'server',
+                  target = 'neptools-server',
                   use    = 'common',
                   uselib = 'BOOST USER32')
 

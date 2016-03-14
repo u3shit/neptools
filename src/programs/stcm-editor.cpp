@@ -525,7 +525,7 @@ int main(int argc, char** argv)
     }
     catch (InvalidParameters ip)
     {
-        std::cerr << NAME " v" VERSION "\nUsage: " << argv[0]
+        std::cerr << "NepTools stcm-editor v" VERSION "\nUsage: " << argv[0]
                   << " [--options] [<file/directory>...]\n"
                      "Default operation: import all .cl3.txt to .cl3, export "
                      "all .cl3 to .cl3.txt.\n\n"
