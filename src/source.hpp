@@ -49,16 +49,6 @@ public:
     FilePosition Tell() const noexcept { return get; }
     bool Eof() const noexcept { return get == size; }
 
-    // offset: in original file!
-    BufEntry GetTemporaryEntry(FilePosition offs) const
-    {
-        if (GetEntry(offs)) return p->lru[0];
-        p->Pread(offs, nullptr, 0);
-        BOOST_ASSERT(p->lru[0].offset <= offs &&
-                     p->lru[0].offset + p->lru[0].size > offs);
-        return p->lru[0];
-    }
-
     template <typename T>
     void Read(T& x) { Read(reinterpret_cast<Byte*>(&x), sizeof(T)); }
     template <typename T>
@@ -121,6 +111,9 @@ public:
 
         virtual void Pread(FilePosition offs, Byte* buf, FileMemSize len) = 0;
 
+        void LruPush(Byte* ptr, FilePosition offset, FileMemSize size);
+        bool LruGet(FilePosition offs);
+
         std::array<BufEntry, 4> lru;
         fs::path file_name;
         FilePosition size;
@@ -128,24 +121,14 @@ public:
     Source(std::shared_ptr<Provider> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
+protected:
+    // offset: in original file!
+    BufEntry GetTemporaryEntry(FilePosition offs) const;
+
 private:
     static Source FromFile_(fs::path fname);
 
     FilePosition offset = 0, size, get = 0;
-    bool GetEntry(FilePosition offs) const
-    {
-        for (size_t i = 0; i < p->lru.size(); ++i)
-        {
-            auto x = p->lru[i];
-            if (x.offset <= offs && x.offset + x.size > offs)
-            {
-                memmove(&p->lru[1], &p->lru[0], sizeof(BufEntry)*i);
-                p->lru[0] = x;
-                return true;
-            }
-        }
-        return false;
-    }
 
     std::shared_ptr<Provider> p;
 };

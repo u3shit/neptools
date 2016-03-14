@@ -3,10 +3,15 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 #include <vector>
 
-#include "../utils.hpp"
+#include "../source.hpp"
+
+#define GEN_FWD(name, fld) \
+    template <typename... Args> inline auto name(Args&&... args)  \
+    { return (this->*fld)(std::forward<Args>(args)...); }
 
 struct PakEntry
 {
@@ -14,8 +19,8 @@ struct PakEntry
     unsigned file_index;
     char file_name[260];
     unsigned field_10c;
-    unsigned compressed_size;
-    unsigned uncompressed_size;
+    size_t compressed_size;
+    size_t uncompressed_size;
     unsigned is_compressed;
     unsigned field_11c;
 };
@@ -48,18 +53,38 @@ struct CpkHandler
     unsigned last_error;
     CRITICAL_SECTION crit_sec;
 
-    char __thiscall OpenFile(const char* fname, int* out);
+    char __thiscall OpenFile(const char* fname, size_t* out);
     char __thiscall CloseFile(unsigned index);
-    char __thiscall Read(unsigned index, char* dst, int dst_size,
-                         int* out_size_read);
+    char __thiscall Read(unsigned index, char* dst, size_t dst_size,
+                         size_t* out_size_read);
 
     using OpenFilePtr = decltype(&CpkHandler::OpenFile);
     using CloseFilePtr = decltype(&CpkHandler::CloseFile);
     using ReadPtr = decltype(&CpkHandler::Read);
 
+    static CpkHandler::OpenFilePtr orig_open_file;
+    static CpkHandler::CloseFilePtr orig_close_file;
+    static CpkHandler::ReadPtr orig_read;
+
+    GEN_FWD(OrigOpenFile, orig_open_file);
+    GEN_FWD(OrigCloseFile, orig_close_file);
+    GEN_FWD(OrigRead, orig_read);
+
     static void Hook();
+
+    Source GetSource(const char* fname);
+
+private:
+    FileInfo& GetEntryVect(size_t* out);
+    bool OpenFsFile(const char* fname, const fs::path& pth, size_t* out);
+    bool OpenTxtFile(const char* fname, const fs::path& pth, size_t* out);
 };
 STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
 
+struct CpkError : std::runtime_error, virtual boost::exception
+{
+    using std::runtime_error::runtime_error;
+};
+using CpkErrorCode = boost::error_info<struct CpkErrorCodeTag, int>;
 
 #endif

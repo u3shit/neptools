@@ -1,4 +1,5 @@
 #include "cl3.hpp"
+#include "stcm/file.hpp"
 #include "../except.hpp"
 #include <fstream>
 
@@ -286,4 +287,19 @@ void Cl3::Dump_(Sink& sink) const
             sink.Write(le);
         }
     }
+}
+
+Stcm::File& Cl3::GetStcm()
+{
+    auto dat = GetFile("main.DAT");
+    if (!dat) THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+
+    auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
+    if (stcm) return *stcm;
+
+    auto src = asserted_cast<DumpableSource*>(dat->src.get());
+    auto nstcm = std::make_unique<Stcm::File>(*src);
+    auto ret = nstcm.get();
+    dat->src = std::move(nstcm);
+    return *ret;
 }

@@ -8,6 +8,8 @@
 #include "../source.hpp"
 #include "../fixed_string.hpp"
 
+namespace Stcm { class File; }
+
 class Cl3 : public Dumpable
 {
 public:
@@ -119,6 +121,8 @@ public:
 
     void DeleteFile(size_t i);
     void DeleteFile(Entry& e) { DeleteFile(&e - &entries.front()); }
+
+    Stcm::File& GetStcm();
 
 private:
     FilePosition data_size;

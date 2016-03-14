@@ -73,7 +73,7 @@ void Source::Pread(FilePosition offs, Byte* buf, FileMemSize len) const
         offs += offset;
         while (len)
         {
-            if (GetEntry(offs))
+            if (p->LruGet(offs))
             {
                 auto& x = p->lru[0];
                 auto buf_offs = offs - x.offset;
@@ -91,6 +91,38 @@ void Source::Pread(FilePosition offs, Byte* buf, FileMemSize len) const
     {
         e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
     });
+}
+
+Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const
+{
+    if (p->LruGet(offs)) return p->lru[0];
+    p->Pread(offs, nullptr, 0);
+    BOOST_ASSERT(p->lru[0].offset <= offs &&
+                 p->lru[0].offset + p->lru[0].size > offs);
+    return p->lru[0];
+}
+
+void Source::Provider::LruPush(Byte* ptr, FilePosition offset, FileMemSize size)
+{
+    memmove(&lru[1], &lru[0], sizeof(BufEntry)*(lru.size()-1));
+    lru[0].ptr = ptr;
+    lru[0].offset = offset;
+    lru[0].size = size;
+}
+
+bool Source::Provider::LruGet(FilePosition offs)
+{
+    for (size_t i = 0; i < lru.size(); ++i)
+    {
+        auto x = lru[i];
+        if (x.offset <= offs && x.offset + x.size > offs)
+        {
+            memmove(&lru[1], &lru[0], sizeof(BufEntry)*i);
+            lru[0] = x;
+            return true;
+        }
+    }
+    return false;
 }
 
 template <typename T>
@@ -126,23 +158,12 @@ void UnixLike<T>::EnsureChunk(FilePosition offs)
 {
     auto const CHUNK_SIZE = static_cast<T*>(this)->CHUNK_SIZE;
     auto ch_offs = offs/CHUNK_SIZE*CHUNK_SIZE;
-    for (size_t i = 0; i < lru.size(); ++i)
-        if (lru[i].offset == ch_offs)
-        {
-            auto x = lru[i];
-            memmove(&lru[1], &lru[0], sizeof(Source::BufEntry)*i);
-            lru[0] = x;
-            return;
-        }
+    if (LruGet(offs)) return;
 
     auto size = std::min(CHUNK_SIZE, this->size-ch_offs);
     auto x = static_cast<T*>(this)->ReadChunk(ch_offs, size);
     static_cast<T*>(this)->DeleteChunk(lru.size()-1);
-    memmove(&lru[1], &lru[0], sizeof(Source::BufEntry)*(lru.size()-1));
-
-    lru[0].ptr = static_cast<Byte*>(x);
-    lru[0].offset = ch_offs;
-    lru[0].size = size;
+    LruPush(static_cast<Byte*>(x), ch_offs, size);
 }
 
 FileMemSize MmapProvider::CHUNK_SIZE = MMAP_CHUNK;

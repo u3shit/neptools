@@ -117,36 +117,14 @@ void EnsureStcm(State& st)
     if (!st.cl3)
         throw ParamError{"invalid file loaded: can't find STCM without CL3"};
 
-    auto dat = st.cl3->GetFile("main.DAT");
-    if (!dat) THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
-
-    auto src = asserted_cast<DumpableSource*>(dat->src.get());
-    auto nstcm = std::make_unique<Stcm::File>(*src);
-    st.stcm = nstcm.get();
-    dat->src = std::move(nstcm);
-}
-
-Stcm::GbnlItem* FindGbnl(Item* root)
-{
-    if (!root) return nullptr;
-
-    auto x = dynamic_cast<Stcm::GbnlItem*>(root);
-    if (x) return x;
-
-    x = FindGbnl(root->GetChildren());
-    if (x) return x;
-
-    return FindGbnl(root->GetNext());
+    st.stcm = &st.cl3->GetStcm();
 }
 
 void EnsureGbnl(State& st)
 {
     if (st.gbnl) return;
     EnsureStcm(st);
-
-    st.gbnl = FindGbnl(st.stcm->GetRoot());
-    if (!st.gbnl)
-        THROW(DecodeError{"No GBNL found in STCM"});
+    st.gbnl = &st.stcm->FindGbnl();
 }
 
 bool auto_failed = false;

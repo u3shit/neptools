@@ -8,13 +8,16 @@
 namespace Stcm
 {
 
+class GbnlItem;
 class File : public Context
 {
 public:
     File(Source src);
+    GbnlItem& FindGbnl();
 
 private:
     void Parse_(Source& src);
+    GbnlItem* FindGbnl_(Item* root) const;
 };
 
 }

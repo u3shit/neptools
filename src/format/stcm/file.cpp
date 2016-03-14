@@ -2,6 +2,7 @@
 #include "header.hpp"
 #include "../item.hpp"
 #include "../eof_item.hpp"
+#include "gbnl.hpp"
 #include <boost/assert.hpp>
 
 namespace Stcm
@@ -19,6 +20,26 @@ void File::Parse_(Source& src)
     SetRoot(std::move(root));
     root_sav->Split(root_sav->GetSize(), Create<EofItem>());
     HeaderItem::CreateAndInsert({root_sav, 0});
+}
+
+GbnlItem& File::FindGbnl()
+{
+    auto gbnl = FindGbnl_(GetRoot());
+    if (!gbnl) THROW(DecodeError{"No GBNL found in STCM"});
+    return *gbnl;
+}
+
+GbnlItem* File::FindGbnl_(Item* root) const
+{
+    if (!root) return nullptr;
+
+    auto x = dynamic_cast<Stcm::GbnlItem*>(root);
+    if (x) return x;
+
+    x = FindGbnl_(root->GetChildren());
+    if (x) return x;
+
+    return FindGbnl_(root->GetNext());
 }
 
 }
