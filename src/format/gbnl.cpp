@@ -572,7 +572,7 @@ void Gbnl::ReadTxt(std::istream& is)
                 RecalcSize();
                 return;
             }
-            auto id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
+            uint32_t id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {

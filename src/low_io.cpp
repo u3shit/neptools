@@ -18,9 +18,9 @@
 #ifdef WINDOWS
 #include <iostream>
 
-#define SYSERROR2(x, rst)                                                       \
-    NEPTOOLS_THROW(boost::enable_error_info(std::system_error{std::error_code{  \
-                    int(GetLastError()), std::system_category()}}) <<           \
+#define SYSERROR2(x, rst)                                           \
+    NEPTOOLS_THROW(SystemError{std::error_code{                     \
+                int(GetLastError()), std::system_category()}} <<    \
         boost::errinfo_api_function{x} rst)
 #define SYSERROR(x) SYSERROR2(x, )
 
@@ -127,10 +127,9 @@ void LowIo::Write(const void* buf, FileMemSize len) const
 
 #else // linux/unix
 
-#define SYSERROR(x)                                                             \
-    NEPTOOLS_THROW(boost::enable_error_info(std::system_error{std::error_code{  \
-                    errno, std::system_category()}}) <<                         \
-        boost::errinfo_api_function{x})
+#define SYSERROR(x)                                                            \
+    NEPTOOLS_THROW(SystemError{std::error_code{errno, std::system_category()}} \
+                   << boost::errinfo_api_function{x})
 
 namespace Neptools
 {

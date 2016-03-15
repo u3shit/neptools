@@ -61,10 +61,16 @@ inline auto AddInfo(Fun fun, Info info_adder, Args&&... args)
 }
 // AddInfo([&](){ ...; }, [&](auto& e) { e << foo; });
 
-struct DecodeError : std::runtime_error, virtual boost::exception
-{
-    using std::runtime_error::runtime_error;
-};
+#define NEPTOOLS_GEN_EXCEPTION_TYPE(name, base)  \
+    struct name : base, virtual boost::exception \
+    {                                            \
+        using BaseType = base;                   \
+        using BaseType::BaseType;                \
+    }
+
+NEPTOOLS_GEN_EXCEPTION_TYPE(DecodeError, std::runtime_error);
+NEPTOOLS_GEN_EXCEPTION_TYPE(OutOfRange,  std::out_of_range);
+NEPTOOLS_GEN_EXCEPTION_TYPE(SystemError, std::system_error);
 
 #define NEPTOOLS_VALIDATE_FIELD(msg, x)                           \
     while (!(x)) NEPTOOLS_THROW(DecodeError{msg": invalid data"}  \
