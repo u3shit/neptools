@@ -28,6 +28,9 @@ void DeleteOnExit(boost::filesystem::path pth)
 }
 #endif
 
+namespace Neptools
+{
+
 void Dumpable::Dump(const boost::filesystem::path& path) const
 {
     auto path2 = path;
@@ -57,4 +60,6 @@ std::ostream& operator<<(std::ostream& os, const Dumpable& dmp)
 {
     dmp.Inspect(os);
     return os;
+}
+
 }

@@ -4,9 +4,12 @@
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
+namespace Neptools
+{
+
 void Cl3::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Cl3::Header", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Header", x)
     VALIDATE(memcmp(magic, "CL3L", 4) == 0);
     VALIDATE(field_04 == 0);
     VALIDATE(field_08 == 3);
@@ -16,7 +19,7 @@ void Cl3::Header::Validate(FilePosition file_size) const
 
 void Cl3::Section::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Cl3::Section", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Section", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= file_size);
     VALIDATE(data_offset + data_size <= file_size);
@@ -28,7 +31,7 @@ void Cl3::Section::Validate(FilePosition file_size) const
 
 void Cl3::FileEntry::Validate(uint32_t block_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Cl3::FileEntry", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::FileEntry", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= block_size);
     VALIDATE(data_offset + data_size <= block_size);
@@ -39,7 +42,7 @@ void Cl3::FileEntry::Validate(uint32_t block_size) const
 
 void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Cl3::LinkEntry", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::LinkEntry", x)
     VALIDATE(field_00 == 0);
     VALIDATE(linked_file_id < file_count);
     VALIDATE(link_id == i);
@@ -56,7 +59,7 @@ Cl3::Cl3(Source src)
 void Cl3::Parse_(Source& src)
 {
     if (src.GetSize() < sizeof(Header))
-        THROW(DecodeError{"CL3: file too short"});
+        NEPTOOLS_THROW(DecodeError{"CL3: file too short"});
 
     auto hdr = src.Pread<Header>(0);
     hdr.Validate(src.GetSize());
@@ -83,8 +86,9 @@ void Cl3::Parse_(Source& src)
         {
             link_offset = sec.data_offset;
             link_count = sec.count;
-            VALIDATE_FIELD("Cl3::Section",
-                           sec.data_size == link_count * sizeof(LinkEntry));
+            NEPTOOLS_VALIDATE_FIELD(
+                "Cl3::Section",
+                sec.data_size == link_count * sizeof(LinkEntry));
         }
     }
 
@@ -293,7 +297,7 @@ void Cl3::Dump_(Sink& sink) const
 Stcm::File& Cl3::GetStcm()
 {
     auto dat = GetFile("main.DAT");
-    if (!dat) THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+    if (!dat) NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
 
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
     if (stcm) return *stcm;
@@ -303,4 +307,6 @@ Stcm::File& Cl3::GetStcm()
     auto ret = nstcm.get();
     dat->src = std::move(nstcm);
     return *ret;
+}
+
 }

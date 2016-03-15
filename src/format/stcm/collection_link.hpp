@@ -6,6 +6,8 @@
 #include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -33,7 +35,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Header) == 0x40);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
     CollectionLinkHeaderItem(Key k, Context* ctx, const Header& s);
     static CollectionLinkHeaderItem* CreateAndInsert(ItemPointer ptr);
@@ -64,7 +66,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Entry) == 0x20);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x20);
 
     CollectionLinkItem(Key k, Context* ctx) : Item{k, ctx} {}
     CollectionLinkItem(Key k, Context* ctx, Source src, uint32_t count);
@@ -86,5 +88,5 @@ private:
 };
 
 }
-
+}
 #endif

@@ -3,12 +3,16 @@
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
 
+namespace Neptools
+{
 namespace Stcm
 {
 
 void CollectionLinkHeaderItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkHeaderItem::Header", x)
+#define VALIDATE(x) \
+    NEPTOOLS_VALIDATE_FIELD("Stcm::CollectionLinkHeaderItem::Header", x)
+
     VALIDATE(field_00 == 0);
     VALIDATE(offset <= file_size);
     VALIDATE(offset + sizeof(CollectionLinkItem::Entry)*count <= file_size);
@@ -21,7 +25,7 @@ void CollectionLinkHeaderItem::Header::Validate(FilePosition file_size) const
 
 void CollectionLinkItem::Entry::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::CollectionLinkItem::Entry", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::CollectionLinkItem::Entry", x)
     VALIDATE(name_0 <= file_size);
     VALIDATE(name_1 <= file_size);
     VALIDATE(ptr == 0);
@@ -50,8 +54,9 @@ CollectionLinkHeaderItem* CollectionLinkHeaderItem::CreateAndInsert(
     if (!ritem2)
     {
         // HACK!
-        VALIDATE_FIELD("Stcm::CollectionLinkHeaderItem",
-                       ptr2.offset == 0 && x.t.count == 0);
+        NEPTOOLS_VALIDATE_FIELD(
+            "Stcm::CollectionLinkHeaderItem",
+            ptr2.offset == 0 && x.t.count == 0);
         auto& eof = ptr2.AsChecked0<EofItem>();
         eof.Replace(eof.GetContext()->Create<CollectionLinkItem>());
         return ret;
@@ -139,5 +144,5 @@ void CollectionLinkItem::Inspect_(std::ostream& os) const
     }
 }
 
-
+}
 }

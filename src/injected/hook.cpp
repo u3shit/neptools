@@ -6,6 +6,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+namespace Neptools
+{
+
 Byte* image_base;
 static HANDLE heap = HeapCreate(HEAP_CREATE_ENABLE_EXECUTE, 0, 0);
 
@@ -26,7 +29,7 @@ void* Hook(void* fun, void* dst, size_t copy)
     if (copy)
     {
         ret = static_cast<char*>(HeapAlloc(heap, 0, copy + JMP_SIZE));
-        if (!ret) THROW(std::bad_alloc{});
+        if (!ret) NEPTOOLS_THROW(std::bad_alloc{});
         memcpy(ret, addr, copy);
         ret[copy] = 0xe9; // jmp
         auto base = ret + copy + JMP_SIZE;
@@ -52,11 +55,13 @@ void* Hook(void* fun, void* dst, size_t copy)
 Unprotect::Unprotect(void* ptr, size_t len) : ptr{ptr}, len{len}
 {
     if (!VirtualProtect(ptr, len, PAGE_READWRITE, &orig_prot))
-        THROW(std::runtime_error{"Unprotect: VirtualProtect"});
+        NEPTOOLS_THROW(std::runtime_error{"Unprotect: VirtualProtect"});
 }
 
 Unprotect::~Unprotect()
 {
     if (!VirtualProtect(ptr, len, orig_prot, &orig_prot))
         abort();
+}
+
 }

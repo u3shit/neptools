@@ -9,6 +9,9 @@
 #include "../source.hpp"
 #include "../fixed_string.hpp"
 
+namespace Neptools
+{
+
 namespace Stcm { class File; }
 
 class Cl3 : public Dumpable
@@ -25,7 +28,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Header) == 0x18);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x18);
 
     struct Section
     {
@@ -45,7 +48,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Section) == 0x50);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Section) == 0x50);
 
     struct FileEntry
     {
@@ -65,7 +68,7 @@ public:
 
         void Validate(uint32_t block_size) const;
     };
-    STATIC_ASSERT(sizeof(FileEntry) == 0x230);
+    NEPTOOLS_STATIC_ASSERT(sizeof(FileEntry) == 0x230);
 
     struct LinkEntry
     {
@@ -80,7 +83,7 @@ public:
 
         void Validate(uint32_t i, uint32_t file_count) const;
     };
-    STATIC_ASSERT(sizeof(LinkEntry) == 0x20);
+    NEPTOOLS_STATIC_ASSERT(sizeof(LinkEntry) == 0x20);
 
     Cl3() : field_14{0} {}
     Cl3(Source src);
@@ -134,4 +137,5 @@ private:
     void Inspect_(std::ostream& os) const override;
 };
 
+}
 #endif

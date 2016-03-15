@@ -8,6 +8,9 @@
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 
+namespace Neptools
+{
+
 class Gbnl : public Dumpable
 {
 public:
@@ -35,7 +38,7 @@ public:
 
         void Validate(size_t chunk_size) const;
     };
-    STATIC_ASSERT(sizeof(Header) == 0x40);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
     struct TypeDescriptor
     {
@@ -50,7 +53,7 @@ public:
         boost::endian::little_uint16_t type;
         boost::endian::little_uint16_t offset;
     };
-    STATIC_ASSERT(sizeof(TypeDescriptor) == 0x04);
+    NEPTOOLS_STATIC_ASSERT(sizeof(TypeDescriptor) == 0x04);
 
 
     Gbnl(Source src);
@@ -99,5 +102,5 @@ private:
     size_t msg_descr_size, msgs_size;
 };
 
-
+}
 #endif

@@ -5,6 +5,9 @@
 #include "utils.hpp"
 #include "except.hpp"
 
+namespace Neptools
+{
+
 struct Pattern
 {
     const Byte* pattern;
@@ -18,7 +21,7 @@ struct Pattern
     const Byte* Find(const Byte* data, size_t size) const
     {
         auto ret = MaybeFind(data, size);
-        if (!ret) THROW(std::runtime_error{"Couldn't find pattern"});
+        if (!ret) NEPTOOLS_THROW(std::runtime_error{"Couldn't find pattern"});
         return ret;
     }
     const Byte* Find(const std::string& str)
@@ -37,4 +40,5 @@ struct Pattern
     { return const_cast<Byte*>(Find(const_cast<const std::string&>(str)));}
 };
 
+}
 #endif

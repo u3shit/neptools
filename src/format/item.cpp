@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <iostream>
 
+namespace Neptools
+{
+
 Item::~Item()
 {
     //BOOST_ASSERT(labels.empty());
@@ -245,4 +248,6 @@ void ItemWithChildren::Fixup()
 {
     if (GetChildren())
         GetChildren()->UpdatePositions(position);
+}
+
 }

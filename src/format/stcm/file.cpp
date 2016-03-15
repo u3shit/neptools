@@ -5,6 +5,8 @@
 #include "gbnl.hpp"
 #include <boost/assert.hpp>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -25,7 +27,7 @@ void File::Parse_(Source& src)
 GbnlItem& File::FindGbnl()
 {
     auto gbnl = FindGbnl_(GetRoot());
-    if (!gbnl) THROW(DecodeError{"No GBNL found in STCM"});
+    if (!gbnl) NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
     return *gbnl;
 }
 
@@ -42,4 +44,5 @@ GbnlItem* File::FindGbnl_(Item* root) const
     return FindGbnl_(root->GetNext());
 }
 
+}
 }

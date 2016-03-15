@@ -13,6 +13,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+using namespace Neptools;
+
 namespace
 {
 
@@ -44,7 +46,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
 {
     auto src = Source::FromFile(fname.native());
     if (src.GetSize() < 4)
-        THROW(DecodeError{"Input file too short"});
+        NEPTOOLS_THROW(DecodeError{"Input file too short"});
 
     char buf[4];
     src.Pread(0, buf, 4);
@@ -70,7 +72,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
         return {std::move(gbnl), nullptr, nullptr, ret2};
     }
     else
-        THROW(DecodeError{"Unknown input file"});
+        NEPTOOLS_THROW(DecodeError{"Unknown input file"});
 }
 
 State SmartOpen(const boost::filesystem::path& fname)
@@ -533,7 +535,8 @@ int main(int argc, char** argv)
     }
     catch (InvalidParameters ip)
     {
-        std::cerr << "NepTools stcm-editor v" VERSION "\nUsage: " << argv[0]
+        std::cerr << "NepTools stcm-editor v" NEPTOOLS_VERSION "\nUsage: "
+                  << argv[0]
                   << " [--options] [<file/directory>...]\n"
                      "Default operation: import all .cl3.txt to .cl3, export "
                      "all .cl3 to .cl3.txt.\n\n"

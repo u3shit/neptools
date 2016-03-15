@@ -6,6 +6,8 @@
 #include "../raw_item.hpp"
 #include <boost/endian/arithmetic.hpp>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -32,7 +34,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Header) == 0x30);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x30);
 
 
     HeaderItem(Key k, Context* ctx, const Header& hdr);
@@ -50,5 +52,5 @@ private:
 };
 
 }
-
+}
 #endif

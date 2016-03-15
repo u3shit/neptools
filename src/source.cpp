@@ -3,6 +3,9 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
+namespace Neptools
+{
+
 namespace
 {
 
@@ -137,7 +140,7 @@ UnixLike<T>::~UnixLike()
 template <typename T>
 void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
 {
-    BOOST_ASSERT(io.fd != reinterpret_cast<FdType>(-1));
+    BOOST_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
         return io.Pread(buf, len, offs);
 
@@ -167,12 +170,12 @@ void UnixLike<T>::EnsureChunk(FilePosition offs)
     LruPush(static_cast<Byte*>(x), ch_offs, size);
 }
 
-FileMemSize MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
+FileMemSize MmapProvider::CHUNK_SIZE = LowIo::MMAP_CHUNK;
 MmapProvider::MmapProvider(
     LowIo&& io, boost::filesystem::path file_name, FilePosition size)
     : UnixLike{{}, std::move(file_name), size}
 {
-    size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
+    size_t to_map = size < LowIo::MMAP_LIMIT ? size : LowIo::MMAP_CHUNK;
 
     io.PrepareMmap(false);
     void* ptr = io.Mmap(0, to_map, false);
@@ -201,7 +204,7 @@ void MmapProvider::DeleteChunk(size_t i)
         io.Munmap(lru[i].ptr, lru[i].size);
 }
 
-FilePosition UnixProvider::CHUNK_SIZE = MEM_CHUNK;
+FilePosition UnixProvider::CHUNK_SIZE = LowIo::MEM_CHUNK;
 
 void* UnixProvider::ReadChunk(FilePosition offs, FileMemSize size)
 {
@@ -247,4 +250,6 @@ std::string to_string(const UsedSource& src)
     DumpableSource{src.value()}.Inspect(ss);
     ss << ", pos: " << src.value().Tell() << '\n';
     return ss.str();
+}
+
 }

@@ -10,6 +10,9 @@
 #include <map>
 #include <unordered_map>
 
+namespace Neptools
+{
+
 class Context : public Dumpable
 {
 public:
@@ -62,12 +65,18 @@ private:
 };
 
 using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
+}
 
 #include "item.hpp"
+
+namespace Neptools
+{
+
 template <typename T, typename... Args>
 inline std::unique_ptr<T> Context::Create(Args&&... args)
 {
     return std::unique_ptr<T>(new T(Item::Key{}, this, std::forward<Args>(args)...));
 }
 
+}
 #endif

@@ -7,6 +7,8 @@
 #include <set>
 #include <iostream>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -14,7 +16,7 @@ namespace Stcm
 
 static void Param48Validate(uint32_t param, FilePosition file_size)
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm Param48", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm Param48", x)
     switch (IP::TypeTag(param))
     {
     case IP::Type48::MEM_OFFSET:
@@ -36,7 +38,7 @@ static void Param48Validate(uint32_t param, FilePosition file_size)
 
 void InstructionItem::Parameter::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::InstructionItem::Parameter", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::InstructionItem::Parameter", x)
     switch (TypeTag(param_0))
     {
     case Type0::MEM_OFFSET:
@@ -80,7 +82,7 @@ void InstructionItem::Parameter::Validate(FilePosition file_size) const
 
 void InstructionItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::InstructionItem::Header", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::InstructionItem::Header", x)
     VALIDATE(is_call == 0 || is_call == 1);
     VALIDATE(param_count < 16);
     VALIDATE(size >= sizeof(Header) + param_count*sizeof(Parameter));
@@ -166,11 +168,11 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
             out.param_4.label = GetContext()->GetLabelTo(in.param_4);
         }
         else
-            UNREACHABLE("Invalid special parameter type");
+            NEPTOOLS_UNREACHABLE("Invalid special parameter type");
         break;
 
     default:
-        UNREACHABLE("Invalid parameter type");
+        NEPTOOLS_UNREACHABLE("Invalid parameter type");
     }
 }
 
@@ -204,11 +206,11 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
             out.num = in - Parameter::Type48Special::READ_4AC_MIN;
         }
         else
-            UNREACHABLE("Invalid 48Special param");
+            NEPTOOLS_UNREACHABLE("Invalid 48Special param");
         break;
 
     default:
-        UNREACHABLE("Invalid 48 param");
+        NEPTOOLS_UNREACHABLE("Invalid 48 param");
     }
 }
 
@@ -218,11 +220,11 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
     if (x.src.GetSize() < sizeof(Header))
-        THROW(DecodeError{"Invalid instruction: premature end of data"});
+        NEPTOOLS_THROW(DecodeError{"Invalid instruction: premature end of data"});
 
     auto inst = x.src.Pread<Header>(0);
     if (x.src.GetSize() < inst.size)
-        THROW(DecodeError{"Invalid instruction: premature end of data"});
+        NEPTOOLS_THROW(DecodeError{"Invalid instruction: premature end of data"});
 
     auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
 
@@ -279,7 +281,7 @@ void InstructionItem::Dump48(
         out = Parameter::Type48Special::READ_4AC_MIN + in.num;
         return;
     }
-    UNREACHABLE("Invalid Param48 Type stored");
+    NEPTOOLS_UNREACHABLE("Invalid Param48 Type stored");
 }
 
 void InstructionItem::Fixup()
@@ -417,4 +419,5 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
     abort();
 }
 
+}
 }

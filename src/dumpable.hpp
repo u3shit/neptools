@@ -5,6 +5,9 @@
 #include <boost/filesystem/path.hpp>
 #include "sink.hpp"
 
+namespace Neptools
+{
+
 class Dumpable
 {
 public:
@@ -31,4 +34,5 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
 
+}
 #endif

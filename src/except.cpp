@@ -2,6 +2,9 @@
 #include <boost/core/demangle.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
+namespace Neptools
+{
+
 void RethrowBoostException()
 {
     try { throw; }
@@ -32,6 +35,8 @@ void PrintException(std::ostream& os)
     {
         os << "Unknown exception (run while you can)" << std::endl;
     }
+}
+
 }
 
 namespace std

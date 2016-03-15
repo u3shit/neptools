@@ -5,12 +5,14 @@
 #include <stdexcept>
 #include <iostream>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
 void HeaderItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
     VALIDATE(memcmp(msg.data(), "STCM2L", 6) == 0);
     VALIDATE(msg.is_valid());
     VALIDATE(export_offset < file_size - 0x28*export_count);
@@ -60,4 +62,5 @@ void HeaderItem::Inspect_(std::ostream& os) const
        << collection_link->first;
 }
 
+}
 }

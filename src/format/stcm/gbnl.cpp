@@ -2,6 +2,8 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -16,4 +18,5 @@ GbnlItem* GbnlItem::CreateAndInsert(ItemPointer ptr)
     return x.ritem.SplitCreate<GbnlItem>(ptr.offset, x.src);
 }
 
+}
 }

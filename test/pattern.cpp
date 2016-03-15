@@ -1,6 +1,8 @@
 #include <catch.hpp>
 #include "pattern_parse.hpp"
 
+using namespace Neptools;
+
 // static test...
 static_assert(std::is_same<
     decltype("01 02 03 04"_pattern),

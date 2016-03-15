@@ -2,6 +2,6 @@
 #define UUID_9B678665_38D4_4683_8E87_6EA045BA7585
 #pragma once
 
-#define VERSION "@VERSION@"
+#define NEPTOOLS_VERSION "@VERSION@"
 
 #endif

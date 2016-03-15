@@ -6,6 +6,9 @@
 #include <functional>
 #include "../utils.hpp"
 
+namespace Neptools
+{
+
 class Item;
 class Context;
 
@@ -52,13 +55,16 @@ struct ItemPointer
 
 using Label = std::pair<const std::string, ItemPointer>;
 
+}
+
 namespace std
 {
-template<> struct hash<ItemPointer>
+template<> struct hash<::Neptools::ItemPointer>
 {
-    std::size_t operator()(const ItemPointer& ptr) const
+    std::size_t operator()(const ::Neptools::ItemPointer& ptr) const
     {
-        return hash<Item*>()(ptr.item) ^ hash<FilePosition>()(ptr.offset);
+        return hash<::Neptools::Item*>()(ptr.item) ^
+            hash<::Neptools::FilePosition>()(ptr.offset);
     }
 };
 }

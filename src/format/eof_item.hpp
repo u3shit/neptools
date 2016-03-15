@@ -4,6 +4,9 @@
 
 #include "item.hpp"
 
+namespace Neptools
+{
+
 class EofItem final : public Item
 {
 public:
@@ -14,4 +17,5 @@ public:
     FilePosition GetSize() const noexcept override { return 0; }
 };
 
+}
 #endif

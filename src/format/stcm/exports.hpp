@@ -7,6 +7,8 @@
 #include "../../fixed_string.hpp"
 #include <boost/endian/arithmetic.hpp>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -22,7 +24,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Entry) == 0x28);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x28);
 
     ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
     static ExportsItem* CreateAndInsert(ItemPointer ptr, uint32_t export_count);
@@ -40,5 +42,5 @@ private:
 };
 
 }
-
+}
 #endif

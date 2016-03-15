@@ -5,6 +5,8 @@
 #include "../item.hpp"
 #include "../gbnl.hpp"
 
+namespace Neptools
+{
 class RawItem;
 
 namespace Stcm
@@ -25,5 +27,5 @@ private:
 };
 
 }
-
+}
 #endif

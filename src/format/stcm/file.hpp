@@ -5,6 +5,8 @@
 #include "../../source.hpp"
 #include "../context.hpp"
 
+namespace Neptools
+{
 namespace Stcm
 {
 
@@ -20,5 +22,6 @@ private:
     GbnlItem* FindGbnl_(Item* root) const;
 };
 
+}
 }
 #endif

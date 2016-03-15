@@ -8,6 +8,9 @@
 #include <vector>
 #include <map>
 
+namespace Neptools
+{
+
 class Item : public Dumpable
 {
 protected:
@@ -85,4 +88,5 @@ protected:
     void Dump_(Sink& sink) const override;
 };
 
+}
 #endif

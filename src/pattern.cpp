@@ -1,6 +1,9 @@
 #include "pattern.hpp"
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
+namespace Neptools
+{
+
 static bool CheckPattern(
     const Byte* ptr, const Byte* pattern, const Byte* mask, size_t len)
 {
@@ -52,4 +55,6 @@ const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexc
         ptr = match + 1;
     }
     return res;
+}
+
 }

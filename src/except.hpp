@@ -9,28 +9,30 @@
 #include <boost/exception/info.hpp>
 
 #ifdef NDEBUG
-#define THROW(x) ::boost::throw_exception(x)
+#define NEPTOOLS_THROW(x) ::boost::throw_exception(x)
 
-#ifdef __GNUC__
-#define UNREACHABLE(x) __builtin_unreachable()
-#elif defined(_MSC_VER)
-#define UNREACHABLE(x) __assume(0)
+#if defined(__GNUC__) || defined(__clang__)
+#define NEPTOOLS_UNREACHABLE(x) __builtin_unreachable()
 #else
-#define UNREACHABLE(x) abort()
+#define NEPTOOLS_UNREACHABLE(x) abort()
 #endif
 
 #else
 
-#define THROW BOOST_THROW_EXCEPTION
-#define UNREACHABLE(x) BOOST_ASSERT_MSG(false, x);
+#define NEPTOOLS_THROW BOOST_THROW_EXCEPTION
+#define NEPTOOLS_UNREACHABLE(x) BOOST_ASSERT_MSG(false, x);
 #endif
 
-#ifdef __GNUC__
-__attribute__((noreturn))
-#elif defined(_MSC_VER)
-__declspec(noreturn)
+#if defined(__GNUC__) || defined(__clang__)
+#define NEPTOOLS_NORETURN __attribute__((noreturn))
+#else
+#define NEPTOOLS_NORETURN
 #endif
-void RethrowBoostException();
+
+namespace Neptools
+{
+
+NEPTOOLS_NORETURN void RethrowBoostException();
 void PrintException(std::ostream& os);
 
 template <typename Base, typename T, typename Derived, typename... Args>
@@ -64,12 +66,14 @@ struct DecodeError : std::runtime_error, virtual boost::exception
     using std::runtime_error::runtime_error;
 };
 
-#define VALIDATE_FIELD(msg, x)                               \
-    while (!(x)) THROW(DecodeError{msg": invalid data"}  \
-                       << FailedExpression{#x})
+#define NEPTOOLS_VALIDATE_FIELD(msg, x)                           \
+    while (!(x)) NEPTOOLS_THROW(DecodeError{msg": invalid data"}  \
+                                << FailedExpression{#x})
 
 using FailedExpression = boost::error_info<struct FailedExpressionTag, const char*>;
 using RethrownType = boost::error_info<struct RethrownTypeTag, std::type_index>;
+
+}
 
 namespace std
 {

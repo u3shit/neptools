@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 
+namespace Neptools
+{
+
 template <size_t N>
 class FixedString :
     boost::totally_ordered<FixedString<N>,
@@ -78,4 +81,5 @@ inline std::istream& operator>>(std::istream& is, FixedString<N>& str)
 { is.width(N-1); return is >> &str[0]; }
 */
 
+}
 #endif

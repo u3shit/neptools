@@ -7,6 +7,9 @@
 #include <boost/filesystem/path.hpp>
 #include <cstring>
 
+namespace Neptools
+{
+
 class Sink
 {
 public:
@@ -75,4 +78,5 @@ private:
     void Pad_(FileMemSize) override;
 };
 
+}
 #endif

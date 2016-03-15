@@ -4,12 +4,14 @@
 #include "../context.hpp"
 #include <iostream>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
 void ExportsItem::Entry::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
     VALIDATE(field_0 == 0);
     VALIDATE(name.is_valid());
     VALIDATE(offset < file_size);
@@ -69,4 +71,5 @@ void ExportsItem::Inspect_(std::ostream& os) const
         os << e.first << " -> @" << e.second->first << '\n';
 }
 
+}
 }

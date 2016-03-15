@@ -1,5 +1,4 @@
 #include "pattern_parse.hpp"
 
-//int fun() { };
-
+using namespace Neptools;
 auto x = TEST_PATTERN;

@@ -5,6 +5,9 @@
 #include <cstddef>
 #include "../pattern.hpp"
 
+namespace Neptools
+{
+
 extern Byte* image_base;
 size_t GetImageSize() noexcept;
 
@@ -18,7 +21,7 @@ void* Hook(void* hook, void* dst, size_t copy);
 template <typename T>
 inline T Hook(void* hook, T dst, size_t copy)
 {
-    STATIC_ASSERT(sizeof(T) == 4);
+    NEPTOOLS_STATIC_ASSERT(sizeof(T) == 4);
     union
     {
         T t;
@@ -46,4 +49,5 @@ private:
     unsigned long orig_prot;
 };
 
+}
 #endif

@@ -9,6 +9,9 @@
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 
+namespace Neptools
+{
+
 namespace
 {
 
@@ -58,8 +61,8 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         size_t read;
         cpk->entry_vect[index]->read_pos = offs;
         if (!cpk->OrigRead(index, reinterpret_cast<char*>(buf), len, &read))
-            THROW(CpkError{"Cpk::OrigRead failed"} <<
-                  CpkErrorCode{cpk->last_error});
+            NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
+                           CpkErrorCode{cpk->last_error});
         BOOST_ASSERT(read == len);
         return;
     }
@@ -73,8 +76,8 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         size_t read;
         cpk->entry_vect[index]->read_pos = coffs;
         if (!cpk->OrigRead(index, cbuf.get(), csize, &read))
-            THROW(CpkError{"Cpk::OrigRead failed"} <<
-                  CpkErrorCode{cpk->last_error});
+            NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
+                           CpkErrorCode{cpk->last_error});
         BOOST_ASSERT(read == csize);
 
         auto to_offs = offs % CPK_CHUNK;
@@ -166,7 +169,7 @@ bool CpkHandler::OpenTxtFile(
         Source src{boost::filesystem::exists(pth) ?
             Source::FromFile(pth) : GetSource(fname)};
         if (src.GetSize() < 4)
-            THROW(DecodeError{"Input file too short"});
+            NEPTOOLS_THROW(DecodeError{"Input file too short"});
 
         char hdr_buf[4];
         src.Pread(0, hdr_buf, 4);
@@ -281,8 +284,8 @@ Source CpkHandler::GetSource(const char* fname)
 {
     size_t index;
     if (!OrigOpenFile(fname, &index))
-            THROW(CpkError{"Cpk::OrigOpenFile failed"} <<
-                  CpkErrorCode{last_error});
+            NEPTOOLS_THROW(CpkError{"Cpk::OrigOpenFile failed"} <<
+                           CpkErrorCode{last_error});
     try
     {
         return Source(std::make_shared<CpkSource>(fname, this, index),
@@ -295,9 +298,11 @@ Source CpkHandler::GetSource(const char* fname)
     }
 }
 
-void CpkHandler::Hook()
+void CpkHandler::Init()
 {
-    orig_open_file = ::Hook(FindImage(OPEN_FILE), &CpkHandler::OpenFile, 5);
-    orig_close_file = ::Hook(FindImage(FILE_CLOSE), &CpkHandler::CloseFile, 5);
-    orig_read = ::Hook(FindImage(FILE_READ), &CpkHandler::Read, 5);
+    orig_open_file = Hook(FindImage(OPEN_FILE), &CpkHandler::OpenFile, 5);
+    orig_close_file = Hook(FindImage(FILE_CLOSE), &CpkHandler::CloseFile, 5);
+    orig_read = Hook(FindImage(FILE_READ), &CpkHandler::Read, 5);
+}
+
 }

@@ -2,6 +2,7 @@
 #include <catch.hpp>
 #include <fstream>
 
+using namespace Neptools;
 #define MAYBE GENERATE(Catch::Generators::between(false, true))
 TEST_CASE("small simple write", "[Sink]")
 {
@@ -25,7 +26,7 @@ TEST_CASE("small simple write", "[Sink]")
 TEST_CASE("many small writes", "[Sink]")
 {
     int buf[6] = {0,77,-123,98,77,-1};
-    STATIC_ASSERT(sizeof(buf) == 24);
+    NEPTOOLS_STATIC_ASSERT(sizeof(buf) == 24);
 
     static constexpr FilePosition SIZE = 2*1024*1024 / 24 * 24;
     auto sink = Sink::ToFile("tmp", SIZE, MAYBE);

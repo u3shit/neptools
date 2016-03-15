@@ -11,6 +11,9 @@
 #define NOMINMAX
 #include <windows.h>
 
+namespace Neptools
+{
+
 #define GEN_FWD(name, fld) \
     template <typename... Args> inline auto name(Args&&... args)  \
     { return (this->*fld)(std::forward<Args>(args)...); }
@@ -26,7 +29,7 @@ struct PakEntry
     unsigned is_compressed;
     unsigned field_11c;
 };
-STATIC_ASSERT(sizeof(PakEntry) == 0x120);
+NEPTOOLS_STATIC_ASSERT(sizeof(PakEntry) == 0x120);
 
 struct CpkHandlerFileInfo
 {
@@ -40,7 +43,7 @@ struct CpkHandlerFileInfo
     void* block;
     int decoded_block_index;
 };
-STATIC_ASSERT(sizeof(CpkHandlerFileInfo) == 0x140);
+NEPTOOLS_STATIC_ASSERT(sizeof(CpkHandlerFileInfo) == 0x140);
 
 struct CpkHandler
 {
@@ -72,7 +75,7 @@ struct CpkHandler
     GEN_FWD(OrigCloseFile, orig_close_file);
     GEN_FWD(OrigRead, orig_read);
 
-    static void Hook();
+    static void Init();
 
     Source GetSource(const char* fname);
 
@@ -83,7 +86,7 @@ private:
     bool OpenTxtFile(
         const char* fname, const boost::filesystem::path& pth, size_t* out);
 };
-STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
+NEPTOOLS_STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
 
 struct CpkError : std::runtime_error, virtual boost::exception
 {
@@ -91,4 +94,5 @@ struct CpkError : std::runtime_error, virtual boost::exception
 };
 using CpkErrorCode = boost::error_info<struct CpkErrorCodeTag, int>;
 
+}
 #endif

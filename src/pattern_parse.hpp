@@ -4,6 +4,9 @@
 
 #include "pattern.hpp"
 
+namespace Neptools
+{
+
 namespace PatternParse
 {
 
@@ -45,13 +48,13 @@ template <Byte... Bytes> struct ByteSequence
 template <Byte... Bytes> constexpr Byte ByteSequence<Bytes...>::seq[];
 
 template <typename PatternBytes, typename MaskBytes>
-struct Pattern : public ::Pattern
+struct Pattern : public ::Neptools::Pattern
 {
     template <Byte Pat, Byte Mask>
     using Append = Pattern<typename PatternBytes::template Append<Pat>,
                            typename MaskBytes::template Append<Mask>>;
 
-    constexpr Pattern() noexcept : ::Pattern{pattern, mask, size} {}
+    constexpr Pattern() noexcept : ::Neptools::Pattern{pattern, mask, size} {}
 
     static constexpr auto pattern = PatternBytes::seq;
     static constexpr auto mask    = MaskBytes::seq;
@@ -113,4 +116,5 @@ using DoPatternParse = typename PatternParse<
 template <typename CharT, CharT... Chars>
 inline auto operator""_pattern() { return PatternParse::DoPatternParse<Chars...>{}; }
 
+}
 #endif

@@ -10,6 +10,9 @@
 #include "dumpable.hpp"
 #include "low_io.hpp"
 
+namespace Neptools
+{
+
 /// A fixed size, read-only, seekable data source (or something that emulates it)
 class Source
 {
@@ -161,4 +164,5 @@ using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
 using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
 std::string to_string(const UsedSource& src);
 
+}
 #endif

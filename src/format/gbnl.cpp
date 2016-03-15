@@ -8,9 +8,12 @@
 
 //#define STRTOOL_COMPAT
 
+namespace Neptools
+{
+
 void Gbnl::Header::Validate(size_t chunk_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Gbnl::Header", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Gbnl::Header", x)
     VALIDATE(field_04 == 1 && field_08 == 16 && field_0c == 4);
     VALIDATE(descr_offset + msg_descr_size * count_msgs < chunk_size);
     VALIDATE(field_22 == 0);
@@ -41,7 +44,7 @@ static size_t GetSize(uint16_t type)
     case Gbnl::TypeDescriptor::UINT32: return 4;
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
-    default: THROW(DecodeError{"Gbnl: invalid type"});
+    default: NEPTOOLS_THROW(DecodeError{"Gbnl: invalid type"});
     }
 }
 
@@ -52,9 +55,9 @@ Gbnl::Gbnl(Source src)
 
 void Gbnl::Parse_(Source& src)
 {
-#define VALIDATE(msg, x) VALIDATE_FIELD("Gbnl" msg, x)
+#define VALIDATE(msg, x) NEPTOOLS_VALIDATE_FIELD("Gbnl" msg, x)
     if (src.GetSize() < sizeof(Header))
-        THROW(DecodeError{"GBNL: section too short"});
+        NEPTOOLS_THROW(DecodeError{"GBNL: section too short"});
 
     auto foot = src.Pread<Header>(0);
     if (memcmp(foot.magic, "GSTL", 4) == 0)
@@ -83,8 +86,8 @@ void Gbnl::Parse_(Source& src)
     {
         auto type = src.Read<TypeDescriptor>();
 
-        auto bytes = ::GetSize(type.type);
-        calc_offs = ::Align(calc_offs, bytes);
+        auto bytes = ::Neptools::GetSize(type.type);
+        calc_offs = ::Neptools::Align(calc_offs, bytes);
         VALIDATE("", calc_offs == type.offset);
         calc_offs += bytes;
         offsets.push_back(type.offset);
@@ -96,7 +99,8 @@ void Gbnl::Parse_(Source& src)
             {
                 auto t2 = src.Pread<TypeDescriptor>(src.Tell());
                 // if it longer than 1, make it a string
-                if (t2.offset != ::Align(type.offset+1, ::GetSize(t2.type)))
+                if (t2.offset != ::Neptools::Align(
+                        type.offset+1, ::Neptools::GetSize(t2.type)))
                 {
                     auto len = t2.offset - type.offset;
                     calc_offs += len-1;
@@ -121,7 +125,7 @@ void Gbnl::Parse_(Source& src)
             bld.Add<OffsetString>();
             break;
         default:
-            THROW(DecodeError{"GBNL: invalid type"});
+            NEPTOOLS_THROW(DecodeError{"GBNL: invalid type"});
         }
     }
     VALIDATE(" type array incomplete/bad padding",
@@ -572,17 +576,19 @@ void Gbnl::ReadTxt(std::istream& is)
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {
-                THROW(DecodeError{"GbnlTxt: invalid id in input"} <<
+                NEPTOOLS_THROW(DecodeError{"GbnlTxt: invalid id in input"} <<
                       FailedId{id});
             }
         }
         else
         {
             if (pos == static_cast<size_t>(-1))
-                THROW(DecodeError{"GbnlTxt: data before separator"});
+                NEPTOOLS_THROW(DecodeError{"GbnlTxt: data before separator"});
             if (!line.empty() && line.back() == '\r') line.pop_back();
             msg.append(line).append(1, '\n');
         }
     }
-    THROW(DecodeError{"GbnlTxt: EOF"});
+    NEPTOOLS_THROW(DecodeError{"GbnlTxt: EOF"});
+}
+
 }

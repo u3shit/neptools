@@ -7,6 +7,9 @@
 #include <fstream>
 #include <sstream>
 
+namespace Neptools
+{
+
 void Context::SetRoot(std::unique_ptr<Item> nroot)
 {
     BOOST_ASSERT(nroot->ctx == this && nroot->position == 0);
@@ -21,7 +24,7 @@ const Label* Context::GetLabel(const std::string& name) const
 {
     auto it = labels.find(name);
     if (it == labels.end())
-        THROW(boost::enable_error_info(std::out_of_range{"Context::GetLabel"})
+        NEPTOOLS_THROW(boost::enable_error_info(std::out_of_range{"Context::GetLabel"})
               << AffectedLabel{name});
     return &*it;
 }
@@ -30,7 +33,7 @@ const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
 {
     auto pair = labels.insert({std::move(name), ptr});
     if (!pair.second)
-        THROW(boost::enable_error_info(std::out_of_range{"label already exists"})
+        NEPTOOLS_THROW(boost::enable_error_info(std::out_of_range{"label already exists"})
               << AffectedLabel(name));
 
     return PostCreateLabel(pair, ptr);
@@ -102,4 +105,6 @@ void Context::Dump_(Sink& sink) const
 void Context::Inspect_(std::ostream& os) const
 {
     if (GetRoot()) os << *GetRoot();
+}
+
 }

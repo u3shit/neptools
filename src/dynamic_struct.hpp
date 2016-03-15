@@ -2,12 +2,16 @@
 #define UUID_98C06485_8AE9_47DA_B99F_62CA5AF00FF4
 #pragma once
 
+#include "utils.hpp"
 #include <iostream>
 #include <cstdint>
 #include <memory>
 #include <typeindex>
 #include <vector>
 #include <boost/intrusive_ptr.hpp>
+
+namespace Neptools
+{
 
 template <typename Item, typename... Rest> struct IndexOf;
 template <typename Item, typename... Rest>
@@ -22,7 +26,7 @@ struct IndexOf<Item, Head, Rest...>
     static constexpr const size_t value = 1 + IndexOf<Item, Rest...>::value;
 };
 
-STATIC_ASSERT(IndexOf<int, float, double, int>::value == 2);
+NEPTOOLS_STATIC_ASSERT(IndexOf<int, float, double, int>::value == 2);
 
 template <typename Item, typename... Rest>
 constexpr const size_t IndexOf<Item, Item, Rest...>::value;
@@ -238,5 +242,5 @@ inline void intrusive_ptr_release(const T* t)
         ::operator delete(const_cast<T*>(t));
 }
 
-
+}
 #endif

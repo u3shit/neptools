@@ -5,6 +5,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+using namespace Neptools;
+
 using WinMainPtr = int (CALLBACK*)(HINSTANCE, HINSTANCE, wchar_t*, int);
 static WinMainPtr orig_main;
 
@@ -20,7 +22,7 @@ static int CALLBACK NewWinMain(
         freopen("CONOUT$", "w", stderr);
         std::cerr << "Console init" << std::endl;
 #endif
-        CpkHandler::Hook();
+        CpkHandler::Init();
 #ifndef NDEBUG
         std::cerr << "Hook done" << std::endl;
 #endif
@@ -32,7 +34,9 @@ static int CALLBACK NewWinMain(
     }
 
 
+#ifndef NDEBUG
     std::cerr << "Starting main" << std::endl;
+#endif
     return orig_main(inst, prev, cmdline, show_cmd);
 }
 

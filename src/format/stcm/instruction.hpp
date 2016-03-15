@@ -6,6 +6,8 @@
 #include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
 
+namespace Neptools
+{
 class RawItem;
 
 namespace Stcm
@@ -30,7 +32,7 @@ public:
 
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Header) == 0x10);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x10);
 
     struct Parameter
     {
@@ -79,7 +81,7 @@ public:
         { return (tag << 30) | val; }
         void Validate(FilePosition file_size) const;
     };
-    STATIC_ASSERT(sizeof(Parameter) == 0xc);
+    NEPTOOLS_STATIC_ASSERT(sizeof(Parameter) == 0xc);
 
     InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context* ctx, Source src);
@@ -146,5 +148,5 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p);
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p);
 
 }
-
+}
 #endif

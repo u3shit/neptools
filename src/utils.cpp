@@ -8,6 +8,9 @@
 #define BOOST_FILESYSTEM_C_STR c_str()
 #endif
 
+namespace Neptools
+{
+
 std::ofstream OpenOut(const boost::filesystem::path& pth)
 {
     std::ofstream os;
@@ -43,4 +46,6 @@ void DumpBytes(std::ostream& os, const Byte* data, size_t len)
             os << "\\x" << std::setw(2) << static_cast<unsigned>(data[i]);
     os << '"';
     os.flags(flags);
+}
+
 }

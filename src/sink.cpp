@@ -4,6 +4,8 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
+namespace Neptools
+{
 namespace
 {
 
@@ -24,7 +26,7 @@ struct SimpleSink : public Sink
     SimpleSink(LowIo io, FilePosition size) : Sink{size}, io{std::move(io)}
     {
         Sink::buf = buf;
-        buf_size = MEM_CHUNK;
+        buf_size = LowIo::MEM_CHUNK;
     }
     ~SimpleSink();
 
@@ -33,14 +35,14 @@ struct SimpleSink : public Sink
     void Flush() override;
 
     LowIo io;
-    Byte buf[MEM_CHUNK];
+    Byte buf[LowIo::MEM_CHUNK];
 };
 
 }
 
 MmapSink::MmapSink(LowIo&& io, FilePosition size) : Sink{size}
 {
-    size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
+    size_t to_map = size < LowIo::MMAP_LIMIT ? size : LowIo::MMAP_CHUNK;
 
     io.Truncate(size);
     io.PrepareMmap(true);
@@ -58,12 +60,13 @@ MmapSink::~MmapSink()
 
 void MmapSink::Write_(const Byte* data, FileMemSize len)
 {
-    BOOST_ASSERT(buf_put == buf_size && offset < size && buf_size == MMAP_CHUNK);
+    BOOST_ASSERT(buf_put == buf_size && offset < size &&
+                 buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put;
-    if (len / MMAP_CHUNK)
+    if (len / LowIo::MMAP_CHUNK)
     {
-        auto to_write = len / MMAP_CHUNK * MMAP_CHUNK;
+        auto to_write = len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
         io.Pwrite(data, to_write, offset);
         data += to_write;
         offset += to_write;
@@ -78,10 +81,11 @@ void MmapSink::Write_(const Byte* data, FileMemSize len)
 
 void MmapSink::Pad_(FileMemSize len)
 {
-    BOOST_ASSERT(buf_put == buf_size && offset < size && buf_size == MMAP_CHUNK);
+    BOOST_ASSERT(buf_put == buf_size && offset < size &&
+                 buf_size == LowIo::MMAP_CHUNK);
 
-    offset += buf_put + len / MMAP_CHUNK * MMAP_CHUNK;
-    MapNext(len % MMAP_CHUNK);
+    offset += buf_put + len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
+    MapNext(len % LowIo::MMAP_CHUNK);
 }
 
 void MmapSink::MapNext(FileMemSize len)
@@ -91,7 +95,7 @@ void MmapSink::MapNext(FileMemSize len)
     // (linux doesn't care...)
     if (offset < size)
     {
-        auto nbuf_size = std::min<FileMemSize>(MMAP_CHUNK, size-offset);
+        auto nbuf_size = std::min<FileMemSize>(LowIo::MMAP_CHUNK, size-offset);
         void* nbuf = io.Mmap(offset, nbuf_size, true);
         io.Munmap(buf, buf_size);
         buf = static_cast<Byte*>(nbuf);
@@ -127,12 +131,12 @@ void SimpleSink::Flush()
 
 void SimpleSink::Write_(const Byte* data, FileMemSize len)
 {
-    BOOST_ASSERT(buf_size == MEM_CHUNK);
-    BOOST_ASSERT(buf_put == MEM_CHUNK);
-    io.Write(buf, MEM_CHUNK);
-    offset += MEM_CHUNK;
+    BOOST_ASSERT(buf_size == LowIo::MEM_CHUNK);
+    BOOST_ASSERT(buf_put == LowIo::MEM_CHUNK);
+    io.Write(buf, LowIo::MEM_CHUNK);
+    offset += LowIo::MEM_CHUNK;
 
-    if (len >= MEM_CHUNK)
+    if (len >= LowIo::MEM_CHUNK)
     {
         io.Write(data, len);
         offset += len;
@@ -147,24 +151,24 @@ void SimpleSink::Write_(const Byte* data, FileMemSize len)
 
 void SimpleSink::Pad_(FileMemSize len)
 {
-    BOOST_ASSERT(buf_size == MEM_CHUNK);
-    BOOST_ASSERT(buf_put == MEM_CHUNK);
-    io.Write(buf, MEM_CHUNK);
-    offset += MEM_CHUNK;
+    BOOST_ASSERT(buf_size == LowIo::MEM_CHUNK);
+    BOOST_ASSERT(buf_put == LowIo::MEM_CHUNK);
+    io.Write(buf, LowIo::MEM_CHUNK);
+    offset += LowIo::MEM_CHUNK;
 
     // assume we're not seekable (I don't care about not mmap-able but seekable
     // files)
-    if (len >= MEM_CHUNK)
+    if (len >= LowIo::MEM_CHUNK)
     {
-        memset(buf, 0, MEM_CHUNK);
+        memset(buf, 0, LowIo::MEM_CHUNK);
         size_t i;
-        for (i = MEM_CHUNK; i < len; i += MEM_CHUNK)
-            io.Write(buf, MEM_CHUNK);
-        offset += i - MEM_CHUNK;
+        for (i = LowIo::MEM_CHUNK; i < len; i += LowIo::MEM_CHUNK)
+            io.Write(buf, LowIo::MEM_CHUNK);
+        offset += i - LowIo::MEM_CHUNK;
     }
     else
         memset(buf, 0, len);
-    buf_put = len % MEM_CHUNK;
+    buf_put = len % LowIo::MEM_CHUNK;
 }
 
 std::unique_ptr<Sink> Sink::ToFile(
@@ -194,6 +198,8 @@ std::unique_ptr<Sink> Sink::ToStdOut()
 }
 
 void MemorySink::Write_(const Byte*, FileMemSize)
-{ UNREACHABLE("MemorySink::Write_ called"); }
+{ NEPTOOLS_UNREACHABLE("MemorySink::Write_ called"); }
 void MemorySink::Pad_(FileMemSize)
-{ UNREACHABLE("MemorySink::Pad_ called"); }
+{ NEPTOOLS_UNREACHABLE("MemorySink::Pad_ called"); }
+
+}

@@ -18,11 +18,14 @@
 #ifdef WINDOWS
 #include <iostream>
 
-#define SYSERROR2(x, rst)                                               \
-    THROW(boost::enable_error_info(std::system_error{std::error_code{   \
-                    int(GetLastError()), std::system_category()}}) <<   \
+#define SYSERROR2(x, rst)                                                       \
+    NEPTOOLS_THROW(boost::enable_error_info(std::system_error{std::error_code{  \
+                    int(GetLastError()), std::system_category()}}) <<           \
         boost::errinfo_api_function{x} rst)
 #define SYSERROR(x) SYSERROR2(x, )
+
+namespace Neptools
+{
 
 LowIo::LowIo(const wchar_t* fname, bool write)
     : fd{CreateFileW(
@@ -120,12 +123,17 @@ void LowIo::Write(const void* buf, FileMemSize len) const
         SYSERROR("WriteFile");
 }
 
+}
+
 #else // linux/unix
 
-#define SYSERROR(x)                                                       \
-    THROW(boost::enable_error_info(std::system_error{std::error_code{     \
-                    errno, std::system_category()}}) <<                   \
+#define SYSERROR(x)                                                             \
+    NEPTOOLS_THROW(boost::enable_error_info(std::system_error{std::error_code{  \
+                    errno, std::system_category()}}) <<                         \
         boost::errinfo_api_function{x})
+
+namespace Neptools
+{
 
 LowIo::LowIo(const char* fname, bool write)
     : fd{open(fname, write ? O_CREAT | O_TRUNC | O_RDWR : O_RDONLY, 0666)}
@@ -191,5 +199,7 @@ void LowIo::Pwrite(const void* buf, FileMemSize len, FilePosition offs) const
 void LowIo::Write(const void* buf, FileMemSize len) const
 {
     if (write(fd, buf, len) != len) SYSERROR("write");
+}
+
 }
 #endif

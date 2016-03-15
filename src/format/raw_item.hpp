@@ -7,6 +7,9 @@
 #include "../except.hpp"
 #include <boost/assert.hpp>
 
+namespace Neptools
+{
+
 class RawItem final : public Item
 {
 public:
@@ -36,7 +39,7 @@ public:
         auto& ritem = ptr.AsChecked<RawItem>();
         BOOST_ASSERT(ptr.offset <= ritem.GetSize());
         if (ptr.offset + sizeof(T) > ritem.GetSize())
-            THROW(std::runtime_error{"Premature end of data"});
+            NEPTOOLS_THROW(std::runtime_error{"Premature end of data"});
 
         struct Ret { RawItem& ritem; T t; };
         return Ret{
@@ -51,7 +54,7 @@ public:
         if (len == FilePosition(-1)) len = ritem.GetSize() - ptr.offset;
 
         if (ptr.offset + len > ritem.GetSize())
-            THROW(std::runtime_error{"Premature end of data"});
+            NEPTOOLS_THROW(std::runtime_error{"Premature end of data"});
         struct Ret { RawItem& ritem; Source src; };
         return Ret{std::ref(ritem), {ritem.src, ptr.offset, len}};
     }
@@ -78,4 +81,5 @@ inline void MaybeCreate(ItemPointer ptr)
         ptr.As0<T>(); // assert it
 }
 
+}
 #endif

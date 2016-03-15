@@ -5,12 +5,14 @@
 #include <iostream>
 #include <boost/assert.hpp>
 
+namespace Neptools
+{
 namespace Stcm
 {
 
 void DataItem::Header::Validate(FilePosition chunk_size) const
 {
-#define VALIDATE(x) VALIDATE_FIELD("Stcm::DataItem::Header", x)
+#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::DataItem::Header", x)
     VALIDATE(type < 0xff);
     VALIDATE(length <= chunk_size);
 #undef VALIDATE
@@ -85,4 +87,5 @@ void DataItem::Fixup()
         GetChildren()->UpdatePositions(position + sizeof(Header));
 }
 
+}
 }

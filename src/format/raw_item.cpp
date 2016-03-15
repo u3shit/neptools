@@ -2,6 +2,9 @@
 #include "context.hpp"
 #include <iomanip>
 
+namespace Neptools
+{
+
 static inline char FilterPrintable(Byte c)
 {
     //return isprint(c) ? c : '.';
@@ -104,4 +107,6 @@ RawItem* RawItem::Split(FilePosition offset, FilePosition size)
     auto ret = it.get();
     Split2(offset, std::move(it));
     return ret;
+}
+
 }
