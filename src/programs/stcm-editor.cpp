@@ -2,7 +2,6 @@
 #include "../format/cl3.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
-#include "../fs.hpp"
 #include "../except.hpp"
 #include "../utils.hpp"
 #include "version.hpp"
@@ -11,6 +10,8 @@
 #include <deque>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 namespace
 {
@@ -39,7 +40,7 @@ struct State
     Gbnl* gbnl;
 };
 
-State SmartOpen_(const fs::path& fname)
+State SmartOpen_(const boost::filesystem::path& fname)
 {
     auto src = Source::FromFile(fname.native());
     if (src.GetSize() < 4)
@@ -72,7 +73,7 @@ State SmartOpen_(const fs::path& fname)
         THROW(DecodeError{"Unknown input file"});
 }
 
-State SmartOpen(const fs::path& fname)
+State SmartOpen(const boost::filesystem::path& fname)
 {
     return AddInfo(
         SmartOpen_,
@@ -129,7 +130,7 @@ void EnsureGbnl(State& st)
 
 bool auto_failed = false;
 template <typename Pred, typename Fun>
-void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
+void RecDo(const boost::filesystem::path& path, Pred p, Fun f, bool rec = false)
 {
     if (p(path, rec))
     {
@@ -141,8 +142,8 @@ void RecDo(const fs::path& path, Pred p, Fun f, bool rec = false)
             PrintException(std::cerr);
         }
     }
-    else if (fs::is_directory(path))
-        for (auto& e: fs::directory_iterator(path))
+    else if (boost::filesystem::is_directory(path))
+        for (auto& e: boost::filesystem::directory_iterator(path))
             RecDo(e, p, f, true);
     else if (!rec)
         std::cerr << "Invalid filename: " << path << std::endl;
@@ -163,9 +164,9 @@ enum class Mode
 #undef GEN_ENUM
 } mode = Mode::AUTO_STRTOOL;
 
-void DoAutoFun(const fs::path& p)
+void DoAutoFun(const boost::filesystem::path& p)
 {
-    fs::path cl3, txt;
+    boost::filesystem::path cl3, txt;
     bool import;
     if (boost::ends_with(p.native(), ".txt"))
     {
@@ -195,11 +196,12 @@ void DoAutoFun(const fs::path& p)
         st.gbnl->WriteTxt(OpenOut(txt));
 }
 
-void DoAutoCl3(const fs::path& p)
+void DoAutoCl3(const boost::filesystem::path& p)
 {
-    if (fs::is_directory(p))
+    if (boost::filesystem::is_directory(p))
     {
-        fs::path cl3_file = p.native().substr(0, p.native().size() - 4);
+        boost::filesystem::path cl3_file =
+            p.native().substr(0, p.native().size() - 4);
         std::cerr << "Packing " << cl3_file << std::endl;
         Cl3 cl3{Source::FromFile(cl3_file)};
         cl3.UpdateFromDir(p);
@@ -215,13 +217,14 @@ void DoAutoCl3(const fs::path& p)
     }
 }
 
-inline bool is_file(const fs::path& pth)
+inline bool is_file(const boost::filesystem::path& pth)
 {
-    auto stat = fs::status(pth);
-    return fs::is_regular_file(stat) || fs::is_symlink(stat);
+    auto stat = boost::filesystem::status(pth);
+    return boost::filesystem::is_regular_file(stat) ||
+        boost::filesystem::is_symlink(stat);
 }
 
-bool IsBin(const fs::path& p, bool = false)
+bool IsBin(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
         boost::ends_with(p.native(), ".cl3") ||
@@ -229,7 +232,7 @@ bool IsBin(const fs::path& p, bool = false)
         boost::ends_with(p.native(), ".gstr"));
 }
 
-bool IsTxt(const fs::path& p, bool = false)
+bool IsTxt(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
         boost::ends_with(p.native(), ".cl3.txt") ||
@@ -237,20 +240,21 @@ bool IsTxt(const fs::path& p, bool = false)
         boost::ends_with(p.native(), ".gstr.txt"));
 }
 
-bool IsCl3(const fs::path& p, bool = false)
+bool IsCl3(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && boost::ends_with(p.native(), ".cl3");
 }
 
-bool IsCl3Dir(const fs::path& p, bool = false)
+bool IsCl3Dir(const boost::filesystem::path& p, bool = false)
 {
-    return fs::is_directory(p) && boost::ends_with(p.native(), ".cl3.out");
+    return boost::filesystem::is_directory(p) &&
+        boost::ends_with(p.native(), ".cl3.out");
 }
 
-void DoAuto(const fs::path& path)
+void DoAuto(const boost::filesystem::path& path)
 {
-    bool (*pred)(const fs::path&, bool);
-    void (*fun)(const fs::path& p);
+    bool (*pred)(const boost::filesystem::path&, bool);
+    void (*fun)(const boost::filesystem::path& p);
 
     switch (mode)
     {
@@ -259,9 +263,11 @@ void DoAuto(const fs::path& path)
         {
             if (rec)
                 return (IsTxt(p) &&
-                        fs::exists(p.native().substr(0, p.native().size()-4))) ||
+                        boost::filesystem::exists(
+                            p.native().substr(0, p.native().size()-4))) ||
                        (IsBin(p) &&
-                        !fs::exists(fs::path(p)+=".txt"));
+                        !boost::filesystem::exists(
+                            boost::filesystem::path(p)+=".txt"));
             else
                 return IsBin(p) || IsTxt(p);
         };
@@ -282,7 +288,9 @@ void DoAuto(const fs::path& path)
         {
             if (rec)
                 return IsCl3Dir(p) ||
-                    (IsCl3(p) && !fs::exists(fs::path(p)+=".out"));
+                    (IsCl3(p) &&
+                     !boost::filesystem::exists(
+                         boost::filesystem::path(p)+=".out"));
             else
                 return IsCl3(p) || IsCl3Dir(p);
         };
@@ -486,7 +494,7 @@ int main(int argc, char** argv)
             if (st.stcm) st.stcm->Fixup();
         }, "<in_file>|-\n\tRead text from <in_file> or stdin\n");
 
-    fs::path self{argv[0]};
+    boost::filesystem::path self{argv[0]};
     if (boost::iequals(self.filename().string(), "cl3-tool")
 #ifdef WINDOWS
         || boost::iequals(self.filename().string(), "cl3-tool.exe")

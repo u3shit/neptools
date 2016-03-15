@@ -2,9 +2,9 @@
 #define UUID_8EC8FF70_7F93_4281_9370_FF756B846775
 #pragma once
 
-#include "fs.hpp"
 #include "utils.hpp"
 #include <boost/endian/arithmetic.hpp>
+#include <boost/filesystem/path.hpp>
 #include <cstring>
 
 class Sink
@@ -12,7 +12,7 @@ class Sink
 public:
     virtual ~Sink() = default;
     static std::unique_ptr<Sink> ToFile(
-        fs::path fname, FilePosition size, bool try_mmap = true);
+        boost::filesystem::path fname, FilePosition size, bool try_mmap = true);
     static std::unique_ptr<Sink> ToStdOut();
 
     FilePosition Tell() const noexcept { return offset + buf_put; }

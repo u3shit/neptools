@@ -1,10 +1,12 @@
 #include "dumpable.hpp"
 #include <fstream>
+#include <boost/filesystem/operations.hpp>
 
 #ifdef WINDOWS
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <vector>
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 
 namespace
 {
@@ -16,9 +18,9 @@ struct DeleteOnExitHelper
             DeleteFileW(p.c_str());
     }
 
-    std::vector<fs::path> pths;
+    std::vector<boost::filesystem::path> pths;
 };
-void DeleteOnExit(fs::path pth)
+void DeleteOnExit(boost::filesystem::path pth)
 {
     static DeleteOnExitHelper hlp;
     hlp.pths.push_back(std::move(pth));
@@ -26,26 +28,26 @@ void DeleteOnExit(fs::path pth)
 }
 #endif
 
-void Dumpable::Dump(const fs::path& path) const
+void Dumpable::Dump(const boost::filesystem::path& path) const
 {
     auto path2 = path;
-    auto sink = Sink::ToFile(path2+=fs::unique_path(), GetSize());
+    auto sink = Sink::ToFile(path2+=boost::filesystem::unique_path(), GetSize());
     Dump(*sink);
     sink.reset();
 
 #ifdef WINDOWS
-    if (fs::is_regular_file(path))
+    if (boost::filesystem::is_regular_file(path))
     {
         auto path3 = path;
-        fs::rename(path, path3+=fs::unique_path());
+        boost::filesystem::rename(path, path3+=boost::filesystem::unique_path());
         if (!DeleteFileW(path3.c_str()) && GetLastError() == ERROR_ACCESS_DENIED)
             DeleteOnExit(std::move(path3));
     }
 #endif
-    fs::rename(path2, path);
+    boost::filesystem::rename(path2, path);
 }
 
-void Dumpable::Inspect(const fs::path& path) const
+void Dumpable::Inspect(const boost::filesystem::path& path) const
 {
     return Inspect(OpenOut(path));
 }

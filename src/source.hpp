@@ -6,8 +6,8 @@
 #include <boost/endian/arithmetic.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/get_error_info.hpp>
+#include <boost/filesystem/path.hpp>
 #include "dumpable.hpp"
-#include "fs.hpp"
 #include "low_io.hpp"
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
@@ -24,7 +24,7 @@ public:
     Source(const Source& s, FilePosition offset, FilePosition size) noexcept
         : Source{s} { Slice(offset, size); get = 0; }
 
-    static Source FromFile(fs::path fname);
+    static Source FromFile(boost::filesystem::path fname);
 
     void Slice(FilePosition offset, FilePosition size) noexcept
     {
@@ -37,7 +37,8 @@ public:
 
     FilePosition GetOffset() const noexcept { return offset; }
     FilePosition GetOrigSize() const noexcept { return p->size; }
-    const fs::path& GetFileName() const noexcept { return p->file_name; }
+    const boost::filesystem::path& GetFileName() const noexcept
+    { return p->file_name; }
 
     FilePosition GetSize() const noexcept { return size; }
 
@@ -103,7 +104,7 @@ public:
 
     struct Provider
     {
-        Provider(fs::path file_name, FilePosition size)
+        Provider(boost::filesystem::path file_name, FilePosition size)
             : file_name{std::move(file_name)}, size{size} {}
         Provider(const Provider&) = delete;
         void operator=(const Provider&) = delete;
@@ -115,7 +116,7 @@ public:
         bool LruGet(FilePosition offs);
 
         std::array<BufEntry, 4> lru;
-        fs::path file_name;
+        boost::filesystem::path file_name;
         FilePosition size;
     };
     Source(std::shared_ptr<Provider> p, FilePosition size)
@@ -126,7 +127,7 @@ protected:
     BufEntry GetTemporaryEntry(FilePosition offs) const;
 
 private:
-    static Source FromFile_(fs::path fname);
+    static Source FromFile_(boost::filesystem::path fname);
 
     FilePosition offset = 0, size, get = 0;
 

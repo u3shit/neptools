@@ -2,6 +2,7 @@
 #define UUID_C9446864_0020_4D2F_8E96_CBC6ADCCA3BE
 #pragma once
 
+#include <boost/filesystem/path.hpp>
 #include "sink.hpp"
 
 class Dumpable
@@ -17,11 +18,11 @@ public:
 
     void Dump(Sink& os) const { return Dump_(os); }
     void Dump(Sink&& os) const { return Dump_(os); }
-    void Dump(const fs::path& path) const;
+    void Dump(const boost::filesystem::path& path) const;
 
     void Inspect(std::ostream& os) const { return Inspect_(os); }
     void Inspect(std::ostream&& os) const { return Inspect_(os); }
-    void Inspect(const fs::path& path) const;
+    void Inspect(const boost::filesystem::path& path) const;
 
 private:
     virtual void Dump_(Sink& sink) const = 0;

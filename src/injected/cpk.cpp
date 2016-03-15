@@ -1,12 +1,12 @@
 #include "cpk.hpp"
 #include "hook.hpp"
-#include "../fs.hpp"
 #include "../pattern_parse.hpp"
 
 #include "../format/cl3.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 
+#include <boost/filesystem/operations.hpp>
 #include <iostream>
 
 namespace
@@ -27,7 +27,7 @@ constexpr const FileMemSize CPK_CHUNK = 128*1024*1024; // default size used by i
 
 struct CpkSource : public Source::Provider
 {
-    CpkSource(fs::path fname, CpkHandler* cpk, size_t index);
+    CpkSource(boost::filesystem::path fname, CpkHandler* cpk, size_t index);
     ~CpkSource();
     void Pread(FilePosition offs, Byte* buf, FileMemSize len) override;
 
@@ -37,7 +37,7 @@ struct CpkSource : public Source::Provider
 
 }
 
-CpkSource::CpkSource(fs::path fname, CpkHandler* cpk, size_t index)
+CpkSource::CpkSource(boost::filesystem::path fname, CpkHandler* cpk, size_t index)
     : Source::Provider{
           std::move(fname), cpk->entry_vect[index]->entry.uncompressed_size},
       cpk{cpk}, index{index}
@@ -99,7 +99,7 @@ char CpkHandler::OpenFile(const char* fname, size_t* out)
 #ifndef NDEBUG
     std::cerr << "OpenFile " << basename << fname;
 #endif
-    fs::path pth{"neptools"};
+    boost::filesystem::path pth{"neptools"};
     pth /= basename;
     pth /= fname;
 
@@ -120,7 +120,8 @@ char CpkHandler::OpenFile(const char* fname, size_t* out)
     }
 }
 
-bool CpkHandler::OpenFsFile(const char* fname, const fs::path& pth, size_t* out)
+bool CpkHandler::OpenFsFile(
+    const char* fname, const boost::filesystem::path& pth, size_t* out)
 {
     auto h = CreateFileW(pth.c_str(), GENERIC_READ, FILE_SHARE_READ, 0,
                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
@@ -151,17 +152,19 @@ bool CpkHandler::OpenFsFile(const char* fname, const fs::path& pth, size_t* out)
     return true;
 }
 
-bool CpkHandler::OpenTxtFile(const char* fname, const fs::path& pth, size_t* out)
+bool CpkHandler::OpenTxtFile(
+    const char* fname, const boost::filesystem::path& pth, size_t* out)
 {
     FileMemSize size;
     std::unique_ptr<Byte[]> buf;
 
     try
     {
-        fs::path pthtxt = pth;
-        if (!fs::exists(pthtxt += ".txt")) return false;
+        boost::filesystem::path pthtxt = pth;
+        if (!boost::filesystem::exists(pthtxt += ".txt")) return false;
 
-        Source src{fs::exists(pth) ? Source::FromFile(pth) : GetSource(fname)};
+        Source src{boost::filesystem::exists(pth) ?
+            Source::FromFile(pth) : GetSource(fname)};
         if (src.GetSize() < 4)
             THROW(DecodeError{"Input file too short"});
 

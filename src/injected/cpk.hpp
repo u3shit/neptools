@@ -2,12 +2,14 @@
 #define UUID_6D829400_DD15_49CC_B55F_6F2565105828
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
+#include <boost/filesystem/path.hpp>
 #include <vector>
 
 #include "../source.hpp"
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
 
 #define GEN_FWD(name, fld) \
     template <typename... Args> inline auto name(Args&&... args)  \
@@ -76,8 +78,10 @@ struct CpkHandler
 
 private:
     FileInfo& GetEntryVect(size_t* out);
-    bool OpenFsFile(const char* fname, const fs::path& pth, size_t* out);
-    bool OpenTxtFile(const char* fname, const fs::path& pth, size_t* out);
+    bool OpenFsFile(
+        const char* fname, const boost::filesystem::path& pth, size_t* out);
+    bool OpenTxtFile(
+        const char* fname, const boost::filesystem::path& pth, size_t* out);
 };
 STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
 

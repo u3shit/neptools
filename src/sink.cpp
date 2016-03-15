@@ -168,7 +168,7 @@ void SimpleSink::Pad_(FileMemSize len)
 }
 
 std::unique_ptr<Sink> Sink::ToFile(
-    fs::path fname, FilePosition size, bool try_mmap)
+    boost::filesystem::path fname, FilePosition size, bool try_mmap)
 {
     return AddInfo(
         [&]() -> std::unique_ptr<Sink>

@@ -9,7 +9,7 @@ namespace
 template <typename T>
 struct UnixLike : public Source::Provider
 {
-    UnixLike(LowIo io, fs::path file_name, FilePosition size)
+    UnixLike(LowIo io, boost::filesystem::path file_name, FilePosition size)
         : Source::Provider{std::move(file_name), size}, io{std::move(io)} {}
     ~UnixLike();
 
@@ -21,7 +21,8 @@ struct UnixLike : public Source::Provider
 
 struct MmapProvider final : public UnixLike<MmapProvider>
 {
-    MmapProvider(LowIo&& fd, fs::path file_name, FilePosition size);
+    MmapProvider(LowIo&& fd, boost::filesystem::path file_name,
+                 FilePosition size);
 
     static FileMemSize CHUNK_SIZE;
     void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -40,7 +41,7 @@ struct UnixProvider final : public UnixLike<UnixProvider>
 }
 
 
-Source Source::FromFile(fs::path fname)
+Source Source::FromFile(boost::filesystem::path fname)
 {
     return AddInfo(
         &FromFile_,
@@ -48,7 +49,7 @@ Source Source::FromFile(fs::path fname)
         fname);
 }
 
-Source Source::FromFile_(fs::path fname)
+Source Source::FromFile_(boost::filesystem::path fname)
 {
     LowIo io{fname.c_str(), false};
 
@@ -168,7 +169,7 @@ void UnixLike<T>::EnsureChunk(FilePosition offs)
 
 FileMemSize MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
 MmapProvider::MmapProvider(
-    LowIo&& io, fs::path file_name, FilePosition size)
+    LowIo&& io, boost::filesystem::path file_name, FilePosition size)
     : UnixLike{{}, std::move(file_name), size}
 {
     size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;

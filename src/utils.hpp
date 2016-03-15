@@ -2,9 +2,9 @@
 #define UUID_9AE0723F_DD0B_434B_8880_D7981FAF1F20
 #pragma once
 
-#include "fs.hpp"
 #include <iosfwd>
 #include <boost/assert.hpp>
+#include <boost/filesystem/path.hpp>
 
 using Byte = unsigned char;
 
@@ -40,8 +40,8 @@ T asserted_cast(U* ptr)
     return static_cast<T>(ptr);
 }
 
-std::ofstream OpenOut(const fs::path& pth);
-std::ifstream OpenIn(const fs::path& pth);
+std::ofstream OpenOut(const boost::filesystem::path& pth);
+std::ifstream OpenIn(const boost::filesystem::path& pth);
 
 void DumpBytes(std::ostream& os, const Byte* data, size_t len);
 inline void DumpBytes(std::ostream& os, const char* data, size_t len)

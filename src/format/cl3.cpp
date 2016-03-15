@@ -2,6 +2,7 @@
 #include "stcm/file.hpp"
 #include "../except.hpp"
 #include <fstream>
+#include <boost/filesystem/operations.hpp>
 
 void Cl3::Header::Validate(FilePosition file_size) const
 {
@@ -149,10 +150,10 @@ Cl3::Entry* Cl3::GetFile(const std::string& fname)
     return nullptr;
 }
 
-void Cl3::ExtractTo(const fs::path& dir) const
+void Cl3::ExtractTo(const boost::filesystem::path& dir) const
 {
-    if (!fs::is_directory(dir))
-        fs::create_directories(dir);
+    if (!boost::filesystem::is_directory(dir))
+        boost::filesystem::create_directories(dir);
 
     for (const auto& e : entries)
     {
@@ -161,14 +162,14 @@ void Cl3::ExtractTo(const fs::path& dir) const
     }
 }
 
-void Cl3::UpdateFromDir(const fs::path& dir)
+void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
 {
-    for (auto& e : fs::directory_iterator(dir))
+    for (auto& e : boost::filesystem::directory_iterator(dir))
         GetOrCreateFile(e.path().filename().string()).src =
             std::make_unique<DumpableSource>(Source::FromFile(e));
 
     for (size_t i = 0; i < entries.size(); )
-        if (!fs::exists(dir / entries[i].name))
+        if (!boost::filesystem::exists(dir / entries[i].name))
             DeleteFile(i);
         else
             ++i;

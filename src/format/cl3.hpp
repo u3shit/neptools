@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <boost/endian/arithmetic.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include "../source.hpp"
 #include "../fixed_string.hpp"
@@ -116,8 +117,8 @@ public:
     Entry* GetFile(const char* fname);
     Entry* GetFile(const std::string& fname);
 
-    void ExtractTo(const fs::path& dir) const;
-    void UpdateFromDir(const fs::path& dir);
+    void ExtractTo(const boost::filesystem::path& dir) const;
+    void UpdateFromDir(const boost::filesystem::path& dir);
 
     void DeleteFile(size_t i);
     void DeleteFile(Entry& e) { DeleteFile(&e - &entries.front()); }

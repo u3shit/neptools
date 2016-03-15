@@ -97,19 +97,7 @@ int main() { return 0; }
     elif chkdef(cfg, '_WIN32'):
         cfg.env.DEST_OS = 'win32'
 
-    fs_check = '''
-#include <experimental/filesystem>
-int main()
-{
-    std::experimental::filesystem::exists("foo");
-    return 0;
-}
-'''
-    if cfg.check_cxx(header_name='experimental/filesystem',
-                     fragment=fs_check, mandatory=False):
-        cfg.check_boost()
-    else:
-        cfg.check_boost(lib='filesystem system')
+    cfg.check_boost(lib='filesystem system')
 
     if cfg.options.release:
         cfg.define('NDEBUG', 1)
