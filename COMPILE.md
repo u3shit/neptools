@@ -112,7 +112,8 @@ Open `tools/lld/COFF/Driver.cpp`, find these lines:
     assignExportOrdinals();
   }
 ```
-and comment out/delete them.
+and comment out/delete the `writeImportLibrary()` line (the others are needed
+for the `dinput8.dll` hack).
 
 The second problem is that when using LTO, llvm can fuck up the bytecode, and
 fail or create an executable that'll randomly crash. See `clang.patch` for a

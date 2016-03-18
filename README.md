@@ -84,8 +84,19 @@ files. The main differences between KitServer and NepTools' server:
 Usage
 -----
 
-Extract `launcher.exe` and `neptools-server.dll` into the game directory. Create
-a directory named `neptools`. If you want to replace (for example)
+There are two ways to use it. The first one mirrors the original KitServer:
+extract `launcher.exe` and `neptools-server.dll` into the game directory. In
+this case you'll have to use launcher.exe to launch the game, if you simply
+launch `NeptuniaReBirth[123].exe`, Neptools won't be loaded, and you'll run an
+unmodded game.
+
+The second way is to extract only `neptools-server.dll` and rename it to
+`dinput8.dll`. In this case there's no launcher, simply start the original
+executable. To temporarily disable modding in this case, you'll have to
+delete/rename `dinput8.dll`.
+
+In either case, you'll have to create a directory named `neptools`, and place
+files to be replaced inside it. If you want to replace (for example)
 `database/stitem.gbin` inside `data/SYSTEM00000`, place it into
 `neptools/data/SYSTEM/database/stitem.gbin` (that five zeros you normally get is
 actually an artifact of the current `.cpk`/`.pac` extractor doesn't handle the

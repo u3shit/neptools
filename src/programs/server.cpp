@@ -5,6 +5,32 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+extern "C"
+HRESULT WINAPI DirectInput8Create(HINSTANCE inst, DWORD version, REFIID iid,
+                                  LPVOID* out, void* unk) noexcept
+{
+    {
+        auto sys_len = GetSystemDirectory(nullptr, 0);
+        if (sys_len == 0) goto err;
+        auto len = sys_len + strlen("/dinput8.dll");
+        std::unique_ptr<wchar_t[]> buf{new wchar_t[len]};
+        if (GetSystemDirectoryW(buf.get(), sys_len) != sys_len-1) goto err;
+        wcscat(buf.get(), L"\\dinput8.dll");
+
+        auto dll = LoadLibraryW(buf.get());
+        if (dll == nullptr) goto err;
+        auto proc = reinterpret_cast<decltype(&DirectInput8Create)>(
+            GetProcAddress(dll, "DirectInput8Create"));
+        if (proc == nullptr) goto err;
+        return proc(inst, version, iid, out, unk);
+    }
+
+err:
+    MessageBoxA(nullptr, "DirectInput8Create loading failed", "Neptools",
+                MB_OK | MB_ICONERROR);
+    abort();
+}
+
 using namespace Neptools;
 
 using WinMainPtr = int (CALLBACK*)(HINSTANCE, HINSTANCE, wchar_t*, int);
@@ -29,7 +55,7 @@ static int CALLBACK NewWinMain(
     }
     catch (const std::exception& e)
     {
-        MessageBoxA(nullptr, e.what(), "WinMain", MB_OK);
+        MessageBoxA(nullptr, e.what(), "WinMain", MB_OK | MB_ICONERROR);
         return -1;
     }
 

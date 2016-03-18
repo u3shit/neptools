@@ -164,7 +164,13 @@ def build(bld):
         from waflib.TaskGen import taskgen_method
         @taskgen_method
         def apply_implib(self):
-            pass
+            if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
+                node = self.path.find_resource(self.defs)
+                if not node:
+                    raise Errors.WafError('invalid def file %r' % self.defs)
+
+                self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
+                self.link_task.dep_nodes.append(node)
 
         src_inject = [
             'src/injected/cpk.cpp',
@@ -174,7 +180,8 @@ def build(bld):
         bld.shlib(source = src_inject,
                   target = 'neptools-server',
                   use    = 'common',
-                  uselib = 'BOOST USER32')
+                  uselib = 'BOOST USER32',
+                  defs   = 'src/programs/server.def')
 
 from waflib.Build import BuildContext
 class TestContext(BuildContext):
