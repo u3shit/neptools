@@ -3,7 +3,6 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include <iostream>
-#include <boost/assert.hpp>
 
 namespace Neptools
 {
@@ -37,7 +36,7 @@ DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
     if (x.t.length > 0)
         ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, x.t.length)->Remove());
-    BOOST_ASSERT(ret->GetSize() == sizeof(Header) + x.t.length);
+    NEPTOOLS_ASSERT(ret->GetSize() == sizeof(Header) + x.t.length);
 
     // hack
     auto child = dynamic_cast<RawItem*>(ret->GetChildren());

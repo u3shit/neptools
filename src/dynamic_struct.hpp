@@ -96,7 +96,7 @@ public:
 
         void Add(size_t i, size_t size)
         {
-            BOOST_ASSERT(i < sizeof...(Args));
+            NEPTOOLS_ASSERT_MSG(i < sizeof...(Args), "index out of range");
             desc.push_back({i, size});
         }
 
@@ -162,12 +162,12 @@ public:
     size_t GetSize() const { return type->item_count; }
     size_t GetSize(size_t i) const
     {
-        BOOST_ASSERT(i < GetSize());
+        NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].size;
     }
     size_t GetTypeIndex(size_t i) const
     {
-        BOOST_ASSERT(i < GetSize());
+        NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].idx;
     }
 
@@ -184,14 +184,14 @@ public:
     template <typename T>
     T& Get(size_t i)
     {
-        BOOST_ASSERT(Is<T>(i));
+        NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<T*>(&data[type->items[i].offset]);
     }
 
     template <typename T>
     const T& Get(size_t i) const
     {
-        BOOST_ASSERT(Is<T>(i));
+        NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<const T*>(&data[type->items[i].offset]);
     }
 

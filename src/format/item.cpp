@@ -1,7 +1,6 @@
 #include "context.hpp"
 #include "item.hpp"
 #include "../utils.hpp"
-#include <boost/assert.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -39,8 +38,10 @@ FilePosition Item::UpdatePositions(FilePosition npos)
 
 void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 {
-    BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&
-                 nitem->prev == nullptr && nitem->next == nullptr);
+    NEPTOOLS_ASSERT_MSG(
+        nitem->ctx == ctx && nitem->parent == nullptr &&
+        nitem->prev == nullptr && nitem->next == nullptr,
+        "item already added?");
     nitem->next = std::move(children);
     nitem->parent = this;
     children = std::move(nitem);
@@ -48,8 +49,10 @@ void Item::PrependChild(std::unique_ptr<Item> nitem) noexcept
 
 void Item::InsertAfter(std::unique_ptr<Item> nitem) noexcept
 {
-    BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&
-                 nitem->prev == nullptr && nitem->next == nullptr);
+    NEPTOOLS_ASSERT_MSG(
+        nitem->ctx == ctx && nitem->parent == nullptr &&
+        nitem->prev == nullptr && nitem->next == nullptr,
+        "item already added?");
     nitem->ctx = ctx;
     nitem->parent = parent;
 
@@ -61,8 +64,10 @@ void Item::InsertAfter(std::unique_ptr<Item> nitem) noexcept
 
 void Item::InsertBefore(std::unique_ptr<Item> nitem) noexcept
 {
-    BOOST_ASSERT(nitem->ctx == ctx && nitem->parent == nullptr &&
-                 nitem->prev == nullptr && nitem->next == nullptr);
+    NEPTOOLS_ASSERT_MSG(
+        nitem->ctx == ctx && nitem->parent == nullptr &&
+        nitem->prev == nullptr && nitem->next == nullptr,
+        "item already added?");
     auto sav = nitem.get();
     sav->parent = parent;
     sav->ctx = ctx;
@@ -71,19 +76,19 @@ void Item::InsertBefore(std::unique_ptr<Item> nitem) noexcept
     std::unique_ptr<Item> thisptr;
     if (prev)
     {
-        BOOST_ASSERT(prev->next.get() == this);
+        NEPTOOLS_ASSERT(prev->next.get() == this);
         thisptr = std::move(prev->next);
         prev->next = std::move(nitem);
     }
     else if (parent)
     {
-        BOOST_ASSERT(parent->children.get() == this);
+        NEPTOOLS_ASSERT(parent->children.get() == this);
         thisptr = std::move(parent->children);
         parent->children = std::move(nitem);
     }
     else
     {
-        BOOST_ASSERT(ctx->root.get() == this);
+        NEPTOOLS_ASSERT(ctx->root.get() == this);
         thisptr = std::move(ctx->root);
         ctx->root = std::move(nitem);
     }
@@ -98,7 +103,7 @@ std::unique_ptr<Item> Item::Remove() noexcept
     std::unique_ptr<Item> ret;
     if (prev)
     {
-        BOOST_ASSERT(prev->next.get() == this);
+        NEPTOOLS_ASSERT(prev->next.get() == this);
         ret = std::move(prev->next);
         prev->next = std::move(next);
     }
@@ -109,7 +114,7 @@ std::unique_ptr<Item> Item::Remove() noexcept
     }
     else
     {
-        BOOST_ASSERT(ctx->root.get() == this);
+        NEPTOOLS_ASSERT_MSG(ctx->root.get() == this, "item already removed?");
         ret = std::move(ctx->root);
         ctx->root = std::move(next);
     }
@@ -120,11 +125,11 @@ std::unique_ptr<Item> Item::Remove() noexcept
 
 void Item::Replace(std::unique_ptr<Item> nitem) noexcept
 {
-#ifndef BOOST_ASSERT_IS_VOID
+#ifndef NDEBUG
     auto nsize = nitem->GetSize();
     for (auto it : labels)
-        BOOST_ASSERT(it.first <= nsize);
-    BOOST_ASSERT(nitem->labels.empty());
+        NEPTOOLS_ASSERT_MSG(it.first <= nsize, "would invalidate labels");
+    NEPTOOLS_ASSERT_MSG(nitem->labels.empty(), "new item has labels");
 #endif
 
     // move labels
@@ -159,9 +164,9 @@ struct PmapRem
 
 void Item::Slice(SliceSeq seq)
 {
-    BOOST_ASSERT(std::is_sorted(seq.begin(), seq.end(),
+    NEPTOOLS_ASSERT(std::is_sorted(seq.begin(), seq.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; }));
-    BOOST_ASSERT(seq[0].second == 0);
+    NEPTOOLS_ASSERT(seq[0].second == 0);
 
     std::vector<PmapRem> ps;
     std::vector<LabelsContainer> nlabels;
@@ -201,19 +206,22 @@ void Item::Slice(SliceSeq seq)
             prev->InsertAfter(std::move(seq[i].first));
         prev = cur;
     }
-    BOOST_ASSERT(moved == 1);
+    NEPTOOLS_ASSERT_MSG(
+        moved == 1, "invalid seq: zero or more than one nullptrs");
 }
 
 void Item::CommitLabels(LabelsContainer&& cnt) noexcept
 {
-#ifndef BOOST_ASSERT_IS_VOID
+#ifndef NDEBUG
     auto size = GetSize();
 #endif
 
     labels = std::move(cnt);
     for (auto& it : labels)
     {
-        BOOST_ASSERT(it.first < size);
+#ifndef NDEBUG // otherwise __assume fails
+        NEPTOOLS_ASSERT(it.first < size);
+#endif
         auto& ptr = it.second->second;
         ptr.item = this;
         ptr.offset = it.first;

@@ -2,7 +2,6 @@
 #include "item.hpp"
 #include "../utils.hpp"
 #include "../except.hpp"
-#include <boost/assert.hpp>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -12,7 +11,8 @@ namespace Neptools
 
 void Context::SetRoot(std::unique_ptr<Item> nroot)
 {
-    BOOST_ASSERT(nroot->ctx == this && nroot->position == 0);
+    NEPTOOLS_ASSERT_MSG(nroot->ctx == this && nroot->position == 0,
+                        "invalid root item");
     PointerMap npmap{{0, nroot.get()}};
 
     pmap = std::move(npmap);
@@ -82,7 +82,7 @@ const Label* Context::GetLabelTo(ItemPointer ptr)
 ItemPointer Context::GetPointer(FilePosition pos) const noexcept
 {
     auto it = pmap.upper_bound(pos);
-    BOOST_ASSERT(it != pmap.begin());
+    NEPTOOLS_ASSERT_MSG(it != pmap.begin(), "file position out of range");
     --it;
     return {it->second, pos - it->first};
 }

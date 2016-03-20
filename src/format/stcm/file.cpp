@@ -3,7 +3,6 @@
 #include "../item.hpp"
 #include "../eof_item.hpp"
 #include "gbnl.hpp"
-#include <boost/assert.hpp>
 
 namespace Neptools
 {

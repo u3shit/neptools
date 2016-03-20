@@ -28,6 +28,7 @@ public:
 
     void Write(const Byte* data, FileMemSize len)
     {
+        NEPTOOLS_ASSERT_MSG(offset+buf_put+len <= size, "sink overflow");
         auto cp = std::min(len, buf_size - buf_put);
         memcpy(buf+buf_put, data, cp);
         data += cp;
@@ -39,6 +40,7 @@ public:
 
     void Pad(FileMemSize len)
     {
+        NEPTOOLS_ASSERT_MSG(offset+buf_put+len <= size, "sink overflow");
         auto cp = std::min(len, buf_size - buf_put);
         memset(buf+buf_put, 0, cp);
         buf_put += cp;

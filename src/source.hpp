@@ -31,8 +31,8 @@ public:
 
     void Slice(FilePosition offset, FilePosition size) noexcept
     {
-        BOOST_ASSERT(offset <= this->size &&
-                     offset + size <= this->size);
+        NEPTOOLS_ASSERT_MSG(offset <= this->size &&
+                            offset + size <= this->size, "source overflow");
         this->offset += offset;
         this->get -= offset;
         this->size = size;
@@ -47,7 +47,7 @@ public:
 
     void Seek(FilePosition pos) noexcept
     {
-        BOOST_ASSERT(pos <= size);
+        NEPTOOLS_ASSERT_MSG(pos <= size, "source overflow");
         get = pos;
     }
     FilePosition Tell() const noexcept { return get; }

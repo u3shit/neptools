@@ -1,7 +1,6 @@
 #include "gbnl.hpp"
 #include "../except.hpp"
 #include <map>
-#include <boost/assert.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -316,12 +315,13 @@ void Gbnl::Dump_(Sink& sink) const
                 }
             }
 
-    BOOST_ASSERT(offset == msgs_size);
+    NEPTOOLS_ASSERT(offset == msgs_size);
     auto offset_round = Align(offset);
     sink.Pad(offset_round - offset);
 
-    BOOST_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
-    BOOST_ASSERT(control_end_round == Align(msgs_end_round +
+    // sanity checks
+    NEPTOOLS_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
+    NEPTOOLS_ASSERT(control_end_round == Align(msgs_end_round +
         sizeof(TypeDescriptor) * type->item_count));
     if (!is_gstl) DumpHeader(sink);
 }
@@ -425,7 +425,7 @@ void Gbnl::RecalcSize()
     size_t offset = 0;
     for (auto& m : messages)
     {
-        BOOST_ASSERT(m.GetRawType() == type);
+        NEPTOOLS_ASSERT(m.GetRawType() == type);
         for (size_t i = 0; i < m.GetSize(); ++i)
             if (m.Is<OffsetString>(i))
             {
@@ -556,7 +556,7 @@ void Gbnl::ReadTxt(std::istream& is)
         {
             if (pos != static_cast<size_t>(-1))
             {
-                BOOST_ASSERT(msg.back() == '\n');
+                NEPTOOLS_ASSERT(msg.back() == '\n');
                 msg.pop_back();
                 auto& m = messages[last_index];
                 if (m.Is<OffsetString>(pos))

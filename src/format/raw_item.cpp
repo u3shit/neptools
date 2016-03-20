@@ -58,14 +58,14 @@ void RawItem::Inspect_(std::ostream& os) const
         if ((i+=j) >= GetSize()) break;
         os << '\n';
     }
-    BOOST_ASSERT(it == GetLabels().end());
+    NEPTOOLS_ASSERT(it == GetLabels().end());
     os.flags(flags);
 }
 
 std::unique_ptr<RawItem> RawItem::InternalSlice(
     FilePosition spos, FilePosition slen)
 {
-    BOOST_ASSERT(spos+slen <= GetSize());
+    NEPTOOLS_ASSERT(spos+slen <= GetSize());
     return GetContext()->Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
@@ -73,7 +73,7 @@ std::unique_ptr<RawItem> RawItem::InternalSlice(
 void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
 {
     auto len = nitem->GetSize();
-    BOOST_ASSERT(pos <= GetSize() && pos+len <= GetSize());
+    NEPTOOLS_ASSERT(pos <= GetSize() && pos+len <= GetSize());
     auto rem_len = GetSize() - len - pos;
 
     if (pos == 0 && rem_len == 0)
@@ -94,7 +94,7 @@ void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
     Item::Slice(std::move(seq));
     if (pos == 0)
     {
-        BOOST_ASSERT(rem_len > 0);
+        NEPTOOLS_ASSERT(rem_len > 0);
         src.Slice(len, rem_len);
     }
     else

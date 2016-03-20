@@ -3,8 +3,8 @@
 #pragma once
 
 #include <iosfwd>
-#include <boost/assert.hpp>
 #include <boost/filesystem/path.hpp>
+#include "except.hpp"
 
 namespace Neptools
 {
@@ -20,7 +20,7 @@ using FileMemSize = uint32_t; // min(FilePos, size_t)
 template <typename T, typename U>
 T asserted_cast(U* ptr)
 {
-    BOOST_ASSERT(dynamic_cast<T>(ptr));
+    NEPTOOLS_ASSERT_MSG(dynamic_cast<T>(ptr), "U is not T");
     return static_cast<T>(ptr);
 }
 

@@ -3,7 +3,6 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include "../../except.hpp"
-#include <boost/assert.hpp>
 #include <set>
 #include <iostream>
 
@@ -234,7 +233,7 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
         ret->PrependChild(asserted_cast<RawItem*>(
             ret->GetNext())->Split(0, rem_data)->Remove());
 
-    BOOST_ASSERT(ret->GetSize() == inst.size);
+    NEPTOOLS_ASSERT(ret->GetSize() == inst.size);
 
     // recursive parse
     if (ret->is_call)

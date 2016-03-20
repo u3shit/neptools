@@ -73,7 +73,7 @@ void Source::Pread(FilePosition offs, Byte* buf, FileMemSize len) const
 {
     AddInfo([&]
     {
-        BOOST_ASSERT(offs <= size && offs+len <= size);
+        NEPTOOLS_ASSERT_MSG(offs <= size && offs+len <= size, "source overflow");
         offs += offset;
         while (len)
         {
@@ -101,8 +101,8 @@ Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const
 {
     if (p->LruGet(offs)) return p->lru[0];
     p->Pread(offs, nullptr, 0);
-    BOOST_ASSERT(p->lru[0].offset <= offs &&
-                 p->lru[0].offset + p->lru[0].size > offs);
+    NEPTOOLS_ASSERT(p->lru[0].offset <= offs &&
+                    p->lru[0].offset + p->lru[0].size > offs);
     return p->lru[0];
 }
 
@@ -140,7 +140,7 @@ UnixLike<T>::~UnixLike()
 template <typename T>
 void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
 {
-    BOOST_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
+    NEPTOOLS_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
         return io.Pread(buf, len, offs);
 
@@ -234,7 +234,7 @@ void DumpableSource::Dump_(Sink& sink) const
     while (rem_size)
     {
         auto x = GetTemporaryEntry(offset);
-        BOOST_ASSERT(x.offset <= offset);
+        NEPTOOLS_ASSERT(x.offset <= offset);
         auto ptroff = offset - x.offset;
         auto size = std::min(rem_size, x.size - ptroff);
         sink.Write(x.ptr + ptroff, size);

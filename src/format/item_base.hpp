@@ -34,21 +34,21 @@ struct ItemPointer
     template <typename T>
     T& As0() const
     {
-        BOOST_ASSERT(offset == 0);
+        NEPTOOLS_ASSERT(offset == 0);
         return *asserted_cast<T*>(item);
     }
 
     template <typename T>
     T& AsChecked0() const
     {
-        BOOST_ASSERT(offset == 0);
+        NEPTOOLS_ASSERT(offset == 0);
         return dynamic_cast<T&>(*item);
     }
 
     template <typename T>
     T* Maybe0() const
     {
-        BOOST_ASSERT(offset == 0);
+        NEPTOOLS_ASSERT(offset == 0);
         return dynamic_cast<T*>(item);
     }
 };

@@ -5,7 +5,6 @@
 #include "context.hpp"
 #include "../source.hpp"
 #include "../except.hpp"
-#include <boost/assert.hpp>
 
 namespace Neptools
 {
@@ -37,7 +36,7 @@ public:
     static auto Get(ItemPointer ptr)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
-        BOOST_ASSERT(ptr.offset <= ritem.GetSize());
+        NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
         if (ptr.offset + sizeof(T) > ritem.GetSize())
             NEPTOOLS_THROW(DecodeError{"Premature end of data"});
 
@@ -50,7 +49,7 @@ public:
     static auto GetSource(ItemPointer ptr, FilePosition len)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
-        BOOST_ASSERT(ptr.offset <= ritem.GetSize());
+        NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
         if (len == FilePosition(-1)) len = ritem.GetSize() - ptr.offset;
 
         if (ptr.offset + len > ritem.GetSize())

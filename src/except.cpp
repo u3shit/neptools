@@ -1,6 +1,11 @@
 #include "except.hpp"
 #include <boost/core/demangle.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <iostream>
+
+#ifdef WINDOWS
+extern "C" void _assert(const char* msg, const char* file, unsigned line);
+#endif
 
 namespace Neptools
 {
@@ -35,6 +40,29 @@ void PrintException(std::ostream& os)
     {
         os << "Unknown exception (run while you can)" << std::endl;
     }
+}
+
+void AssertFailed(
+    const char* expr, const char* msg, const char* file, unsigned line,
+    const char* fun)
+{
+#ifdef WINDOWS
+    std::string fake_expr = expr;
+    fake_expr += "\nFunction: ";
+    fake_expr += fun;
+    if (msg)
+    {
+        fake_expr += "\nMessage: ";
+        fake_expr += msg;
+    }
+    _assert(fake_expr.c_str(), file, line);
+#else
+    std::cerr << "Assertion failed!\n" << file << ':' << line
+              << ": in function " << fun << "\nExpression: " << expr << '\n';
+    if (msg)
+        std::cerr << "Message: " << msg << '\n';
+    abort();
+#endif
 }
 
 }

@@ -4,29 +4,61 @@
 
 #include <stdexcept>
 #include <typeindex>
-#include <boost/assert.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/exception/info.hpp>
 
+#ifndef __has_builtin
+#  define __has_builtin(x) 0
+#endif
+
 #ifdef NDEBUG
-#define NEPTOOLS_THROW(x) ::boost::throw_exception(x)
+#  if __has_builtin(__builtin_assume)
+#    define NEPTOOLS_ASSERT(expr) __builtin_assume(expr)
+#    define NEPTOOLS_ASSERT_MSG(expr, msg) __builtin_assume(expr)
+#  else
+#    define NEPTOOLS_ASSERT(expr) ((void)0)
+#    define NEPTOOLS_ASSERT_MSG(expr, msg) ((void)0)
+#  endif
+#  define NEPTOOLS_THROW(...) (throw ::boost::enable_error_info(__VA_ARGS__))
 
-#if defined(__GNUC__) || defined(__clang__)
-#define NEPTOOLS_UNREACHABLE(x) __builtin_unreachable()
+#  if defined(__GNUC__) || defined(__clang__)
+#    define NEPTOOLS_UNREACHABLE(x) __builtin_unreachable()
+#  else
+#    define NEPTOOLS_UNREACHABLE(x) abort()
+#  endif
+
 #else
-#define NEPTOOLS_UNREACHABLE(x) abort()
+
+// boost doesn't check __clang__, and falls back to some simpler implementation
+#  if defined(__GNUC__) || defined(__clang__)
+#    define NEPTOOLS_FUNCTION __PRETTY_FUNCTION__
+#  else
+#    include <boost/current_function.hpp>
+#    define NEPTOOLS_FUNCTION BOOST_CURRENT_FUNCTION
+#  endif
+#  include "file.hpp"
+
+#  define NEPTOOLS_ASSERT(expr) \
+    (BOOST_LIKELY(!!(expr)) ? ((void)0) : NEPTOOLS_ASSERT_FAILED(#expr, nullptr))
+
+#  define NEPTOOLS_ASSERT_MSG(expr, msg) \
+    (BOOST_LIKELY(!!(expr)) ? ((void)0) : NEPTOOLS_ASSERT_FAILED(#expr, msg))
+
+#  define NEPTOOLS_ASSERT_FAILED(expr, msg)                      \
+    ::Neptools::AssertFailed(expr, msg, NEPTOOLS_FILE, __LINE__, \
+                             NEPTOOLS_FUNCTION)
+
+#  define NEPTOOLS_THROW(...)                               \
+    (throw ::boost::enable_error_info(__VA_ARGS__) <<       \
+     ::boost::throw_file(NEPTOOLS_FILE) <<                  \
+     ::boost::throw_line(__LINE__) <<                       \
+     ::boost::throw_function(NEPTOOLS_FUNCTION))
+#  define NEPTOOLS_UNREACHABLE(x) NEPTOOLS_ASSERT_FAILED("unreachable", x)
 #endif
 
-#else
-
-#define NEPTOOLS_THROW BOOST_THROW_EXCEPTION
-#define NEPTOOLS_UNREACHABLE(x) BOOST_ASSERT_MSG(false, x);
-#endif
-
 #if defined(__GNUC__) || defined(__clang__)
-#define NEPTOOLS_NORETURN __attribute__((noreturn))
+#  define NEPTOOLS_NORETURN __attribute__((noreturn))
 #else
-#define NEPTOOLS_NORETURN
+#  define NEPTOOLS_NORETURN
 #endif
 
 namespace Neptools
@@ -34,6 +66,13 @@ namespace Neptools
 
 NEPTOOLS_NORETURN void RethrowBoostException();
 void PrintException(std::ostream& os);
+
+#ifndef WINDOWS
+NEPTOOLS_NORETURN
+#endif
+void AssertFailed(
+    const char* expr, const char* msg, const char* file, unsigned line,
+    const char* fun);
 
 template <typename Base, typename T, typename Derived, typename... Args>
 inline auto Invoke(T Base::*fun, Derived* thiz, Args&&... args)

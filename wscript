@@ -55,7 +55,7 @@ def configure(cfg):
         '-fcolor-diagnostics', '-fdiagnostics-show-option',
         '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
         '-Wno-gnu-string-literal-operator-template',
-        '-Wno-vla-extension', '-Wno-vla'])
+        '-Wno-vla-extension', '-Wno-vla', '-Wno-assume'])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
         cfg.define('_CRT_SECURE_NO_WARNINGS', 1)

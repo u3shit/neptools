@@ -63,7 +63,7 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         if (!cpk->OrigRead(index, reinterpret_cast<char*>(buf), len, &read))
             NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
                            CpkErrorCode{cpk->last_error});
-        BOOST_ASSERT(read == len);
+        NEPTOOLS_ASSERT(read == len);
         return;
     }
 
@@ -78,7 +78,7 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         if (!cpk->OrigRead(index, cbuf.get(), csize, &read))
             NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
                            CpkErrorCode{cpk->last_error});
-        BOOST_ASSERT(read == csize);
+        NEPTOOLS_ASSERT(read == csize);
 
         auto to_offs = offs % CPK_CHUNK;
         auto to_copy = std::min(len, csize - to_offs);

@@ -60,8 +60,8 @@ MmapSink::~MmapSink()
 
 void MmapSink::Write_(const Byte* data, FileMemSize len)
 {
-    BOOST_ASSERT(buf_put == buf_size && offset < size &&
-                 buf_size == LowIo::MMAP_CHUNK);
+    NEPTOOLS_ASSERT(buf_put == buf_size && offset < size &&
+                    buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put;
     if (len / LowIo::MMAP_CHUNK)
@@ -81,10 +81,11 @@ void MmapSink::Write_(const Byte* data, FileMemSize len)
 
 void MmapSink::Pad_(FileMemSize len)
 {
-    BOOST_ASSERT(buf_put == buf_size && offset < size &&
-                 buf_size == LowIo::MMAP_CHUNK);
+    NEPTOOLS_ASSERT(buf_put == buf_size && offset < size &&
+                    buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put + len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
+    NEPTOOLS_ASSERT_MSG(offset <= size, "sink overflow");
     MapNext(len % LowIo::MMAP_CHUNK);
 }
 
@@ -131,8 +132,8 @@ void SimpleSink::Flush()
 
 void SimpleSink::Write_(const Byte* data, FileMemSize len)
 {
-    BOOST_ASSERT(buf_size == LowIo::MEM_CHUNK);
-    BOOST_ASSERT(buf_put == LowIo::MEM_CHUNK);
+    NEPTOOLS_ASSERT(buf_size == LowIo::MEM_CHUNK &&
+                    buf_put == LowIo::MEM_CHUNK);
     io.Write(buf, LowIo::MEM_CHUNK);
     offset += LowIo::MEM_CHUNK;
 
@@ -151,8 +152,8 @@ void SimpleSink::Write_(const Byte* data, FileMemSize len)
 
 void SimpleSink::Pad_(FileMemSize len)
 {
-    BOOST_ASSERT(buf_size == LowIo::MEM_CHUNK);
-    BOOST_ASSERT(buf_put == LowIo::MEM_CHUNK);
+    NEPTOOLS_ASSERT(buf_size == LowIo::MEM_CHUNK &&
+                    buf_put == LowIo::MEM_CHUNK);
     io.Write(buf, LowIo::MEM_CHUNK);
     offset += LowIo::MEM_CHUNK;
 
