@@ -26,10 +26,15 @@ def options(opt):
     opt.load('compiler_c compiler_cxx boost')
     opt.add_option('--clang-hack', action='store_true', default=False,
                    help='Read COMPILE.md...')
+    opt.add_option('--optimize', action='store_true', default=False,
+                   help='Enable some default optimizations')
     opt.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
 
 def configure(cfg):
+    if cfg.options.release:
+        cfg.options.optimize = True
+
     if cfg.options.clang_hack:
         cfg.find_program('clang-cl', var='CC')
         cfg.find_program('clang-cl', var='CXX')
@@ -65,7 +70,7 @@ def configure(cfg):
             '-EHsc', '-MD'])
         cfg.env.prepend_value('CFLAGS', '/Gs9999999')
 
-        if cfg.options.release:
+        if cfg.options.optimize:
             cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
             cfg.env.prepend_value('CXXFLAGS', [
                 '-O2', '-Xclang', '-emit-llvm-bc'])
@@ -74,7 +79,7 @@ def configure(cfg):
         cfg.check_cxx(cxxflags='-std=c++14')
         cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
 
-        if cfg.options.release:
+        if cfg.options.optimize:
             cfg.filter_flags(['CXXFLAGS', 'LINKFLAGS'], [
                 '-Ofast', '-flto', '-fno-fat-lto-objects',
                  '-fomit-frame-pointer'])
