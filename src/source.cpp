@@ -62,8 +62,7 @@ Source Source::FromFile_(boost::filesystem::path fname)
     try { p = std::make_shared<MmapProvider>(std::move(io), fname.string(), size); }
     catch (const std::system_error& e)
     {
-        std::cerr << "Mmap failed: ";
-        PrintException(std::cerr);
+        std::cerr << "Mmap failed: " << ExceptionToString() << std::endl;
         p = std::make_shared<UnixProvider>(std::move(io), fname.string(), size);
     }
     return {std::move(p), size};

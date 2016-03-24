@@ -119,8 +119,7 @@ void RecDo(const boost::filesystem::path& path, Pred p, Fun f, bool rec = false)
         catch (const std::exception& e)
         {
             auto_failed = true;
-            std::cerr << "Failed: ";
-            PrintException(std::cerr);
+            std::cerr << "Failed: " << ExceptionToString() << std::endl;
         }
     }
     else if (boost::filesystem::is_directory(path))
@@ -502,7 +501,7 @@ int main(int argc, char** argv)
     catch (...)
     {
         std::cerr << "Fatal error, aborting\n";
-        PrintException(std::cerr);
+        std::cerr << ExceptionToString() << std::endl;
         return 2;
     }
     return auto_failed;

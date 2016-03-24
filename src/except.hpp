@@ -65,7 +65,7 @@ namespace Neptools
 {
 
 NEPTOOLS_NORETURN void RethrowBoostException();
-void PrintException(std::ostream& os);
+std::string ExceptionToString();
 
 #ifndef WINDOWS
 NEPTOOLS_NORETURN

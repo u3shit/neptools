@@ -23,22 +23,24 @@ void RethrowBoostException()
     RETHROW(std::runtime_error)
 }
 
-void PrintException(std::ostream& os)
+std::string ExceptionToString()
 {
     try { throw; }
     catch (const boost::exception& e)
     {
         auto se = dynamic_cast<const std::exception*>(&e);
-        os << (se ? se->what() : "???")<< "\n\nDetails: "
-           << boost::diagnostic_information(e) << std::endl;
+        std::stringstream ss;
+        ss << (se ? se->what() : "???")<< "\n\nDetails: "
+           << boost::diagnostic_information(e);
+        return ss.str();
     }
     catch (const std::exception& e)
     {
-        os << e.what() << std::endl;
+        return e.what();
     }
     catch (...)
     {
-        os << "Unknown exception (run while you can)" << std::endl;
+        return "Unknown exception (run while you can)";
     }
 }
 

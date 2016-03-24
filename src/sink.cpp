@@ -115,8 +115,7 @@ SimpleSink::~SimpleSink()
     try { Flush(); }
     catch (std::exception& e)
     {
-        std::cerr << "Mayday: ~SimpleSink";
-        PrintException(std::cerr);
+        std::cerr << "Mayday: ~SimpleSink " << ExceptionToString() << std::endl;
     }
 }
 
@@ -185,8 +184,7 @@ std::unique_ptr<Sink> Sink::ToFile(
             try { return std::make_unique<MmapSink>(std::move(io), size); }
             catch (const std::system_error& e)
             {
-                std::cerr << "Mmmap failed: ";
-                PrintException(std::cerr);
+                std::cerr << "Mmmap failed: " << ExceptionToString() << std::endl;
                 return std::make_unique<SimpleSink>(std::move(io), size);
             }
         },
