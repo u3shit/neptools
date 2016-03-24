@@ -3,6 +3,7 @@
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 #include "../except.hpp"
+#include "../options.hpp"
 #include "../utils.hpp"
 #include "version.hpp"
 #include <iostream>
@@ -17,22 +18,6 @@ using namespace Neptools;
 
 namespace
 {
-
-struct InvalidParameters {};
-struct ParamError : public std::runtime_error
-{ using std::runtime_error::runtime_error; };
-
-struct Command
-{
-    using DoFun = std::function<void (std::deque<const char*>&)>;
-
-    Command(std::string name, DoFun fun, std::string help)
-        : name{std::move(name)}, fun{std::move(fun)}, help{std::move(help)} {}
-
-    std::string name;
-    DoFun fun;
-    std::string help;
-};
 
 struct State
 {
@@ -84,41 +69,35 @@ State SmartOpen(const boost::filesystem::path& fname)
 }
 
 template <typename T>
-void ShellDump(const T* item, std::deque<const char*>& args)
+void ShellDump(const T* item, const char* name)
 {
-    if (args.empty()) throw ParamError{"missing argument"};
-
-    auto fname = args.front(); args.pop_front();
     std::unique_ptr<Sink> sink;
-    if (fname[0] == '-' && fname[1] == '\0')
+    if (name[0] == '-' && name[1] == '\0')
         sink = Sink::ToStdOut();
     else
-        sink = Sink::ToFile(fname, item->GetSize());
+        sink = Sink::ToFile(name, item->GetSize());
     item->Dump(*sink);
 }
 
 template <typename T, typename Fun>
-void ShellInspectGen(const T* item, std::deque<const char*>& args, Fun f)
+void ShellInspectGen(const T* item, const char* name, Fun f)
 {
-    if (args.empty()) throw ParamError{"missing argument"};
-
-    auto fname = args.front(); args.pop_front();
-    if (fname[0] == '-' && fname[1] == '\0')
+    if (name[0] == '-' && name[1] == '\0')
         f(item, std::cout);
     else
-        f(item, OpenOut(fname));
+        f(item, OpenOut(name));
 }
 
 template <typename T>
-void ShellInspect(const T* item, std::deque<const char*>& args)
-{ ShellInspectGen(item, args, [](auto x, auto&& y) { y << *x; }); }
+void ShellInspect(const T* item, const char* name)
+{ ShellInspectGen(item, name, [](auto x, auto&& y) { y << *x; }); }
 
 void EnsureStcm(State& st)
 {
     if (st.stcm) return;
-    if (!st.file) throw ParamError{"no file loaded"};
+    if (!st.file) throw InvalidParam{"no file loaded"};
     if (!st.cl3)
-        throw ParamError{"invalid file loaded: can't find STCM without CL3"};
+        throw InvalidParam{"invalid file loaded: can't find STCM without CL3"};
 
     st.stcm = &st.cl3->GetStcm();
 }
@@ -309,7 +288,7 @@ void DoAuto(const boost::filesystem::path& path)
         break;
 
     case Mode::MANUAL:
-        throw ParamError{"Can't use auto files in manual mode"};
+        throw InvalidParam{"Can't use auto files in manual mode"};
     }
     RecDo(path, pred, fun);
 }
@@ -319,64 +298,55 @@ void DoAuto(const boost::filesystem::path& path)
 int main(int argc, char** argv)
 {
     State st;
+    auto& parser = OptionParser::GetGlobal();
+    OptionGroup hgrp{parser, "High-level options"};
+    OptionGroup lgrp{parser, "Low-level options", "See README for details"};
 
-    std::deque<const char*> args(argv+1, argv+argc);
-    std::vector<Command> commands;
-#define CMD(...) commands.emplace_back(__VA_ARGS__)
-    CMD("--help", [](auto&){ throw InvalidParameters{}; }, "\n\tShow this help message\n");
-#define GEN_IFS(c, str, _) else if (strcmp(args.front(), str) == 0) mode = Mode::c;
+    Option mode_opt{
+        hgrp, "mode", 'm', 1, "OPTION",
 #define GEN_HELP(_, key, help) "\t\t" key ": " help "\n"
-    CMD("--mode", [](auto& args)
-        {
-            if (args.empty()) throw ParamError{"missing argument"};
-            if (0);
-            MODE_PARS(GEN_IFS)
-            else throw ParamError{"invalid parameter"};
-            args.pop_front();
-        },
-        "\n\tSet operating mode:\n"
-        MODE_PARS(GEN_HELP));
-#undef GEN_IFS
+        "Set operating mode:\n" MODE_PARS(GEN_HELP),
 #undef GEN_HELP
-
-    CMD("--export-only", [&](auto&)
+        [](auto&& args)
         {
-            std::cerr << "--export-only deprecated, use --mode export-strtool\n";
-            mode = Mode::EXPORT_STRTOOL;
-        },
-        "\n\tDeprecated, same as --mode export-strtool\n");
-    CMD("--import-only", [&](auto&)
-        {
-            std::cerr << "--import-only deprecated, use --mode import-strtool\n";
-            mode = Mode::IMPORT_STRTOOL;
-        },
-        "\n\tDeprecated, same as --mode import-strtool\n\nAdvanced operations (see README):\n");
+            if (0);
+#define GEN_IFS(c, str, _) else if (strcmp(args.front(), str) == 0) mode = Mode::c;
+            MODE_PARS(GEN_IFS)
+#undef GEN_IFS
+            else throw InvalidParam{"invalid argument"};
+        }};
 
-    CMD("--open", [&](auto& args)
+    Option open_opt{
+        lgrp, "open", 1, "FILE", "Opens FILE as cl3 or stcm file",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw ParamError{"missing argument"};
             st = SmartOpen(args.front());
-            args.pop_front();
-        }, "<file>\n\tOpens <file> as a cl3 or stcm file\n");
-    CMD("--save", [&](auto& args)
+        }};
+    Option save_opt{
+        lgrp, "save", 1, "FILE|-", "Saves the loaded file to FILE or stdout",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw ParamError{"no file loaded"};
+            if (!st.file) throw InvalidParam{"no file loaded"};
             st.file->Fixup();
-            ShellDump(st.file.get(), args);
-        }, "<file>|-\n\tSaves the loaded file to <file> or stdout\n");
-    CMD("--create-cl3", [&](auto&)
+            ShellDump(st.file.get(), args.front());
+        }};
+    Option create_cl3_opt{
+        lgrp, "create-cl3", 0, nullptr, "Creates an empty cl3 file",
+        [&](auto&&)
         {
             mode = Mode::MANUAL;
             auto c = std::make_unique<Cl3>();
             auto c2 = c.get();
             st = {std::move(c), c2, nullptr, nullptr};
-        }, "\n\tCreates an empty cl3 file\n");
-    CMD("--list-files", [&](auto&)
+        }};
+    Option list_files_opt{
+        lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive\n",
+        [&](auto&&)
         {
             mode = Mode::MANUAL;
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
             size_t i = 0;
             for (const auto& e : st.cl3->entries)
             {
@@ -385,116 +355,134 @@ int main(int argc, char** argv)
                 for (auto l : e.links) std::cout << ' ' << l;
                 std::cout << std::endl;
             }
-        }, "\n\tLists the contents of the cl3 archive\n");
-    CMD("--extract-file", [&](auto& args) -> void
+        }};
+    Option extract_file_opt{
+        lgrp, "extract-file", 2, "NAME OUT_FILE|-",
+        "Extract NAME from cl3 archive to OUT_FILE or stdout",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 2) throw ParamError{"missing arguments"};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
+            auto e = st.cl3->GetFile(args[0]);
 
             if (!e)
-                throw ParamError{"specified file not found"};
+                throw InvalidParam{"specified file not found"};
             else
-                ShellDump(e->src.get(), args);
-        }, "<name> <out_file>|-\n\tExtract <name> from cl3 archive to <out_file> or stdout\n");
-    CMD("--extract-files", [&](auto& args)
+                ShellDump(e->src.get(), args[1]);
+        }};
+    Option extract_files_opt{
+        lgrp, "extract-files", 1, "DIR", "Extract the cl3 archive to DIR",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw ParamError{"missing argument"};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
             st.cl3->ExtractTo(args.front());
-            args.pop_front();
-        }, "<dir>\n\tExtract the cl3 archive to <dir>\n");
-    CMD("--replace-file", [&](auto& args)
+        }};
+    Option replace_file_opt{
+        lgrp, "replace-file", 2, "NAME IN_FILE",
+        "Adds or replaces NAME in cl3 archive with IN_FILE",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 2) throw InvalidParameters{};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
 
             auto& e = st.cl3->GetOrCreateFile(args[0]);
             e.src = std::make_unique<DumpableSource>(Source::FromFile(args[1]));
-
-            args.pop_front(); args.pop_front();
-        }, "<name> <in_file>\n\tAdds or replaces <name> in cl3 archive with <in_file>\n");
-    CMD("--remove-file", [&](auto& args)
+        }};
+    Option remove_file_opt{
+        lgrp, "remove-file", 1, "NAME", "Removes NAME from cl3 archive",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw ParamError{"missing argument"};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args.front()); args.pop_front();
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
+            auto e = st.cl3->GetFile(args.front());
             if (!e)
-                throw ParamError{"specified file not found"};
+                throw InvalidParam{"specified file not found"};
             else
                 st.cl3->DeleteFile(*e);
-        }, "<name>\n\tRemoves <name> from cl3 archive\n");
-    CMD("--set-link", [&](auto& args)
+        }};
+    Option set_link_opt{
+        lgrp, "set-link", 3, "NAME ID DEST", "Sets link at NAME, ID to DEST",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 3) throw ParamError{"missing arguments"};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args.front()); args.pop_front();
-            auto i = std::stoul(args.front()); args.pop_front();
-            auto e2 = st.cl3->GetFile(args[1]); args.pop_front();
-            if (!e || !e2) throw ParamError{"specified file not found"};
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
+            auto e = st.cl3->GetFile(args[0]);
+            auto i = std::stoul(args[1]);
+            auto e2 = st.cl3->GetFile(args[2]);
+            if (!e || !e2) throw InvalidParam{"specified file not found"};
 
             if (i < e->links.size())
                 e->links[i] = e2 - &st.cl3->entries.front();
             else if (i == e->links.size())
                 e->links.push_back(e2 - &st.cl3->entries.front());
             else
-                throw ParamError{"invalid link id"};
-        }, "<name> <id> <dst>\n\tSets link at <name>, <id> to <dst>");
-    CMD("--remove-link", [&](auto& args)
+                throw InvalidParam{"invalid link id"};
+        }};
+    Option remove_link_opt{
+        lgrp, "remove-link", 2, "NAME ID", "Remove link ID from NAME",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.size() < 2) throw ParamError{"missing arguments"};
-            if (!st.cl3) throw ParamError{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args.front()); args.pop_front();
-            auto i = std::stoul(args.front()); args.pop_front();
-            if (!e) throw ParamError{"specified file not found"};
+            if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
+            auto e = st.cl3->GetFile(args[0]);
+            auto i = std::stoul(args[1]);
+            if (!e) throw InvalidParam{"specified file not found"};
 
             if (i < e->links.size())
                 e->links.erase(e->links.begin() + i);
             else
-                throw ParamError{"invalid link id"};
-        }, "<name> <id>\n\tRemove link <id> from <name>");
-    CMD("--inspect", [&](auto& args)
+                throw InvalidParam{"invalid link id"};
+        }};
+    Option inspect_opt{
+        lgrp, "inspect", 1, "OUT|-",
+        "Inspects currently loaded file into OUT or stdout",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw ParamError{"No file loaded"};
-            ShellInspect(st.file.get(), args);
-        }, "<out>|-\n\tInspects currently loaded file into <out> or stdout\n");
-    CMD("--inspect-stcm", [&](auto& args)
+            if (!st.file) throw InvalidParam{"No file loaded"};
+            ShellInspect(st.file.get(), args.front());
+        }};
+    Option inspect_stcm_opt{
+        lgrp, "inspect-stcm", 1, "OUT|-",
+        "Inspects only the stcm portion of the currently loaded file into OUT or stdout",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
             EnsureStcm(st);
-            ShellInspect(st.stcm, args);
-        }, "<out>|-\n\tInspects only the stcm portion of the currently loaded file into <out> or stdout\n");
-    CMD("--parse-stcm", [&](auto&)
+            ShellInspect(st.stcm, args.front());
+        }};
+    Option parse_stcmp_opt{
+        lgrp, "parse-stcm", 0, nullptr,
+        "Parse STCM-inside-CL3 (usually done automatically)",
+        [&](auto&&)
         {
             mode = Mode::MANUAL;
             EnsureStcm(st);
-        },
-        "\n\tParse STCM-inside-CL3 (usually done automatically)\n");
-    CMD("--export-txt", [&](auto& args) -> void
+        }};
+
+    Option export_txt_opt{
+        lgrp, "export-txt", 1, "OUT_FILE|-", "Export text to OUT_FILE or stdout",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
             EnsureGbnl(st);
-            ShellInspectGen(st.gbnl, args, [](auto& x, auto&& y) { x->WriteTxt(y); });
-        }, "<out_file>|-\n\tExport text to <out_file> or stdout\n");
-    CMD("--import-txt", [&](auto& args)
+            ShellInspectGen(st.gbnl, args.front(),
+                            [](auto& x, auto&& y) { x->WriteTxt(y); });
+        }};
+    Option import_txt_opt{
+        lgrp, "import-txt", 1, "IN_FILE|-", "Read text from IN_FILE or stdin",
+        [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (args.empty()) throw ParamError{"missing arguments"};
             EnsureGbnl(st);
-            auto fname = args.front(); args.pop_front();
+            auto fname = args.front();
             if (fname[0] == '-' && fname[1] == '\0')
                 st.gbnl->ReadTxt(std::cin);
             else
                 st.gbnl->ReadTxt(OpenIn(fname));
             if (st.stcm) st.stcm->Fixup();
-        }, "<in_file>|-\n\tRead text from <in_file> or stdin\n");
+        }};
 
     boost::filesystem::path self{argv[0]};
     if (boost::iequals(self.filename().string(), "cl3-tool")
@@ -504,60 +492,18 @@ int main(int argc, char** argv)
         )
         mode = Mode::AUTO_CL3;
 
-    const char* cmd = nullptr;
-    try
-    {
-        if (args.empty()) throw InvalidParameters{};
+    parser.SetVersion("NepTools stcm-editor v" NEPTOOLS_VERSION);
+    parser.SetUsage("[--options] [<file/directory>...]");
+    parser.SetShowHelpOnNoOptions();
+    parser.SetNoArgHandler(DoAuto);
 
-        while (!args.empty())
-        {
-            cmd = args.front(); args.pop_front();
-            if (cmd[0] == '-' && cmd[1] == '-' && cmd[2] == '\0') break;
-
-            if (cmd[0] == '-')
-            {
-                auto it = std::find_if(
-                    commands.begin(), commands.end(),
-                    [cmd](const auto& x) { return x.name == cmd; });
-                if (it == commands.end())
-                    throw ParamError{"unknown parameter"};
-
-                it->fun(args);
-            }
-            else
-                DoAuto(cmd);
-        }
-        while (!args.empty())
-        {
-            DoAuto(args.front());
-            args.pop_front();
-        }
-    }
-    catch (InvalidParameters ip)
-    {
-        std::cerr << "NepTools stcm-editor v" NEPTOOLS_VERSION "\nUsage: "
-                  << argv[0]
-                  << " [--options] [<file/directory>...]\n"
-                     "Default operation: import all .cl3.txt to .cl3, export "
-                     "all .cl3 to .cl3.txt.\n\n"
-                     "Options:\n";
-
-        for (auto& c : commands)
-            std::cerr << "  " << c.name << ' ' << c.help;
-
-        return -1;
-    }
-    catch (const ParamError& e)
-    {
-        std::cerr << cmd << ": " << e.what() << "\nRun " << argv[0]
-                  << " --help to list available parameters" << std::endl;
-        return 3;
-    }
+    try { parser.Run(argc, argv); }
+    catch (const Exit& e) { return !e.success; }
     catch (...)
     {
         std::cerr << "Fatal error, aborting\n";
         PrintException(std::cerr);
-        return 4;
+        return 2;
     }
-    return auto_failed;;
+    return auto_failed;
 }
