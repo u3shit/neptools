@@ -125,6 +125,7 @@ def build_common(bld):
         'src/except.cpp',
         'src/dumpable.cpp',
         'src/low_io.cpp',
+        'src/options.cpp',
         'src/pattern.cpp',
         'src/sink.cpp',
         'src/source.cpp',
@@ -264,6 +265,7 @@ def test(bld):
 
     src = [
         'test/main.cpp',
+        'test/options.cpp',
         'test/pattern.cpp',
         'test/sink.cpp',
     ]
