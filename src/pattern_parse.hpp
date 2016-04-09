@@ -14,27 +14,31 @@ template <char C, typename Enable = void>
 struct HexValue;
 
 template <char C>
-struct HexValue<C, typename std::enable_if<C >= '0' && C <= '9'>::type>
-{ static constexpr unsigned value = C - '0'; };
+struct HexValue<C, typename std::enable_if_t<C >= '0' && C <= '9'>>
+    : std::integral_constant<unsigned, C - '0'> {};
 
 template <char C>
-struct HexValue<C, typename std::enable_if<C >= 'A' && C <= 'F'>::type>
-{ static constexpr unsigned value = C + 10 - 'A'; };
+struct HexValue<C, typename std::enable_if_t<C >= 'A' && C <= 'F'>>
+    : std::integral_constant<unsigned, C + 10 - 'A'> {};
 
 template <char C>
-struct HexValue<C, typename std::enable_if<C >= 'a' && C <= 'f'>::type>
-{ static constexpr unsigned value = C + 10 - 'a'; };
+struct HexValue<C, typename std::enable_if_t<C >= 'a' && C <= 'f'>>
+    : std::integral_constant<unsigned, C + 10 - 'a'> {};
+
+template <char C>
+constexpr auto HexValueV = HexValue<C>::value;
 
 template <unsigned Acc, char... Chars> struct FromHex;
 template <unsigned Acc, char A, char... Chars>
 struct FromHex<Acc, A, Chars...>
-{
-    static constexpr unsigned value = FromHex<
-        Acc * 16 + HexValue<A>::value, Chars...>::value;
-};
+    : std::integral_constant<unsigned, FromHex<
+        Acc * 16 + HexValueV<A>, Chars...>::value> {};
+
 template <unsigned Acc>
-struct FromHex<Acc>
-{ static constexpr unsigned value = Acc; };
+struct FromHex<Acc> : std::integral_constant<unsigned, Acc> {};
+
+template <char... Chars>
+constexpr auto FromHexV = FromHex<0, Chars...>::value;
 
 template <Byte... Bytes> struct ByteSequence
 {
@@ -83,7 +87,7 @@ template <typename Pat, char A, char B, char... Args>
 struct PatternParse<Pat, A, B, ' ', Args...>
 {
     using value = typename PatternParse<
-        typename Pat::template Append<FromHex<0, A, B>::value, 0xff>,
+        typename Pat::template Append<FromHexV<A, B>, 0xff>,
         Args...>::value;
 };
 
@@ -91,7 +95,7 @@ template <typename Pat, char A, char... Args>
 struct PatternParse<Pat, A, ' ', Args...>
 {
     using value = typename PatternParse<
-        typename Pat::template Append<FromHex<0, A>::value, 0xff>,
+        typename Pat::template Append<FromHexV<A>, 0xff>,
         Args...>::value;
 };
 

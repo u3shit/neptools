@@ -16,23 +16,16 @@ namespace Neptools
 template <typename Item, typename... Rest> struct IndexOf;
 template <typename Item, typename... Rest>
 struct IndexOf<Item, Item, Rest...>
-{
-    static constexpr const size_t value = 0;
-};
+    : std::integral_constant<size_t, 0> {};
 
 template <typename Item, typename Head, typename... Rest>
 struct IndexOf<Item, Head, Rest...>
-{
-    static constexpr const size_t value = 1 + IndexOf<Item, Rest...>::value;
-};
+    : std::integral_constant<size_t, 1 + IndexOf<Item, Rest...>::value> {};
 
-NEPTOOLS_STATIC_ASSERT(IndexOf<int, float, double, int>::value == 2);
+template <typename Item, typename... Args>
+constexpr auto IndexOfV = IndexOf<Item, Args...>::value;
 
-template <typename Item, typename... Rest>
-constexpr const size_t IndexOf<Item, Item, Rest...>::value;
-
-template <typename Item, typename Head, typename... Rest>
-constexpr const size_t IndexOf<Item, Head, Rest...>::value;
+NEPTOOLS_STATIC_ASSERT(IndexOfV<int, float, double, int> == 2);
 
 template <typename... Args>
 class DynamicStruct
@@ -56,11 +49,10 @@ class DynamicStruct
 public:
     template <typename T>
     static constexpr size_t GetIndexFromType()
-    { return IndexOf<T, Args...>::value; }
+    { return IndexOfV<T, Args...>; }
 
-    // not constexpr because of msvc
-    static const size_t SIZE_OF[sizeof...(Args)];
-    static const size_t ALIGN_OF[sizeof...(Args)];
+    static constexpr const size_t SIZE_OF[] = { sizeof(Args)... };
+    static constexpr const size_t ALIGN_OF[] = { alignof(Args)... };
 
     struct Type
     {
@@ -88,11 +80,7 @@ public:
 
         template <typename T>
         void Add(size_t size = sizeof(T))
-        {
-            // do not remove this variable, otherwise msvc generates invalid code...
-            size_t val = IndexOf<T, Args...>::value;
-            desc.emplace_back(val, size);
-        }
+        { desc.emplace_back(IndexOfV<T, Args...>, size); }
 
         void Add(size_t i, size_t size)
         {
@@ -134,7 +122,7 @@ public:
     {
         data.reset(new char[type->size]);
         ForEach([](auto& x, size_t)
-                { new (&x) typename std::remove_reference<decltype(x)>::type; });
+                { new (&x) std::remove_reference_t<decltype(x)>; });
     }
 
     DynamicStruct(DynamicStruct&& o) : type{o.type}, data{std::move(o.data)}
@@ -154,7 +142,7 @@ public:
     {
         ForEach([](auto& x, size_t)
                 {
-                    using T = typename std::remove_reference<decltype(x)>::type;
+                    using T = std::remove_reference_t<decltype(x)>;
                     x.~T();
                 });
     }
@@ -224,11 +212,10 @@ private:
 };
 
 template <typename... Args>
-const size_t DynamicStruct<Args...>::SIZE_OF[] = { sizeof(Args)... };
+constexpr const size_t DynamicStruct<Args...>::SIZE_OF[];
 
 template <typename... Args>
-const size_t DynamicStruct<Args...>::ALIGN_OF[] = { alignof(Args)... };
-
+constexpr const size_t DynamicStruct<Args...>::ALIGN_OF[];
 
 // TODO: SFINAE T is DynamicStruct::Type
 template <typename T>
