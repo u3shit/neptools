@@ -161,4 +161,12 @@ constexpr auto operator"" _get_wfile() { return GetFile<Args...>::wstr; }
         return NEPTOOLS_CONCAT(__FILE__, _get_wfile);       \
     }())
 
+// boost doesn't check __clang__, and falls back to some simpler implementation
+#if defined(__GNUC__) || defined(__clang__)
+#  define NEPTOOLS_FUNCTION __PRETTY_FUNCTION__
+#else
+#  include <boost/current_function.hpp>
+#  define NEPTOOLS_FUNCTION BOOST_CURRENT_FUNCTION
+#endif
+
 #endif

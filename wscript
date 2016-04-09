@@ -124,6 +124,7 @@ def build_common(bld):
     src = [
         'src/except.cpp',
         'src/dumpable.cpp',
+        'src/logger.cpp',
         'src/low_io.cpp',
         'src/options.cpp',
         'src/pattern.cpp',

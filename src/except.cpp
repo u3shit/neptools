@@ -3,6 +3,9 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <iostream>
 
+#define NEPTOOLS_LOG_NAME "except"
+#include "logger_helper.hpp"
+
 #ifdef WINDOWS
 extern "C" void _assert(const char* msg, const char* file, unsigned line);
 #endif
@@ -59,10 +62,11 @@ void AssertFailed(
     }
     _assert(fake_expr.c_str(), file, line);
 #else
-    std::cerr << "Assertion failed!\n" << file << ':' << line
-              << ": in function " << fun << "\nExpression: " << expr << '\n';
+    ERR << "Assertion failed!\n" << file << ':' << line
+        << ": in function " << fun << "\nExpression: " << expr << '\n';
     if (msg)
-        std::cerr << "Message: " << msg << '\n';
+        ERR << "Message: " << msg << '\n';
+    ERR << std::flush;
     abort();
 #endif
 }

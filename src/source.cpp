@@ -3,6 +3,9 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
+#define NEPTOOLS_LOG_NAME "source"
+#include "logger_helper.hpp"
+
 namespace Neptools
 {
 
@@ -62,7 +65,8 @@ Source Source::FromFile_(boost::filesystem::path fname)
     try { p = std::make_shared<MmapProvider>(std::move(io), fname.string(), size); }
     catch (const std::system_error& e)
     {
-        std::cerr << "Mmap failed: " << ExceptionToString() << std::endl;
+        WARN << "Mmap failed, falling back to normal reading: "
+             << ExceptionToString() << std::endl;
         p = std::make_shared<UnixProvider>(std::move(io), fname.string(), size);
     }
     return {std::move(p), size};

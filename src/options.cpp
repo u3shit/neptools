@@ -20,7 +20,7 @@ OptionParser::OptionParser()
               [this](auto&&) { ShowHelp(); throw Exit{true}; }},
       version_option{help_version, "version", 0, nullptr, "Show program version",
               [this](auto&&) { *os << version << std::endl; throw Exit{true}; }},
-      os{&std::cerr}
+      os{&std::clog}
 {
     version_option.enabled = false;
 }

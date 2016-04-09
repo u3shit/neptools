@@ -4,6 +4,9 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
+#define NEPTOOLS_LOG_NAME "sink"
+#include "logger_helper.hpp"
+
 namespace Neptools
 {
 namespace
@@ -115,7 +118,7 @@ SimpleSink::~SimpleSink()
     try { Flush(); }
     catch (std::exception& e)
     {
-        std::cerr << "Mayday: ~SimpleSink " << ExceptionToString() << std::endl;
+        ERR << "~SimpleSink " << ExceptionToString() << std::endl;
     }
 }
 
@@ -184,7 +187,8 @@ std::unique_ptr<Sink> Sink::ToFile(
             try { return std::make_unique<MmapSink>(std::move(io), size); }
             catch (const std::system_error& e)
             {
-                std::cerr << "Mmmap failed: " << ExceptionToString() << std::endl;
+                WARN << "Mmmap failed, falling back to normal writing: "
+                     << ExceptionToString() << std::endl;
                 return std::make_unique<SimpleSink>(std::move(io), size);
             }
         },

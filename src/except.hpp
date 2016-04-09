@@ -28,13 +28,6 @@
 
 #else
 
-// boost doesn't check __clang__, and falls back to some simpler implementation
-#  if defined(__GNUC__) || defined(__clang__)
-#    define NEPTOOLS_FUNCTION __PRETTY_FUNCTION__
-#  else
-#    include <boost/current_function.hpp>
-#    define NEPTOOLS_FUNCTION BOOST_CURRENT_FUNCTION
-#  endif
 #  include "file.hpp"
 
 #  define NEPTOOLS_ASSERT(expr) \

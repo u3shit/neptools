@@ -2,6 +2,9 @@
 #include "../injected/hook.hpp"
 #include "../pattern_parse.hpp"
 
+#define NEPTOOLS_LOG_NAME "server"
+#include "../logger_helper.hpp"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -46,23 +49,21 @@ static int CALLBACK NewWinMain(
         AllocConsole();
         freopen("CONOUT$", "w", stdout);
         freopen("CONOUT$", "w", stderr);
-        std::cerr << "Console init" << std::endl;
+        INFO << "Console init" << std::endl;
 #endif
         CpkHandler::Init();
-#ifndef NDEBUG
-        std::cerr << "Hook done" << std::endl;
-#endif
+        DBG(0) << "Hook done" << std::endl;
     }
     catch (const std::exception& e)
     {
+        ERR << "Exception during NewWinMain: " << ExceptionToString()
+            << std::endl;
         MessageBoxA(nullptr, e.what(), "WinMain", MB_OK | MB_ICONERROR);
         return -1;
     }
 
 
-#ifndef NDEBUG
-    std::cerr << "Starting main" << std::endl;
-#endif
+    DBG(0) << "Starting main" << std::endl;
     return orig_main(inst, prev, cmdline, show_cmd);
 }
 

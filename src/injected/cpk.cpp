@@ -9,6 +9,9 @@
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 
+#define NEPTOOLS_LOG_NAME "cpk"
+#include "../logger_helper.hpp"
+
 namespace Neptools
 {
 
@@ -99,26 +102,20 @@ CpkHandler::ReadPtr CpkHandler::orig_read;
 
 char CpkHandler::OpenFile(const char* fname, size_t* out)
 {
-#ifndef NDEBUG
-    std::cerr << "OpenFile " << basename << fname;
-#endif
+    DBG(2) << "OpenFile " << basename << fname;
     boost::filesystem::path pth{"neptools"};
     pth /= basename;
     pth /= fname;
 
     if (OpenTxtFile(fname, pth, out) || OpenFsFile(fname, pth, out))
     {
-#ifndef NDEBUG
-        std::cerr << " -- hooked it" << std::endl;
-#endif
+        DBG(2) << " -- hooked it" << std::endl;
         return 1;
     }
     else
     {
         auto ret = (this->*orig_open_file)(fname, out);
-#ifndef NDEBUG
-        std::cerr << " -> " << int(ret) << ", " << *out << std::endl;
-#endif
+        DBG(2) << " -> " << int(ret) << ", " << *out << std::endl;
         return ret;
     }
 }
@@ -130,17 +127,13 @@ bool CpkHandler::OpenFsFile(
                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if (h == INVALID_HANDLE_VALUE)
     {
-#ifndef NDEBUG
-        std::cerr << " -- can't fs hook: CreateFileW failed: " << GetLastError();
-#endif
+        DBG(2) << " -- can't fs hook: CreateFileW failed: " << GetLastError();
         return false;
     }
     size_t size = GetFileSize(h, nullptr);
     if (size == INVALID_FILE_SIZE)
     {
-#ifndef NDEBUG
-        std::cerr << " -- can't fs hook: GetFileSize failed: " << GetLastError();
-#endif
+        DBG(2) << " -- can't fs hook: GetFileSize failed: " << GetLastError();
         CloseHandle(h);
         return false;
     }
@@ -196,9 +189,8 @@ bool CpkHandler::OpenTxtFile(
     catch (const std::exception& e)
     {
         auto except = ExceptionToString();
-#ifndef NDEBUG
-        std::cerr << " -- txt hook failed: " << except << std::endl;
-#endif
+        DBG(2) << " -- txt hook failed: " << except << std::endl;
+
         std::stringstream ss;
         ss << "Failed to import " << pth << ", ignoring.\n\n" << except;
         MessageBoxA(nullptr, ss.str().c_str(), nullptr, MB_OK | MB_ICONERROR);
@@ -255,25 +247,21 @@ CpkHandlerFileInfo& CpkHandler::GetEntryVect(size_t* out)
 
 char CpkHandler::CloseFile(unsigned index)
 {
-#ifndef NDEBUG
-    //std::cerr << "CloseFile " << index << std::endl;
-#endif
+    DBG(3) << "CloseFile " << index << std::endl;
     return OrigCloseFile(index);
 }
 
 char CpkHandler::Read(unsigned index, char* dst, size_t dst_size,
                       size_t* out_size_read)
 {
-#ifndef NDEBUG
-    //std::cerr << "Read " << index << " " << dst_size << std::endl;
-#endif
+    DBG(3) << "Read " << index << " " << dst_size << std::endl;
+
     auto& en = *entry_vect[index];
     if (en.handle == INVALID_HANDLE_VALUE)
     {
         // cpk from mem
-#ifndef NDEBUG
-        std::cerr << "cpk read " << en.read_pos << " " << dst_size << std::endl;
-#endif
+        DBG(3) << "cpk read " << en.read_pos << " " << dst_size << std::endl;
+
         dst_size = std::min(dst_size, en.entry.uncompressed_size - en.read_pos);
         memcpy(dst, static_cast<char*>(en.block) + en.read_pos, dst_size);
         en.read_pos += dst_size;

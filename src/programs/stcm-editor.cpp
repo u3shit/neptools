@@ -14,6 +14,9 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#define NEPTOOLS_LOG_NAME "stcm-editor"
+#include "../logger_helper.hpp"
+
 using namespace Neptools;
 
 namespace
@@ -119,14 +122,14 @@ void RecDo(const boost::filesystem::path& path, Pred p, Fun f, bool rec = false)
         catch (const std::exception& e)
         {
             auto_failed = true;
-            std::cerr << "Failed: " << ExceptionToString() << std::endl;
+            ERR << "Failed: " << ExceptionToString() << std::endl;
         }
     }
     else if (boost::filesystem::is_directory(path))
         for (auto& e: boost::filesystem::directory_iterator(path))
             RecDo(e, p, f, true);
     else if (!rec)
-        std::cerr << "Invalid filename: " << path << std::endl;
+        ERR << "Invalid filename: " << path << std::endl;
 }
 
 enum class Mode
@@ -153,14 +156,14 @@ void DoAutoFun(const boost::filesystem::path& p)
         cl3 = p.native().substr(0, p.native().size()-4);
         txt = p;
         import = true;
-        std::cerr << "Importing: " << cl3 << " <- " << txt << std::endl;
+        INFO << "Importing: " << cl3 << " <- " << txt << std::endl;
     }
     else
     {
         cl3 = txt = p;
         txt += ".txt";
         import = false;
-        std::cerr << "Exporting: " << cl3 << " -> " << txt << std::endl;
+        INFO << "Exporting: " << cl3 << " -> " << txt << std::endl;
     }
 
     auto st = SmartOpen(cl3);
@@ -182,7 +185,7 @@ void DoAutoCl3(const boost::filesystem::path& p)
     {
         boost::filesystem::path cl3_file =
             p.native().substr(0, p.native().size() - 4);
-        std::cerr << "Packing " << cl3_file << std::endl;
+        INFO << "Packing " << cl3_file << std::endl;
         Cl3 cl3{Source::FromFile(cl3_file)};
         cl3.UpdateFromDir(p);
         cl3.Fixup();
@@ -190,7 +193,7 @@ void DoAutoCl3(const boost::filesystem::path& p)
     }
     else
     {
-        std::cerr << "Extracting " << p << std::endl;
+        INFO << "Extracting " << p << std::endl;
         Cl3 cl3{Source::FromFile(p)};
         auto out = p;
         cl3.ExtractTo(out += ".out");
@@ -500,8 +503,7 @@ int main(int argc, char** argv)
     catch (const Exit& e) { return !e.success; }
     catch (...)
     {
-        std::cerr << "Fatal error, aborting\n";
-        std::cerr << ExceptionToString() << std::endl;
+        ERR << "Fatal error, aborting\n" << ExceptionToString() << std::endl;
         return 2;
     }
     return auto_failed;

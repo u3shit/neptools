@@ -1,6 +1,9 @@
 #include "pattern.hpp"
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
+#define NEPTOOLS_LOG_NAME "pattern"
+#include "logger_helper.hpp"
+
 namespace Neptools
 {
 
@@ -44,16 +47,17 @@ const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexc
         if (CheckPattern(match - max_i, pattern, mask, size))
             if (res)
             {
-                // todo
-                std::cerr << "Multiple matches for pattern "
-                          << static_cast<const void*>(res) << " and "
-                          << static_cast<const void*>(match - max_i) << std::endl;
+                // todo?
+                WARN << "Multiple matches for pattern "
+                     << static_cast<const void*>(res) << " and "
+                     << static_cast<const void*>(match - max_i) << std::endl;
                 return nullptr;
             }
             else
                 res = match - max_i;
         ptr = match + 1;
     }
+    DBG(3) << "Found pattern @" << static_cast<const void*>(res) << std::endl;
     return res;
 }
 
