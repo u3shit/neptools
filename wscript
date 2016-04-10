@@ -185,9 +185,10 @@ def build(bld):
             'src/programs/server.cpp',
         ]
         bld.shlib(source = src_inject,
+                  includes = 'src', # for version.hpp
                   target = 'neptools-server',
                   use    = 'common',
-                  uselib = 'BOOST USER32',
+                  uselib = 'BOOST SHELL32 USER32',
                   defs   = 'src/programs/server.def')
 
 from waflib.Build import BuildContext

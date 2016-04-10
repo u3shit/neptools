@@ -31,6 +31,11 @@ void OptionParser::SetVersion(const char* version_str)
     version_option.enabled = true;
 }
 
+void OptionParser::FailOnNoArg()
+{
+    no_arg_fun = [](auto) { throw InvalidParam{"Invalid option"}; };
+}
+
 namespace
 {
 

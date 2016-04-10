@@ -27,6 +27,12 @@ namespace Neptools
 namespace Logger
 {
 
+OptionGroup& GetOptionGroup()
+{
+    static OptionGroup grp{OptionParser::GetGlobal(), "Logging options"};
+    return grp;
+}
+
 namespace
 {
 
@@ -34,9 +40,8 @@ std::map<std::string, int> level_map;
 int global_level = -1;
 bool show_fun = false;
 
-OptionGroup grp{OptionParser::GetGlobal(), "Logging options"};
 Option show_fun_opt{
-    grp, "show-functions", 0, nullptr,
+    GetOptionGroup(), "show-functions", 0, nullptr,
 #ifdef NDEBUG
     "Ignored for compatibility with debug builds",
 #else
@@ -69,7 +74,7 @@ int ParseLevel(const char* str)
 }
 
 Option debug_level_opt{
-    grp, "log-level", 'l', 1, "[MODULE=LEVEL,[...]][DEFAULT_LEVEL]",
+    GetOptionGroup(), "log-level", 'l', 1, "[MODULE=LEVEL,[...]][DEFAULT_LEVEL]",
     "Sets logging level for the specified modules, or the global default\n\t"
     "Valid levels: none, err, warn, info"
 #ifndef NDEBUG

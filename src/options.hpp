@@ -72,6 +72,7 @@ public:
 
     using NoArgFun = std::function<void (const char*)>;
     void SetNoArgHandler(NoArgFun fun) { no_arg_fun = std::move(fun); }
+    void FailOnNoArg();
     const NoArgFun& GetNoArgHandler() const { return no_arg_fun; }
 
     void SetShowHelpOnNoOptions(bool show = true) noexcept { no_opts_help = show; }

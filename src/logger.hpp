@@ -7,6 +7,8 @@
 
 namespace Neptools
 {
+
+class OptionGroup;
 namespace Logger
 {
 
@@ -19,6 +21,8 @@ enum Level
     WARNING = -2,
     INFO = -1,
 };
+
+OptionGroup& GetOptionGroup();
 
 bool CheckLog(const char* name, int level);
 std::ostream& Log(

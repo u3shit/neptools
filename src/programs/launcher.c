@@ -101,8 +101,8 @@ static int mymain(void)
     memset(&si, 0, sizeof(si));
     memset(&pi, 0, sizeof(pi));
     si.cb = sizeof(STARTUPINFO);
-    if (CreateProcessW(buf, NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL,
-                       NULL, &si, &pi) == 0)
+    if (CreateProcessW(buf, GetCommandLineW(), NULL, NULL, FALSE,
+                       CREATE_SUSPENDED, NULL, NULL, &si, &pi) == 0)
     {
         MessageBoxA(NULL, "Failed to start game", NULL, MB_OK | MB_ICONERROR);
         return 2;
