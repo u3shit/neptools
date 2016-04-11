@@ -69,6 +69,7 @@ This is like KitServer, except it's open source and modifies some internal game
 functions instead of creating virtual files that look like the original `.pac`
 files. The main differences between KitServer and NepTools' server:
 
+* It also supports a launcher-less method, see usage below.
 * No tid_tool integration (for now). You have to convert your pngs to tid if you
   want to use them.
 * Integrated stcm-editor: just drop the `.cl3.txt` (and `.gbin.txt` and
@@ -78,6 +79,8 @@ files. The main differences between KitServer and NepTools' server:
   try running `stcm-editor` on the file.
 * Use `neptools` instead of `KitFolder`, remove the last 5 digits from folder
   names inside `data`.
+* Also has some kind of debug console, download a debug release and see usage
+  notes below.
 * Very early release version: anything may change at any time, nothing is
   guaranteed to work...
 
@@ -92,8 +95,10 @@ unmodded game.
 
 The second way is to extract only `neptools-server.dll` and rename it to
 `dinput8.dll`. In this case there's no launcher, simply start the original
-executable. To temporarily disable modding in this case, you'll have to
-delete/rename `dinput8.dll`.
+executable. To temporarily disable modding in this case, you'll either have to
+temporarly delete/rename `dinput8.dll` or start `NeptuniaReBirth?.exe` with the
+`--disable` parameter (this is not exactly same as removing the dll as Neptools
+will be still loaded, but it will try to minimize changes made to the game...)
 
 In either case, you'll have to create a directory named `neptools`, and place
 files to be replaced inside it. If you want to replace (for example)
@@ -101,6 +106,12 @@ files to be replaced inside it. If you want to replace (for example)
 `neptools/data/SYSTEM/database/stitem.gbin` (that five zeros you normally get is
 actually an artifact of the current `.cpk`/`.pac` extractor doesn't handle the
 format correctly, I will rant more about it someday...)
+
+It also has some command line flags, use `launcher.exe --help` or
+`NeptuniaReBirth?.exe --help` to get a list. If you have a debug build, you can
+use `--console -lcpk=2` (or `--log-to-file=filename -lcpk=2` to save it to a
+file) to list all files opened by the game (it'll cause significant slowdown
+though, especially with the console method).
 
 Compilation
 ===========

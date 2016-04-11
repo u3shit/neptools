@@ -10,7 +10,7 @@ try:
         stderr = subprocess.PIPE,
         universal_newlines = True).strip('\n').lstrip('v')
 except:
-    VERSION = '0.3.1'
+    VERSION = '0.3.2'
 
 # these variables are mandatory ('/' are converted automatically)
 top = '.'
