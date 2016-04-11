@@ -41,12 +41,17 @@ def configure(cfg):
         cfg.find_program('lld-link', var='LINK_CXX')
         cfg.find_program('llvm-lib', var='AR')
 
+        cfg.add_os_flags('WINRCFLAGS', dup=False)
+        rcflags_save = cfg.env.WINRCFLAGS
+
         cfg.load('msvc', funs='no_autodetect')
         from waflib.Tools.compiler_cxx import cxx_compiler
         from waflib import Utils
         cxx_compiler[Utils.unversioned_sys_platform()] = ['msvc']
         from waflib.Tools.compiler_c import c_compiler
         c_compiler[Utils.unversioned_sys_platform()] = ['msvc']
+
+        cfg.env.WINRCFLAGS = rcflags_save
 
     cfg.load('compiler_cxx boost clang_compilation_database')
 
@@ -116,10 +121,21 @@ int main() { return 0; }
         cfg.check_cxx(lib='user32')
 
 def build_common(bld):
+    # ignore .rc files when not on windows/no resource compiler
+    from waflib.TaskGen import extension
+    @extension('.rc')
+    def rc_override(self, node):
+        if self.env.WINRC:
+            from waflib.Tools.winres import rc_file
+            rc_file(self, node)
+
+    import re
+    rc_ver = re.sub('-.*', '', re.sub('\.', ',', VERSION)) + ',0'
     bld(features = 'subst',
         source = 'src/version.hpp.in',
         target = 'src/version.hpp',
-        VERSION = VERSION)
+        VERSION = VERSION,
+        RC_VERSION = rc_ver)
 
     src = [
         'src/except.cpp',
@@ -152,7 +168,7 @@ def build_common(bld):
 def build(bld):
     build_common(bld)
 
-    bld.program(source = 'src/programs/stcm-editor.cpp',
+    bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
                 includes = 'src', # for version.hpp
                 uselib = 'BOOST',
                 use = 'common',
@@ -162,7 +178,8 @@ def build(bld):
         # technically launcher can be compiled for 64bits, but it makes no sense
         ld = ['/nodefaultlib', '/entry:start', '/subsystem:windows', '/FIXED',
               '/NXCOMPAT:NO', '/IGNORE:4254']
-        bld.program(source = 'src/programs/launcher.c',
+        bld.program(source = 'src/programs/launcher.c src/programs/launcher.rc',
+                    includes = 'src', # for version.hpp
                     target = 'launcher',
                     uselib = 'KERNEL32 SHELL32 USER32',
                     linkflags = ld)
@@ -183,6 +200,7 @@ def build(bld):
             'src/injected/cpk.cpp',
             'src/injected/hook.cpp',
             'src/programs/server.cpp',
+            'src/programs/server.rc',
         ]
         bld.shlib(source = src_inject,
                   includes = 'src', # for version.hpp

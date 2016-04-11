@@ -1,0 +1,42 @@
+#include <windows.h>
+#include "version.hpp"
+
+0 ICON "icon.ico"
+
+1 VERSIONINFO
+FILEVERSION NEPTOOLS_RC_VERSION
+PRODUCTVERSION NEPTOOLS_RC_VERSION
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904E4"
+        {
+            VALUE "ProductName", "stcm-editor"
+            VALUE "ProductVersion", NEPTOOLS_VERSION
+            VALUE "FileDescription", "NepTools stcm-editor"
+            VALUE "FileVersion", NEPTOOLS_VERSION
+            VALUE "InternalName", "stcm-editor"
+            VALUE "OriginalFileName", "stcm-editor.exe"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x409, 1200
+    }
+}
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST
+{
+    "<?xml version='1.0' encoding='utf-8' standalone='yes'?>"
+    "<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>"
+    "<trustInfo>"
+      "<security>"
+        "<requestedPrivileges>"
+          "<requestedExecutionLevel level='asInvoker' uiAccess='false'/>"
+        "</requestedPrivileges>"
+      "</security>"
+    "</trustInfo>"
+  "</assembly>"
+}

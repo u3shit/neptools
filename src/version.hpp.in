@@ -3,5 +3,6 @@
 #pragma once
 
 #define NEPTOOLS_VERSION "@VERSION@"
+#define NEPTOOLS_RC_VERSION @RC_VERSION@
 
 #endif
