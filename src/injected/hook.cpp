@@ -21,6 +21,13 @@ size_t GetImageSize() noexcept
     return hdr->OptionalHeader.SizeOfImage;
 }
 
+Byte* GetEntryPoint() noexcept
+{
+    auto dos_hdr = reinterpret_cast<IMAGE_DOS_HEADER*>(image_base);
+    auto hdr = reinterpret_cast<IMAGE_NT_HEADERS32*>(image_base + dos_hdr->e_lfanew);
+    return image_base + hdr->OptionalHeader.AddressOfEntryPoint;
+}
+
 void* Hook(void* fun, void* dst, size_t copy)
 {
     char* addr = reinterpret_cast<char*>(fun);

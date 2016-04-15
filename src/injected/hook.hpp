@@ -10,6 +10,7 @@ namespace Neptools
 
 extern Byte* image_base;
 size_t GetImageSize() noexcept;
+Byte* GetEntryPoint() noexcept;
 
 inline Byte* MaybeFindImage(const Pattern& pat) noexcept
 { return pat.MaybeFind(image_base, GetImageSize()); }

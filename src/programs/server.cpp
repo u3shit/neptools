@@ -148,8 +148,8 @@ int CALLBACK NewWinMain(
     return orig_main(inst, prev, cmdline, show_cmd);
 }
 
-auto MAIN_CALL = "53 51 6a 00 68 ?? ?? ?? ?? e8"_pattern;
-size_t MAIN_CALL_OFFSET = MAIN_CALL.size;
+// msvc 2013 crt offset between entry point and call to WinMain+1
+constexpr size_t MAIN_CALL_OFFSET = -201+1;
 
 }
 
@@ -158,14 +158,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
     if (reason != DLL_PROCESS_ATTACH) return true;
 
     image_base = reinterpret_cast<Byte*>(GetModuleHandle(nullptr));
-    auto call_base = FindImage(MAIN_CALL);
-    if (!call_base)
-    {
-        MessageBoxA(nullptr, "Failed to find entry point", nullptr, MB_OK);
-        return false;
-    }
+    auto call = GetEntryPoint() + MAIN_CALL_OFFSET;
 
-    auto call = call_base + MAIN_CALL_OFFSET;
     Unprotect up{call, 4};
     orig_main = reinterpret_cast<WinMainPtr>(call + 4 + As<size_t>(call));
     As<size_t>(call) = reinterpret_cast<Byte*>(NewWinMain) - call - 4;
