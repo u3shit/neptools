@@ -18,7 +18,7 @@ static bool CheckPattern(
 
 const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexcept
 {
-    size_t max_len = 0, max_i;
+    size_t max_len = 0, max_i = 0;
     size_t start_i = 0;
     for (size_t i = 0; i < size; ++i)
         if (mask[i] == 0xff)
@@ -32,6 +32,7 @@ const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexc
         else
             start_i = i+1;
 
+    NEPTOOLS_ASSERT(max_i + max_len <= size);
     boost::algorithm::boyer_moore<const Byte*> bm{
         pattern + max_i, pattern + max_i + max_len};
 
