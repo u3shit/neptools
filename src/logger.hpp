@@ -23,6 +23,7 @@ enum Level
 };
 
 OptionGroup& GetOptionGroup();
+extern int global_level;
 
 bool CheckLog(const char* name, int level);
 std::ostream& Log(

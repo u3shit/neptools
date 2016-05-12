@@ -33,11 +33,12 @@ OptionGroup& GetOptionGroup()
     return grp;
 }
 
+int global_level = -1;
+
 namespace
 {
 
 std::map<std::string, int> level_map;
-int global_level = -1;
 bool show_fun = false;
 
 Option show_fun_opt{
