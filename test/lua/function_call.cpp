@@ -3,7 +3,7 @@
 
 using namespace Neptools::Lua;
 
-int global;
+static int global;
 
 void voidfun() { global = 1; }
 
@@ -11,7 +11,7 @@ void voidfun() { global = 1; }
 TEST_CASE("void function", "[lua]")
 {
     State vm;
-    vm.PushFunction<FT(voidfun)>();
+    vm.Push<FT(voidfun)>();
 
     global = 0;
     lua_call(vm, 0, 0);
@@ -22,7 +22,7 @@ int intfun(int a, int b) { return a+b+3; }
 TEST_CASE("int function", "[lua]")
 {
     State vm;
-    vm.PushFunction<FT(intfun)>();
+    vm.Push<FT(intfun)>();
 
     vm.Push(5);
     vm.Push(7);
@@ -33,7 +33,7 @@ TEST_CASE("int function", "[lua]")
     CHECK(lua_gettop(vm) == 0);
 }
 
-std::string strfun(size_t a, std::string b)
+std::string strfun(size_t a, const std::string& b)
 {
     std::string ret;
     for (size_t i = 0; i < a; ++i)
@@ -43,7 +43,7 @@ std::string strfun(size_t a, std::string b)
 TEST_CASE("string function", "[lua]")
 {
     State vm;
-    vm.PushFunction<FT(strfun)>();
+    vm.Push<FT(strfun)>();
 
     vm.Push(5);
     vm.Push("hello");
@@ -63,7 +63,7 @@ std::tuple<bool, int, std::string> tuplefun(bool a, int n)
 TEST_CASE("tuple function", "[lua]")
 {
     State vm;
-    vm.PushFunction<FT(tuplefun)>();
+    vm.Push<FT(tuplefun)>();
 
     vm.Push(false);
     vm.Push(5);

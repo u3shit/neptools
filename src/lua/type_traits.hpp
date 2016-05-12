@@ -87,11 +87,11 @@ struct TypeTraits<std::string>
     { lua_pushlstring(vm, val.data(), val.length()); }
 };
 
-template <typename T>
-struct TypeTraits<std::shared_ptr<T>,
-                  std::enable_if_t<std::is_base_of<SharedObject, T>::value>>
+template<>
+struct TypeTraits<std::shared_ptr<SharedObject>>
 {
-    static std::shared_ptr<T>& Get(StateRef vm, bool arg, int idx)
+    template <typename T>
+    static std::shared_ptr<SharedObject>& Get2(StateRef vm, bool arg, int idx)
     {
         {
             if (!lua_getmetatable(vm, idx)) goto fail; // +1
@@ -108,11 +108,24 @@ struct TypeTraits<std::shared_ptr<T>,
         vm.TypeError(arg, T::TYPE_NAME, idx);
     }
 
-    static void Push(StateRef vm, const std::shared_ptr<T>& ptr)
+    static std::shared_ptr<SharedObject>& Get(StateRef vm, bool arg, int idx)
+    { return Get2<SharedObject>(vm, arg, idx); }
+
+    static void Push(StateRef vm, const std::shared_ptr<SharedObject>& ptr)
     {
-        if (ptr) ptr->Push(vm);
+        if (ptr) ptr->PushLua(vm);
         else lua_pushnil(vm);
     }
+
+};
+
+template <typename T>
+struct TypeTraits<std::shared_ptr<T>,
+                  std::enable_if_t<std::is_base_of<SharedObject, T>::value>>
+    : public TypeTraits<std::shared_ptr<SharedObject>>
+{
+    static std::shared_ptr<T> Get(StateRef vm, bool arg, int idx)
+    { return Get2<T>(vm, arg, idx); }
 };
 
 }

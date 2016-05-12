@@ -237,6 +237,8 @@ def build_common(bld):
         'src/format/stsc/instruction.cpp',
         'src/format/stsc/string.cpp',
         'src/lua/base.cpp',
+        'src/lua/shared_object.cpp',
+        'src/lua/user_type.cpp',
     ]
 
     bld.stlib(source = src,
@@ -373,6 +375,7 @@ def test(bld):
         'test/container/ordered_map.cpp',
         'test/lua/base.cpp',
         'test/lua/function_call.cpp',
+        'test/lua/user_type.cpp',
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',

@@ -12,6 +12,15 @@ namespace Neptools
 namespace Lua
 {
 
+// placeholder to skip parsing this argument
+struct Skip {};
+
+// the function pushes result manually
+struct RetNum { int n; };
+
+namespace Detail
+{
+
 template <typename... Args> struct List;
 
 template <typename T> struct FunctionTraits;
@@ -29,13 +38,11 @@ template <typename Ret, typename C, typename... Args>
 struct FunctionTraits<Ret(C::*)(Args...) const> : FunctionTraits<Ret(C*, Args...)> {};
 
 
-// placeholder to skip parsing this argument
-struct Skip {};
-
 template <typename T, int Idx> struct GetArg
 {
     static constexpr size_t NEXT_IDX = Idx+1;
-    static T Get(StateRef vm) { return vm.Check<T>(Idx); }
+    static decltype(auto) Get(StateRef vm)
+    { return vm.Check<typename std::decay<T>::type>(Idx); }
 };
 
 template <int Idx> struct GetArg<Skip, Idx>
@@ -62,9 +69,6 @@ struct GenArgSequence<N, std::integer_sequence<int, Seq...>, Head, Args...>
 template <int N, typename Seq> struct GenArgSequence<N, Seq>
 { using Type = Seq; };
 
-
-// the function pushes result manually
-struct RetNum { int n; };
 
 template <typename T> struct ResultPush
 {
@@ -129,9 +133,11 @@ struct WrapFunGen2<T, Fun, List<Args...>>
 template <typename T, T Fun>
 using WrapFunc = WrapFunGen2<T, Fun, typename FunctionTraits<T>::Arguments>;
 
+}
+
 template <typename T, T Fun>
-inline void StateRef::PushFunction()
-{ lua_pushcfunction(vm, (WrapFunc<T, Fun>::Func)); }
+inline void StateRef::Push()
+{ lua_pushcfunction(vm, (Detail::WrapFunc<T, Fun>::Func)); }
 
 }
 }

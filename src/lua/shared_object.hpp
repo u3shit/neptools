@@ -12,11 +12,14 @@ namespace Lua
 class SharedObject : public /* virtual? */ std::enable_shared_from_this<SharedObject>
 {
 public:
+    static constexpr const char* TYPE_NAME = "object";
+
     SharedObject() = default;
     SharedObject(const SharedObject&) = delete;
     virtual ~SharedObject() = default;
     void operator=(const SharedObject&) = delete;
 
+    static char TYPE_TAG;
     void PushLua(StateRef vm);
 
 private:

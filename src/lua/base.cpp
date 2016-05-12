@@ -87,31 +87,5 @@ void StateRef::TypeError(bool arg, const char* expected, int idx)
 thread_local const char* StateRef::error_msg;
 thread_local size_t StateRef::error_len;
 
-void SharedObject::PushLua(StateRef vm)
-{
-    // check cache
-    lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
-    lua_rawgetp(vm, -1, this); // +2
-    if (!lua_isnil(vm, -1)) // hit
-    {
-        lua_remove(vm, -2); // +1 remove reftbl
-        return;
-    }
-    lua_pop(vm, 1); // +1
-
-    // create instance
-    auto sptr = lua_newuserdata(vm, sizeof(std::shared_ptr<SharedObject>)); // +2
-    lua_rawgetp(vm, LUA_REGISTRYINDEX, GetTypeTag()); // +3
-    NEPTOOLS_ASSERT(lua_istable(vm, -1));
-
-    new (sptr) std::shared_ptr<SharedObject>{this->shared_from_this()};
-    lua_setmetatable(vm, -2); // +2
-
-    // save
-    lua_pushvalue(vm, -1); // +3
-    lua_rawsetp(vm, -3, this); // +2
-    lua_remove(vm, -2); // +1
-}
-
 }
 }

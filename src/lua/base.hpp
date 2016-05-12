@@ -13,7 +13,16 @@ using std::is_assignable;
 #endif
 #include <boost/optional.hpp>
 
+#include "../assert.hpp"
 #include "../except.hpp"
+
+#ifdef NDEBUG
+#define NEPTOOLS_LUA_GETTOP(vm, name) ((void) 0)
+#define NEPTOOLS_LUA_CHECKTOP(vm, val) ((void) 0)
+#else
+#define NEPTOOLS_LUA_GETTOP(vm, name) auto name = lua_gettop(vm)
+#define NEPTOOLS_LUA_CHECKTOP(vm, val) NEPTOOLS_ASSERT(lua_gettop(vm) == val)
+#endif
 
 namespace Neptools
 {
@@ -47,11 +56,15 @@ public:
     }
 
     template <typename T> void Push(T&& t)
-    { TypeTraits<std::decay_t<T>>::Push(*this, std::forward<T>(t)); }
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        TypeTraits<std::decay_t<T>>::Push(*this, std::forward<T>(t));
+        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    }
 
-    template <typename T, T Fun> void PushFunction();
+    template <typename T, T Fun> void Push();
 
-    void PushFunction(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
+    void Push(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
 
     // use optional<T>::value_or to get default value
     template <typename T> boost::optional<T> Opt(int idx)
@@ -60,9 +73,9 @@ public:
         return {Check<T>(idx)};
     }
 
-    template <typename T> T Get(int idx = -1)
+    template <typename T> decltype(auto) Get(int idx = -1)
     { return TypeTraits<T>::Get(*this, false, idx); }
-    template <typename T> T Check(int idx)
+    template <typename T> decltype(auto) Check(int idx)
     { return TypeTraits<T>::Get(*this, true, idx); }
 
     operator lua_State*() { return vm; }
