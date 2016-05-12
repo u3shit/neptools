@@ -48,20 +48,14 @@
 #  define NEPTOOLS_UNREACHABLE(x) NEPTOOLS_ASSERT_FAILED("unreachable", x)
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-#  define NEPTOOLS_NORETURN __attribute__((noreturn))
-#else
-#  define NEPTOOLS_NORETURN
-#endif
-
 namespace Neptools
 {
 
-NEPTOOLS_NORETURN void RethrowBoostException();
+BOOST_NORETURN void RethrowBoostException();
 std::string ExceptionToString();
 
 #ifndef WINDOWS
-NEPTOOLS_NORETURN
+BOOST_NORETURN
 #endif
 void AssertFailed(
     const char* expr, const char* msg, const char* file, unsigned line,

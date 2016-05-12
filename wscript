@@ -65,7 +65,9 @@ def configure(cfg):
         '-fcolor-diagnostics', '-fdiagnostics-show-option',
         '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
         '-Wno-gnu-string-literal-operator-template',
-        '-Wno-vla-extension', '-Wno-vla', '-Wno-assume'])
+        '-Wno-vla-extension', '-Wno-vla', '-Wno-assume',
+        '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
+    ])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
         cfg.define('_CRT_SECURE_NO_WARNINGS', 1)
@@ -108,6 +110,11 @@ int main() { return 0; }
         cfg.env.DEST_OS = 'win32'
 
     cfg.check_boost(lib='filesystem system')
+
+    # change boost includes to -isystem, because they can produce a lot of junk
+    if cfg.env['INCLUDES_BOOST']:
+        cfg.env.append_value('CXXFLAGS_BOOST', ['-isystem', cfg.env['INCLUDES_BOOST']])
+        del cfg.env['INCLUDES_BOOST']
 
     if cfg.options.release:
         cfg.define('NDEBUG', 1)
@@ -314,7 +321,7 @@ def filter_flags(cfg, vars, flags):
             if flag[0:5] == '-Wno-':
                 testflag = '-W'+flag[5:]
             cfg.check_cxx(cxxflags=[testflag], features='cxx',
-                          msg='Checking for compiler flag '+testflag)
+                          msg='Checking for compiler flags '+testflag)
             ret.append(flag)
             for var in vars:
                 cfg.env.append_value(var, flag)
