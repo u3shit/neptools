@@ -153,9 +153,11 @@ constexpr size_t MAIN_CALL_OFFSET = -201+1;
 
 }
 
-BOOL WINAPI DllMain(HINSTANCE, DWORD reason, LPVOID)
+BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID)
 {
     if (reason != DLL_PROCESS_ATTACH) return true;
+
+    DisableThreadLibraryCalls(inst);
 
     image_base = reinterpret_cast<Byte*>(GetModuleHandle(nullptr));
     auto call = GetEntryPoint() + MAIN_CALL_OFFSET;
