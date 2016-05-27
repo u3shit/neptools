@@ -16,7 +16,7 @@ File::File(Source src)
 
 void File::Parse_(Source& src)
 {
-    auto root = Create<RawItem>(std::move(src));
+    auto root = Create<RawItem>(src);
     auto root_sav = root.get();
     SetRoot(std::move(root));
     root_sav->Split(root_sav->GetSize(), Create<EofItem>());
