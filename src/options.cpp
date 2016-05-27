@@ -104,6 +104,7 @@ size_t ParseLong(const std::map<const char*, Option*, OptCmp>& long_opts,
         throw InvalidParam{"Unknown option"};
 
     if (std::next(it) != long_opts.end() &&
+        strcmp(argv[i]+2, it->first) != 0 && // exact matches are non ambiguous
         strncmp(argv[i]+2, std::next(it)->first, len) == 0)
     {
         std::stringstream ss;

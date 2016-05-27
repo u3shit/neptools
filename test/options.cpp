@@ -317,3 +317,25 @@ TEST_CASE("usage displaying", "[Options]")
           " -h --help\n"
           "\tShow this help message\n");
 }
+
+TEST_CASE("non-unique prefix", "[Options]")
+{
+    std::stringstream ss;
+    OptionParser parser;
+    parser.SetOstream(ss);
+
+    OptionGroup grp{parser, "Foo", "Description of foo"};
+
+    bool b1 = false, b2 = false;
+
+    Option test1{grp, "foo",     0, nullptr, "foo", [&](auto){ b1 = true; }};
+    Option test2{grp, "foo-bar", 0, nullptr, "bar", [&](auto){ b2 = true; }};
+
+    int argc = 2;
+    const char* argv[] = { "foo", "--foo", nullptr };
+
+    parser.Run(argc, argv);
+    CHECK(ss.str() == "");
+    CHECK(b1 == true);
+    CHECK(b2 == false);
+}
