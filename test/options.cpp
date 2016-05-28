@@ -339,3 +339,43 @@ TEST_CASE("non-unique prefix", "[Options]")
     CHECK(b1 == true);
     CHECK(b2 == false);
 }
+
+TEST_CASE("non-unique prefix with options", "[Options]")
+{
+    std::stringstream ss;
+    OptionParser parser;
+    parser.SetOstream(ss);
+
+    OptionGroup grp{parser, "Foo", "Description of foo"};
+
+    const char* b1 = nullptr;
+    bool b2 = false;
+
+    Option test1{grp, "foo",     1, nullptr, "foo", [&](auto a){ b1 = a.front(); }};
+    Option test2{grp, "foo-bar", 0, nullptr, "bar", [&](auto){ b2 = true; }};
+
+    int argc;
+    const char* argv[4] = {"foo"};
+    bool b = false;
+    SECTION("space separated")
+    {
+        argc = 3;
+        argv[1] = "--foo";
+        argv[2] = "bar";
+        b = true;
+    }
+    SECTION("= separated")
+    {
+        argc = 2;
+        argv[1] = "--foo=bar";
+        b = true;
+    }
+
+    if (b) // catch+clang is buggy...
+    {
+        parser.Run(argc, argv);
+        CHECK(ss.str() == "");
+        CHECK_STREQ(b1, "bar");
+        CHECK(b2 == false);
+    }
+}
