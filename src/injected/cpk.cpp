@@ -161,8 +161,7 @@ bool CpkHandler::OpenTxtFile(
 
         Source src{boost::filesystem::exists(pth) ?
             Source::FromFile(pth) : GetSource(fname)};
-        if (src.GetSize() < 4)
-            NEPTOOLS_THROW(DecodeError{"Input file too short"});
+        src.CheckSize(4);
 
         char hdr_buf[4];
         src.Pread(0, hdr_buf, 4);

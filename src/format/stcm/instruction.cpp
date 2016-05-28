@@ -218,12 +218,10 @@ static const std::set<uint32_t> no_returns{0, 6};
 InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
-    if (x.src.GetSize() < sizeof(Header))
-        NEPTOOLS_THROW(DecodeError{"Invalid instruction: premature end of data"});
 
+    x.src.CheckSize(sizeof(Header));
     auto inst = x.src.Pread<Header>(0);
-    if (x.src.GetSize() < inst.size)
-        NEPTOOLS_THROW(DecodeError{"Invalid instruction: premature end of data"});
+    x.src.CheckSize(inst.size);
 
     auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
 

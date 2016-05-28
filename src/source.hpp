@@ -13,6 +13,12 @@
 namespace Neptools
 {
 
+class Source;
+using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
+using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
+using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
+std::string to_string(const UsedSource& src);
+
 /// A fixed size, read-only, seekable data source (or something that emulates it)
 class Source
 {
@@ -51,7 +57,17 @@ public:
         get = pos;
     }
     FilePosition Tell() const noexcept { return get; }
+    FilePosition GetRemainingSize() const noexcept { return p->size - get; }
     bool Eof() const noexcept { return get == size; }
+
+    void CheckSize(FilePosition size) const
+    {
+        if (p->size < size)
+            NEPTOOLS_THROW(
+                DecodeError{"Premature end of data"} <<
+                UsedSource(*this));
+    }
+    void CheckRemaining(FilePosition size) const { CheckSize(get + size); }
 
     template <typename T>
     void Read(T& x) { Read(reinterpret_cast<Byte*>(&x), sizeof(T)); }
@@ -158,11 +174,6 @@ private:
         if (!::boost::get_error_info<UsedSource>(e))    \
             e << UsedSource{src};                       \
     }
-
-using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
-using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
-using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
-std::string to_string(const UsedSource& src);
 
 }
 #endif

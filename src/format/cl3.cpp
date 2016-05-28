@@ -58,9 +58,7 @@ Cl3::Cl3(Source src)
 
 void Cl3::Parse_(Source& src)
 {
-    if (src.GetSize() < sizeof(Header))
-        NEPTOOLS_THROW(DecodeError{"CL3: file too short"});
-
+    src.CheckSize(sizeof(Header));
     auto hdr = src.Pread<Header>(0);
     hdr.Validate(src.GetSize());
 

@@ -33,8 +33,7 @@ struct State
 State SmartOpen_(const boost::filesystem::path& fname)
 {
     auto src = Source::FromFile(fname.native());
-    if (src.GetSize() < 4)
-        NEPTOOLS_THROW(DecodeError{"Input file too short"});
+    src.CheckSize(4);
 
     char buf[4];
     src.Pread(0, buf, 4);

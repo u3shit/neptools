@@ -55,9 +55,8 @@ Gbnl::Gbnl(Source src)
 void Gbnl::Parse_(Source& src)
 {
 #define VALIDATE(msg, x) NEPTOOLS_VALIDATE_FIELD("Gbnl" msg, x)
-    if (src.GetSize() < sizeof(Header))
-        NEPTOOLS_THROW(DecodeError{"GBNL: section too short"});
 
+    src.CheckSize(sizeof(Header));
     auto foot = src.Pread<Header>(0);
     if (memcmp(foot.magic, "GSTL", 4) == 0)
     {
