@@ -24,6 +24,9 @@ T asserted_cast(U* ptr)
     return static_cast<T>(ptr);
 }
 
+template <typename T>
+constexpr size_t EmptySizeof = std::is_empty<T>::value ? 0 : sizeof(T);
+
 std::ofstream OpenOut(const boost::filesystem::path& pth);
 std::ifstream OpenIn(const boost::filesystem::path& pth);
 

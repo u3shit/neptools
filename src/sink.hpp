@@ -22,7 +22,7 @@ public:
 
     template <typename T>
     void Write(const T& x)
-    { Write(reinterpret_cast<const Byte*>(&x), sizeof(T)); }
+    { Write(reinterpret_cast<const Byte*>(&x), EmptySizeof<T>); }
     void Write(const char* data, FileMemSize len)
     { Write(reinterpret_cast<const Byte*>(data), len); }
 

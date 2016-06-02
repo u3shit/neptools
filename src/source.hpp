@@ -70,13 +70,13 @@ public:
     void CheckRemaining(FilePosition size) const { CheckSize(get + size); }
 
     template <typename T>
-    void Read(T& x) { Read(reinterpret_cast<Byte*>(&x), sizeof(T)); }
+    void Read(T& x) { Read(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
     template <typename T>
     T Read() { T ret; Read(ret); return ret; }
 
     template <typename T>
     void Pread(FilePosition offs, T& x) const
-    { Pread(offs, reinterpret_cast<Byte*>(&x), sizeof(T)); }
+    { Pread(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
     template <typename T>
     T Pread(FilePosition offs) const
     { T ret; Pread(offs, ret); return ret; }

@@ -2,6 +2,7 @@
 #include "../format/cl3.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
+#include "../format/stsc/file.hpp"
 #include "../except.hpp"
 #include "../options.hpp"
 #include "../utils.hpp"
@@ -48,6 +49,11 @@ State SmartOpen_(const boost::filesystem::path& fname)
         auto stcm = std::make_unique<Stcm::File>(src);
         auto ret2 = stcm.get();
         return {std::move(stcm), nullptr, ret2, nullptr};
+    }
+    else if (memcmp(buf, "STSC", 4) == 0)
+    {
+        auto stsc = std::make_unique<Stsc::File>(src);
+        return {std::move(stsc), nullptr, nullptr, nullptr};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
              (memcmp(buf, "GSTL", 4) == 0 ||

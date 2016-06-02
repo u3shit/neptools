@@ -166,6 +166,10 @@ def build_common(bld):
         'src/format/stcm/gbnl.cpp',
         'src/format/stcm/header.cpp',
         'src/format/stcm/instruction.cpp',
+        'src/format/stsc/file.cpp',
+        'src/format/stsc/header.cpp',
+        'src/format/stsc/instruction.cpp',
+        'src/format/stsc/string.cpp',
     ]
 
     bld.stlib(source = src,
