@@ -168,7 +168,7 @@ void Gbnl::Parse_(Source& src)
                     VALIDATE("", offs < src.GetSize() - foot.offset_msgs);
                     auto str = foot.offset_msgs + offs;
 
-                    m.Get<OffsetString>(i) = {src.GetCstring(str), 0};
+                    m.Get<OffsetString>(i) = {src.GetCString(str), 0};
                 }
                 break;
             }

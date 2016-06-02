@@ -104,19 +104,49 @@ public:
     uint32_t GetLittleUint32(FilePosition offs) const
     { return Pread<boost::endian::little_uint32_t>(offs); }
 
-    std::string GetCstring()
+    static constexpr size_t GET_C_BUF_SIZE = 16;
+    std::string GetCString()
     {
         std::string str;
-        while (char c = Get())
-            str += c;
+        char buf[GET_C_BUF_SIZE];
+        while (true)
+        {
+            auto rem = GetRemainingSize();
+            if (rem == 0)
+                NEPTOOLS_THROW(DecodeError{"Unterminated C-style string"} <<
+                               UsedSource{*this});
+
+            auto rd = std::min<FilePosition>(GET_C_BUF_SIZE, rem);
+            Read(buf, rd);
+            auto len = strnlen(buf, rd);
+            str.append(buf, len);
+            if (len < rd)
+            {
+                Seek(Tell() - (rd-len+1));
+                break;
+            }
+        }
         return str;
     }
 
-    std::string GetCstring(FilePosition offs) const
+    std::string GetCString(FilePosition offs) const
     {
         std::string str;
-        while (char c = Get(offs++))
-            str += c;
+        char buf[GET_C_BUF_SIZE];
+        while (true)
+        {
+            auto rem = GetSize() - offs;
+            if (rem == 0)
+                NEPTOOLS_THROW(DecodeError{"Unterminated C-style string"} <<
+                               UsedSource{*this});
+
+            auto rd = std::min<FilePosition>(GET_C_BUF_SIZE, rem);
+            Pread(offs, buf, rd);
+            auto len = strnlen(buf, rd);
+            str.append(buf, len);
+            if (len < rd) break;
+            offs += rd;
+        }
         return str;
     }
 
