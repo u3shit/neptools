@@ -17,6 +17,9 @@ struct ItemPointer
     Item* item;
     FilePosition offset;
 
+    ItemPointer(Item* item, FilePosition offset = 0)
+        : item{item}, offset{offset} {}
+
     bool operator==(const ItemPointer& o) const
     { return item == o.item && offset == o.offset; }
     bool operator!=(const ItemPointer& o) const

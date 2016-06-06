@@ -17,14 +17,18 @@ std::unique_ptr<InstructionBase> CreateAdapt(Context* ctx, const Source& src)
 { return ctx->Create<InstructionItem<I>>(I, src); }
 
 template <typename T> struct CreateMapImpl;
-template <uint8_t... I>
+template <size_t... I>
 struct CreateMapImpl<std::index_sequence<I...>>
 {
     static const constexpr CreateType MAP[] = { CreateAdapt<I>... };
+    static const constexpr bool NO_RETURN[] = { InstructionItem<I>::NO_RETURN... };
 };
 
-template <uint8_t... I>
-const CreateType CreateMapImpl<std::index_sequence<I...>>::MAP[];
+template <size_t... I>
+const constexpr CreateType CreateMapImpl<std::index_sequence<I...>>::MAP[];
+
+template <size_t... I>
+const constexpr bool CreateMapImpl<std::index_sequence<I...>>::NO_RETURN[];
 
 using CreateMap = CreateMapImpl<std::make_index_sequence<256>>;
 }
@@ -35,7 +39,13 @@ InstructionBase* InstructionBase::CreateAndInsert(ItemPointer ptr)
     auto x = RawItem::GetSource(ptr, -1);
     x.src.CheckSize(1);
     uint8_t opcode = x.src.Read<boost::endian::little_uint8_t>();
-    return x.ritem.Split(ptr.offset, CreateMap::MAP[opcode](x.ritem.GetContext(), x.src));
+    auto ret =  x.ritem.Split(
+        ptr.offset, CreateMap::MAP[opcode](x.ritem.GetContext(), x.src));
+
+    ret->PostInsert();
+    if (!CreateMap::NO_RETURN[opcode])
+        MaybeCreateUnchecked<InstructionBase>(ret->GetNext());
+    return ret;
 }
 
 void InstructionBase::InstrDump(Sink& sink) const
@@ -108,6 +118,7 @@ struct Traits<T, ToVoid<typename EndianMap<T>::Type>>
     static T Parse(RawType r, Context*) { return r; }
     static RawType Dump(T r) { return r; }
     static void Inspect(std::ostream& os, T t) { os << uint32_t(t); }
+    static void PostInsert(T) {}
 };
 
 template<> struct Traits<float>
@@ -132,15 +143,16 @@ template<> struct Traits<float>
     }
 
     static void Inspect(std::ostream& os, float v) { os << v; }
+    static void PostInsert(float) {}
 };
 
-template<> struct Traits<const Label*>
+template<> struct Traits<void*>
 {
     using RawType = boost::endian::little_uint32_t;
     static constexpr const size_t SIZE = 4;
 
     static void Validate(uint32_t r, FilePosition size)
-    { NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction", r < size); }
+    { NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction", r <= size); }
 
     static const Label* Parse(uint32_t r, Context* ctx)
     { return ctx->GetLabelTo(r); }
@@ -150,17 +162,20 @@ template<> struct Traits<const Label*>
 
     static void Inspect(std::ostream& os, const Label* l)
     { os << '@' << l->first; }
+
+    static void PostInsert(const Label*) {}
 };
 
-template<> struct Traits<std::string> : public Traits<const Label*>
+template<> struct Traits<std::string> : public Traits<void*>
 {
-    static const Label* Parse(uint32_t r, Context* ctx)
-    {
-        auto lbl = Traits<const Label*>::Parse(r, ctx);
-        if (lbl->second.Maybe<RawItem>())
-            StringItem::CreateAndInsert(lbl->second);
-        return lbl;
-    }
+    static void PostInsert(const Label* lbl)
+    { MaybeCreate<StringItem>(lbl->second); }
+};
+
+template<> struct Traits<Code*> : public Traits<void*>
+{
+    static void PostInsert(const Label* lbl)
+    { MaybeCreateUnchecked<InstructionBase>(lbl->second); }
 };
 
 template <typename T, typename... Args> struct OperationsImpl;
@@ -172,11 +187,17 @@ struct OperationsImpl<std::index_sequence<I...>, T...>
 
     template <typename Tuple>
     static void Validate(const Tuple& tuple, FilePosition size)
-    { FORALL(Traits<T>::Validate(Get<I>(tuple), size)); }
+    {
+        (void) size; // shut up, retarded gcc
+        FORALL(Traits<T>::Validate(Get<I>(tuple), size));
+    }
 
     template <typename Dst, typename Src>
     static void Parse(Dst& dst, const Src& src, Context* ctx)
-    { FORALL(std::get<I>(dst) = Traits<T>::Parse(Get<I>(src), ctx)); }
+    {
+        (void) ctx; // shut up, retarded gcc
+        FORALL(std::get<I>(dst) = Traits<T>::Parse(Get<I>(src), ctx));
+    }
 
     template <typename Dst, typename Src>
     static void Dump(Dst& dst, const Src& src)
@@ -189,6 +210,10 @@ struct OperationsImpl<std::index_sequence<I...>, T...>
             os << ", ",
             Traits<T>::Inspect(os, std::get<I>(tuple)));
     }
+
+    template <typename Tuple>
+    static void PostInsert(const Tuple& tuple)
+    { FORALL(Traits<T>::PostInsert(std::get<I>(tuple))); }
 
     static constexpr size_t Size()
     {
@@ -204,20 +229,20 @@ using Operations = OperationsImpl<std::index_sequence_for<Args...>, Args...>;
 
 }
 
-template <typename... Args>
-const FilePosition SimpleInstruction<Args...>::SIZE =
+template <bool NoReturn, typename... Args>
+const FilePosition SimpleInstruction<NoReturn, Args...>::SIZE =
     Operations<Args...>::Size() + 1;
 
-template <typename... Args>
-SimpleInstruction<Args...>::SimpleInstruction(
+template <bool NoReturn, typename... Args>
+SimpleInstruction<NoReturn, Args...>::SimpleInstruction(
     Key k, Context* ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
 {
     AddInfo(&SimpleInstruction::Parse_, ADD_SOURCE(src), this, src);
 }
 
-template <typename... Args>
-void SimpleInstruction<Args...>::Parse_(Source& src)
+template <bool NoReturn, typename... Args>
+void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
 {
     src.CheckSize(SIZE);
     using Tuple = PODTuple<typename Traits<Args>::RawType...>;
@@ -230,8 +255,8 @@ void SimpleInstruction<Args...>::Parse_(Source& src)
     Operations<Args...>::Parse(args, raw, GetContext());
 }
 
-template <typename... Args>
-void SimpleInstruction<Args...>::Dump_(Sink& sink) const
+template <bool NoReturn, typename... Args>
+void SimpleInstruction<NoReturn, Args...>::Dump_(Sink& sink) const
 {
     InstrDump(sink);
 
@@ -241,14 +266,21 @@ void SimpleInstruction<Args...>::Dump_(Sink& sink) const
     sink.Write(t);
 }
 
-template <typename... Args>
-void SimpleInstruction<Args...>::Inspect_(std::ostream& os) const
+template <bool NoReturn, typename... Args>
+void SimpleInstruction<NoReturn, Args...>::Inspect_(std::ostream& os) const
 {
     InstrInspect(os);
     Operations<Args...>::Inspect(os, args);
     os << ')';
 }
 
+template <bool NoReturn, typename... Args>
+void SimpleInstruction<NoReturn, Args...>::PostInsert()
+{
+    Operations<Args...>::PostInsert(args);
+}
+
+// ------------------------------------------------------------------------
 // specific instruction implementations
 Instruction0dItem::Instruction0dItem(
     Key k, Context* ctx, uint8_t opcode, Source src)
@@ -295,12 +327,13 @@ void Instruction0dItem::Inspect_(std::ostream& os) const
     os << ')';
 }
 
-Instruction19Item::Instruction19Item(
-    Key k, Context* ctx, uint8_t opcode, Source src)
-    : InstructionBase{k, ctx, opcode}
+void Instruction0dItem::PostInsert()
 {
-    abort();
+    for (auto l : tgts)
+        MaybeCreateUnchecked<InstructionBase>(l->second);
 }
+
+// ------------------------------------------------------------------------
 
 void Instruction1dItem::FixParams::Validate(
     FilePosition rem_size, FilePosition size)
@@ -375,6 +408,13 @@ void Instruction1dItem::InspectNode(std::ostream& os, size_t i) const
     os << '}';
 }
 
+void Instruction1dItem::PostInsert()
+{
+    MaybeCreateUnchecked<InstructionBase>(tgt->second);
+}
+
+// ------------------------------------------------------------------------
+
 void Instruction1eItem::FixParams::Validate(FilePosition rem_size)
 {
     NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction1eItem::FixParams",
@@ -409,7 +449,8 @@ void Instruction1eItem::Parse_(Source& src)
     {
         auto exp = src.Read<ExpressionParams>();
         exp.Validate(GetContext()->GetSize());
-        expressions.push_back({exp.expression, GetContext()->GetLabelTo(exp.tgt)});
+        expressions.push_back({
+                exp.expression, GetContext()->GetLabelTo(exp.tgt)});
     }
 }
 
@@ -433,6 +474,12 @@ void Instruction1eItem::Inspect_(std::ostream& os) const
         os << '{' << e.first << ", @" << e.second->first << '}';
     }
     os << "})";
+}
+
+void Instruction1eItem::PostInsert()
+{
+    for (const auto& e : expressions)
+        MaybeCreate<InstructionBase>(e.second->second);
 }
 
 }

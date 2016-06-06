@@ -80,5 +80,13 @@ inline void MaybeCreate(ItemPointer ptr)
         ptr.As0<T>(); // assert it
 }
 
+template <typename T>
+inline void MaybeCreateUnchecked(ItemPointer ptr)
+{
+    if (ptr.Maybe<RawItem>())
+        T::CreateAndInsert(ptr);
+}
+
+
 }
 #endif

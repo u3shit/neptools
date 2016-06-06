@@ -42,10 +42,7 @@ HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
     auto x = RawItem::GetSource(ptr, -1);
     auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.src);
 
-    auto nptr = ret->entry_point->second;
-    //for (size_t i = 0; i < 75; ++i)
-    while (nptr.Maybe<RawItem>())
-        nptr = {InstructionBase::CreateAndInsert(nptr)->GetNext(), 0};
+    InstructionBase::CreateAndInsert(ret->entry_point->second);
     return ret;
 }
 
