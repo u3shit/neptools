@@ -76,6 +76,7 @@ def configure(cfg):
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
             '-EHsc', '-MD'])
         cfg.env.prepend_value('CFLAGS', '/Gs9999999')
+        cfg.env.prepend_value('INCLUDES', 'msvc_include')
 
         if cfg.options.optimize:
             cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
