@@ -21,14 +21,10 @@ template <size_t... I>
 struct CreateMapImpl<std::index_sequence<I...>>
 {
     static const constexpr CreateType MAP[] = { CreateAdapt<I>... };
-    static const constexpr bool NO_RETURN[] = { InstructionItem<I>::NO_RETURN... };
 };
 
 template <size_t... I>
 const constexpr CreateType CreateMapImpl<std::index_sequence<I...>>::MAP[];
-
-template <size_t... I>
-const constexpr bool CreateMapImpl<std::index_sequence<I...>>::NO_RETURN[];
 
 using CreateMap = CreateMapImpl<std::make_index_sequence<256>>;
 }
@@ -43,8 +39,6 @@ InstructionBase* InstructionBase::CreateAndInsert(ItemPointer ptr)
         ptr.offset, CreateMap::MAP[opcode](x.ritem.GetContext(), x.src));
 
     ret->PostInsert();
-    if (!CreateMap::NO_RETURN[opcode])
-        MaybeCreateUnchecked<InstructionBase>(ret->GetNext());
     return ret;
 }
 
@@ -278,6 +272,7 @@ template <bool NoReturn, typename... Args>
 void SimpleInstruction<NoReturn, Args...>::PostInsert()
 {
     Operations<Args...>::PostInsert(args);
+    if (!NoReturn) MaybeCreateUnchecked<InstructionBase>(GetNext());
 }
 
 // ------------------------------------------------------------------------
@@ -411,6 +406,7 @@ void Instruction1dItem::InspectNode(std::ostream& os, size_t i) const
 void Instruction1dItem::PostInsert()
 {
     MaybeCreateUnchecked<InstructionBase>(tgt->second);
+    MaybeCreateUnchecked<InstructionBase>(GetNext());
 }
 
 // ------------------------------------------------------------------------
@@ -480,6 +476,7 @@ void Instruction1eItem::PostInsert()
 {
     for (const auto& e : expressions)
         MaybeCreate<InstructionBase>(e.second->second);
+    MaybeCreateUnchecked<InstructionBase>(GetNext());
 }
 
 }

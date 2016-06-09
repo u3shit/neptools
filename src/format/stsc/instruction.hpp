@@ -41,8 +41,6 @@ template <bool NoReturn, typename... Args>
 class SimpleInstruction final : public InstructionBase
 {
 public:
-    static constexpr bool NO_RETURN = NoReturn;
-
     SimpleInstruction(Key k, Context* ctx, uint8_t opcode, Source src);
 
     static const FilePosition SIZE;
@@ -60,8 +58,6 @@ private:
 class Instruction0dItem final : public InstructionBase
 {
 public:
-    static constexpr bool NO_RETURN = true;
-
     Instruction0dItem(Key k, Context* ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
 
@@ -77,8 +73,6 @@ private:
 class UnimplementedInstructionItem final : public InstructionBase
 {
 public:
-    static constexpr bool NO_RETURN = true;
-
     UnimplementedInstructionItem(Key k, Context* ctx, uint8_t opcode, Source)
         : InstructionBase{k, ctx, opcode}
     { NEPTOOLS_THROW(DecodeError{"Unimplemented instruction"}); }
@@ -112,8 +106,6 @@ public:
         void Validate(uint16_t size);
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(NodeParams) == 9);
-
-    static constexpr bool NO_RETURN = false;
 
     Instruction1dItem(Key k, Context* ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override
@@ -156,8 +148,6 @@ public:
         void Validate(FilePosition size);
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(ExpressionParams) == 8);
-
-    static constexpr bool NO_RETURN = false;
 
     Instruction1eItem(Key k, Context* ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override
