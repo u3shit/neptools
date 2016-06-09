@@ -26,14 +26,16 @@ public:
     template <typename T, typename... Args>
     std::unique_ptr<T> Create(Args&&... args);
 
-    const Label* GetLabel(const std::string& name) const;
+    const Label* GetLabel(std::string name) const;
     const Label* CreateLabel(std::string name, ItemPointer ptr);
-    const Label* CreateLabelFallback(const std::string& name, ItemPointer ptr);
-    const Label* CreateLabelFallback(const std::string& name, FilePosition pos)
+    const Label* CreateLabelFallback(std::string name, ItemPointer ptr);
+    const Label* CreateLabelFallback(std::string name, FilePosition pos)
     { return CreateLabelFallback(name, GetPointer(pos)); }
 
     const Label* GetLabelTo(ItemPointer ptr);
     const Label* GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
+
+    const Label* GetLabelTo(FilePosition pos, std::string name);
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
@@ -46,6 +48,7 @@ protected:
     void SetRoot(std::unique_ptr<Item> nroot);
 
 private:
+    static void FilterLabelName(std::string& name);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
 

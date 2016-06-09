@@ -162,6 +162,18 @@ template<> struct Traits<void*>
 
 template<> struct Traits<std::string> : public Traits<void*>
 {
+    static const Label* Parse(uint32_t r, Context* ctx)
+    {
+        auto ptr = ctx->GetPointer(r);
+        if (ptr.Maybe<RawItem>())
+        {
+            auto x = RawItem::GetSource(ptr, -1);
+            return ctx->GetLabelTo(r, "str_"+x.src.GetCString(0).substr(0, 16));
+        }
+        else
+            return ctx->GetLabelTo(r);
+    }
+
     static void PostInsert(const Label* lbl)
     { MaybeCreate<StringItem>(lbl->second); }
 };

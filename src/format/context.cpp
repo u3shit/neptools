@@ -20,8 +20,9 @@ void Context::SetRoot(std::unique_ptr<Item> nroot)
     size = root->GetSize();
 }
 
-const Label* Context::GetLabel(const std::string& name) const
+const Label* Context::GetLabel(std::string name) const
 {
+    FilterLabelName(name);
     auto it = labels.find(name);
     if (it == labels.end())
         NEPTOOLS_THROW(OutOfRange{"Context::GetLabel"}
@@ -31,6 +32,7 @@ const Label* Context::GetLabel(const std::string& name) const
 
 const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
 {
+    FilterLabelName(name);
     auto pair = labels.insert({std::move(name), ptr});
     if (!pair.second)
         NEPTOOLS_THROW(OutOfRange{"label already exists"}
@@ -39,8 +41,9 @@ const Label* Context::CreateLabel(std::string name, ItemPointer ptr)
     return PostCreateLabel(pair, ptr);
 }
 
-const Label* Context::CreateLabelFallback(const std::string& name, ItemPointer ptr)
+const Label* Context::CreateLabelFallback(std::string name, ItemPointer ptr)
 {
+    FilterLabelName(name);
     auto pair = labels.insert({name, ptr});
     for (int i = 1; !pair.second; ++i)
     {
@@ -77,6 +80,22 @@ const Label* Context::GetLabelTo(ItemPointer ptr)
     ss << "loc_" << std::setw(8) << std::setfill('0') << std::hex
        << ptr.item->GetPosition() + ptr.offset;
     return CreateLabelFallback(ss.str(), ptr);
+}
+
+const Label* Context::GetLabelTo(FilePosition pos, std::string name)
+{
+    auto ptr = GetPointer(pos);
+    auto& lctr = ptr.item->labels;
+    auto it = lctr.find(ptr.offset);
+    if (it != lctr.end()) return it->second;
+
+    return CreateLabelFallback(std::move(name), ptr);
+}
+
+void Context::FilterLabelName(std::string& name)
+{
+    for (auto& c : name)
+        if (!isalnum(c)) c = '_';
 }
 
 ItemPointer Context::GetPointer(FilePosition pos) const noexcept
