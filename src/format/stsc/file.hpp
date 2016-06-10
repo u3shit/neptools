@@ -4,19 +4,23 @@
 
 #include "../context.hpp"
 #include "../../source.hpp"
+#include "../../txt_serializable.hpp"
 
 namespace Neptools
 {
 namespace Stsc
 {
 
-class File : public Context
+class File : public Context, public TxtSerializable
 {
 public:
     File(Source src);
 
 private:
     void Parse_(Source& src);
+
+    void WriteTxt_(std::ostream& os) const override;
+    void ReadTxt_(std::istream& is) override;
 };
 
 }

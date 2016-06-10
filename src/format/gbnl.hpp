@@ -5,13 +5,14 @@
 #include "../dumpable.hpp"
 #include "../source.hpp"
 #include "../dynamic_struct.hpp"
+#include "../txt_serializable.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 
 namespace Neptools
 {
 
-class Gbnl : public Dumpable
+class Gbnl : public Dumpable, public TxtSerializable
 {
 public:
     struct Header // or Footer
@@ -60,11 +61,6 @@ public:
 
     void Fixup() override { RecalcSize(); }
 
-    void WriteTxt(std::ostream& os) const;
-    void WriteTxt(std::ostream&& os) const { WriteTxt(os); }
-    void ReadTxt(std::istream& is);
-    void ReadTxt(std::istream&& is) { ReadTxt(is); }
-
     struct OffsetString
     {
         std::string str;
@@ -91,6 +87,9 @@ protected:
     void Inspect_(std::ostream& os) const override;
 
 private:
+    void WriteTxt_(std::ostream& os) const override;
+    void ReadTxt_(std::istream& is) override;
+
     void Parse_(Source& src);
     void DumpHeader(Sink& sink) const;
     FilePosition Align(FilePosition x) const noexcept;

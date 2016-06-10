@@ -27,14 +27,21 @@ GbnlItem& File::FindGbnl()
 {
     auto gbnl = FindGbnl_(GetRoot());
     if (!gbnl) NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
+    return *const_cast<GbnlItem*>(gbnl);
+}
+
+const GbnlItem& File::FindGbnl() const
+{
+    auto gbnl = FindGbnl_(GetRoot());
+    if (!gbnl) NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
     return *gbnl;
 }
 
-GbnlItem* File::FindGbnl_(Item* root) const
+const GbnlItem* File::FindGbnl_(const Item* root) const
 {
     if (!root) return nullptr;
 
-    auto x = dynamic_cast<Stcm::GbnlItem*>(root);
+    auto x = dynamic_cast<const Stcm::GbnlItem*>(root);
     if (x) return x;
 
     x = FindGbnl_(root->GetChildren());
@@ -42,6 +49,13 @@ GbnlItem* File::FindGbnl_(Item* root) const
 
     return FindGbnl_(root->GetNext());
 }
+
+void File::WriteTxt_(std::ostream& os) const
+{ FindGbnl().WriteTxt(os); }
+
+void File::ReadTxt_(std::istream& is)
+{ FindGbnl().ReadTxt(is); }
+
 
 }
 }

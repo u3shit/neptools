@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../../source.hpp"
+#include "../../txt_serializable.hpp"
 #include "../context.hpp"
 
 namespace Neptools
@@ -11,15 +12,19 @@ namespace Stcm
 {
 
 class GbnlItem;
-class File : public Context
+class File : public Context, public TxtSerializable
 {
 public:
     File(Source src);
     GbnlItem& FindGbnl();
+    const GbnlItem& FindGbnl() const;
 
 private:
     void Parse_(Source& src);
-    GbnlItem* FindGbnl_(Item* root) const;
+    const GbnlItem* FindGbnl_(const Item* root) const;
+
+    void WriteTxt_(std::ostream& os) const override;
+    void ReadTxt_(std::istream& is) override;
 };
 
 }

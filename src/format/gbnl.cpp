@@ -486,7 +486,7 @@ uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
         return this_k*10000+j;
 }
 
-void Gbnl::WriteTxt(std::ostream& os) const
+void Gbnl::WriteTxt_(std::ostream& os) const
 {
     size_t j = 0;
     for (const auto& m : messages)
@@ -542,7 +542,7 @@ size_t Gbnl::FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,
     return -1;
 }
 
-void Gbnl::ReadTxt(std::istream& is)
+void Gbnl::ReadTxt_(std::istream& is)
 {
     std::string line, msg;
     size_t last_index = 0, pos = -1;
@@ -555,8 +555,8 @@ void Gbnl::ReadTxt(std::istream& is)
         {
             if (pos != static_cast<size_t>(-1))
             {
-                NEPTOOLS_ASSERT(msg.back() == '\n');
-                msg.pop_back();
+                NEPTOOLS_ASSERT(msg.empty() || msg.back() == '\n');
+                if (!msg.empty()) msg.pop_back();
                 auto& m = messages[last_index];
                 if (m.Is<OffsetString>(pos))
                     m.Get<OffsetString>(pos).str = std::move(msg);

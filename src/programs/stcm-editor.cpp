@@ -5,6 +5,7 @@
 #include "../format/stsc/file.hpp"
 #include "../except.hpp"
 #include "../options.hpp"
+#include "../txt_serializable.hpp"
 #include "../utils.hpp"
 #include "version.hpp"
 #include <iostream>
@@ -29,6 +30,7 @@ struct State
     Cl3* cl3;
     Stcm::File* stcm;
     Gbnl* gbnl;
+    TxtSerializable* txt;
 };
 
 State SmartOpen_(const boost::filesystem::path& fname)
@@ -42,18 +44,19 @@ State SmartOpen_(const boost::filesystem::path& fname)
     {
         auto cl3 = std::make_unique<Cl3>(src);
         auto ret2 = cl3.get();
-        return {std::move(cl3), ret2, nullptr, nullptr};
+        return {std::move(cl3), ret2, nullptr, nullptr, nullptr};
     }
     else if (memcmp(buf, "STCM", 4) == 0)
     {
         auto stcm = std::make_unique<Stcm::File>(src);
         auto ret2 = stcm.get();
-        return {std::move(stcm), nullptr, ret2, nullptr};
+        return {std::move(stcm), nullptr, ret2, nullptr, nullptr};
     }
     else if (memcmp(buf, "STSC", 4) == 0)
     {
         auto stsc = std::make_unique<Stsc::File>(src);
-        return {std::move(stsc), nullptr, nullptr, nullptr};
+        auto ret2 = stsc.get();
+        return {std::move(stsc), nullptr, nullptr, nullptr, ret2};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
              (memcmp(buf, "GSTL", 4) == 0 ||
@@ -62,7 +65,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
     {
         auto gbnl = std::make_unique<Gbnl>(src);
         auto ret2 = gbnl.get();
-        return {std::move(gbnl), nullptr, nullptr, ret2};
+        return {std::move(gbnl), nullptr, nullptr, ret2, ret2};
     }
     else
         NEPTOOLS_THROW(DecodeError{"Unknown input file"});
@@ -115,6 +118,12 @@ void EnsureGbnl(State& st)
     if (st.gbnl) return;
     EnsureStcm(st);
     st.gbnl = &st.stcm->FindGbnl();
+}
+
+void EnsureTxt(State& st)
+{
+    if (st.txt) return;
+    EnsureGbnl(st);
 }
 
 bool auto_failed = false;
@@ -172,16 +181,16 @@ void DoAutoFun(const boost::filesystem::path& p)
     }
 
     auto st = SmartOpen(cl3);
-    EnsureGbnl(st);
+    EnsureTxt(st);
     if (import)
     {
-        st.gbnl->ReadTxt(OpenIn(txt));
+        st.txt->ReadTxt(OpenIn(txt));
         if (st.stcm) st.stcm->Fixup();
         st.file->Fixup();
         st.file->Dump(cl3);
     }
     else
-        st.gbnl->WriteTxt(OpenOut(txt));
+        st.txt->WriteTxt(OpenOut(txt));
 }
 
 void DoAutoCl3(const boost::filesystem::path& p)
@@ -217,7 +226,8 @@ bool IsBin(const boost::filesystem::path& p, bool = false)
     return is_file(p) && (
         boost::ends_with(p.native(), ".cl3") ||
         boost::ends_with(p.native(), ".gbin") ||
-        boost::ends_with(p.native(), ".gstr"));
+        boost::ends_with(p.native(), ".gstr") ||
+        boost::ends_with(p.native(), ".bin"));
 }
 
 bool IsTxt(const boost::filesystem::path& p, bool = false)
@@ -225,7 +235,8 @@ bool IsTxt(const boost::filesystem::path& p, bool = false)
     return is_file(p) && (
         boost::ends_with(p.native(), ".cl3.txt") ||
         boost::ends_with(p.native(), ".gbin.txt") ||
-        boost::ends_with(p.native(), ".gstr.txt"));
+        boost::ends_with(p.native(), ".gstr.txt") ||
+        boost::ends_with(p.native(), ".bin.txt"));
 }
 
 bool IsCl3(const boost::filesystem::path& p, bool = false)
@@ -346,7 +357,7 @@ int main(int argc, char** argv)
             mode = Mode::MANUAL;
             auto c = std::make_unique<Cl3>();
             auto c2 = c.get();
-            st = {std::move(c), c2, nullptr, nullptr};
+            st = {std::move(c), c2, nullptr, nullptr, nullptr};
         }};
     Option list_files_opt{
         lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive\n",
@@ -473,8 +484,8 @@ int main(int argc, char** argv)
         [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            EnsureGbnl(st);
-            ShellInspectGen(st.gbnl, args.front(),
+            EnsureTxt(st);
+            ShellInspectGen(st.txt, args.front(),
                             [](auto& x, auto&& y) { x->WriteTxt(y); });
         }};
     Option import_txt_opt{
@@ -482,12 +493,12 @@ int main(int argc, char** argv)
         [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            EnsureGbnl(st);
+            EnsureTxt(st);
             auto fname = args.front();
             if (fname[0] == '-' && fname[1] == '\0')
-                st.gbnl->ReadTxt(std::cin);
+                st.txt->ReadTxt(std::cin);
             else
-                st.gbnl->ReadTxt(OpenIn(fname));
+                st.txt->ReadTxt(OpenIn(fname));
             if (st.stcm) st.stcm->Fixup();
         }};
 
