@@ -2,9 +2,11 @@ NepTools
 ========
 
 This is a collection tools to mod in Hyperdimension Neptunia Re;Birth 3: V
-Century (and probably RB 1 and 2 too). It contains a `.cl3` extractor/importer,
-a text editor for `.cl3`/`.gstr`/`.gbin`, and a tool to use these files in the
-game without repacking the `.pac` files (like KitServer).
+Century (and probably RB 1 and 2 too) and some rudimentary support for
+Hyperdevotion Noire: Goddess Black Heart `.bin` files (only stuff under `Main`).
+It contains a `.cl3` extractor/importer, a text editor for
+`.cl3`/`.gstr`/`.gbin`/`.bin`, and a tool to use these files in the game without
+repacking the `.pac` files in case of the Re;Births (like KitServer).
 
 stcm-editor/cl3-tool
 ====================
