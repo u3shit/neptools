@@ -9,3 +9,6 @@ build
 compile_commands.json
 .clang_complete
 wscript_user.py
+
+ext/boost
+ext/boost.tar.bz2

@@ -1,11 +1,12 @@
-Note: all of the following assumes you're on Linux. If you're on Windows, have
-fun figuring things out...
+**Note**: all of the following assumes you're on Linux. If you're on Windows,
+have fun figuring things out...
 
-You'll need python (for the compilation script), a C++14 compiler and boost-1.60
-compiled with c++14 support. Most likely you'll have a C++98 ABI version, which
-means it'll probably compile but crash randomly when run. Refer to the next
-section how to obtain a correct boost version. If you have them, you can just
-run:
+You'll need python (for the compilation script), a C++14 compiler and boost-1.61
+sources. Boost is not included in the git repository or as a submodule, because
+it's huge, you can use use `./get_boost.sh` to automatically download it.
+Alternatively place it/symlink into `ext/boost`, the build script will
+automatically compile the required boost libraries with the correct flags. In an
+ideal world, you can just run:
 
 ```
 ./waf configure
@@ -18,10 +19,28 @@ You can specify compile flags on configure:
 CXX=g++-5.3.0 CXXFLAGS="-O3 -DNDEBUG" LINKFLAGS="-whatever" ./waf configure
 ```
 
+You can use `CXXFLAGS_NEPTOOLS`, `LINKFLAGS_NEPTOOLS`, etc. to add flags only
+used during compiling Neptools, and `CXXFLAGS_EXT` etc. to add flags only used
+during compiling bundled libs.
+
+Some useful flags for configure:
+
+* `--optimize`: produce some default optimization, but keep assertions enabled.
+* `--optimize-ext`: optimize ext libs even if Neptools itself is not optimized
+  (will also remove debug info).
+* `--release`: `--optimize` + no asserts
+* `--system-boost`: use external Boost, see next section for warnings
+
 If everything goes well, you'll get an executable in `build/stcm-editor`.
 
 Boost with C++14
 ----------------
+
+**Note**: This is no longer needed, but you can still manually compile and use a
+standalone version of boost. Please note that you need boost compiled with c++14
+support. If you want to use your distribution's build, it'll most likely have a
+C++98 ABI version, which means it'll probably compile but crash randomly when
+run. Unless you want to avoid all this pain, use the bundled build above.
 
 [Download the latest release][boost-dl], and look at
 [getting started][boost-getting-started] guide, specially the 5.2. section. If
@@ -42,7 +61,7 @@ b2 --with-filesystem toolset=gcc-5.3.0 variant=release link=static threading=sin
 
 To actually use it, if you unpacked boost into `$boost_dir`:
 ```
-./waf configure --boost-includes $boost_dir --boost-libs $boost_dir/stage/lib
+./waf configure --system-boost --boost-includes $boost_dir --boost-libs $boost_dir/stage/lib
 ```
 
 (Cross) Compiling to Windows
@@ -72,8 +91,9 @@ overflowing your terminal about how awful the microsoft headers are (we know
 that). For linking, you'll need `/libpath:$vc/lib
 /libpath:$winkit/lib/winv6.3/um/x86`.
 
-To compile boost, look [here][boost-cross]. You'll need to create a
-`~/user-config.jam`. Mine looks like this (clang is installed into `$clangbin`):
+To compile boost (no longer needed), look [here][boost-cross]. You'll need to
+create a `~/user-config.jam`. Mine looks like this (clang is installed into
+`$clangbin`):
 
 ```
 using msvc : clang : "$clangbin/clang-cl" :
@@ -94,7 +114,7 @@ libs).
 
 Now you can compile this project. Use something like that:
 ```
-CC=$clangbin/clang-cl CXX=$clangbin/clang-cl LINK_CXX=$clangbin/lld-link AR=$clangbin/llvm-lib CXXFLAGS="your cflags"  LINKFLAGS="your linkflags" ./waf configure --clang-hack --boost-includes ...
+CC=$clangbin/clang-cl CXX=$clangbin/clang-cl LINK_CXX=$clangbin/lld-link AR=$clangbin/llvm-lib CXXFLAGS="your cflags"  LINKFLAGS="your linkflags" ./waf configure --clang-hack [--system-boost --boost-includes ...]
 ```
 
 Some potential problems with the clang toolchain

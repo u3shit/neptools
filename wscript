@@ -23,15 +23,27 @@ except IOError:
     pass
 
 def options(opt):
-    opt.load('compiler_c compiler_cxx boost')
+    opt.load('compiler_c compiler_cxx')
     opt.add_option('--clang-hack', action='store_true', default=False,
                    help='Read COMPILE.md...')
     opt.add_option('--optimize', action='store_true', default=False,
                    help='Enable some default optimizations')
+    opt.add_option('--optimize-ext', action='store_true', default=False,
+                   help='Optimize ext libs even if Neptools is in debug mode')
     opt.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
 
+    opt.recurse('ext')
+
 def configure(cfg):
+    # override flags specific to neptools/bundled libraries
+    for v in ['NEPTOOLS', 'EXT']:
+        cfg.add_os_flags('CPPFLAGS_'+v, dup=False)
+        cfg.add_os_flags('CFLAGS_'+v, dup=False)
+        cfg.add_os_flags('CXXFLAGS_'+v, dup=False)
+        cfg.add_os_flags('LINKFLAGS_'+v, dup=False)
+        cfg.add_os_flags('LDFLAGS_'+v, dup=False)
+
     if cfg.options.release:
         cfg.options.optimize = True
 
@@ -53,9 +65,9 @@ def configure(cfg):
 
         cfg.env.WINRCFLAGS = rcflags_save
 
-    cfg.load('compiler_cxx boost clang_compilation_database')
+    cfg.load('compiler_cxx clang_compilation_database')
 
-    flags = cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], [
+    cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], [
         # error on unknown arguments, including unknown options that turns
         # unknown argument warnings into error. どうして？
         '-Werror=unknown-warning-option',
@@ -63,10 +75,15 @@ def configure(cfg):
         '-Werror=unknown-argument',
 
         '-fcolor-diagnostics', '-fdiagnostics-show-option',
+    ])
+    cfg.filter_flags(['CFLAGS_NEPTOOLS', 'CXXFLAGS_NEPTOOLS'], [
         '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
         '-Wno-gnu-string-literal-operator-template',
         '-Wno-vla-extension', '-Wno-vla', '-Wno-assume',
         '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
+    ])
+    cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [
+        '-Wno-parentheses-equality', # boost fs, windows build
     ])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
@@ -83,6 +100,8 @@ def configure(cfg):
             cfg.env.prepend_value('CXXFLAGS', [
                 '-O2', '-Xclang', '-emit-llvm-bc'])
             cfg.env.prepend_value('LINKFLAGS', ['/OPT:REF', '/OPT:ICF'])
+        elif cfg.options.optimize_ext:
+            cfg.env.prepend_value('CXXFLAGS_EXT', '-O2')
     else:
         cfg.check_cxx(cxxflags='-std=c++14')
         cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
@@ -93,6 +112,8 @@ def configure(cfg):
                  '-fomit-frame-pointer'])
 
             cfg.env.append_value('LINKFLAGS', '-Wl,-O1')
+        elif cfg.options.optimize_ext:
+            cfg.filter_flags(['CXXFLAGS_EXT'], ['-g0', '-Ofast'])
 
     def chkdef(cfg, defn):
         return cfg.check_cxx(fragment='''
@@ -110,13 +131,6 @@ int main() { return 0; }
     elif chkdef(cfg, '_WIN32'):
         cfg.env.DEST_OS = 'win32'
 
-    cfg.check_boost(lib='filesystem system')
-
-    # change boost includes to -isystem, because they can produce a lot of junk
-    if cfg.env['INCLUDES_BOOST']:
-        cfg.env.append_value('CXXFLAGS_BOOST', ['-isystem', cfg.env['INCLUDES_BOOST']])
-        del cfg.env['INCLUDES_BOOST']
-
     if cfg.options.release:
         cfg.define('NDEBUG', 1)
     if cfg.env.DEST_OS == 'win32' or cfg.env.DEST_OS == 'win64':
@@ -128,7 +142,11 @@ int main() { return 0; }
         cfg.check_cxx(lib='shell32')
         cfg.check_cxx(lib='user32')
 
+    cfg.recurse('ext', name='configure', once=False)
+
 def build_common(bld):
+    bld.recurse('ext', name='build', once=False)
+
     # ignore .rc files when not on windows/no resource compiler
     from waflib.TaskGen import extension
     @extension('.rc')
@@ -174,7 +192,7 @@ def build_common(bld):
     ]
 
     bld.stlib(source = src,
-              uselib = 'BOOST',
+              uselib = 'BOOST NEPTOOLS',
               target = 'common')
 
 def build(bld):
@@ -182,8 +200,8 @@ def build(bld):
 
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
                 includes = 'src', # for version.hpp
-                uselib = 'BOOST',
-                use = 'common',
+                uselib = 'BOOST NEPTOOLS',
+                use = 'common boost_system boost_filesystem',
                 target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32':
@@ -193,7 +211,7 @@ def build(bld):
         bld.program(source = 'src/programs/launcher.c src/programs/launcher.rc',
                     includes = 'src', # for version.hpp
                     target = 'launcher',
-                    uselib = 'KERNEL32 SHELL32 USER32',
+                    uselib = 'KERNEL32 SHELL32 USER32 NEPTOOLS',
                     linkflags = ld)
 
         # server.dll has no implib (doesn't export anything)
@@ -217,8 +235,8 @@ def build(bld):
         bld.shlib(source = src_inject,
                   includes = 'src', # for version.hpp
                   target = 'neptools-server',
-                  use    = 'common',
-                  uselib = 'BOOST SHELL32 USER32',
+                  use    = 'common boost_system boost_filesystem',
+                  uselib = 'BOOST SHELL32 USER32 NEPTOOLS',
                   defs   = 'src/programs/server.def')
 
 from waflib.Build import BuildContext
@@ -287,11 +305,13 @@ def test(bld):
     bld(features='cxx',
         source='test/pattern_fail.cpp',
         uselib='BOOST',
+        use='boost_system boost_filesystem',
         includes='src',
         defines=['TEST_PATTERN="b2 ff"_pattern'])
     bld(features='cxx fail_cxx',
         source='test/pattern_fail.cpp',
         uselib='BOOST',
+        use='boost_system boost_filesystem',
         includes='src',
         defines=['TEST_PATTERN="bz ff"_pattern'])
 
@@ -303,8 +323,8 @@ def test(bld):
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',
-                uselib   = 'BOOST',
-                use      = 'common',
+                uselib   = 'BOOST NEPTOOLS',
+                use      = 'common boost_system boost_filesystem',
                 target   = 'run-tests')
     bld.add_post_fun(lambda ctx:
         ctx.exec_command([
