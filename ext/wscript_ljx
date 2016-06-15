@@ -1,0 +1,242 @@
+# -*- mode: python -*-
+
+def options(ctx):
+    ctx.add_option('--host-lua', action='store', default=None,
+                   help='System lua 5.1/5.2 + bitop or luajit or ljx')
+    ctx.load('gas')
+
+def configure(ctx):
+    if ctx.env['COMPILER_CXX'] != 'msvc':
+        ctx.load('gas')
+
+    variant = ctx.variant
+    if ctx.options.host_lua:
+        ctx.find_program(ctx.options.host_lua,
+                         var='LUA',
+                         environ={'PATH': ctx.environ['PATH']})
+    else:
+        ctx.setenv(variant + '_host')
+        ctx.check_cc(lib='m', mandatory=False)
+        ctx.setenv(variant)
+
+    if ctx.env.DEST_OS == 'linux':
+        ctx.check_cc(lib='dl')
+        ctx.check_cc(lib='readline')
+    ctx.check_cc(lib='m', mandatory=False)
+
+    # preprocess lj_arch.h
+    ctx.start_msg('Checking for ljx config')
+    cmd = [] # python, why u no have Array#flatten?
+    cmd += ctx.env.CC
+    cmd += ctx.env.CPPFLAGS
+    cmd += ctx.env.CFLAGS
+    cmd += ['-E', ctx.path.find_node('ljx/src/lj_arch.h').abspath() ]
+    if ctx.env['COMPILER_CXX'] == 'msvc': cmd += ['-Xclang', '-dM']
+    else: cmd += ['-dM']
+    try:
+        out = ctx.cmd_and_log(cmd)
+    except Exception:
+        ctx.end_msg(False)
+        raise
+
+    import re
+    reg = re.compile('^#define ([^ ]+) (.*)$')
+    macros = dict(map(lambda l: reg.match(l).groups(), out.splitlines()))
+
+    # dasm defines/arch
+    dasm_defs = [
+        'P'+macros['LJ_ARCH_BITS'],
+        'VER='+macros.get('LJ_ARCH_VERSION', ''),
+    ]
+    if macros.get('LJ_LE', 0) == '1':             dasm_defs += ['ENDIAN_LE']
+    else:                                         dasm_defs += ['ENDIAN_BE']
+    if macros.get('LJ_HASJIT', 0) == '1':         dasm_defs += ['JIT']
+    if macros.get('LJ_HASFFI', 0) == '1':         dasm_defs += ['FFI']
+    if macros.get('LJ_DUALNUM', 0) == '1':        dasm_defs += ['DUALNUM']
+    if macros.get('LJ_ARCH_HASFPU', 0) == '1':    dasm_defs += ['FPU']
+    if macros.get('LJ_ABI_SOFTFP', 0) != '1':     dasm_defs += ['HFABI']
+    if macros.get('LJ_NO_UNWIND', 0) == '1':      dasm_defs += ['NO_UNWIND']
+    if macros.get('LJ_ARCH_SQRT', 0) == '1':      dasm_defs += ['SQRT']
+    if macros.get('LJ_ARCH_ROUND', 0) == '1':     dasm_defs += ['ROUND']
+    if macros.get('LJ_ARCH_PPC32ON64', 0) == '1': dasm_defs += ['GPR64']
+    if ctx.env.DEST_OS == 'win32' or ctx.env.DEST_OS == 'win64':
+        dasm_defs += ['WIN']
+    # ios, ps3 checks removed
+
+    dasm_arch = None
+    if macros.get('LJ_TARGET_X86', None):        ljarch = dasm_arch = 'x86'
+    if macros.get('LJ_TARGET_X64', None):
+        _ =                                      ljarch = dasm_arch = 'x64'
+        if macros.get('LJ_FR2', 0) != '1':                dasm_arch = 'x86'
+    if macros.get('LJ_TARGET_ARM', None):        ljarch = dasm_arch = 'arm'
+    if macros.get('LJ_TARGET_ARM64', None):      ljarch = dasm_arch = 'arm64'
+    if macros.get('LJ_TARGET_PPC', None):        ljarch = dasm_arch = 'ppc'
+    if macros.get('LJ_TARGET_MIPS', None):
+        if macros.get('LJ_TARGET_MIPS64', None): ljarch = dasm_arch = 'mips64'
+        else:                                    ljarch = dasm_arch = 'mips'
+    if not dasm_arch:
+        ctx.end_msg(False)
+        ctx.fatal('Unsupported ljx architecture')
+
+    ctx.env.DASM_ARCH = dasm_arch
+    ctx.env.DASM_DEFINE_ST = ['-D']
+    ctx.env.DASM_DEFINES = dasm_defs
+    ctx.end_msg('arch: %s/%s, dasm defines: %s' % (ljarch, dasm_arch, ' '.join(dasm_defs)))
+
+    # buildvm flags
+    dest_os = ctx.env.DEST_OS
+    ctx.setenv(variant + '_host')
+    ctx.env.append_value('CFLAGS_BUILDVM', '-m' + macros['LJ_ARCH_BITS'])
+    ctx.env.append_value('LINKFLAGS_BUILDVM', '-m' + macros['LJ_ARCH_BITS'])
+
+    # os
+    if dest_os == 'win32' or dest_os == 'win64':
+        ctx.env.append_value('CFLAGS_BUILDVM', '-malign-double')
+        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_WINDOWS')
+    elif dest_os == 'linux':
+        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_LINUX')
+    elif dest_os == 'darwin':
+        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_OSX')
+    else:
+        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_OTHER')
+
+    # architecture specific shit
+    if macros.get('LJ_TARGET_PPC', None):
+        if macros.get('LJ_LE', 0) == '1':
+            ctx.env.append_value('DEFINES_BUILDVM', 'LJ_ARCH_ENDIAN=LUAJIT_LE')
+        else:
+            ctx.env.append_value('DEFINES_BUILDVM', 'LJ_ARCH_ENDIAN=LUAJIT_BE')
+    if macros.get('LJ_TARGET_MIPS', None) and macros.get('MIPSEL', None):
+        ctx.env.append_value('DEFINES_BUILDVM', '__MIPSEL__=1')
+
+    ctx.env.append_value('DEFINES_BUILDVM', [
+        'LUAJIT_TARGET=LUAJIT_ARCH_'+ljarch,
+        'LJ_ARCH_HASFPU='+macros.get('LJ_ARCH_HASFPU', 0),
+        'LJ_ABI_SOFTFP='+macros.get('LJ_ABI_SOFTFP', 0),
+    ])
+    if macros.get('LJ_NO_UNWIND', 0) == '1':
+        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_NO_UNWIND=1')
+
+    ctx.setenv(variant)
+
+    ctx.env.append_value('DEFINES_LJX',
+                         ['LJ_ABIVER=51', 'LUAJIT_ENABLE_LUA53COMPAT'])
+    if not ctx.options.release:
+        ctx.env.append_value('DEFINES_LJX', 'LUA_USE_APICHECK')
+
+def build(ctx):
+    host_env = ctx.all_envs[ctx.variant + '_host']
+
+    minilua = False
+    if not ctx.env.LUA:
+        ctx.program(source = 'ljx/src/host/minilua.c',
+                    env    = host_env.derive(),
+                    uselib = 'M',
+                    target = 'minilua')
+
+        tg = ctx.get_tgen_by_name('minilua')
+        tg.post()
+        ctx.env.LUA = tg.link_task.outputs[0].abspath()
+        minilua = True
+
+    src = ['ljx/dynasm/dynasm.lua', 'ljx/src/vm_%s.dasc' % ctx.env.DASM_ARCH]
+    if minilua: src += ['minilua']
+    ctx(rule           = '${LUA} ${SRC[0].abspath()} ${DASM_DEFINE_ST:DASM_DEFINES} -o ${TGT} ${SRC[1].abspath()}',
+        source         = src,
+        shell          = False,
+        update_outputs = True,
+        target         = 'buildvm_arch.h')
+
+    src = [
+        'ljx/src/host/buildvm_asm.c',
+        'ljx/src/host/buildvm.c',
+        'ljx/src/host/buildvm_fold.c',
+        'ljx/src/host/buildvm_lib.c',
+        'ljx/src/host/buildvm_peobj.c',
+    ]
+    tg = ctx.program(source   = src,
+                     env      = host_env.derive(),
+                     includes = '. ljx/src',
+                     defines  = 'LUAJIT_ENABLE_LUA53COMPAT',
+                     uselib   = 'BUILDVM',
+                     target   = 'buildvm')
+    tg.post()
+    buildvm = tg.link_task.outputs[0].abspath()
+
+    tgt = 'lj_vm.s'
+    if ctx.env.DEST_OS == 'win32' or ctx.env.DEST_OS == 'win64':
+        mode = 'peobj'
+        tgt  = 'lj_vm.obj'
+    elif ctx.env.DEST_OS == 'darwin':
+        mode = 'machasm'
+    else:
+        mode = 'elfasm'
+
+    ctx(rule           = '%s -m %s -o ${TGT}' % (buildvm, mode),
+        shell          = False,
+        update_outputs = True,
+        deps           = 'buildvm',
+        target         = tgt)
+
+    src = [
+        'ljx/src/lib_base.c',
+        'ljx/src/lib_math.c',
+        'ljx/src/lib_bit.c',
+        'ljx/src/lib_string.c',
+        'ljx/src/lib_utf8.c',
+        'ljx/src/lib_table.c',
+        'ljx/src/lib_io.c',
+        'ljx/src/lib_os.c',
+        'ljx/src/lib_package.c',
+        'ljx/src/lib_debug.c',
+        'ljx/src/lib_jit.c',
+        'ljx/src/lib_ffi.c',
+    ]
+    for mode in ['bcdef', 'ffdef', 'libdef', 'recdef', 'vmdef']:
+        ctx(rule           = '%s -m %s -o ${TGT} ${SRC}' % (buildvm, mode),
+            shell          = False,
+            update_outputs = True,
+            source         = src,
+            deps           = 'buildvm',
+            target         = 'lj_%s.h' % mode)
+    ctx(rule           = '%s -m folddef -o ${TGT} ${SRC}' % buildvm,
+        shell          = False,
+        update_outputs = True,
+        source         = 'ljx/src/lj_opt_fold.c',
+        deps           = 'buildvm',
+        target         = 'lj_folddef.h')
+
+
+    ver = 'LJX_VERSION="%s"' % ctx.path.find_node('ljx/.version').read().strip()
+    ctx.stlib(source          = ['ljx/src/ljamalg.c', tgt],
+              includes        = '.',
+              export_includes = 'ljx/src',
+              defines         = ver,
+              uselib          = 'EXT',
+              use             = 'LJX DL M',
+              target          = 'ljx')
+
+    # todo: maybe integrate into stcm-editor
+    ctx.program(source  = 'ljx/src/luajit.c',
+                use     = 'ljx',
+                uselib  = 'READLINE',
+                defines = [ ver, 'LUA_CREDITS=""' ],
+                target  = 'luajit-ljx')
+
+from waflib.TaskGen import after_method, feature, extension
+from waflib.Task import Task
+class copy(Task):
+    run_str = 'cp ${SRC} ${TGT}'
+
+@extension('.o', '.obj')
+def add_those_o_files(self, node):
+    try:
+        self.o_files.append(node)
+    except AttributeError:
+        self.o_files = [node]
+
+@feature('c', 'cxx', 'd', 'fc', 'asm')
+@after_method('apply_link')
+def add_o(self):
+    if getattr(self, 'o_files', None):
+        self.link_task.inputs += self.o_files

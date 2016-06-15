@@ -1,0 +1,58 @@
+# -*- mode: python -*-
+
+def options(ctx):
+    ctx.load('boost')
+    ctx.add_option('--system-boost', action='store_true', default=False,
+                   help='Use system boost')
+
+def configure(ctx):
+    if ctx.options.system_boost:
+        ctx.check_boost(lib='filesystem system')
+    else:
+        ctx.start_msg('Checking for boost')
+        if not ctx.path.find_node('boost/boost/filesystem.hpp'):
+            ctx.end_msg(False)
+            ctx.fatal('No --system-boost option and no boost at ext/boost')
+
+        ctx.end_msg('building')
+        ctx.env['INCLUDES_BOOST'] = ctx.path.find_node('boost').abspath()
+        ctx.env.BUILD_BOOST = True
+
+    # change boost includes to -isystem, because they can produce a lot of junk
+    if ctx.env['INCLUDES_BOOST']:
+        if ctx.check_cxx(cxxflags=['-isystem', '.'],
+                         features='cxx', mandatory=False,
+                         msg='Checking for compiler flag -isystem'):
+            flag = '-isystem'
+        elif ctx.check_cxx(cxxflags=['-imsvc', '.'],
+                           features='cxx', mandatory=False,
+                           msg='Checking for compiler flag -imsvc'):
+            flag = '-imsvc'
+        else:
+            return
+
+        ctx.env.append_value('CXXFLAGS_BOOST', [flag, ctx.env['INCLUDES_BOOST']])
+        del ctx.env['INCLUDES_BOOST']
+
+def build(ctx):
+    if not ctx.env.BUILD_BOOST: return
+
+    ctx.stlib(source  = 'boost/libs/system/src/error_code.cpp',
+              defines = 'BOOST_SYSTEM_STATIC_LINK=1',
+              target  = 'boost_system',
+              uselib  = 'BOOST EXT') # get proper includes
+
+    fs_src = [
+        'boost/libs/filesystem/src/codecvt_error_category.cpp',
+        'boost/libs/filesystem/src/operations.cpp',
+        'boost/libs/filesystem/src/path.cpp',
+        'boost/libs/filesystem/src/path_traits.cpp',
+        'boost/libs/filesystem/src/portability.cpp',
+        'boost/libs/filesystem/src/unique_path.cpp',
+        'boost/libs/filesystem/src/utf8_codecvt_facet.cpp',
+        'boost/libs/filesystem/src/windows_file_codecvt.cpp',
+    ]
+    ctx.stlib(source  = fs_src,
+              defines = 'BOOST_FILESYSTEM_STATIC_LINK=1',
+              target  = 'boost_filesystem',
+              uselib  = 'BOOST EXT') # get proper includes

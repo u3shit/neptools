@@ -43,6 +43,34 @@ def options(opt):
     opt.recurse('ext')
 
 def configure(cfg):
+    from waflib import Logs
+    if cfg.options.release:
+        cfg.options.optimize = True
+
+    variant = cfg.variant
+    environ = cfg.environ
+    # setup host compiler
+    cfg.setenv(variant + '_host')
+    Logs.pprint('NORMAL', 'Configuring host compiler '+variant)
+
+    # replace xxx with HOST_xxx env vars
+    cfg.environ = environ.copy()
+    for k in cfg.environ.keys():
+        if k[0:5] == 'HOST_':
+            cfg.environ[k[6:]] = cfg.environ[k]
+            del cfg.environ[k]
+
+    cfg.load('compiler_c')
+
+    if cfg.options.optimize or cfg.options.optimize_ext:
+        cfg.filter_flags_c(['CFLAGS'], ['-O2', '-march=native'])
+
+    # ----------------------------------------------------------------------
+    # setup target
+    cfg.setenv(variant)
+    Logs.pprint('NORMAL', 'Configuring target compiler '+variant)
+    cfg.environ = environ
+
     # override flags specific to neptools/bundled libraries
     for v in ['NEPTOOLS', 'EXT']:
         cfg.add_os_flags('CPPFLAGS_'+v, dup=False)
@@ -50,9 +78,6 @@ def configure(cfg):
         cfg.add_os_flags('CXXFLAGS_'+v, dup=False)
         cfg.add_os_flags('LINKFLAGS_'+v, dup=False)
         cfg.add_os_flags('LDFLAGS_'+v, dup=False)
-
-    if cfg.options.release:
-        cfg.options.optimize = True
 
     if cfg.options.clang_hack:
         cfg.find_program('clang-cl', var='CC')
@@ -66,14 +91,22 @@ def configure(cfg):
         cfg.load('msvc', funs='no_autodetect')
         fixup_msvc()
         from waflib.Tools.compiler_cxx import cxx_compiler
-        from waflib import Utils
-        cxx_compiler[Utils.unversioned_sys_platform()] = ['msvc']
         from waflib.Tools.compiler_c import c_compiler
-        c_compiler[Utils.unversioned_sys_platform()] = ['msvc']
+        from waflib import Utils
+
+        plat = Utils.unversioned_sys_platform()
+        cxx_save = cxx_compiler[plat]
+        c_save = c_compiler[plat]
+        cxx_compiler[plat] = ['msvc']
+        c_compiler[plat] = ['msvc']
 
         cfg.env.WINRCFLAGS = rcflags_save
 
-    cfg.load('compiler_cxx clang_compilation_database')
+    cfg.load('compiler_c compiler_cxx clang_compilation_database')
+
+    if cfg.options.clang_hack:
+        cxx_compiler[plat] = cxx_save
+        c_compiler[plat] = c_save
 
     cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], [
         # error on unknown arguments, including unknown options that turns
@@ -91,6 +124,7 @@ def configure(cfg):
     ])
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [
         '-Wno-parentheses-equality', # boost fs, windows build
+        '-Wno-microsoft-enum-value', '-Wno-shift-count-overflow', # ljx
     ])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
@@ -98,12 +132,15 @@ def configure(cfg):
         cfg.env.append_value('CXXFLAGS', [
             '-Xclang', '-std=c++14',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
-            '-EHsc', '-MD'])
-        cfg.env.prepend_value('CFLAGS', '/Gs9999999')
-        cfg.env.prepend_value('INCLUDES', 'msvc_include')
+            '-EHs', '-MD'])
+        inc = '-I' + cfg.path.find_node('msvc_include').abspath()
+        cfg.env.prepend_value('CFLAGS', inc)
+        cfg.env.prepend_value('CXXFLAGS', inc)
 
         if cfg.options.optimize:
-            cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
+            #cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
+            cfg.env.prepend_value('CFLAGS', [
+                '-O2', ]) #'-Xclang', '-emit-llvm-bc'])
             cfg.env.prepend_value('CXXFLAGS', [
                 '-O2', '-Xclang', '-emit-llvm-bc'])
             cfg.env.prepend_value('LINKFLAGS', ['/OPT:REF', '/OPT:ICF'])
@@ -149,6 +186,7 @@ int main() { return 0; }
         cfg.check_cxx(lib='shell32')
         cfg.check_cxx(lib='user32')
 
+    Logs.pprint('NORMAL', 'Configuring ext '+variant)
     cfg.recurse('ext', name='configure', once=False)
 
 def build_common(bld):
@@ -200,16 +238,17 @@ def build_common(bld):
     ]
 
     bld.stlib(source = src,
-              uselib = 'BOOST NEPTOOLS',
+              uselib = 'NEPTOOLS',
+              use    = 'BOOST boost_system boost_filesystem',
               target = 'common')
 
 def build(bld):
     build_common(bld)
 
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
-                includes = 'src', # for version.hpp
-                uselib = 'BOOST NEPTOOLS',
-                use = 'common boost_system boost_filesystem',
+                includes = 'src ext/ljx/src', # for version.hpp
+                uselib = 'NEPTOOLS',
+                use = 'common ljx',
                 target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32':
@@ -219,6 +258,7 @@ def build(bld):
         bld.program(source = 'src/programs/launcher.c src/programs/launcher.rc',
                     includes = 'src', # for version.hpp
                     target = 'launcher',
+                    cflags = '-O1 -Gs9999999',
                     uselib = 'KERNEL32 SHELL32 USER32 NEPTOOLS',
                     linkflags = ld)
 
@@ -243,8 +283,8 @@ def build(bld):
         bld.shlib(source = src_inject,
                   includes = 'src', # for version.hpp
                   target = 'neptools-server',
-                  use    = 'common boost_system boost_filesystem',
-                  uselib = 'BOOST SHELL32 USER32 NEPTOOLS',
+                  use    = 'common',
+                  uselib = 'SHELL32 USER32 NEPTOOLS',
                   defs   = 'src/programs/server.def')
 
 from waflib.Build import BuildContext
@@ -332,8 +372,8 @@ def test(bld):
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',
-                uselib   = 'BOOST NEPTOOLS',
-                use      = 'common boost_system boost_filesystem',
+                uselib   = 'NEPTOOLS',
+                use      = 'common',
                 target   = 'run-tests')
     bld.add_post_fun(lambda ctx:
         ctx.exec_command([
@@ -356,6 +396,28 @@ def filter_flags(cfg, vars, flags):
                 testflag = '-W'+flag[5:]
             cfg.check_cxx(cxxflags=[testflag], features='cxx',
                           msg='Checking for compiler flags '+testflag)
+            ret.append(flag)
+            for var in vars:
+                cfg.env.append_value(var, flag)
+        except:
+            pass
+
+    return ret
+
+@conf
+def filter_flags_c(cfg, vars, flags):
+    ret = []
+
+    for flag in flags:
+        try:
+            # gcc ignores unknown -Wno-foo flags but not -Wfoo, but warns if
+            # there are other warnings. with clang, just depend on
+            # -Werror=ignored-*-option, -Werror=unknown-*-option
+            testflag = flag
+            if flag[0:5] == '-Wno-':
+                testflag = '-W'+flag[5:]
+            cfg.check_cc(cflags=[testflag],
+                         msg='Checking for compiler flags '+testflag)
             ret.append(flag)
             for var in vars:
                 cfg.env.append_value(var, flag)

@@ -1,3 +1,6 @@
 [submodule "ext/catch"]
 	path = ext/catch
 	url = git://github.com/philsquared/Catch.git
+[submodule "ext/ljx/"]
+	path = ext/ljx
+	url = git://github.com/u3shit/ljx.git

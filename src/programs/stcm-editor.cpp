@@ -15,6 +15,7 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <lua.hpp>
 
 #define NEPTOOLS_LOG_NAME "stcm-editor"
 #include "../logger_helper.hpp"
@@ -496,6 +497,16 @@ int main(int argc, char** argv)
             else
                 st.txt->ReadTxt(OpenIn(fname));
             if (st.stcm) st.stcm->Fixup();
+        }};
+
+    Option lua{ // temp
+        lgrp, "lua", 0, nullptr, "ignore",
+        [&](auto&&)
+        {
+            auto st = luaL_newstate();
+            luaL_openlibs(st);
+            luaL_dostring(st, "print('foo')");
+            lua_close(st);
         }};
 
     boost::filesystem::path self{argv[0]};
