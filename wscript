@@ -125,6 +125,7 @@ def configure(cfg):
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [
         '-Wno-parentheses-equality', # boost fs, windows build
         '-Wno-microsoft-enum-value', '-Wno-shift-count-overflow', # ljx
+        '-Wno-varargs',
     ])
 
     if cfg.env['COMPILER_CXX'] == 'msvc':
@@ -235,11 +236,12 @@ def build_common(bld):
         'src/format/stsc/header.cpp',
         'src/format/stsc/instruction.cpp',
         'src/format/stsc/string.cpp',
+        'src/lua/base.cpp',
     ]
 
     bld.stlib(source = src,
               uselib = 'NEPTOOLS',
-              use    = 'BOOST boost_system boost_filesystem',
+              use    = 'BOOST boost_system boost_filesystem ljx',
               target = 'common')
 
 def build(bld):
@@ -248,7 +250,7 @@ def build(bld):
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
                 includes = 'src ext/ljx/src', # for version.hpp
                 uselib = 'NEPTOOLS',
-                use = 'common ljx',
+                use = 'common',
                 target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32':
@@ -369,6 +371,8 @@ def test(bld):
         'test/pattern.cpp',
         'test/sink.cpp',
         'test/container/ordered_map.cpp',
+        'test/lua/base.cpp',
+        'test/lua/function_call.cpp',
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',

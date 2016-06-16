@@ -1,0 +1,14 @@
+// -*- c++ -*-
+
+// replace "tuple()" with "constexpr tuple()", but leave other tuple ctors...
+// http://stackoverflow.com/a/21371401
+
+#define __GET_MACRO(_0, _1, _2, _3, _4, NAME, ...) NAME
+#define tuple(...) \
+    __GET_MACRO(_0, ##__VA_ARGS__, tuple, tuple, tuple, tuple, constexpr tuple)\
+    (__VA_ARGS__)
+
+#include_next <tuple>
+
+#undef tuple
+#undef __GET_MACRO
