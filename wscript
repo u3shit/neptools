@@ -12,6 +12,13 @@ try:
 except:
     VERSION = '0.3.3'
 
+def fixup_msvc():
+    from waflib.TaskGen import after_method, feature
+    @after_method('apply_link')
+    @feature('c', 'cxx')
+    def apply_flags_msvc(self):
+        pass
+
 # these variables are mandatory ('/' are converted automatically)
 top = '.'
 out = 'build'
@@ -57,6 +64,7 @@ def configure(cfg):
         rcflags_save = cfg.env.WINRCFLAGS
 
         cfg.load('msvc', funs='no_autodetect')
+        fixup_msvc()
         from waflib.Tools.compiler_cxx import cxx_compiler
         from waflib import Utils
         cxx_compiler[Utils.unversioned_sys_platform()] = ['msvc']
@@ -145,6 +153,7 @@ int main() { return 0; }
     cfg.recurse('ext', name='configure', once=False)
 
 def build_common(bld):
+    fixup_msvc()
     bld.recurse('ext', name='build', once=False)
 
     # ignore .rc files when not on windows/no resource compiler
