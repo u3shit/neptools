@@ -14,7 +14,7 @@ class TypeBuilder
 {
 public:
     TypeBuilder(StateRef vm, void* type_tag);
-    ~TypeBuilder();
+    void Done();
 
     TypeBuilder& Name(const char* name);
 
@@ -76,6 +76,7 @@ public:
             TypeBuilder bld{vm, type_tag};
             bld.Name(Class::TYPE_NAME);
             DoRegister<Class>(vm, bld);
+            bld.Done();
         }
 
         NEPTOOLS_LUA_CHECKTOP(vm, top+1);

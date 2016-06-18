@@ -125,7 +125,14 @@ struct TypeTraits<std::shared_ptr<T>,
     : public TypeTraits<std::shared_ptr<SharedObject>>
 {
     static std::shared_ptr<T> Get(StateRef vm, bool arg, int idx)
-    { return Get2<T>(vm, arg, idx); }
+    { return std::static_pointer_cast<T>(Get2<T>(vm, arg, idx)); }
+};
+
+template <typename T>
+struct TypeTraits<T*, std::enable_if_t<std::is_base_of<SharedObject, T>::value>>
+{
+    static T* Get(StateRef vm, bool arg, int idx)
+    { return TypeTraits<std::shared_ptr<T>>::Get(vm, arg, idx).get(); }
 };
 
 }

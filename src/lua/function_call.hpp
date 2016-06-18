@@ -107,7 +107,8 @@ struct WrapFunGen<T, Fun, Ret, List<Args...>, std::integer_sequence<int, Seq...>
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        return ResultPush<Ret>::Push(vm, Fun(GetArg<Args, Seq>::Get(vm)...));
+        return ResultPush<Ret>::Push(
+            vm, Invoke(Fun, GetArg<Args, Seq>::Get(vm)...));
     }
 };
 
@@ -117,7 +118,7 @@ struct WrapFunGen<T, Fun, void, List<Args...>, std::integer_sequence<int, Seq...
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        Fun(GetArg<Args, Seq>::Get(vm)...);
+        Invoke(Fun, GetArg<Args, Seq>::Get(vm)...);
         return 0;
     }
 };

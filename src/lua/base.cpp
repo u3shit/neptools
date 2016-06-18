@@ -39,9 +39,15 @@ State::State() : State(0)
             lua_setmetatable(vm, -2);       // +1
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
 
+            // helper funs
+            auto ret = luaL_loadstring(vm,
+                "return{__call=function(t,...)return t.new(...)end}"); // +1
+            NEPTOOLS_ASSERT(ret == 0);
+            lua_call(vm, 0, 1); // +1
+            lua_setfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // 0
+
             for (auto r : Registers())
                 r(vm);
-            return 0;
         }, *this);
 }
 
