@@ -47,7 +47,7 @@ size_t ParseShort(const std::array<Option*, 256>& short_opts,
     {
         while (*++ptr)
         {
-            auto opt = short_opts[*ptr];
+            auto opt = short_opts[static_cast<unsigned char>(*ptr)];
             if (!opt) throw InvalidParam{"Unknown option"};
 
             std::vector<const char*> args;
