@@ -127,6 +127,20 @@ def configure(ctx):
 def build(ctx):
     host_env = ctx.all_envs[ctx.variant + '_host']
 
+    invalid_files = [
+        'ljx/src/host/buildvm_arch.h',
+        'ljx/src/lj_bcdef.h',
+        'ljx/src/lj_ffdef.h',
+        'ljx/src/lj_libdef.h',
+        'ljx/src/lj_recdef.h',
+        'ljx/src/lj_vmdef.h',
+        'ljx/src/lj_folddef.h',
+    ]
+    for f in invalid_files:
+        nd = ctx.path.find_node(f)
+        if nd:
+            ctx.fatal('%s exists, run `make clean` in ext/ljx' % nd.abspath())
+
     minilua = False
     if not ctx.env.LUA:
         ctx.program(source = 'ljx/src/host/minilua.c',
