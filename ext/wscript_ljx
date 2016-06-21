@@ -6,10 +6,8 @@ def options(ctx):
     ctx.load('gas')
 
 def configure(ctx):
-    if ctx.env['COMPILER_CXX'] != 'msvc':
-        ctx.load('gas')
-
     variant = ctx.variant
+    host_variant = variant + '_host'
     if ctx.options.host_lua:
         ctx.find_program(ctx.options.host_lua,
                          var='LUA',
@@ -17,7 +15,28 @@ def configure(ctx):
     else:
         ctx.setenv(variant + '_host')
         ctx.check_cc(lib='m', mandatory=False)
-        ctx.setenv(variant)
+        # ctx.setenv(variant) # restored by configure_ljx
+
+    if ctx.env.CROSS:
+        configure_ljx(ctx, host_variant, host_variant, '_HOST')
+    configure_ljx(ctx, variant, host_variant, '')
+
+    ctx.setenv(variant)
+    host_env = ctx.all_envs[host_variant]
+    ctx.env.LJX_CROSS = ctx.env.CROSS and \
+                        ctx.env.DASM_ARCH != host_env.DASM_ARCH or \
+                        ctx.env.DASM_DEFINES != host_env.DASM_DEFINES or \
+                        host_env.CFLAGS_BUILDVM != host_env.CFLAGS_BUILDVM_HOST or \
+                        host_env.DEFINES_BUILDVM != host_env.DEFINES_BUILDVM_HOST
+    ctx.msg('Checking if cross compiling ljx',
+            ctx.env.LJX_CROSS and 'yes' or 'no',
+            color = ctx.env.LJX_CROSS and 'GREEN' or 'YELLOW')
+
+def configure_ljx(ctx, variant, host_variant, suf):
+    ctx.setenv(variant)
+
+    if ctx.env['COMPILER_CXX'] != 'msvc':
+        ctx.load('gas')
 
     if ctx.env.DEST_OS == 'linux':
         ctx.check_cc(lib='dl')
@@ -85,37 +104,37 @@ def configure(ctx):
 
     # buildvm flags
     dest_os = ctx.env.DEST_OS
-    ctx.setenv(variant + '_host')
-    ctx.env.append_value('CFLAGS_BUILDVM', '-m' + macros['LJ_ARCH_BITS'])
-    ctx.env.append_value('LINKFLAGS_BUILDVM', '-m' + macros['LJ_ARCH_BITS'])
+    ctx.setenv(host_variant)
+    ctx.env.append_value('CFLAGS_BUILDVM'+suf, '-m' + macros['LJ_ARCH_BITS'])
+    ctx.env.append_value('LINKFLAGS_BUILDVM'+suf, '-m' + macros['LJ_ARCH_BITS'])
 
     # os
     if dest_os == 'win32' or dest_os == 'win64':
-        ctx.env.append_value('CFLAGS_BUILDVM', '-malign-double')
-        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_WINDOWS')
+        ctx.env.append_value('CFLAGS_BUILDVM'+suf, '-malign-double')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LUAJIT_OS=LUAJIT_OS_WINDOWS')
     elif dest_os == 'linux':
-        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_LINUX')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LUAJIT_OS=LUAJIT_OS_LINUX')
     elif dest_os == 'darwin':
-        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_OSX')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LUAJIT_OS=LUAJIT_OS_OSX')
     else:
-        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_OS=LUAJIT_OS_OTHER')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LUAJIT_OS=LUAJIT_OS_OTHER')
 
     # architecture specific shit
     if macros.get('LJ_TARGET_PPC', None):
         if macros.get('LJ_LE', 0) == '1':
-            ctx.env.append_value('DEFINES_BUILDVM', 'LJ_ARCH_ENDIAN=LUAJIT_LE')
+            ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LJ_ARCH_ENDIAN=LUAJIT_LE')
         else:
-            ctx.env.append_value('DEFINES_BUILDVM', 'LJ_ARCH_ENDIAN=LUAJIT_BE')
+            ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LJ_ARCH_ENDIAN=LUAJIT_BE')
     if macros.get('LJ_TARGET_MIPS', None) and macros.get('MIPSEL', None):
-        ctx.env.append_value('DEFINES_BUILDVM', '__MIPSEL__=1')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, '__MIPSEL__=1')
 
-    ctx.env.append_value('DEFINES_BUILDVM', [
+    ctx.env.append_value('DEFINES_BUILDVM'+suf, [
         'LUAJIT_TARGET=LUAJIT_ARCH_'+ljarch,
         'LJ_ARCH_HASFPU='+macros.get('LJ_ARCH_HASFPU', 0),
         'LJ_ABI_SOFTFP='+macros.get('LJ_ABI_SOFTFP', 0),
     ])
     if macros.get('LJ_NO_UNWIND', 0) == '1':
-        ctx.env.append_value('DEFINES_BUILDVM', 'LUAJIT_NO_UNWIND=1')
+        ctx.env.append_value('DEFINES_BUILDVM'+suf, 'LUAJIT_NO_UNWIND=1')
 
     ctx.setenv(variant)
 
@@ -133,7 +152,6 @@ def build(ctx):
         'ljx/src/lj_ffdef.h',
         'ljx/src/lj_libdef.h',
         'ljx/src/lj_recdef.h',
-        'ljx/src/lj_vmdef.h',
         'ljx/src/lj_folddef.h',
     ]
     for f in invalid_files:
@@ -153,13 +171,23 @@ def build(ctx):
         ctx.env.LUA = tg.link_task.outputs[0].abspath()
         minilua = True
 
+    if ctx.env.LJX_CROSS:
+        old_env = ctx.env
+        ctx.env = host_env
+        ctx.env.LUA = old_env.LUA
+        build_ljx(ctx, minilua, host_env, 'host/', '_HOST')
+        ctx.env = old_env
+
+    build_ljx(ctx, minilua, host_env, '', '')
+
+def build_ljx(ctx, minilua, host_env, pref, suf):
     src = ['ljx/dynasm/dynasm.lua', 'ljx/src/vm_%s.dasc' % ctx.env.DASM_ARCH]
     if minilua: src += ['minilua']
     ctx(rule           = '${LUA} ${SRC[0].abspath()} ${DASM_DEFINE_ST:DASM_DEFINES} -o ${TGT} ${SRC[1].abspath()}',
         source         = src,
         shell          = False,
         update_outputs = True,
-        target         = 'buildvm_arch.h')
+        target         = pref+'buildvm_arch.h')
 
     src = [
         'ljx/src/host/buildvm_asm.c',
@@ -170,17 +198,17 @@ def build(ctx):
     ]
     tg = ctx.program(source   = src,
                      env      = host_env.derive(),
-                     includes = '. ljx/src',
+                     includes = pref+'. ljx/src',
                      defines  = 'LUAJIT_ENABLE_LUA53COMPAT',
-                     uselib   = 'BUILDVM',
-                     target   = 'buildvm')
+                     uselib   = 'BUILDVM'+suf,
+                     target   = pref+'buildvm')
     tg.post()
     buildvm = tg.link_task.outputs[0].abspath()
 
-    tgt = 'lj_vm.s'
+    tgt = pref+'lj_vm.s'
     if ctx.env.DEST_OS == 'win32' or ctx.env.DEST_OS == 'win64':
         mode = 'peobj'
-        tgt  = 'lj_vm.obj'
+        tgt  = pref+'lj_vm.obj'
     elif ctx.env.DEST_OS == 'darwin':
         mode = 'machasm'
     else:
@@ -189,7 +217,7 @@ def build(ctx):
     ctx(rule           = '%s -m %s -o ${TGT}' % (buildvm, mode),
         shell          = False,
         update_outputs = True,
-        deps           = 'buildvm',
+        deps           = pref+'buildvm',
         target         = tgt)
 
     src = [
@@ -206,36 +234,44 @@ def build(ctx):
         'ljx/src/lib_jit.c',
         'ljx/src/lib_ffi.c',
     ]
-    for mode in ['bcdef', 'ffdef', 'libdef', 'recdef', 'vmdef']:
+    for mode in ['bcdef', 'ffdef', 'libdef', 'recdef']:
         ctx(rule           = '%s -m %s -o ${TGT} ${SRC}' % (buildvm, mode),
             shell          = False,
             update_outputs = True,
             source         = src,
-            deps           = 'buildvm',
-            target         = 'lj_%s.h' % mode)
+            deps           = pref+'buildvm',
+            target         = '%slj_%s.h' % (pref, mode))
     ctx(rule           = '%s -m folddef -o ${TGT} ${SRC}' % buildvm,
         shell          = False,
         update_outputs = True,
         source         = 'ljx/src/lj_opt_fold.c',
-        deps           = 'buildvm',
-        target         = 'lj_folddef.h')
+        deps           = pref+'buildvm',
+        target         = pref+'lj_folddef.h')
+    # only needed by luajit-ljx?
+    ctx(rule           = '%s -m vmdef -o ${TGT} ${SRC}' % buildvm,
+        shell          = False,
+        update_outputs = True,
+        source         = src,
+        deps           = pref+'buildvm',
+        target         = pref+'jit/vmdef.lua')
 
 
     ver = 'LJX_VERSION="%s"' % ctx.path.find_node('ljx/.version').read().strip()
     ctx.stlib(source          = ['ljx/src/ljamalg.c', tgt],
-              includes        = '.',
+              includes        = pref+'.',
               export_includes = 'ljx/src',
               defines         = ver,
               uselib          = 'EXT',
               use             = 'LJX DL M',
-              target          = 'ljx')
+              target          = pref+'ljx')
 
     # todo: maybe integrate into stcm-editor
+    # only really needed for host
     ctx.program(source  = 'ljx/src/luajit.c',
-                use     = 'ljx',
+                use     = pref+'ljx',
                 uselib  = 'READLINE',
                 defines = [ ver, 'LUA_CREDITS=""' ],
-                target  = 'luajit-ljx')
+                target  = pref+'luajit-ljx')
 
 from waflib.TaskGen import after_method, feature, extension
 from waflib.Task import Task

@@ -53,10 +53,12 @@ def configure(cfg):
     cfg.setenv(variant + '_host')
     Logs.pprint('NORMAL', 'Configuring host compiler '+variant)
 
+    cross = False
     # replace xxx with HOST_xxx env vars
     cfg.environ = environ.copy()
     for k in cfg.environ.keys():
         if k[0:5] == 'HOST_':
+            cross = True
             cfg.environ[k[6:]] = cfg.environ[k]
             del cfg.environ[k]
 
@@ -69,6 +71,7 @@ def configure(cfg):
     # setup target
     cfg.setenv(variant)
     Logs.pprint('NORMAL', 'Configuring target compiler '+variant)
+    cfg.env.CROSS = cross
     cfg.environ = environ
 
     # override flags specific to neptools/bundled libraries
