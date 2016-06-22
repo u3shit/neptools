@@ -65,7 +65,7 @@ def configure(cfg):
     cfg.load('compiler_c')
 
     if cfg.options.optimize or cfg.options.optimize_ext:
-        cfg.filter_flags_c(['CFLAGS'], ['-O2', '-march=native'])
+        cfg.filter_flags_c(['CFLAGS'], ['-O1', '-march=native'])
 
     # ----------------------------------------------------------------------
     # setup target
@@ -207,10 +207,12 @@ def build_common(bld):
 
     import re
     rc_ver = re.sub('-.*', '', re.sub('\.', ',', VERSION))
-    bld(features = 'subst',
-        source = 'src/version.hpp.in',
-        target = 'src/version.hpp',
-        VERSION = VERSION,
+    bld(features   = 'subst',
+        source     = 'src/version.hpp.in',
+        target     = 'src/version.hpp',
+        ext_out    = ['.shit'], # otherwise every fucking c and cpp file will
+                                # depend on this task...
+        VERSION    = VERSION,
         RC_VERSION = rc_ver)
 
     src = [
@@ -240,14 +242,16 @@ def build_common(bld):
         'src/format/stsc/instruction.cpp',
         'src/format/stsc/string.cpp',
         'src/lua/base.cpp',
+        'src/lua/base_funcs.lua',
         'src/lua/shared_object.cpp',
         'src/lua/user_type.cpp',
     ]
 
-    bld.stlib(source = src,
-              uselib = 'NEPTOOLS',
-              use    = 'BOOST boost_system boost_filesystem ljx',
-              target = 'common')
+    bld.stlib(source   = src,
+              uselib   = 'NEPTOOLS',
+              use      = 'BOOST boost_system boost_filesystem ljx',
+              includes = 'src',
+              target   = 'common')
 
 def build(bld):
     build_common(bld)
@@ -435,3 +439,10 @@ def filter_flags_c(cfg, vars, flags):
             pass
 
     return ret
+
+# waf 1.7 style logging: c/cxx instead of vague shit like 'processing',
+# 'compiling', etc.
+from waflib.Task import Task
+def getname(self):
+    return self.__class__.__name__ + ':'
+Task.keyword = getname

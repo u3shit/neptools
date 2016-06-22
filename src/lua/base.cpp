@@ -1,5 +1,7 @@
 #include "type_traits.hpp"
 #include "../assert.hpp"
+#include "lua/base_funcs.lua.h"
+
 #include <cstring>
 
 namespace Neptools
@@ -28,6 +30,8 @@ State::State() : State(0)
     Catch(
         [](StateRef vm)
         {
+            NEPTOOLS_LUA_GETTOP(vm, top);
+
             lua_atpanic(vm, panic);
             luaL_openlibs(vm);
 
@@ -40,14 +44,15 @@ State::State() : State(0)
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
 
             // helper funs
-            auto ret = luaL_loadstring(vm,
-                "return{__call=function(t,...)return t.new(...)end}"); // +1
+            auto ret = luaL_loadbuffer(
+                vm, luaJIT_BC_base_funcs, luaJIT_BC_base_funcs_SIZE, "neptools"); // +1
             NEPTOOLS_ASSERT(ret == 0);
-            lua_call(vm, 0, 1); // +1
-            lua_setfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // 0
+            lua_call(vm, 0, 0); // 0
 
             for (auto r : Registers())
                 r(vm);
+
+            NEPTOOLS_LUA_CHECKTOP(vm, top);
         }, *this);
 }
 

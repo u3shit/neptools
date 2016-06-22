@@ -6,74 +6,6 @@ namespace Neptools
 namespace Lua
 {
 
-static int index(lua_State* vm)
-{
-    // indexes:
-    // 1 -> self
-    // 2 -> key
-    // upval 1 -> metatable
-
-    lua_pushvalue(vm, 2); // +1
-    if (lua_rawget(vm, lua_upvalueindex(1)) > 0) return 1; // +1
-    lua_pop(vm, 1); // +0
-
-    if (lua_isstring(vm, 2))
-    {
-        lua_pushfstring(vm, "get_%s", lua_tostring(vm, 2)); // +1
-        if (lua_rawget(vm, lua_upvalueindex(1)) == LUA_TFUNCTION) // +1
-        {
-            lua_pushvalue(vm, 1); // +2
-            lua_call(vm, 1, 1); // +1
-            return 1;
-        }
-        lua_pop(vm, 1); // +0
-    }
-
-    lua_pushliteral(vm, "get"); // +1
-    if (lua_rawget(vm, lua_upvalueindex(1)) == LUA_TFUNCTION) // +1
-    {
-        lua_pushvalue(vm, 1); // +2
-        lua_pushvalue(vm, 2); // +3
-        lua_call(vm, 2, 1); // +1
-        return 1;
-    }
-    return 0;
-}
-
-static int newindex(lua_State* vm)
-{
-    // 1 -> self
-    // 2 -> key
-    // 3 -> value
-    // upval 1 -> metatable
-    if (lua_isstring(vm, 2))
-    {
-        lua_pushfstring(vm, "set_%s", lua_tostring(vm, 2)); // +1
-        if (lua_rawget(vm, lua_upvalueindex(1)) == LUA_TFUNCTION) // +1
-        {
-            lua_pushvalue(vm, 1); // +2
-            lua_pushvalue(vm, 3); // +3
-            lua_call(vm, 2, 1); // +1
-            return 1;
-        }
-        lua_pop(vm, 1); // +0
-    }
-
-    lua_pushliteral(vm, "set"); //+1
-    if (lua_rawget(vm, lua_upvalueindex(1)) == LUA_TFUNCTION) //+1
-    {
-        // self,key,value,...,fun => ...,fun,self,key,value
-        lua_rotate(vm, 1, -3);
-        lua_call(vm, 3, 1);
-        return 1;
-    }
-
-    // bail out
-    auto key = luaL_tolstring(vm, 2, nullptr);
-    return luaL_error(vm, "attempt to set invalid key '%s'", key);
-}
-
-
 TypeBuilder::TypeBuilder(StateRef vm, void* type_tag) : vm{vm}
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
@@ -95,8 +27,9 @@ TypeBuilder::TypeBuilder(StateRef vm, void* type_tag) : vm{vm}
     lua_pushvalue(vm, -1);
     lua_rawsetp(vm, -2, type_tag);
 
-    lua_pushvalue(vm, -1);
-    lua_pushcclosure(vm, newindex, 1);
+    lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_mt_newindex");
+    lua_pushvalue(vm, -2);
+    lua_call(vm, 1, 1);
     lua_setfield(vm, -2, "__newindex");
 
     lua_pushvalue(vm, -1);
@@ -114,8 +47,9 @@ void TypeBuilder::Done()
     {
         if (lua_isstring(vm, -2) && strncmp(lua_tostring(vm, -2), "get", 3) == 0)
         {
-            lua_pushvalue(vm, -3); // +3
-            lua_pushcclosure(vm, index, 1); // +3
+            lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_mt_index"); // +3
+            lua_pushvalue(vm, -4); // +4
+            lua_call(vm, 1, 1); // +3
             lua_setfield(vm, -4, "__index"); // +2
             lua_pop(vm, 2); // +0
             break;

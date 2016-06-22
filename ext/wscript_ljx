@@ -181,20 +181,20 @@ def build(ctx):
     build_ljx(ctx, minilua, host_env, '', '')
 
 def build_ljx(ctx, minilua, host_env, pref, suf):
+    from waflib import Task
+
     src = ['ljx/dynasm/dynasm.lua', 'ljx/src/vm_%s.dasc' % ctx.env.DASM_ARCH]
     if minilua: src += ['minilua']
-    ctx(rule           = '${LUA} ${SRC[0].abspath()} ${DASM_DEFINE_ST:DASM_DEFINES} -o ${TGT} ${SRC[1].abspath()}',
-        source         = src,
-        shell          = False,
-        update_outputs = True,
-        target         = pref+'buildvm_arch.h')
+    ctx(features = 'dynasm',
+        source   = src,
+        target   = pref+'buildvm_arch.h')
 
     src = [
         'ljx/src/host/buildvm_asm.c',
-        'ljx/src/host/buildvm.c',
         'ljx/src/host/buildvm_fold.c',
         'ljx/src/host/buildvm_lib.c',
         'ljx/src/host/buildvm_peobj.c',
+        'ljx/src/host/buildvm.c',
     ]
     tg = ctx.program(source   = src,
                      env      = host_env.derive(),
@@ -214,11 +214,10 @@ def build_ljx(ctx, minilua, host_env, pref, suf):
     else:
         mode = 'elfasm'
 
-    ctx(rule           = '%s -m %s -o ${TGT}' % (buildvm, mode),
-        shell          = False,
-        update_outputs = True,
-        deps           = pref+'buildvm',
-        target         = tgt)
+    ctx(features = 'buildvm',
+        buildvm  = pref+'buildvm',
+        mode     = mode,
+        target   = tgt)
 
     src = [
         'ljx/src/lib_base.c',
@@ -234,26 +233,25 @@ def build_ljx(ctx, minilua, host_env, pref, suf):
         'ljx/src/lib_jit.c',
         'ljx/src/lib_ffi.c',
     ]
+    # apparently only `bcdef` (and the obj file above) are different when cross
+    # compiling, but generate all of them for extra safety (it's cheap, anyways)
     for mode in ['bcdef', 'ffdef', 'libdef', 'recdef']:
-        ctx(rule           = '%s -m %s -o ${TGT} ${SRC}' % (buildvm, mode),
-            shell          = False,
-            update_outputs = True,
-            source         = src,
-            deps           = pref+'buildvm',
-            target         = '%slj_%s.h' % (pref, mode))
-    ctx(rule           = '%s -m folddef -o ${TGT} ${SRC}' % buildvm,
-        shell          = False,
-        update_outputs = True,
-        source         = 'ljx/src/lj_opt_fold.c',
-        deps           = pref+'buildvm',
-        target         = pref+'lj_folddef.h')
+        ctx(features = 'buildvm',
+            buildvm  = pref+'buildvm',
+            mode     = mode,
+            source   = src,
+            target   = '%slj_%s.h' % (pref, mode))
+    ctx(features = 'buildvm',
+        mode     = 'folddef',
+        buildvm  = pref+'buildvm',
+        source   = 'ljx/src/lj_opt_fold.c',
+        target   = pref+'lj_folddef.h')
     # only needed by luajit-ljx?
-    ctx(rule           = '%s -m vmdef -o ${TGT} ${SRC}' % buildvm,
-        shell          = False,
-        update_outputs = True,
-        source         = src,
-        deps           = pref+'buildvm',
-        target         = pref+'jit/vmdef.lua')
+    ctx(features = 'buildvm',
+        mode     = 'vmdef',
+        buildvm  = pref+'buildvm',
+        source   = src,
+        target   = pref+'jit/vmdef.lua')
 
 
     ver = 'LJX_VERSION="%s"' % ctx.path.find_node('ljx/.version').read().strip()
@@ -273,10 +271,8 @@ def build_ljx(ctx, minilua, host_env, pref, suf):
                 defines = [ ver, 'LUA_CREDITS=""' ],
                 target  = pref+'luajit-ljx')
 
-from waflib.TaskGen import after_method, feature, extension
-from waflib.Task import Task
-class copy(Task):
-    run_str = 'cp ${SRC} ${TGT}'
+from waflib.TaskGen import before_method, after_method, feature, extension
+from waflib import Task
 
 @extension('.o', '.obj')
 def add_those_o_files(self, node):
@@ -290,3 +286,70 @@ def add_those_o_files(self, node):
 def add_o(self):
     if getattr(self, 'o_files', None):
         self.link_task.inputs += self.o_files
+
+# tasks
+def rule_like(name):
+    def x(self):
+        self.meths.remove('process_source')
+        tsk = self.create_task(name)
+        self.task = tsk
+        tsk.inputs = self.to_nodes(self.source)
+
+        # from TaskGen.process_rule
+        if isinstance(self.target, str):
+            self.target = self.target.split()
+        if not isinstance(self.target, list):
+            self.target = [self.target]
+        for x in self.target:
+            if isinstance(x, str):
+                tsk.outputs.append(self.path.find_or_declare(x))
+            else:
+                x.parent.mkdir() # if a node was given, create the required folders
+                tsk.outputs.append(x)
+
+    x.__name__ = 'rule_like_%s' % name
+    feature(name)(x)
+    before_method('process_source')(x)
+
+@Task.update_outputs
+class dynasm(Task.Task):
+    run_str = '${LUA} ${SRC[0].abspath()} ${DASM_DEFINE_ST:DASM_DEFINES} -o ${TGT} ${SRC[1].abspath()}'
+    color = 'BLUE'
+
+    def __str__(self):
+        return self.inputs[1].relpath()
+rule_like('dynasm')
+
+@Task.update_outputs
+class buildvm(Task.Task):
+    run_str = '${tsk.executable} -m ${gen.mode} -o ${TGT} ${SRC}'
+    color = 'BLUE'
+
+    def __str__(self):
+        return self.outputs[0].relpath()
+rule_like('buildvm')
+@feature('buildvm')
+@after_method('rule_like_buildvm')
+def set_executable(self):
+    nd = self.path.find_resource(self.buildvm)
+
+    self.task.executable = nd.abspath()
+    self.task.dep_nodes.append(nd)
+
+
+# task .lua->.h
+@Task.update_outputs
+class ljx(Task.Task):
+    run_str = '${tsk.executable} -bt h ${SRC} ${TGT}'
+    color = 'BLUE'
+
+@extension('.lua')
+def lua_to_h(self, node):
+    tsk = self.create_task('ljx', node, node.change_ext('.lua.h'))
+    pref = self.bld.env.LJX_CROSS and 'host/' or ''
+    ljx = self.path.find_resource('ext/%sluajit-ljx' % pref)
+    bcsav = self.path.find_node('ext/ljx/src/jit/bcsave.lua')
+
+    tsk.executable = ljx.abspath()
+    tsk.env.env = {'LUA_PATH': '%s/?.lua' % bcsav.parent.parent.bldpath()}
+    tsk.dep_nodes += [ljx, bcsav]
