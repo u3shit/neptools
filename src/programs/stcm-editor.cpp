@@ -7,6 +7,7 @@
 #include "../options.hpp"
 #include "../txt_serializable.hpp"
 #include "../utils.hpp"
+#include "../lua/base.hpp"
 #include "version.hpp"
 #include <iostream>
 #include <fstream>
@@ -15,7 +16,6 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <lua.hpp>
 
 #define NEPTOOLS_LOG_NAME "stcm-editor"
 #include "../logger_helper.hpp"
@@ -503,10 +503,14 @@ int main(int argc, char** argv)
         lgrp, "lua", 0, nullptr, "ignore",
         [&](auto&&)
         {
-            auto st = luaL_newstate();
-            luaL_openlibs(st);
-            luaL_dostring(st, "print('foo')");
-            lua_close(st);
+            Lua::State vm;
+            std::string str;
+            while (std::getline(std::cin, str))
+                if (luaL_dostring(vm, str.c_str()))
+                {
+                    ERR << lua_tostring(vm, -1) << std::endl;
+                    lua_pop(vm, 1);
+                }
         }};
 
     boost::filesystem::path self{argv[0]};

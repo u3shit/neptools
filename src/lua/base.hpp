@@ -66,6 +66,9 @@ public:
 
     void Push(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
 
+    // pop table, set table[name] to val at idx; +0 -1
+    void SetRecTable(const char* name, int idx = -1);
+
     // use optional<T>::value_or to get default value
     template <typename T> boost::optional<T> Opt(int idx)
     {
@@ -96,6 +99,16 @@ private:
     BOOST_NORETURN
     void TypeError(bool arg, const char* expected, int idx);
 };
+
+#define NEPTOOLS_LUA_RUNBC(vm, name)                                    \
+    do                                                                  \
+    {                                                                   \
+        auto runbc_ret = luaL_loadbuffer(                               \
+            vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, "neptools"); \
+        NEPTOOLS_ASSERT(runbc_ret == 0);                                \
+        lua_call(vm, 0, 0);                                             \
+    } while (0)
+
 
 class State final : public StateRef
 {

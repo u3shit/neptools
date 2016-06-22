@@ -44,10 +44,7 @@ State::State() : State(0)
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
 
             // helper funs
-            auto ret = luaL_loadbuffer(
-                vm, luaJIT_BC_base_funcs, luaJIT_BC_base_funcs_SIZE, "neptools"); // +1
-            NEPTOOLS_ASSERT(ret == 0);
-            lua_call(vm, 0, 0); // 0
+            NEPTOOLS_LUA_RUNBC(vm, base_funcs);
 
             for (auto r : Registers())
                 r(vm);
@@ -93,6 +90,42 @@ void StateRef::TypeError(bool arg, const char* expected, int idx)
     else
         luaL_error(vm, "invalid lua value: %s", ss.str().c_str());
     NEPTOOLS_UNREACHABLE("lua_error returned");
+}
+
+void StateRef::SetRecTable(const char* name, int idx)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+
+    const char* dot;
+    while (dot = strchr(name, '.'))
+    {
+        // tbl = tbl[name_chunk] ||= {}
+        // {
+        // will be pushed again when subtable doesn't exists, but optimize for
+        // common case where it already exists
+        lua_pushlstring(vm, name, dot-name); // +1
+        auto typ = lua_rawget(vm, -2); // +1
+        if (typ <= 0) // no subtable, create it
+        {
+            lua_pop(vm, 1); // 0
+
+            lua_createtable(vm, 0, 1); // +1 new tbl
+            lua_pushlstring(vm, name, dot-name); // +2
+            lua_pushvalue(vm, -2); // +3
+            lua_rawset(vm, -4); // +1
+        }
+
+        lua_remove(vm, -2); // 0
+        // }
+        name = dot+1;
+    }
+
+    // tbl[name] = value
+    lua_pushvalue(vm, idx); // +1
+    lua_setfield(vm, -2, name); // 0
+    lua_pop(vm, 1); // -1
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
 thread_local const char* StateRef::error_msg;

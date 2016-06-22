@@ -71,36 +71,8 @@ TypeBuilder& TypeBuilder::Name(const char* name)
     lua_setfield(vm, -2, "__name"); // 0
 
     // set global name
-    // local tbl = _G
     lua_pushglobaltable(vm); // +1
-    const char* dot;
-    while (dot = strchr(name, '.'))
-    {
-        // tbl = tbl[name_chunk] ||= {}
-        // {
-        // will be pushed again when subtable doesn't exists, but optimize for
-        // common case where it already exists
-        lua_pushlstring(vm, name, dot-name); // +2
-        auto typ = lua_rawget(vm, -2); // +2
-        if (typ <= 0) // no subtable, create it
-        {
-            lua_pop(vm, 1); // +1
-
-            lua_createtable(vm, 0, 1); // +2 new tbl
-            lua_pushlstring(vm, name, dot-name); // +3
-            lua_pushvalue(vm, -2); // +4
-            lua_rawset(vm, -4); // +2
-        }
-
-        lua_remove(vm, -2); // +1
-        // }
-        name = dot+1;
-    }
-
-    // tbl[name] = type_table
-    lua_pushvalue(vm, -3); // +2
-    lua_setfield(vm, -2, name); // +1
-    lua_pop(vm, 1);
+    vm.SetRecTable(name, -3); // 0
 
     NEPTOOLS_LUA_CHECKTOP(vm, top);
     return *this;

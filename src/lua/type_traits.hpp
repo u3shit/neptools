@@ -15,7 +15,8 @@ namespace Lua
 // luaL_opt*: lua_isnoneornil ? default : luaL_check*
 
 template <typename T>
-struct TypeTraits<T, std::enable_if_t<std::is_integral<T>::value>>
+struct TypeTraits<T, std::enable_if_t<
+    std::is_integral<T>::value || std::is_enum<T>::value>>
 {
     static T Get(StateRef vm, bool arg, int idx)
     {

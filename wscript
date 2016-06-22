@@ -219,6 +219,7 @@ def build_common(bld):
         'src/except.cpp',
         'src/dumpable.cpp',
         'src/logger.cpp',
+        'src/logger.lua',
         'src/low_io.cpp',
         'src/options.cpp',
         'src/pattern.cpp',

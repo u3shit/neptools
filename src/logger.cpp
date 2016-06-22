@@ -7,6 +7,8 @@
 
 #include "logger.hpp"
 #include "options.hpp"
+#include "lua/function_call.hpp"
+#include "logger.lua.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -285,6 +287,57 @@ std::ostream& Log(
 #endif
     return log_os;
 }
+
+static void LuaLog(Lua::StateRef vm, const char* name, int level/*, any msg */)
+{
+    const char* file = nullptr;
+    unsigned line = 0;
+    const char* fun = nullptr;
+
+#ifndef NDEBUG
+    lua_Debug dbg;
+    if (lua_getstack(vm, 1, &dbg) && lua_getinfo(vm, "Sln", &dbg))
+    {
+        file = dbg.short_src;
+        line = dbg.currentline;
+        fun = dbg.name;
+    }
+#endif
+    auto& os = Log(name, level, file, line, fun);
+
+    size_t len;
+    auto str = luaL_tolstring(vm, 3, &len); // +1
+    os.write(str, len);
+    lua_pop(vm, 1); // 0
+
+    os << std::flush;
+}
+
+static Lua::State::Register reg{[](Lua::StateRef vm)
+    {
+        lua_createtable(vm, 0, 2); // +1
+
+        vm.Push<decltype(&CheckLog), &CheckLog>(); // +2
+        lua_setfield(vm, -2, "check_log"); // +1
+
+        vm.Push<decltype(&LuaLog), &LuaLog>(); // +2
+        lua_setfield(vm, -2, "raw_log"); // +1
+
+        vm.Push(Level::ERROR); // +2
+        lua_setfield(vm, -2, "ERROR"); // +1
+
+        vm.Push(Level::WARNING); // +2
+        lua_setfield(vm, -2, "WARNING"); // +1
+
+        vm.Push(Level::INFO); // +2
+        lua_setfield(vm, -2, "INFO"); // +1
+
+        lua_pushglobaltable(vm); // +2
+        vm.SetRecTable("neptools.log", -2); // +1
+        lua_pop(vm, 1); // 0
+
+        NEPTOOLS_LUA_RUNBC(vm, logger);
+    }};
 
 }
 }
