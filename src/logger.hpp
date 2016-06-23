@@ -25,7 +25,7 @@ enum Level
 OptionGroup& GetOptionGroup();
 extern int global_level;
 
-bool CheckLog(const char* name, int level);
+bool CheckLog(const char* name, int level) noexcept;
 std::ostream& Log(
     const char* name, int level, const char* file, unsigned line,
     const char* fun);

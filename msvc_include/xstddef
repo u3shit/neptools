@@ -1,0 +1,17 @@
+// -*- c++ -*-
+#pragma once
+
+#define less __less_base
+#include_next <xstddef>
+#undef less
+
+namespace std
+{
+
+template <typename T = void> struct less : __less_base<T> {};
+template<> struct less<void> : __less_base<void>
+{
+    using is_transparent = void;
+};
+
+}

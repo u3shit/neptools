@@ -38,7 +38,7 @@ int global_level = -1;
 namespace
 {
 
-std::map<std::string, int> level_map;
+std::map<std::string, int, std::less<>> level_map;
 bool show_fun = false;
 
 Option show_fun_opt{
@@ -260,7 +260,7 @@ LogBuffer filter;
 std::ostream log_os{&filter};
 }
 
-bool CheckLog(const char* name, int level)
+bool CheckLog(const char* name, int level) noexcept
 {
     auto it = level_map.find(name);
     if (it != level_map.end()) return it->second >= level;
