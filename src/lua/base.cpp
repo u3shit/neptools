@@ -105,7 +105,7 @@ void StateRef::SetRecTable(const char* name, int idx)
         // common case where it already exists
         lua_pushlstring(vm, name, dot-name); // +1
         auto typ = lua_rawget(vm, -2); // +1
-        if (typ <= 0) // no subtable, create it
+        if (IsNoneOrNil(typ)) // no subtable, create it
         {
             lua_pop(vm, 1); // 0
 

@@ -34,6 +34,11 @@ extern char reftbl;
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
 
+template <typename T, T Fun> struct Overload;
+template <typename T> struct IsOverload : public std::false_type {};
+template <typename T, T Fun>
+struct IsOverload<Overload<T, Fun>> : public std::true_type {};
+
 class StateRef
 {
 public:
@@ -63,6 +68,8 @@ public:
     }
 
     template <typename T, T Fun> void Push();
+    template <typename Head, typename... Tail>
+    typename std::enable_if<IsOverload<Head>::value>::type Push();
 
     void Push(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
 
@@ -78,8 +85,12 @@ public:
 
     template <typename T> decltype(auto) Get(int idx = -1)
     { return TypeTraits<T>::Get(*this, false, idx); }
+    template <typename T> decltype(auto) UnsafeGet(int idx = -1)
+    { return TypeTraits<T>::UnsafeGet(*this, idx); }
     template <typename T> decltype(auto) Check(int idx)
     { return TypeTraits<T>::Get(*this, true, idx); }
+    template <typename T> bool Is(int idx)
+    { return TypeTraits<T>::Is(*this, idx); }
 
     operator lua_State*() { return vm; }
 
@@ -99,6 +110,8 @@ private:
     BOOST_NORETURN
     void TypeError(bool arg, const char* expected, int idx);
 };
+
+inline bool IsNoneOrNil(int v) { return v <= 0; }
 
 #define NEPTOOLS_LUA_RUNBC(vm, name)                                    \
     do                                                                  \

@@ -38,35 +38,41 @@ template <typename Ret, typename C, typename... Args>
 struct FunctionTraits<Ret(C::*)(Args...) const> : FunctionTraits<Ret(C*, Args...)> {};
 
 
-template <typename T, int Idx> struct GetArg
+template <typename T, int Idx, bool Unsafe> struct GetArg
 {
+    using Type = typename std::decay<T>::type;
     static constexpr size_t NEXT_IDX = Idx+1;
     static decltype(auto) Get(StateRef vm)
-    { return vm.Check<typename std::decay<T>::type>(Idx); }
+    { return Unsafe ? vm.UnsafeGet<Type>(Idx) : vm.Check<Type>(Idx); }
+    static bool Is(StateRef vm) { return vm.Is<Type>(Idx); }
 };
 
-template <int Idx> struct GetArg<Skip, Idx>
+template <int Idx, bool Unsafe> struct GetArg<Skip, Idx, Unsafe>
 {
     static constexpr size_t NEXT_IDX = Idx+1;
     static Skip Get(StateRef) { return {}; }
+    static bool Is(StateRef) { return true; }
 };
 
-template <int Idx> struct GetArg<StateRef, Idx>
+template <int Idx, bool Unsafe> struct GetArg<StateRef, Idx, Unsafe>
 {
     static constexpr size_t NEXT_IDX = Idx;
     static StateRef Get(StateRef vm) { return vm; }
+    static bool Is(StateRef) { return true; }
 };
 
-template <int N, typename Seq, typename... Args> struct GenArgSequence;
-template <int N, int... Seq, typename Head, typename... Args>
-struct GenArgSequence<N, std::integer_sequence<int, Seq...>, Head, Args...>
+template <bool Unsafe, int N, typename Seq, typename... Args>
+struct GenArgSequence;
+template <bool Unsafe, int N, int... Seq, typename Head, typename... Args>
+struct GenArgSequence<Unsafe, N, std::integer_sequence<int, Seq...>, Head, Args...>
 {
     using Type = typename GenArgSequence<
-        GetArg<Head, N>::NEXT_IDX,
+        Unsafe,
+        GetArg<Head, N, Unsafe>::NEXT_IDX,
         std::integer_sequence<int, Seq..., N>,
         Args...>::Type;
 };
-template <int N, typename Seq> struct GenArgSequence<N, Seq>
+template <bool Unsafe, int N, typename Seq> struct GenArgSequence<Unsafe, N, Seq>
 { using Type = Seq; };
 
 
@@ -124,47 +130,99 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
     }
 }
 
-template <typename T, T Fun, typename Ret, typename Args, typename Seq>
+template <typename T, T Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
 struct WrapFunGen;
 
-template <typename T, T Fun, typename Ret, typename... Args, int... Seq>
-struct WrapFunGen<T, Fun, Ret, List<Args...>, std::integer_sequence<int, Seq...>>
+template <typename T, T Fun, bool Unsafe, typename Ret, typename... Args, int... Seq>
+struct WrapFunGen<T, Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
         return ResultPush<Ret>::Push(
-            vm, CatchInvoke(vm, Fun, GetArg<Args, Seq>::Get(vm)...));
+            vm, CatchInvoke(vm, Fun, GetArg<Args, Seq, Unsafe>::Get(vm)...));
     }
 };
 
-template <typename T, T Fun, typename... Args, int... Seq>
-struct WrapFunGen<T, Fun, void, List<Args...>, std::integer_sequence<int, Seq...>>
+template <typename T, T Fun, bool Unsafe, typename... Args, int... Seq>
+struct WrapFunGen<T, Fun, Unsafe, void, List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        CatchInvoke(vm, Fun, GetArg<Args, Seq>::Get(vm)...);
+        CatchInvoke(vm, Fun, GetArg<Args, Seq, Unsafe>::Get(vm)...);
         return 0;
     }
 };
 
-template <typename T, T Fun, typename Args> struct WrapFunGen2;
-template <typename T, T Fun, typename... Args>
-struct WrapFunGen2<T, Fun, List<Args...>>
+template <typename T, T Fun, bool Unsafe, typename Args> struct WrapFunGen2;
+template <typename T, T Fun, bool Unsafe, typename... Args>
+struct WrapFunGen2<T, Fun, Unsafe, List<Args...>>
     : public WrapFunGen<
-        T, Fun, typename FunctionTraits<T>::Return, List<Args...>,
-        typename GenArgSequence<1, std::integer_sequence<int>, Args...>::Type>
+        T, Fun, Unsafe,
+        typename FunctionTraits<T>::Return, List<Args...>,
+        typename GenArgSequence<Unsafe, 1, std::integer_sequence<int>, Args...>::Type>
 {};
 
-template <typename T, T Fun>
-using WrapFunc = WrapFunGen2<T, Fun, typename FunctionTraits<T>::Arguments>;
+template <typename T, T Fun, bool Unsafe>
+using WrapFunc = WrapFunGen2<T, Fun, Unsafe, typename FunctionTraits<T>::Arguments>;
+
+// overload
+template <typename Args, typename Seq> struct OverloadCheck2;
+template <typename HArgs, typename... TArgs, int HSeq, int... TSeq>
+struct OverloadCheck2<List<HArgs, TArgs...>,
+                      std::integer_sequence<int, HSeq, TSeq...>>
+{
+    static bool Is(StateRef vm)
+    {
+        return GetArg<HArgs, HSeq, true>::Is(vm) &&
+            OverloadCheck2<List<TArgs...>,
+                           std::integer_sequence<int, TSeq...>>::Is(vm);
+    }
+};
+
+template <> struct OverloadCheck2<List<>, std::integer_sequence<int>>
+{ static bool Is(StateRef) { return true; } };
+
+template <typename Args> struct OverloadCheck;
+template <typename... Args>
+struct OverloadCheck<List<Args...>>
+    : public OverloadCheck2<
+        List<Args...>,
+        typename GenArgSequence<true, 1, std::integer_sequence<int>, Args...>::Type>
+{};
+
+template <typename... Args> struct OverloadWrap;
+template <typename T, T Fun, typename... Rest>
+struct OverloadWrap<Overload<T, Fun>, Rest...>
+{
+    static int Func(lua_State* l)
+    {
+        StateRef vm{l};
+        if (OverloadCheck<typename FunctionTraits<T>::Arguments>::Is(vm))
+            return WrapFunc<T, Fun, true>::Func(vm);
+        else
+            return OverloadWrap<Rest...>::Func(vm);
+    }
+};
+
+template<> struct OverloadWrap<>
+{
+    static int Func(lua_State* l)
+    {
+        return luaL_error(l, "Invalid arguments to overloaded function");
+    }
+};
 
 }
 
 template <typename T, T Fun>
 inline void StateRef::Push()
-{ lua_pushcfunction(vm, (Detail::WrapFunc<T, Fun>::Func)); }
+{ lua_pushcfunction(vm, (Detail::WrapFunc<T, Fun, false>::Func)); }
+
+template <typename Head, typename... Tail>
+inline typename std::enable_if<IsOverload<Head>::value>::type StateRef::Push()
+{ lua_pushcfunction(vm, (Detail::OverloadWrap<Head, Tail...>::Func)); }
 
 }
 }

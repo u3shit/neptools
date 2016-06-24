@@ -75,3 +75,28 @@ TEST_CASE("tuple function", "[lua]")
 
     CHECK(lua_gettop(vm) == 0);
 }
+
+static int called;
+void overload_int(int x) { called = x; }
+void overload_str(const std::string& str) { called = str.size(); }
+TEST_CASE("overload function", "[lua]")
+{
+    State vm;
+    vm.Push<Overload<FT(overload_int)>, Overload<FT(overload_str)>>();
+
+    lua_pushvalue(vm, -1);
+    vm.Push(42);
+    lua_call(vm, 1, 0);
+    CHECK(called == 42);
+
+    lua_pushvalue(vm, -1);
+    vm.Push("Hello");
+    lua_call(vm, 1, 0);
+    CHECK(called == 5);
+
+    lua_pushvalue(vm, -1);
+    vm.Push(false);
+    CHECK_THROWS_WITH(
+        vm.Catch([&]() { lua_call(vm, 1, 0); }),
+        Catch::Matchers::Contains("Invalid arguments to overloaded function"));
+}
