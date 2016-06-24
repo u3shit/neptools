@@ -1,0 +1,12 @@
+diff --git a/lib/LTO/LTOCodeGenerator.cpp b/lib/LTO/LTOCodeGenerator.cpp
+index 579e055..49e2a37 100644
+--- a/lib/LTO/LTOCodeGenerator.cpp
++++ b/lib/LTO/LTOCodeGenerator.cpp
+@@ -427,6 +427,7 @@ void LTOCodeGenerator::applyScopeRestrictions() {
+     MangledName.reserve(GV.getName().size() + 1);
+     Mangler::getNameWithPrefix(MangledName, GV.getName(),
+                                MergedModule->getDataLayout());
++    if (MangledName == "_DllMain") return true;
+     return MustPreserveSymbols.count(MangledName);
+   };
+ 

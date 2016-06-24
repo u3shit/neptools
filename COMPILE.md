@@ -67,7 +67,7 @@ To actually use it, if you unpacked boost into `$boost_dir`:
 (Cross) Compiling to Windows
 ----------------------------
 
-Currently only clang (compiled from git, probably patched, see next section. 3.7
+Currently only clang (compiled from git, probably patched, see next section. 3.8
 doesn't support exceptions properly) is supported, with MSVC 2013 lib files.
 You'll also need [lld] if you want LTO or want to cross compile. I've only
 tested cross compiling, but it should be possible to compile on Windows too.
@@ -84,8 +84,8 @@ Solution 2: use [ciopfs]. Make sure you mount `ciopfs` first, and copy into that
 directory, otherwise you'll manually have to convert all files to downcase.
 
 Problem #2: clang won't know where are your files, so you'll need some compiler
-flags. For compiling you'll need: `-m32 -isystem $vc/include -isystem
-$winkit/include/um -isystem $winkit/include/shared` where `$vc` and `$winkit`
+flags. For compiling you'll need: `-m32 -imsvc $vc/include -imsvc
+$winkit/include/um -imsvc $winkit/include/shared` where `$vc` and `$winkit`
 refers to the folders you previously copied. Using `-isystem` prevent clang from
 overflowing your terminal about how awful the microsoft headers are (we know
 that). For linking, you'll need `/libpath:$vc/lib
@@ -97,7 +97,7 @@ create a `~/user-config.jam`. Mine looks like this (clang is installed into
 
 ```
 using msvc : clang : "$clangbin/clang-cl" :
-  <compileflags>"-m32 -fms-compatibility-version=18 -isystem $vc/include -isystem $winkit/include/um -isystem $winkit/include/shared -Xclang -emit-llvm-bc"
+  <compileflags>"-m32 -fms-compatibility-version=18 -imsvc $vc/include -imsvc $winkit/include/um -imsvc $winkit/include/shared -Xclang -emit-llvm-bc"
   <linkflags>"/libpath:$vc/lib /libpath:$winkit/lib/winv6.3/um/x86"
   <compiler>"$clangbin/clang-cl"
   <linker>"$clangbin/lld-link"
@@ -135,12 +135,8 @@ Open `tools/lld/COFF/Driver.cpp`, find these lines:
 and comment out/delete the `writeImportLibrary()` line (the others are needed
 for the `dinput8.dll` hack).
 
-The second problem is that when using LTO, llvm can fuck up the bytecode, and
-fail or create an executable that'll randomly crash. See `clang.patch` for a
-patch that fixes some of these problems. It'll only fixes normal 32-bit builds.
-In case of 64-bit builds or the 32-bit tests, it'll enter an infinite loop
-during linking... A safer alternative is to specify `/opt:lldlto=1` in the link
-flags.
+The second problem is that when using LTO, it can still crash lld when creating
+a dll. See `llvm.patch` for a path that fixes it for the time being.
 
 
 [boost-dl]: http://www.boost.org/users/download/

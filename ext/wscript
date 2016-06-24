@@ -20,7 +20,18 @@ def configure(ctx):
 
     # change boost includes to -isystem, because they can produce a lot of junk
     if ctx.env['INCLUDES_BOOST']:
-        ctx.env.append_value('CXXFLAGS_BOOST', ['-isystem', ctx.env['INCLUDES_BOOST']])
+        if ctx.check_cxx(cxxflags=['-isystem', '.'],
+                         features='cxx', mandatory=False,
+                         msg='Checking for compiler flag -isystem'):
+            flag = '-isystem'
+        elif ctx.check_cxx(cxxflags=['-imsvc', '.'],
+                           features='cxx', mandatory=False,
+                           msg='Checking for compiler flag -imsvc'):
+            flag = '-imsvc'
+        else:
+            return
+
+        ctx.env.append_value('CXXFLAGS_BOOST', [flag, ctx.env['INCLUDES_BOOST']])
         del ctx.env['INCLUDES_BOOST']
 
 def build(ctx):
