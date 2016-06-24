@@ -98,6 +98,32 @@ template<typename... Args> struct ResultPush<std::tuple<Args...>>
     }
 };
 
+// workaround gcc can't mangle noexcept template arguments...
+template <typename... Args>
+struct NothrowInvokable : std::integral_constant<
+    bool, noexcept(Invoke(std::declval<Args>()...))> {};
+
+template <typename... Args>
+auto CatchInvoke(StateRef, Args&&... args) -> typename std::enable_if<
+    NothrowInvokable<Args&&...>::value,
+    decltype(Invoke(std::forward<Args>(args)...))>::type
+{ return Invoke(std::forward<Args>(args)...); }
+
+template <typename... Args>
+auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
+    !NothrowInvokable<Args&&...>::value,
+    decltype(Invoke(std::forward<Args>(args)...))>::type
+{
+    try { return Invoke(std::forward<Args>(args)...); }
+    catch (const std::exception& e)
+    {
+        auto s = ExceptionToString();
+        lua_pushlstring(vm, s.data(), s.size());
+        lua_error(vm);
+        NEPTOOLS_UNREACHABLE("lua_error returned");
+    }
+}
+
 template <typename T, T Fun, typename Ret, typename Args, typename Seq>
 struct WrapFunGen;
 
@@ -108,7 +134,7 @@ struct WrapFunGen<T, Fun, Ret, List<Args...>, std::integer_sequence<int, Seq...>
     {
         StateRef vm{l};
         return ResultPush<Ret>::Push(
-            vm, Invoke(Fun, GetArg<Args, Seq>::Get(vm)...));
+            vm, CatchInvoke(vm, Fun, GetArg<Args, Seq>::Get(vm)...));
     }
 };
 
@@ -118,7 +144,7 @@ struct WrapFunGen<T, Fun, void, List<Args...>, std::integer_sequence<int, Seq...
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        Invoke(Fun, GetArg<Args, Seq>::Get(vm)...);
+        CatchInvoke(vm, Fun, GetArg<Args, Seq>::Get(vm)...);
         return 0;
     }
 };

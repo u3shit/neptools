@@ -25,10 +25,12 @@ std::string ExceptionToString();
 
 template <typename Base, typename T, typename Derived, typename... Args>
 inline auto Invoke(T Base::*fun, Derived* thiz, Args&&... args)
+    noexcept(noexcept((*thiz.*fun)(std::forward<Args>(args)...)))
 { return (*thiz.*fun)(std::forward<Args>(args)...); }
 
 template <typename Fun, typename... Args>
 inline auto Invoke(Fun&& f, Args&&... args)
+    noexcept(noexcept(std::forward<Fun>(f)(std::forward<Args>(args)...)))
 { return std::forward<Fun>(f)(std::forward<Args>(args)...); }
 
 
