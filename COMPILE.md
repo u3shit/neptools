@@ -138,6 +138,11 @@ for the `dinput8.dll` hack).
 The second problem is that when using LTO, it can still crash lld when creating
 a dll. See `llvm.patch` for a path that fixes it for the time being.
 
+Third problem: llvm/clang doesn't support the `/EHsa` flag, only `/EHs`, but
+that won't catch LuaJIT/ljx exceptions. The `llvm.patch` includes a quick hack
+that'll at least make sure destructors are called when unwinding lua exceptions
+(and exceptions are handled manually by `__try`/`__except`).
+
 
 [boost-dl]: http://www.boost.org/users/download/
 [boost-getting-started]: http://www.boost.org/doc/libs/1_60_0/more/getting_started/unix-variants.html

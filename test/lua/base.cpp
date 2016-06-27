@@ -215,3 +215,23 @@ TEST_CASE("opt invalid", "[lua]")
                       Catch::Matchers::Contains(
                           "bad argument #1 to '?' (integer expected, got string)"));
 }
+
+namespace
+{
+static int global;
+struct DestructorTest
+{
+    ~DestructorTest() { global = 17; }
+};
+}
+
+TEST_CASE("exception interoperability", "[lua]")
+{
+    State vm;
+    global = 0;
+
+    CHECK_THROWS_WITH(
+        vm.Catch([&]() { DestructorTest tst; luaL_error(vm, "foobaz"); }),
+        Catch::Matchers::Contains("foobaz"));
+    CHECK(global == 17); // destructor didn't run if failed
+}

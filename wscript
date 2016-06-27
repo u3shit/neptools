@@ -136,17 +136,17 @@ def configure(cfg):
         cfg.env.append_value('CXXFLAGS', [
             '-Xclang', '-std=c++14',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
-            '-EHs', '-MD'])
+            '-EHsa', '-MD'])
+        cfg.env.append_value('CFLAGS_EXT', '-EHsa')
         inc = '-I' + cfg.path.find_node('msvc_include').abspath()
         cfg.env.prepend_value('CFLAGS', inc)
         cfg.env.prepend_value('CXXFLAGS', inc)
 
         if cfg.options.optimize:
             #cfg.env.prepend_value('CFLAGS', ['/O1', '/GS-'])
-            cfg.env.prepend_value('CFLAGS', [
-                '-O2', ]) #'-Xclang', '-emit-llvm-bc'])
-            cfg.env.prepend_value('CXXFLAGS', [
-                '-O2', '-Xclang', '-emit-llvm-bc'])
+            for f in ['CFLAGS_EXT', 'CXXFLAGS_EXT', 'CXXFLAGS_NEPTOOLS']:
+                cfg.env.prepend_value(f, [
+                    '-O2', '-Xclang', '-emit-llvm-bc'])
             cfg.env.prepend_value('LINKFLAGS', ['/OPT:REF', '/OPT:ICF'])
         elif cfg.options.optimize_ext:
             cfg.env.prepend_value('CXXFLAGS_EXT', '-O2')

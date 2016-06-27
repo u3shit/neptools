@@ -1,5 +1,18 @@
+diff --git a/lib/CodeGen/AsmPrinter/WinException.cpp b/lib/CodeGen/AsmPrinter/WinException.cpp
+index e5933d8..fb10d1f 100644
+--- a/lib/CodeGen/AsmPrinter/WinException.cpp
++++ b/lib/CodeGen/AsmPrinter/WinException.cpp
+@@ -710,7 +710,7 @@ void WinException::emitCXXFrameHandler3Table(const MachineFunction *MF) {
+   OS.EmitIntValue(0, 4);
+ 
+   AddComment("EHFlags");
+-  OS.EmitIntValue(1, 4);
++  OS.EmitIntValue(0, 4);
+ 
+   // UnwindMapEntry {
+   //   int32_t ToState;
 diff --git a/lib/LTO/LTOCodeGenerator.cpp b/lib/LTO/LTOCodeGenerator.cpp
-index 579e055..49e2a37 100644
+index 579e055..e7a7695 100644
 --- a/lib/LTO/LTOCodeGenerator.cpp
 +++ b/lib/LTO/LTOCodeGenerator.cpp
 @@ -427,6 +427,7 @@ void LTOCodeGenerator::applyScopeRestrictions() {
