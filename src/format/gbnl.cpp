@@ -247,7 +247,7 @@ void Gbnl::Dump_(Sink& sink) const
     for (const auto& m : messages)
     {
         m.ForEach(WriteDescr{msgd});
-        sink.Write(msgd, msg_descr_size);
+        sink.Write({msgd, msg_descr_size});
     }
 
     auto msgs_end = msg_descr_size * messages.size();
@@ -295,7 +295,7 @@ void Gbnl::Dump_(Sink& sink) const
             offs += type->items[i].size;
             break;
         };
-        sink.Write(ctrl);
+        sink.WriteGen(ctrl);
     }
     auto control_end = msgs_end_round + sizeof(TypeDescriptor) * type->item_count;
     auto control_end_round = Align(control_end);
@@ -349,7 +349,7 @@ void Gbnl::DumpHeader(Sink& sink) const
     head.field_34 = 0;
     head.field_38 = 0;
     head.field_3c = 0;
-    sink.Write(head);
+    sink.WriteGen(head);
 }
 
 namespace

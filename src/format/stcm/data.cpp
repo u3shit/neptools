@@ -58,7 +58,7 @@ void DataItem::Dump_(Sink& sink) const
     hdr.offset_unit = offset_unit;
     hdr.field_8 = field_8;
     hdr.length = GetSize() - sizeof(Header);
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
 
     for (auto it = GetChildren(); it; it = it->GetNext())
         it->Dump(sink);

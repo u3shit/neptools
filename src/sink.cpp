@@ -16,7 +16,7 @@ struct MmapSink : public Sink
 {
     MmapSink(LowIo&& io, FilePosition size);
     ~MmapSink();
-    void Write_(const Byte* buf, FileMemSize len) override;
+    void Write_(StringView data) override;
     void Pad_(FileMemSize len) override;
 
     void MapNext(FileMemSize len);
@@ -33,7 +33,7 @@ struct SimpleSink : public Sink
     }
     ~SimpleSink();
 
-    void Write_(const Byte* buf, FileMemSize len) override;
+    void Write_(StringView data) override;
     void Pad_(FileMemSize len) override;
     void Flush() override;
 
@@ -61,25 +61,23 @@ MmapSink::~MmapSink()
         LowIo::Munmap(buf, buf_size);
 }
 
-void MmapSink::Write_(const Byte* data, FileMemSize len)
+void MmapSink::Write_(StringView data)
 {
     NEPTOOLS_ASSERT(buf_put == buf_size && offset < size &&
                     buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put;
-    if (len / LowIo::MMAP_CHUNK)
+    if (data.length() / LowIo::MMAP_CHUNK)
     {
-        auto to_write = len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
-        io.Pwrite(data, to_write, offset);
-        data += to_write;
+        auto to_write = data.length() / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
+        io.Pwrite(data.udata(), to_write, offset);
+        data.remove_prefix(to_write);
         offset += to_write;
-        len -= to_write;
         buf_put = 0;
     }
 
-    MapNext(len);
-    memcpy(buf, data, len);
-    buf_put = len;
+    MapNext(data.length());
+    memcpy(buf, data.data(), data.length());
 }
 
 void MmapSink::Pad_(FileMemSize len)
@@ -100,6 +98,7 @@ void MmapSink::MapNext(FileMemSize len)
     if (offset < size)
     {
         auto nbuf_size = std::min<FileMemSize>(LowIo::MMAP_CHUNK, size-offset);
+        NEPTOOLS_ASSERT(nbuf_size >= len);
         void* nbuf = io.Mmap(offset, nbuf_size, true);
         io.Munmap(buf, buf_size);
         buf = static_cast<Byte*>(nbuf);
@@ -132,23 +131,23 @@ void SimpleSink::Flush()
     }
 }
 
-void SimpleSink::Write_(const Byte* data, FileMemSize len)
+void SimpleSink::Write_(StringView data)
 {
     NEPTOOLS_ASSERT(buf_size == LowIo::MEM_CHUNK &&
                     buf_put == LowIo::MEM_CHUNK);
     io.Write(buf, LowIo::MEM_CHUNK);
     offset += LowIo::MEM_CHUNK;
 
-    if (len >= LowIo::MEM_CHUNK)
+    if (data.length() >= LowIo::MEM_CHUNK)
     {
-        io.Write(data, len);
-        offset += len;
+        io.Write(data.data(), data.length());
+        offset += data.length();
         buf_put = 0;
     }
     else
     {
-        memcpy(buf, data, len);
-        buf_put = len;
+        memcpy(buf, data.data(), data.length());
+        buf_put = data.length();
     }
 }
 
@@ -200,7 +199,7 @@ std::unique_ptr<Sink> Sink::ToStdOut()
     return std::make_unique<SimpleSink>(LowIo::OpenStdOut(), -1);
 }
 
-void MemorySink::Write_(const Byte*, FileMemSize)
+void MemorySink::Write_(StringView)
 { NEPTOOLS_UNREACHABLE("MemorySink::Write_ called"); }
 void MemorySink::Pad_(FileMemSize)
 { NEPTOOLS_UNREACHABLE("MemorySink::Pad_ called"); }

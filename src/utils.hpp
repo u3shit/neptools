@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <boost/filesystem/path.hpp>
 #include "except.hpp"
+#include "nonowning_string.hpp"
 
 namespace Neptools
 {
@@ -30,11 +31,7 @@ constexpr size_t EmptySizeof = std::is_empty<T>::value ? 0 : sizeof(T);
 std::ofstream OpenOut(const boost::filesystem::path& pth);
 std::ifstream OpenIn(const boost::filesystem::path& pth);
 
-void DumpBytes(std::ostream& os, const Byte* data, size_t len);
-inline void DumpBytes(std::ostream& os, const char* data, size_t len)
-{ DumpBytes(os, reinterpret_cast<const Byte*>(data), len); }
-inline void DumpBytes(std::ostream& os, const std::string& str)
-{ DumpBytes(os, str.data(), str.size()); }
+void DumpBytes(std::ostream& os, StringView data);
 
 #define NEPTOOLS_STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
 

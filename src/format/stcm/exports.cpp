@@ -59,7 +59,7 @@ void ExportsItem::Dump_(Sink& sink) const
     {
         ee.name = e.first;
         ee.offset = ToFilePos(e.second->second);
-        sink.Write(ee);
+        sink.WriteGen(ee);
     }
 }
 

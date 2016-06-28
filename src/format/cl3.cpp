@@ -137,14 +137,7 @@ FilePosition Cl3::GetSize() const
     return ret;
 }
 
-Cl3::Entry* Cl3::GetFile(const char* fname)
-{
-    for (auto& e : entries)
-        if (e.name == fname)
-            return &e;
-    return nullptr;
-}
-Cl3::Entry* Cl3::GetFile(const std::string& fname)
+Cl3::Entry* Cl3::GetFile(StringView fname)
 {
     for (auto& e : entries)
         if (e.name == fname)
@@ -230,7 +223,7 @@ void Cl3::Dump_(Sink& sink) const
     hdr.sections_count = 2;
     hdr.sections_offset = sections_offset;
     hdr.field_14 = field_14;
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
     sink.Pad(sections_offset-sizeof(Header));
 
     Section sec;
@@ -239,13 +232,13 @@ void Cl3::Dump_(Sink& sink) const
     sec.count = entries.size();
     sec.data_size = link_offset - files_offset;
     sec.data_offset = files_offset;
-    sink.Write(sec);
+    sink.WriteGen(sec);
 
     sec.name = "FILE_LINK";
     sec.count = link_count;
     sec.data_size = link_count * sizeof(LinkEntry);
     sec.data_offset = link_offset;
-    sink.Write(sec);
+    sink.WriteGen(sec);
     sink.Pad((PAD_BYTES - ((2*sizeof(Section)) & PAD)) & PAD);
 
     FileEntry fe;
@@ -263,7 +256,7 @@ void Cl3::Dump_(Sink& sink) const
         fe.data_size = size;
         fe.link_start = link_i;
         fe.link_count = e.links.size();
-        sink.Write(fe);
+        sink.WriteGen(fe);
 
         offset = (offset+size+PAD) & ~PAD;
         link_i += e.links.size();
@@ -287,7 +280,7 @@ void Cl3::Dump_(Sink& sink) const
         {
             le.linked_file_id = l;
             le.link_id = i++;
-            sink.Write(le);
+            sink.WriteGen(le);
         }
     }
 }

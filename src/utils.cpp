@@ -27,11 +27,11 @@ std::ifstream OpenIn(const boost::filesystem::path& pth)
     return is;
 }
 
-void DumpBytes(std::ostream& os, const Byte* data, size_t len)
+void DumpBytes(std::ostream& os, StringView data)
 {
     auto flags = os.flags();
     os << std::hex << std::setfill('0') << '"';
-    for (size_t i = 0; i < len; ++i)
+    for (size_t i = 0; i < data.length(); ++i)
         if (data[i] == '"')
             os << "\\\"";
         else if (data[i] == '\\')
@@ -43,7 +43,7 @@ void DumpBytes(std::ostream& os, const Byte* data, size_t len)
         else if (data[i] >= ' ' && data[i] <= '~')
             os << data[i];
         else
-            os << "\\x" << std::setw(2) << static_cast<unsigned>(data[i]);
+            os << "\\x" << std::setw(2) << data.uindex(i);
     os << '"';
     os.flags(flags);
 }

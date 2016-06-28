@@ -79,9 +79,9 @@ void HeaderItem::Dump_(Sink& sink) const
     memcpy(hdr.magic, "STSC", 4);
     hdr.entry_point = ToFilePos(entry_point->second);
     hdr.flags = flags;
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
 
-    if (flags & 1) sink.Write(extra_headers_1, 32);
+    if (flags & 1) sink.Write({extra_headers_1, 32});
     if (flags & 2)
     {
         ExtraHeader2 eh;
@@ -92,10 +92,10 @@ void HeaderItem::Dump_(Sink& sink) const
         eh.field_8 = extra_headers_2_8;
         eh.field_a = extra_headers_2_a;
         eh.field_c = extra_headers_2_c;
-        sink.Write(eh);
+        sink.WriteGen(eh);
     }
     if (flags & 4)
-        sink.Write(boost::endian::little_uint16_t(extra_headers_4));
+        sink.WriteLittleUint16(extra_headers_4);
 }
 
 void HeaderItem::Inspect_(std::ostream& os) const
@@ -103,7 +103,7 @@ void HeaderItem::Inspect_(std::ostream& os) const
     Item::Inspect_(os);
 
     os << "stsc_header(@" << entry_point->first << ", " << flags;
-    if (flags & 1) { os << ", "; DumpBytes(os, extra_headers_1, 32); }
+    if (flags & 1) { os << ", "; DumpBytes(os, {extra_headers_1, 32}); }
     if (flags & 2)
         os << ", " << extra_headers_2_0
            << ", " << extra_headers_2_2

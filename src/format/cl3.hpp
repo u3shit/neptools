@@ -117,8 +117,7 @@ public:
         return entries.back();
     }
 
-    Entry* GetFile(const char* fname);
-    Entry* GetFile(const std::string& fname);
+    Entry* GetFile(StringView fname);
 
     void ExtractTo(const boost::filesystem::path& dir) const;
     void UpdateFromDir(const boost::filesystem::path& dir);

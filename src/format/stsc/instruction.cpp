@@ -44,7 +44,7 @@ InstructionBase* InstructionBase::CreateAndInsert(ItemPointer ptr)
 
 void InstructionBase::InstrDump(Sink& sink) const
 {
-    sink.Write(boost::endian::little_uint8_t(opcode));
+    sink.WriteLittleUint8(opcode);
 }
 
 std::ostream& InstructionBase::InstrInspect(std::ostream& os) const
@@ -269,7 +269,7 @@ void SimpleInstruction<NoReturn, Args...>::Dump_(Sink& sink) const
     using Tuple = PODTuple<typename Traits<Args>::RawType...>;
     Tuple t;
     Operations<Args...>::Dump(t, args);
-    sink.Write(t);
+    sink.WriteGen(t);
 }
 
 template <bool NoReturn, typename... Args>
@@ -316,9 +316,9 @@ void Instruction0dItem::Parse_(Source& src)
 void Instruction0dItem::Dump_(Sink& sink) const
 {
     InstrDump(sink);
-    sink.Write(boost::endian::little_uint8_t(tgts.size()));
+    sink.WriteLittleUint8(tgts.size());
     for (auto l : tgts)
-        sink.Write(boost::endian::little_uint32_t(ToFilePos(l->second)));
+        sink.WriteLittleUint32(ToFilePos(l->second));
 }
 
 void Instruction0dItem::Inspect_(std::ostream& os) const
@@ -387,9 +387,9 @@ void Instruction1dItem::Parse_(Source& src)
 void Instruction1dItem::Dump_(Sink& sink) const
 {
     InstrDump(sink);
-    sink.Write(FixParams{tree.size(), ToFilePos(tgt->second)});
+    sink.WriteGen(FixParams{tree.size(), ToFilePos(tgt->second)});
     for (auto& n : tree)
-        sink.Write(NodeParams{n.operation, n.value, n.left, n.right});
+        sink.WriteGen(NodeParams{n.operation, n.value, n.left, n.right});
 }
 
 void Instruction1dItem::Inspect_(std::ostream& os) const
@@ -465,9 +465,9 @@ void Instruction1eItem::Parse_(Source& src)
 void Instruction1eItem::Dump_(Sink& sink) const
 {
     InstrDump(sink);
-    sink.Write(FixParams{field_0, (flag << 15) | expressions.size()});
+    sink.WriteGen(FixParams{field_0, (flag << 15) | expressions.size()});
     for (auto& e : expressions)
-        sink.Write(ExpressionParams{e.first, ToFilePos(e.second->second)});
+        sink.WriteGen(ExpressionParams{e.first, ToFilePos(e.second->second)});
 
 }
 

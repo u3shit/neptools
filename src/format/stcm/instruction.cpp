@@ -299,7 +299,7 @@ void InstructionItem::Dump_(Sink& sink) const
         hdr.opcode = opcode;
     hdr.param_count = params.size();
     hdr.size = GetSize();
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
 
     Parameter pp;
     for (const auto& p : params)
@@ -349,7 +349,7 @@ void InstructionItem::Dump_(Sink& sink) const
             pp.param_8 = 0;
             break;
         }
-        sink.Write(pp);
+        sink.WriteGen(pp);
     }
 
     ItemWithChildren::Dump_(sink);

@@ -240,7 +240,7 @@ void DumpableSource::Dump_(Sink& sink) const
         NEPTOOLS_ASSERT(x.offset <= offset);
         auto ptroff = offset - x.offset;
         auto size = std::min(rem_size, x.size - ptroff);
-        sink.Write(x.ptr + ptroff, size);
+        sink.Write({x.ptr + ptroff, size});
         offset += size;
         rem_size -= size;
     }

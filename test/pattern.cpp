@@ -52,84 +52,84 @@ Byte data[] = {
 TEST_CASE("simple patterns", "[pattern]")
 {
     Pattern p = "a8 fe 0 1c"_pattern; //middle
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x1b);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x1b);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1b);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x1b);
 
     p = "ff f0 64"_pattern; //beginning
-    CHECK(p.MaybeFind(data, sizeof(data)) == data);
-    CHECK(p.Find(data, sizeof(data)) == data);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
+    CHECK(p.Find({data, sizeof(data)}) == data);
 
     p = "18 e 2e b9 fc ce"_pattern; //end
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x3a);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x3a);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3a);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x3a);
 }
 TEST_CASE("simple not match", "[pattern]")
 {
     auto p = "12 34 56 76"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 TEST_CASE("multiple match", "[pattern]")
 {
     auto p = "58 ec 21"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 
 TEST_CASE("wildcards", "[pattern]")
 {
     Pattern p = "48 ? c5 ? ? be"_pattern; // mid
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x22);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x22);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x22);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x22);
 
     p = "ff ? ? 22 50"_pattern; // begin
-    CHECK(p.MaybeFind(data, sizeof(data)) == data);
-    CHECK(p.Find(data, sizeof(data)) == data);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
+    CHECK(p.Find({data, sizeof(data)}) == data);
 
 
     p = "e ? b9 ? ce"_pattern; // end
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x3b);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x3b);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
 
     p = "? ? fe 00 ?"_pattern; // mid
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x1a);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x1a);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1a);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x1a);
 
     p = "? ? 64 22 ?"_pattern; // begin
-    CHECK(p.MaybeFind(data, sizeof(data)) == data);
-    CHECK(p.Find(data, sizeof(data)) == data);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
+    CHECK(p.Find({data, sizeof(data)}) == data);
 
     p = "? 2e b9 ? ?"_pattern; // end
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x3b);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x3b);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
 }
 TEST_CASE("wildcards not match", "[pattern]")
 {
     Pattern p = "12 34 ?? 56 ?? 78"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
     p = "? ? 12 34 56"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
     p = "12 34 ? 56 ? ? ?"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 TEST_CASE("wildcards multiple match", "[pattern]")
 {
     Pattern p = "58 ? 21"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
     p = "? 58 ? ?"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
     p = "? ? ? ?"_pattern;
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 
 TEST_CASE("mask", "[pattern]")
@@ -137,8 +137,8 @@ TEST_CASE("mask", "[pattern]")
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x28, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x2f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x18);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x18);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x18);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x18);
 }
 
 TEST_CASE("mask no match", "[pattern]")
@@ -146,8 +146,8 @@ TEST_CASE("mask no match", "[pattern]")
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x18, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x1f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 
 TEST_CASE("mask no 0xff", "[pattern]")
@@ -155,12 +155,12 @@ TEST_CASE("mask no 0xff", "[pattern]")
     Byte pat[]  = { 0x58, 0xe0, 0x20, 0x28, 0x3e };
     Byte mask[] = { 0x5f, 0xf0, 0xf2, 0x2f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind(data, sizeof(data)) == data + 0x18);
-    CHECK(p.Find(data, sizeof(data)) == data + 0x18);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x18);
+    CHECK(p.Find({data, sizeof(data)}) == data + 0x18);
 
     Byte pat2[]  = { 0x58, 0xe0, 0x20, 0x18, 0x3e };
     Byte mask2[] = { 0x5f, 0xf0, 0xf2, 0x1f, 0x3f };
     p = Pattern{pat2, mask2, 5};
-    CHECK(p.MaybeFind(data, sizeof(data)) == nullptr);
-    CHECK_THROWS_AS(p.Find(data, sizeof(data)), std::runtime_error);
+    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
+    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }

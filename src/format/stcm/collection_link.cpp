@@ -74,7 +74,7 @@ void CollectionLinkHeaderItem::Dump_(Sink& sink) const
     Header hdr{};
     hdr.offset = ToFilePos(data->second);
     hdr.count = data->second.As0<CollectionLinkItem>().entries.size();
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
 }
 
 void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
@@ -110,7 +110,7 @@ void CollectionLinkItem::Dump_(Sink& sink) const
     {
         ee.name_0 = ToFilePos(e.name_0->second);
         ee.name_1 = ToFilePos(e.name_1->second);
-        sink.Write(ee);
+        sink.WriteGen(ee);
     }
 }
 

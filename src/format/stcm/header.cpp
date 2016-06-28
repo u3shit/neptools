@@ -51,7 +51,7 @@ void HeaderItem::Dump_(Sink& sink) const
     hdr.field_28 = 1;
     hdr.collection_link_offset = ToFilePos(collection_link->second);
 
-    sink.Write(hdr);
+    sink.WriteGen(hdr);
 }
 
 void HeaderItem::Inspect_(std::ostream& os) const

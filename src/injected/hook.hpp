@@ -13,9 +13,9 @@ size_t GetImageSize() noexcept;
 Byte* GetEntryPoint() noexcept;
 
 inline Byte* MaybeFindImage(const Pattern& pat) noexcept
-{ return pat.MaybeFind(image_base, GetImageSize()); }
+{ return const_cast<Byte*>(pat.MaybeFind({image_base, GetImageSize()})); }
 inline Byte* FindImage(const Pattern& pat)
-{ return pat.Find(image_base, GetImageSize()); }
+{ return const_cast<Byte*>(pat.Find({image_base, GetImageSize()})); }
 
 void* Hook(void* hook, void* dst, size_t copy);
 

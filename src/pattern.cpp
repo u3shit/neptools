@@ -16,7 +16,7 @@ static bool CheckPattern(
     return true;
 }
 
-const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexcept
+const Byte* Pattern::MaybeFind(StringView data) const noexcept
 {
     size_t max_len = 0, max_i = 0;
     size_t start_i = 0;
@@ -36,8 +36,8 @@ const Byte* Pattern::MaybeFind(const Byte* data, size_t data_length) const noexc
     boost::algorithm::boyer_moore<const Byte*> bm{
         pattern + max_i, pattern + max_i + max_len};
 
-    auto ptr = data + max_i;
-    auto ptr_end = data + data_length - (size - max_len - max_i);
+    auto ptr = data.udata() + max_i;
+    auto ptr_end = data.udata() + data.length() - (size - max_len - max_i);
     const Byte* res = nullptr;
 
     while (true)
