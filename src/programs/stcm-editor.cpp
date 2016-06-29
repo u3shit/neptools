@@ -117,13 +117,14 @@ void EnsureGbnl(State& st)
 {
     if (st.gbnl) return;
     EnsureStcm(st);
-    st.gbnl = &st.stcm->FindGbnl();
+    st.txt = st.gbnl = &st.stcm->FindGbnl();
 }
 
 void EnsureTxt(State& st)
 {
     if (st.txt) return;
     EnsureGbnl(st);
+    NEPTOOLS_ASSERT(st.txt);
 }
 
 bool auto_failed = false;
