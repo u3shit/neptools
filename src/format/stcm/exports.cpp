@@ -30,7 +30,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
     auto size = GetContext()->GetSize();
     for (uint32_t i = 0; i < export_count; ++i)
     {
-        auto e = src.Read<Entry>();
+        auto e = src.ReadGen<Entry>();
         e.Validate(size);
         entries.emplace_back(
             e.name,

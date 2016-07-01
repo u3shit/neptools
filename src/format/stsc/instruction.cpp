@@ -34,7 +34,7 @@ InstructionBase* InstructionBase::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
     x.src.CheckSize(1);
-    uint8_t opcode = x.src.Read<boost::endian::little_uint8_t>();
+    uint8_t opcode = x.src.ReadLittleUint8();
     auto ret =  x.ritem.Split(
         ptr.offset, CreateMap::MAP[opcode](x.ritem.GetContext(), x.src));
 
@@ -168,7 +168,7 @@ template<> struct Traits<std::string> : public Traits<void*>
         if (ptr.Maybe<RawItem>())
         {
             auto x = RawItem::GetSource(ptr, -1);
-            return ctx->GetLabelTo(r, "str_"+x.src.GetCString(0).substr(0, 16));
+            return ctx->GetLabelTo(r, "str_"+x.src.PreadCString(0).substr(0, 16));
         }
         else
             return ctx->GetLabelTo(r);
@@ -255,7 +255,7 @@ void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
     NEPTOOLS_STATIC_ASSERT(std::is_pod<Tuple>::value);
     NEPTOOLS_STATIC_ASSERT(EmptySizeof<Tuple> == Operations<Args...>::Size());
 
-    Tuple raw = src.Read<Tuple>();
+    Tuple raw = src.ReadGen<Tuple>();
 
     Operations<Args...>::Validate(raw, GetContext()->GetSize());
     Operations<Args...>::Parse(args, raw, GetContext());
@@ -298,15 +298,15 @@ Instruction0dItem::Instruction0dItem(
 
 void Instruction0dItem::Parse_(Source& src)
 {
-    src.CheckRemaining(1);
-    uint8_t n = src.Read<boost::endian::little_uint8_t>();
-    src.CheckRemaining(4*n);
+    src.CheckRemainingSize(1);
+    uint8_t n = src.ReadLittleUint8();
+    src.CheckRemainingSize(4*n);
 
     tgts.reserve(n);
 
     for (size_t i = 0; i < n; ++i)
     {
-        uint32_t t = src.Read<boost::endian::little_uint32_t>();
+        uint32_t t = src.ReadLittleUint32();
         NEPTOOLS_VALIDATE_FIELD(
             "Stsc::Instruction0dItem", t < GetContext()->GetSize());
         tgts.push_back(GetContext()->GetLabelTo(t));
@@ -368,17 +368,17 @@ Instruction1dItem::Instruction1dItem(
 
 void Instruction1dItem::Parse_(Source& src)
 {
-    src.CheckRemaining(sizeof(FixParams));
-    auto fp = src.Read<FixParams>();
+    src.CheckRemainingSize(sizeof(FixParams));
+    auto fp = src.ReadGen<FixParams>();
     fp.Validate(src.GetRemainingSize(), GetContext()->GetSize());
     tgt = GetContext()->GetLabelTo(fp.tgt);
 
     uint16_t n = fp.size;
-    src.CheckRemaining(n * sizeof(NodeParams));
+    src.CheckRemainingSize(n * sizeof(NodeParams));
     tree.reserve(n);
     for (uint16_t i = 0; i < n; ++i)
     {
-        auto nd = src.Read<NodeParams>();
+        auto nd = src.ReadGen<NodeParams>();
         nd.Validate(n);
         tree.push_back({nd.operation, nd.value, nd.left, nd.right});
     }
@@ -444,8 +444,8 @@ Instruction1eItem::Instruction1eItem(
 
 void Instruction1eItem::Parse_(Source& src)
 {
-    src.CheckRemaining(sizeof(FixParams));
-    auto fp = src.Read<FixParams>();
+    src.CheckRemainingSize(sizeof(FixParams));
+    auto fp = src.ReadGen<FixParams>();
     fp.Validate(src.GetRemainingSize());
 
     field_0 = fp.field_0;
@@ -455,7 +455,7 @@ void Instruction1eItem::Parse_(Source& src)
     expressions.reserve(size);
     for (uint16_t i = 0; i < size; ++i)
     {
-        auto exp = src.Read<ExpressionParams>();
+        auto exp = src.ReadGen<ExpressionParams>();
         exp.Validate(GetContext()->GetSize());
         expressions.push_back({
                 exp.expression, GetContext()->GetLabelTo(exp.tgt)});

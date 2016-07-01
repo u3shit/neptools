@@ -13,6 +13,8 @@
 namespace Neptools
 {
 
+NEPTOOLS_GEN_EXCEPTION_TYPE(SourceUnderflow, std::logic_error);
+
 class Source;
 using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
 using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
@@ -67,19 +69,31 @@ public:
                 DecodeError{"Premature end of data"} <<
                 UsedSource(*this));
     }
-    void CheckRemaining(FilePosition size) const { CheckSize(get + size); }
+    void CheckRemainingSize(FilePosition size) const { CheckSize(get + size); }
 
     template <typename T>
-    void Read(T& x) { Read(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+    void ReadGen(T& x) { Read(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
     template <typename T>
-    T Read() { T ret; Read(ret); return ret; }
+    T ReadGen() { T ret; ReadGen(ret); return ret; }
+    template <typename T>
+    void CheckedReadGen(T& x)
+    { CheckedRead(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+    template <typename T>
+    T CheckedReadGen() { T ret; CheckedReadGen(ret); return ret; }
 
     template <typename T>
-    void Pread(FilePosition offs, T& x) const
+    void PreadGen(FilePosition offs, T& x) const
     { Pread(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
     template <typename T>
-    T Pread(FilePosition offs) const
-    { T ret; Pread(offs, ret); return ret; }
+    T PreadGen(FilePosition offs) const
+    { T ret; PreadGen(offs, ret); return ret; }
+    template <typename T>
+    void CheckedPreadGen(FilePosition offs, T& x) const
+    { CheckedPread(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+    template <typename T>
+    T CheckedPreadGen(FilePosition offs) const
+    { T ret; CheckedPreadGen(offs, ret); return ret; }
+
 
     void Read(Byte* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
     void Read(char* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
@@ -87,25 +101,47 @@ public:
     void Pread(FilePosition offs, char* buf, FileMemSize len) const
     { Pread(offs, reinterpret_cast<Byte*>(buf), len); }
 
-    Byte Get() { return Read<Byte>(); }
-    Byte Get(uint64_t offs) const { return Pread<Byte>(offs); }
+    void CheckedRead(Byte* buf, FileMemSize len) { CheckedPread(get, buf, len); get += len; }
+    void CheckedRead(char* buf, FileMemSize len) { CheckedPread(get, buf, len); get += len; }
+    void CheckedPread(FilePosition offs, Byte* buf, FileMemSize len) const
+    {
+        if (offs > size || offs+len > size)
+            NEPTOOLS_THROW(SourceUnderflow{"Source underflow"} << UsedSource{*this});
+        return Pread(offs, buf, len);
+    }
+    void CheckedPread(FilePosition offs, char* buf, FileMemSize len) const
+    { CheckedPread(offs, reinterpret_cast<Byte*>(buf), len); }
 
     // helper
-    uint8_t GetLittleUint8() { return Get(); }
-    uint8_t GetLittleUint8(FilePosition offs) const { return Get(offs); }
+    uint8_t ReadLittleUint8()
+    { return ReadGen<boost::endian::little_uint8_t>(); }
+    uint8_t PreadLittleUint8(FilePosition offs) const
+    { return PreadGen<boost::endian::little_uint8_t>(offs); }
+    uint8_t CheckedReadLittleUint8()
+    { return CheckedReadGen<boost::endian::little_uint8_t>(); }
+    uint8_t CheckedPreadLittleUint8(FilePosition offs) const
+    { return CheckedPreadGen<boost::endian::little_uint8_t>(offs); }
 
-    uint16_t GetLittleUint16()
-    { return Read<boost::endian::little_uint16_t>(); }
-    uint16_t GetLittleUint16(FilePosition offs) const
-    { return Pread<boost::endian::little_uint16_t>(offs); }
+    uint16_t ReadLittleUint16()
+    { return ReadGen<boost::endian::little_uint16_t>(); }
+    uint16_t PreadLittleUint16(FilePosition offs) const
+    { return PreadGen<boost::endian::little_uint16_t>(offs); }
+    uint16_t CheckedReadLittleUint16()
+    { return CheckedReadGen<boost::endian::little_uint16_t>(); }
+    uint16_t CheckedPreadLittleUint16(FilePosition offs) const
+    { return CheckedPreadGen<boost::endian::little_uint16_t>(offs); }
 
-    uint32_t GetLittleUint32()
-    { return Read<boost::endian::little_uint32_t>(); }
-    uint32_t GetLittleUint32(FilePosition offs) const
-    { return Pread<boost::endian::little_uint32_t>(offs); }
+    uint32_t ReadLittleUint32()
+    { return ReadGen<boost::endian::little_uint32_t>(); }
+    uint32_t PreadLittleUint32(FilePosition offs) const
+    { return PreadGen<boost::endian::little_uint32_t>(offs); }
+    uint32_t CheckedReadLittleUint32()
+    { return CheckedReadGen<boost::endian::little_uint32_t>(); }
+    uint32_t CheckedPreadLittleUint32(FilePosition offs) const
+    { return CheckedPreadGen<boost::endian::little_uint32_t>(offs); }
 
     static constexpr size_t GET_C_BUF_SIZE = 16;
-    std::string GetCString()
+    std::string ReadCString()
     {
         std::string str;
         char buf[GET_C_BUF_SIZE];
@@ -129,7 +165,7 @@ public:
         return str;
     }
 
-    std::string GetCString(FilePosition offs) const
+    std::string PreadCString(FilePosition offs) const
     {
         std::string str;
         char buf[GET_C_BUF_SIZE];

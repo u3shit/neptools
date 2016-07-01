@@ -48,8 +48,8 @@ HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
 
 void HeaderItem::Parse_(Source& src)
 {
-    src.CheckRemaining(sizeof(Header));
-    auto hdr = src.Read<Header>();
+    src.CheckRemainingSize(sizeof(Header));
+    auto hdr = src.ReadGen<Header>();
     hdr.Validate(src.GetSize());
 
     entry_point =
@@ -60,7 +60,7 @@ void HeaderItem::Parse_(Source& src)
         src.Read(extra_headers_1, 32);
     if (flags & 2)
     {
-        auto eh2 = src.Read<ExtraHeader2>();
+        auto eh2 = src.ReadGen<ExtraHeader2>();
         extra_headers_2_0 = eh2.field_0;
         extra_headers_2_2 = eh2.field_2;
         extra_headers_2_4 = eh2.field_4;
@@ -70,7 +70,7 @@ void HeaderItem::Parse_(Source& src)
         extra_headers_2_c = eh2.field_c;
     }
     if (flags & 4)
-        extra_headers_4 = src.Read<boost::endian::little_uint16_t>();
+        extra_headers_4 = src.ReadLittleUint16();
 }
 
 void HeaderItem::Dump_(Sink& sink) const

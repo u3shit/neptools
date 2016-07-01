@@ -102,7 +102,7 @@ InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
 
 void InstructionItem::Parse_(Source& src)
 {
-    auto instr = src.Read<Header>();
+    auto instr = src.ReadGen<Header>();
     instr.Validate(GetContext()->GetSize());
 
     is_call = instr.is_call;
@@ -114,7 +114,7 @@ void InstructionItem::Parse_(Source& src)
     params.resize(instr.param_count);
     for (size_t i = 0; i < instr.param_count; ++i)
     {
-        auto p = src.Read<Parameter>();
+        auto p = src.ReadGen<Parameter>();
         p.Validate(GetContext()->GetSize());
         ConvertParam(params[i], p);
     }
@@ -220,7 +220,7 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
     auto x = RawItem::GetSource(ptr, -1);
 
     x.src.CheckSize(sizeof(Header));
-    auto inst = x.src.Pread<Header>(0);
+    auto inst = x.src.PreadGen<Header>(0);
     x.src.CheckSize(inst.size);
 
     auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);

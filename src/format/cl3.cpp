@@ -59,7 +59,7 @@ Cl3::Cl3(Source src)
 void Cl3::Parse_(Source& src)
 {
     src.CheckSize(sizeof(Header));
-    auto hdr = src.Pread<Header>(0);
+    auto hdr = src.PreadGen<Header>(0);
     hdr.Validate(src.GetSize());
 
     field_14 = hdr.field_14;
@@ -71,7 +71,7 @@ void Cl3::Parse_(Source& src)
         link_offset, link_count = 0;
     for (size_t i = 0; i < secs; ++i)
     {
-        auto sec = src.Read<Section>();
+        auto sec = src.ReadGen<Section>();
         sec.Validate(src.GetSize());
 
         if (sec.name == "FILE_COLLECTION")
@@ -93,7 +93,7 @@ void Cl3::Parse_(Source& src)
     src.Seek(file_offset);
     for (uint32_t i = 0; i < file_count; ++i)
     {
-        auto e = src.Read<FileEntry>();
+        auto e = src.ReadGen<FileEntry>();
         e.Validate(file_size);
 
         entries.emplace_back(
@@ -106,7 +106,7 @@ void Cl3::Parse_(Source& src)
         uint32_t lcount = e.link_count;
         for (uint32_t i = lbase; i < lbase+lcount; ++i)
         {
-            auto le = src.Pread<LinkEntry>(link_offset + i*sizeof(LinkEntry));
+            auto le = src.PreadGen<LinkEntry>(link_offset + i*sizeof(LinkEntry));
             le.Validate(i - lbase, file_count);
             ls.push_back(le.linked_file_id);
         }

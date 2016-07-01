@@ -43,7 +43,7 @@ public:
         struct Ret { RawItem& ritem; T t; };
         return Ret{
             std::ref(ritem),
-            ritem.src.Pread<T>(ptr.offset)};
+            ritem.src.PreadGen<T>(ptr.offset)};
     }
 
     static auto GetSource(ItemPointer ptr, FilePosition len)

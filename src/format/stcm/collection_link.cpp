@@ -95,7 +95,7 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
     entries.reserve(count);
     for (uint32_t i = 0; i < count; ++i)
     {
-        auto e = src.Read<Entry>();
+        auto e = src.ReadGen<Entry>();
         e.Validate(GetContext()->GetSize());
         entries.push_back({
             GetContext()->GetLabelTo(e.name_0),

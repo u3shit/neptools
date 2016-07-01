@@ -7,7 +7,7 @@ namespace Stsc
 {
 
 StringItem::StringItem(Key k, Context* ctx, Source src)
-    : Item{k, ctx}, str{src.GetCString(0)}
+    : Item{k, ctx}, str{src.PreadCString(0)}
 {}
 
 StringItem* StringItem::CreateAndInsert(ItemPointer ptr)

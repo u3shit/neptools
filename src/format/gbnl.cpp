@@ -57,14 +57,14 @@ void Gbnl::Parse_(Source& src)
 #define VALIDATE(msg, x) NEPTOOLS_VALIDATE_FIELD("Gbnl" msg, x)
 
     src.CheckSize(sizeof(Header));
-    auto foot = src.Pread<Header>(0);
+    auto foot = src.PreadGen<Header>(0);
     if (memcmp(foot.magic, "GSTL", 4) == 0)
     {
         is_gstl = true;
     }
     else
     {
-        src.Pread(src.GetSize() - sizeof(Header), foot);
+        src.PreadGen(src.GetSize() - sizeof(Header), foot);
         is_gstl = false;
     }
 
@@ -82,7 +82,7 @@ void Gbnl::Parse_(Source& src)
     Struct::TypeBuilder bld;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
-        auto type = src.Read<TypeDescriptor>();
+        auto type = src.ReadGen<TypeDescriptor>();
 
         auto bytes = ::Neptools::GetSize(type.type);
         calc_offs = ::Neptools::Align(calc_offs, bytes);
@@ -95,7 +95,7 @@ void Gbnl::Parse_(Source& src)
         case TypeDescriptor::UINT8:
             if (i+1 != foot.count_types)
             {
-                auto t2 = src.Pread<TypeDescriptor>(src.Tell());
+                auto t2 = src.PreadGen<TypeDescriptor>(src.Tell());
                 // if it longer than 1, make it a string
                 if (t2.offset != ::Neptools::Align(
                         type.offset+1, ::Neptools::GetSize(t2.type)))
@@ -143,24 +143,24 @@ void Gbnl::Parse_(Source& src)
             switch (type->items[i].idx)
             {
             case Struct::GetIndexFromType<uint8_t>():
-                m.Get<uint8_t>(i) = src.GetLittleUint8();
+                m.Get<uint8_t>(i) = src.ReadLittleUint8();
                 break;
             case Struct::GetIndexFromType<uint16_t>():
-                m.Get<uint16_t>(i) = src.GetLittleUint16();
+                m.Get<uint16_t>(i) = src.ReadLittleUint16();
                 break;
             case Struct::GetIndexFromType<uint32_t>():
-                m.Get<uint32_t>(i) = src.GetLittleUint32();
+                m.Get<uint32_t>(i) = src.ReadLittleUint32();
                 break;
             case Struct::GetIndexFromType<float>():
             {
                 union { float f; uint32_t i; } x;
-                x.i = src.GetLittleUint32();
+                x.i = src.ReadLittleUint32();
                 m.Get<float>(i) = x.f;
                 break;
             }
             case Struct::GetIndexFromType<OffsetString>():
             {
-                uint32_t offs = src.GetLittleUint32();
+                uint32_t offs = src.ReadLittleUint32();
                 if (offs == 0xffffffff)
                     m.Get<OffsetString>(i).offset = -1;
                 else
@@ -168,7 +168,7 @@ void Gbnl::Parse_(Source& src)
                     VALIDATE("", offs < src.GetSize() - foot.offset_msgs);
                     auto str = foot.offset_msgs + offs;
 
-                    m.Get<OffsetString>(i) = {src.GetCString(str), 0};
+                    m.Get<OffsetString>(i) = {src.PreadCString(str), 0};
                 }
                 break;
             }
