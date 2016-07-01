@@ -97,10 +97,24 @@ unmodded game.
 
 The second way is to extract only `neptools-server.dll` and rename it to
 `dinput8.dll`. In this case there's no launcher, simply start the original
-executable. To temporarily disable modding in this case, you'll either have to
-temporarly delete/rename `dinput8.dll` or start `NeptuniaReBirth?.exe` with the
-`--disable` parameter (this is not exactly same as removing the dll as Neptools
-will be still loaded, but it will try to minimize changes made to the game...)
+executable. In case of RB3, it may not work this way. The problem is that the
+directory name steam chooses (`Hyperdimension Neptunia Re;Birth3`) confuses the
+Windows DLL loader, and will treat `;` as a path separator. If you do not want
+to rename the directory (which would upset steam), you'll have to place
+`dinput8.dll` into a subdirectory named `Birth3` (so it should end up in
+`steamapps\common\Hyperdimension Neptunia Re;Birth3\Birth3\dinput8.dll`).
+
+*Note for Linux/Wine users*: wine by default gives priority to it's builtin
+version of `dinput8.dll`, ignoring this custom version. To fix it run `winecfg`,
+select Libraries tab, write `dinput8` under New override for library, click Add,
+make sure it says (native, builtin). Also you'll probably need MSVC2013
+runtimes, if you didn't already install it for the game (`winetricks
+vcrun2013`).
+
+To temporarily disable modding in this case, you'll either have to temporarly
+delete/rename `dinput8.dll` or start `NeptuniaReBirth?.exe` with the `--disable`
+parameter (this is not exactly same as removing the dll as Neptools will be
+still loaded, but it will try to minimize changes made to the game...)
 
 In either case, you'll have to create a directory named `neptools`, and place
 files to be replaced inside it. If you want to replace (for example)
