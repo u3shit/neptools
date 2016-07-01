@@ -11,8 +11,9 @@ namespace Neptools
 namespace Stsc
 {
 
-class File : public Context, public TxtSerializable
+class File final : public Context, public TxtSerializable
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     File(Source src);
 

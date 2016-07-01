@@ -2,14 +2,17 @@
 #define UUID_E17CE799_6569_40E4_A8FE_39F088AE30AB
 #pragma once
 
+#include "lua/dynamic_object.hpp"
 #include <iosfwd>
 
 namespace Neptools
 {
 
-class TxtSerializable
+class TxtSerializable : public Lua::DynamicObject
 {
 public:
+    static constexpr const char* TYPE_NAME = "neptools.txt_serializable";
+
     void WriteTxt(std::ostream& os) const { WriteTxt_(os); }
     void WriteTxt(std::ostream&& os) const { WriteTxt_(os); }
     void ReadTxt(std::istream& is) { ReadTxt_(is); }

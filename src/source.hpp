@@ -12,6 +12,7 @@
 #include "low_io.hpp"
 #include "not_null.hpp"
 #include "shared_ptr.hpp"
+#include "lua/value_object.hpp"
 
 namespace Neptools
 {
@@ -25,9 +26,11 @@ using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
 std::string to_string(const UsedSource& src);
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
-class Source
+class Source : public Lua::ValueObject
 {
 public:
+    static constexpr const char* TYPE_NAME = "neptools.source";
+
     struct BufEntry
     {
         Byte* ptr = nullptr;
@@ -213,8 +216,9 @@ private:
     NotNull<SmartPtr<Provider>> p;
 };
 
-class DumpableSource : public Dumpable, public Source
+class DumpableSource final : public Dumpable, public Source
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     DumpableSource(const Source& s) : Source{s} {}
     DumpableSource(Source&& s) : Source{std::move(s)} {}

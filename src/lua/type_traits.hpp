@@ -2,28 +2,80 @@
 #define UUID_AFD13C49_2B38_4C98_88BE_F8D45F347F14
 #pragma once
 
-#include "shared_object.hpp"
+#include "base.hpp"
+#include "../nonowning_string.hpp"
 #include <boost/numeric/conversion/cast.hpp>
+
+namespace boost { namespace filesystem { class path; } }
 
 namespace Neptools
 {
 namespace Lua
 {
 
+// type name
+template <typename T, typename Enable = void> struct TypeName
+{ static constexpr const char* TYPE_NAME = T::TYPE_NAME; };
+
+template <typename T>
+struct TypeName<T, std::enable_if_t<
+    std::is_integral<T>::value || std::is_enum<T>::value>>
+{ static constexpr const char* TYPE_NAME = "integer"; };
+
+template <typename T>
+struct TypeName<T, std::enable_if_t<std::is_floating_point<T>::value>>
+{ static constexpr const char* TYPE_NAME = "number"; };
+
+template<> struct TypeName<bool>
+{ static constexpr const char* TYPE_NAME = "boolean"; };
+
+template<> struct TypeName<const char*>
+{ static constexpr const char* TYPE_NAME = "string"; };
+template<> struct TypeName<std::string>
+{ static constexpr const char* TYPE_NAME = "string"; };
+
+template <typename T>
+constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
+
+// type tag
+template <typename T> char TYPE_TAG = {};
+
+template <typename T, typename Deriv>
+struct TaggedTraits
+{
+    static decltype(auto) Get(StateRef vm, bool arg, int idx)
+    {
+        if (!Is(vm, idx))
+            vm.TypeError(arg, TYPE_NAME<T>, idx);
+        return Deriv::UnsafeGet(vm, idx);
+    }
+
+    static bool Is(StateRef vm, int idx)
+    {
+        if (!lua_getmetatable(vm, idx)) return false; // +1
+        auto type = lua_rawgetp(vm, -1, &TYPE_TAG<T>); // +2
+        lua_pop(vm, 2);
+        return !IsNoneOrNil(type);
+    }
+};
+
 // lauxlib operations:
 // luaL_check*: call lua_to*, fail if it fails
 // luaL_opt*: lua_isnoneornil ? default : luaL_check*
 
+template <typename T> struct IsBoostEndian : std::false_type {};
+
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<
-    std::is_integral<T>::value || std::is_enum<T>::value>>
+    std::is_integral<T>::value || std::is_enum<T>::value ||
+    IsBoostEndian<T>::value>>
 {
     static T Get(StateRef vm, bool arg, int idx)
     {
         int isnum;
         auto ret = lua_tointegerx(vm, idx, &isnum);
         if (BOOST_LIKELY(isnum)) return boost::numeric_cast<T>(ret);
-        vm.TypeError(arg, "integer", idx);
+        vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
     static T UnsafeGet(StateRef vm, int idx)
@@ -44,7 +96,7 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
         int isnum;
         auto ret = lua_tonumberx(vm, idx, &isnum);
         if (BOOST_LIKELY(isnum)) return boost::numeric_cast<T>(ret);
-        vm.TypeError(arg, "number", idx);
+        vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
     static T UnsafeGet(StateRef vm, int idx)
@@ -64,7 +116,7 @@ struct TypeTraits<bool>
     {
         if (BOOST_LIKELY(lua_isboolean(vm, idx)))
             return lua_toboolean(vm, idx);
-        vm.TypeError(arg, "boolean", idx);
+        vm.TypeError(arg, TYPE_NAME<bool>, idx);
     }
 
     static bool UnsafeGet(StateRef vm, int idx)
@@ -84,7 +136,7 @@ struct TypeTraits<const char*>
     {
         auto str = lua_tostring(vm, idx);
         if (BOOST_LIKELY(!!str)) return str;
-        vm.TypeError(arg, "string", idx);
+        vm.TypeError(arg, TYPE_NAME<const char*>, idx);
     };
 
     static const char* UnsafeGet(StateRef vm, int idx)
@@ -97,18 +149,21 @@ struct TypeTraits<const char*>
     { lua_pushstring(vm, val); }
 };
 
-template<>
-struct TypeTraits<std::string>
+template <typename T>
+struct TypeTraits<T, std::enable_if_t<
+    std::is_same<T, std::string>::value ||
+    std::is_same<T, NonowningString>::value ||
+    std::is_same<T, StringView>::value>>
 {
-    static std::string Get(StateRef vm, bool arg, int idx)
+    static T Get(StateRef vm, bool arg, int idx)
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
         if (BOOST_LIKELY(!!str)) return {str, len};
-        vm.TypeError(arg, "string", idx);
+        vm.TypeError(arg, TYPE_NAME<std::string>, idx);
     };
 
-    static std::string UnsafeGet(StateRef vm, int idx)
+    static T UnsafeGet(StateRef vm, int idx)
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
@@ -118,75 +173,24 @@ struct TypeTraits<std::string>
     static bool Is(StateRef vm, int idx)
     { return lua_isstring(vm, idx); }
 
-    static void Push(StateRef vm, const std::string& val)
+    static void Push(StateRef vm, const T& val)
     { lua_pushlstring(vm, val.data(), val.length()); }
 };
 
-template <typename T>
-struct TypeTraits<std::shared_ptr<T>,
-                  std::enable_if_t<std::is_base_of<SharedObject, T>::value>>
+template<>
+struct TypeTraits<boost::filesystem::path> : public TypeTraits<const char*>
 {
-    static std::shared_ptr<SharedObject>& Get_(StateRef vm, int idx)
+    template <typename T> // T will be boost::filesystem::path, but it's only
+                          // fwd declared at the moment...
+    static void Push(StateRef vm, const T& pth)
     {
-        auto ptr = reinterpret_cast<std::shared_ptr<SharedObject>*>(
-            lua_touserdata(vm, idx));
-        return *ptr;
+#ifdef WINDOWS
+        auto str = pth.string();
+        lua_pushlstring(vm, str.c_str(), str.size());
+#else
+        lua_pushlstring(vm, pth.c_str(), pth.size());
+#endif
     }
-
-    template <typename U = T,
-              typename = std::enable_if_t<std::is_same<U, SharedObject>::value>>
-    static std::shared_ptr<SharedObject>& Get(StateRef vm, bool arg, int idx)
-    {
-        if (!Is(vm, idx))
-            vm.TypeError(arg, T::TYPE_NAME, idx);
-        return Get_(vm, idx);
-    }
-
-    template <typename U = T,
-              typename = std::enable_if_t<!std::is_same<U, SharedObject>::value>>
-    static std::shared_ptr<T> Get(StateRef vm, bool arg, int idx)
-    {
-        if (!Is(vm, idx))
-            vm.TypeError(arg, T::TYPE_NAME, idx);
-        return std::static_pointer_cast<T>(Get_(vm, idx));
-    }
-
-    template <typename U = T,
-              typename = std::enable_if_t<std::is_same<U, SharedObject>::value>>
-    static std::shared_ptr<SharedObject>& UnsafeGet(StateRef vm, int idx)
-    { return Get_(vm, idx); }
-
-    template <typename U = T,
-              typename = std::enable_if_t<!std::is_same<U, SharedObject>::value>>
-    static std::shared_ptr<T> UnsafeGet(StateRef vm, int idx)
-    { return std::static_pointer_cast<T>(Get_(vm, idx)); }
-
-    static bool Is(StateRef vm, int idx)
-    {
-        if (!lua_getmetatable(vm, idx)) return false; // +1
-        auto type = lua_rawgetp(vm, -1, &T::TYPE_TAG); // +2
-        lua_pop(vm, 2);
-        return !IsNoneOrNil(type);
-    }
-
-    static void Push(StateRef vm, const std::shared_ptr<SharedObject>& ptr)
-    {
-        if (ptr) ptr->PushLua(vm);
-        else lua_pushnil(vm);
-    }
-};
-
-template <typename T>
-struct TypeTraits<T*, std::enable_if_t<std::is_base_of<SharedObject, T>::value>>
-{
-    static T* Get(StateRef vm, bool arg, int idx)
-    { return TypeTraits<std::shared_ptr<T>>::Get(vm, arg, idx).get(); }
-
-    static T* UnsafeGet(StateRef vm, int idx)
-    { return TypeTraits<std::shared_ptr<T>>::UnsafeGet(vm, idx).get(); }
-
-    static bool Is(StateRef vm, int idx)
-    { return TypeTraits<std::shared_ptr<T>>::Check(vm, idx); }
 };
 
 }

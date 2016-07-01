@@ -14,6 +14,7 @@ namespace Neptools
 
 class Gbnl : public Dumpable, public TxtSerializable
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header // or Footer
     {

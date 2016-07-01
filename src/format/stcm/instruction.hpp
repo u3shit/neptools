@@ -15,6 +15,7 @@ namespace Stcm
 
 class InstructionItem final : public ItemWithChildren
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {

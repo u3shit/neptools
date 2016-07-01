@@ -94,6 +94,9 @@ public:
 
     operator lua_State*() { return vm; }
 
+    BOOST_NORETURN
+    void TypeError(bool arg, const char* expected, int idx);
+
 protected:
     lua_State* vm;
 
@@ -105,10 +108,6 @@ private:
 #endif
     static thread_local const char* error_msg;
     static thread_local size_t error_len;
-
-    template <typename T, typename Enable> friend struct TypeTraits;
-    BOOST_NORETURN
-    void TypeError(bool arg, const char* expected, int idx);
 };
 
 inline bool IsNoneOrNil(int v) { return v <= 0; }

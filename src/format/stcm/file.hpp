@@ -14,6 +14,7 @@ namespace Stcm
 
 class File : public Context, public TxtSerializable
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     File(Source src);
     std::vector<NotNull<SmartPtr<const GbnlItem>>> FindGbnl() const;

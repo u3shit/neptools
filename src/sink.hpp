@@ -6,6 +6,8 @@
 #include "nonowning_string.hpp"
 #include "shared_ptr.hpp"
 #include "utils.hpp"
+#include "lua/dynamic_object.hpp"
+
 #include <boost/endian/arithmetic.hpp>
 #include <boost/filesystem/path.hpp>
 #include <cstring>
@@ -15,9 +17,12 @@ namespace Neptools
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(SinkOverflow, std::logic_error);
 
-class Sink : public RefCounted
+class Sink : public RefCounted, public Lua::DynamicObject
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    static constexpr const char* TYPE_NAME = "neptools.sink";
+
     static NotNull<RefCountedPtr<Sink>> ToFile(
         boost::filesystem::path fname, FilePosition size, bool try_mmap = true);
     static NotNull<RefCountedPtr<Sink>> ToStdOut();
@@ -81,11 +86,24 @@ private:
 
 class MemorySink : public Sink
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    static constexpr const char* TYPE_NAME = "neptools.memory_sink";
+
     MemorySink(Byte* buffer, FileMemSize size) : Sink{size}
     { this->buf = buffer; this->buf_size = size; }
 
+    MemorySink(FileMemSize size) : Sink{size}, uniq_buf{new Byte[size]}
+    { buf = uniq_buf.get(); buf_size = size; }
+
+    // to_string in lua
+    StringView GetStringView() const noexcept { return {buf, buf_size}; }
+
+    std::unique_ptr<Byte[]> Release() noexcept { return std::move(uniq_buf); }
+
 private:
+    std::unique_ptr<Byte[]> uniq_buf;
+
     void Write_(StringView) override;
     void Pad_(FileMemSize) override;
 };

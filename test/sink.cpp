@@ -251,3 +251,14 @@ TEST_CASE("memory pad", "[MemorySink]")
 
     REQUIRE(memcmp(buf_out, buf_exp, 32) == 0);
 }
+
+TEST_CASE("memory alloc by itself", "[MemorySink]")
+{
+    char buf_exp[4] = { 0x78, 0x56, 0x34, 0x12 };
+    MemorySink sink{4};
+
+    sink.WriteLittleUint32(0x12345678);
+    auto buf = sink.Release();
+
+    REQUIRE(memcmp(buf.get(), buf_exp, 4) == 0);
+}

@@ -13,6 +13,7 @@ namespace Stcm
 
 class HeaderItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {

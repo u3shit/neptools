@@ -12,6 +12,7 @@ namespace Stsc
 
 class StringItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     StringItem(Key k, Context* ctx, Source src);
     static StringItem& CreateAndInsert(ItemPointer ptr);

@@ -15,6 +15,7 @@ namespace Stcm
 class HeaderItem;
 class ExportsItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     enum Type : uint32_t
     {

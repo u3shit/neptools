@@ -13,6 +13,7 @@ namespace Stsc
 
 class HeaderItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {

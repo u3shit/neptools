@@ -225,6 +225,7 @@ def build_common(bld):
         'src/pattern.cpp',
         'src/sink.cpp',
         'src/source.cpp',
+        'src/txt_serializable.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
         'src/format/gbnl.cpp',
@@ -244,7 +245,7 @@ def build_common(bld):
         'src/format/stsc/string.cpp',
         'src/lua/base.cpp',
         'src/lua/base_funcs.lua',
-        'src/lua/shared_object.cpp',
+        'src/lua/dynamic_object.cpp',
         'src/lua/user_type.cpp',
     ]
 

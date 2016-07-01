@@ -9,6 +9,7 @@ namespace Neptools
 
 class EofItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     using Item::Item;
 

@@ -40,6 +40,7 @@ template<> struct TupleTypeMap<Code*> { using Type = const Label*; };
 template <bool NoReturn, typename... Args>
 class SimpleInstruction final : public InstructionBase
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     SimpleInstruction(Key k, Context* ctx, uint8_t opcode, Source src);
 
@@ -57,6 +58,7 @@ private:
 
 class Instruction0dItem final : public InstructionBase
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     Instruction0dItem(Key k, Context* ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
@@ -72,6 +74,7 @@ private:
 
 class UnimplementedInstructionItem final : public InstructionBase
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     UnimplementedInstructionItem(Key k, Context* ctx, uint8_t opcode, Source)
         : InstructionBase{k, ctx, opcode}
@@ -86,6 +89,7 @@ private:
 
 class Instruction1dItem final : public InstructionBase
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct FixParams
     {
@@ -132,6 +136,7 @@ private:
 
 class Instruction1eItem final : public InstructionBase
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct FixParams
     {

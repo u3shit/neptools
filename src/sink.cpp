@@ -1,6 +1,9 @@
 #include "sink.hpp"
 #include "low_io.hpp"
 #include "except.hpp"
+#include "lua/boost_endian_traits.hpp"
+#include "lua/function_call.hpp"
+#include "lua/user_type.hpp"
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
@@ -204,4 +207,39 @@ void MemorySink::Write_(StringView)
 void MemorySink::Pad_(FileMemSize)
 { NEPTOOLS_UNREACHABLE("MemorySink::Pad_ called"); }
 
+namespace Lua
+{
+#define FT(x) decltype(&x), &x
+template<>
+void TypeRegister::DoRegister<Sink>(StateRef vm, TypeBuilder& bld)
+{
+    bld.Inherit<Sink, DynamicObject>()
+        //.Add<FT(Sink::ToFile)>("to_file")
+        //.Add<FT(Sink::ToStdOut)>("to_stdout")
+        .Add<FT(Sink::Write<Check::Throw>)>("write")
+        .Add<FT(Sink::Pad<Check::Throw>)>("pad")
+        .Add<FT(Sink::Flush)>("flush")
+        .Add<FT(Sink::WriteLittleUint8<Check::Throw>)>("write_little_uint8")
+        .Add<FT(Sink::WriteLittleUint16<Check::Throw>)>("write_little_uint16")
+        .Add<FT(Sink::WriteLittleUint32<Check::Throw>)>("write_little_uint32")
+        .Add<FT(Sink::WriteCString<Check::Throw>)>("write_cstring")
+        ;
+
+    // hack to get close call __gc
+    lua_getfield(vm, -2, "__gc");
+    bld.SetField("close");
+}
+
+template<>
+void TypeRegister::DoRegister<MemorySink>(StateRef, TypeBuilder& bld)
+{
+    bld.Inherit<MemorySink, Sink>()
+        //.UniqueCtor<MemorySink, FileMemSize>()
+        .Add<FT(MemorySink::GetStringView)>("to_string")
+        ;
+}
+
+static TypeRegister::StateRegister<Sink, MemorySink> reg;
+
+}
 }

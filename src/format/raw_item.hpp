@@ -11,6 +11,7 @@ namespace Neptools
 
 class RawItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     RawItem(Key k, Context* ctx, Source src, FilePosition pos = 0) noexcept
         : Item{k, ctx, pos}, src{std::move(src)} {}

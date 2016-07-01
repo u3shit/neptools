@@ -12,6 +12,7 @@ namespace Stcm
 
 class DataItem final : public ItemWithChildren
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {

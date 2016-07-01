@@ -16,8 +16,9 @@ namespace Neptools
 
 namespace Stcm { class File; }
 
-class Cl3 : public Dumpable
+class Cl3 final : public Dumpable
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {

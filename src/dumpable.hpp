@@ -3,16 +3,18 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
-#include "utils.hpp"
+#include "lua/dynamic_object.hpp"
 
 namespace Neptools
 {
 
 class Sink;
 
-class Dumpable
+class Dumpable : public Lua::DynamicObject
 {
 public:
+    static constexpr const char* TYPE_NAME = "neptools.dumpable";
+
     Dumpable() = default;
     Dumpable(const Dumpable&) = delete;
     void operator=(const Dumpable&) = delete;

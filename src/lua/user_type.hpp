@@ -2,11 +2,16 @@
 #define UUID_365580B3_AF64_4E79_8FC1_35F50DFF840F
 #pragma once
 
-#include "base.hpp"
+#include "type_traits.hpp"
+#include "function_call.hpp"
+#include "../shared_ptr.hpp"
 #include <type_traits>
 
 namespace Neptools
 {
+
+template <typename T> class NotNull;
+
 namespace Lua
 {
 
@@ -18,24 +23,47 @@ public:
 
     TypeBuilder& Name(const char* name);
 
-    template <typename... Base>
+    template <typename Deriv, typename Base0, typename... Base>
     TypeBuilder& Inherit()
     {
-        InheritHelp<Base...>::Do(*this);
+        InheritHelp<Deriv, Base0, Base...>::Do(*this);
         return *this;
+    }
+
+    template <typename Class, typename... Args>
+    TypeBuilder& ValueCtor()
+    {
+        return Add<decltype(&CtorFun<Class, Args...>),
+                   &CtorFun<Class, Args...>>("new");
     }
 
     template <typename Class, typename... Args>
     TypeBuilder& SharedCtor()
     {
-        return Add<decltype(&std::make_shared<Class, Args...>),
-                   &std::make_shared<Class, Args...>>("new");
+        return Add<decltype(&MakeShared<Class, Args...>),
+                   &MakeShared<Class, Args...>>("new");
+    }
+
+    template <typename T>
+    TypeBuilder& ValueDtor()
+    {
+        vm.Push<decltype(&DtorFun<T>), &DtorFun<T>>();
+        SetField("__gc");
+        return *this;
     }
 
     template <typename T, T fun>
     TypeBuilder& Add(const char* name)
     {
         vm.Push<T, fun>();
+        SetField(name);
+        return *this;
+    }
+
+    template <typename... Args>
+    TypeBuilder& Add(const char* name)
+    {
+        vm.Push<Args...>();
         SetField(name);
         return *this;
     }
@@ -52,10 +80,25 @@ public:
     void SetField(const char* name);
 
 private:
-    template <typename... Base>
+    template <typename Deriv, typename... Base>
     struct InheritHelp;
 
-    void DoInherit();
+    template <typename T, typename... Args>
+    static RetNum CtorFun(StateRef vm, Args&&... args)
+    {
+        TypeTraits<T>::Push(vm, std::forward<Args>(args)...);
+        return {1};
+    }
+
+    template <typename T>
+    static void DtorFun(StateRef vm, T& t)
+    {
+        t.~T();
+        lua_pushnil(vm);
+        lua_setmetatable(vm, 1);
+    }
+
+    void DoInherit(ptrdiff_t offs);
 
     StateRef vm;
 };
@@ -68,13 +111,13 @@ public:
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        void* type_tag = &Class::TYPE_TAG;
+        void* type_tag = &TYPE_TAG<Class>;
         lua_rawgetp(vm, LUA_REGISTRYINDEX, type_tag);
         if (lua_isnil(vm, -1))
         {
             lua_pop(vm, 1);
             TypeBuilder bld{vm, type_tag};
-            bld.Name(Class::TYPE_NAME);
+            bld.Name(TYPE_NAME<Class>);
             DoRegister<Class>(vm, bld);
             bld.Done();
         }
@@ -82,22 +125,36 @@ public:
         NEPTOOLS_LUA_CHECKTOP(vm, top+1);
     }
 
+    template <typename... Args>
+    static void MultiRegister(StateRef vm)
+    {
+        using Swallow = int[];
+        (void) Swallow{ 0, (Register<Args>(vm), lua_pop(vm, 1), 0)... };
+    }
+
+    template <typename... Classes>
+    struct StateRegister : State::Register
+    {
+        StateRegister() : Register{&TypeRegister::MultiRegister<Classes...>} {}
+    };
+
 private:
     template <typename Class>
     static void DoRegister(StateRef vm, TypeBuilder& bld);
 };
 
-template<> struct TypeBuilder::InheritHelp<>
+template <typename Deriv>
+struct TypeBuilder::InheritHelp<Deriv>
 { static void Do(TypeBuilder&) {} };
 
-template <typename Head, typename... Rest>
-struct TypeBuilder::InheritHelp<Head, Rest...>
+template <typename Deriv, typename Head, typename... Rest>
+struct TypeBuilder::InheritHelp<Deriv, Head, Rest...>
 {
     static void Do(TypeBuilder& bld)
     {
         TypeRegister::Register<Head>(bld.vm);
-        bld.DoInherit();
-        InheritHelp<Rest...>::Do(bld);
+        bld.DoInherit(reinterpret_cast<ptrdiff_t>(static_cast<Head*>(static_cast<Deriv*>(nullptr))));
+        InheritHelp<Deriv, Rest...>::Do(bld);
     }
 };
 

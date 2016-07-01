@@ -13,6 +13,7 @@ namespace Stcm
 
 class CollectionLinkHeaderItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -52,6 +53,7 @@ private:
 
 class CollectionLinkItem final : public Item
 {
+    NEPTOOLS_DYNAMIC_OBJECT;
 public:
     struct Entry
     {
