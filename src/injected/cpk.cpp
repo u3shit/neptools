@@ -192,7 +192,7 @@ bool CpkHandler::OpenTxtFile(
 
         std::stringstream ss;
         ss << "Failed to import " << pth << ", ignoring.\n\n" << except;
-        MessageBoxA(nullptr, ss.str().c_str(), nullptr, MB_OK | MB_ICONERROR);
+        MessageBoxA(nullptr, ss.str().c_str(), "Neptools", MB_OK | MB_ICONERROR);
         return false;
     }
 

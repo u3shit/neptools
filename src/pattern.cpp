@@ -42,7 +42,10 @@ const Byte* Pattern::MaybeFind(StringView data) const noexcept
 
     while (true)
     {
+        DBG(4) << "finding " << static_cast<const void*>(ptr) << "..."
+               <<  static_cast<const void*>(ptr_end) << std::endl;
         auto match = bm(ptr, ptr_end);
+        DBG(4) << "match @" << static_cast<const void*>(match) << std::endl;
         if (match == ptr_end) break;
 
         if (CheckPattern(match - max_i, pattern, mask, size))

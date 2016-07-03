@@ -97,10 +97,45 @@ Option file_opt{
         INFO << "Logging to file " << args.front() << std::endl;
     }};
 
+void PrintRecord(const EXCEPTION_RECORD* er, int lvl = 0)
+{
+    std::string pref(2*lvl+1, ' ');
+#define X(fld) ERR << pref << #fld ": " << er->fld << '\n'
+    ERR << std::hex;
+    X(ExceptionCode); X(ExceptionFlags); X(ExceptionAddress);
+    ERR << std::dec;
+    X(NumberParameters);
+#undef X
+    for (size_t i = 0; i < er->NumberParameters; ++i)
+        ERR << pref << "ExceptionInformation[" << std::dec << i << "]: "
+            << std::hex << er->ExceptionInformation[i] << '\n';
+    if (er->ExceptionRecord) PrintRecord(er->ExceptionRecord, lvl+1);
+}
+
+int Filter(unsigned code, EXCEPTION_POINTERS* ep)
+{
+    ERR << "Seh error 0x" << std::hex << code << '\n';
+    PrintRecord(ep->ExceptionRecord);
+    auto ctx = ep->ContextRecord;
+#define X(fld) ERR << "+" #fld ": " << ctx->fld << '\n';
+    ERR << std::hex;
+    if (ctx->ContextFlags & CONTEXT_SEGMENTS)
+    { X(SegGs); X(SegFs); X(SegEs); X(SegDs); }
+    if (ctx->ContextFlags & CONTEXT_INTEGER)
+    { X(Eax); X(Ebx); X(Ecx); X(Edx); X(Esi); X(Edi); }
+    if (ctx->ContextFlags & CONTEXT_CONTROL)
+    { X(Ebp); X(Eip); X(Esp); X(SegCs); X(SegSs); X(EFlags); }
+    ERR << std::dec << std::flush;
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 using WinMainPtr = int (CALLBACK*)(HINSTANCE, HINSTANCE, wchar_t*, int);
 WinMainPtr orig_main;
 
-int CALLBACK NewWinMain(
+void* dll_base;
+
+int CALLBACK NewWinMain2(
     HINSTANCE inst, HINSTANCE prev, wchar_t* cmdline, int show_cmd)
 {
     try
@@ -131,6 +166,8 @@ int CALLBACK NewWinMain(
 
         if (!disable)
         {
+            DBG(1) << "Image base = " << static_cast<void*>(image_base)
+                   << ", dll base = " << dll_base << std::endl;
             CpkHandler::Init();
             DBG(0) << "Hook done" << std::endl;
         }
@@ -148,6 +185,14 @@ int CALLBACK NewWinMain(
     return orig_main(inst, prev, cmdline, show_cmd);
 }
 
+int CALLBACK NewWinMain(
+    HINSTANCE inst, HINSTANCE prev, wchar_t* cmdline, int show_cmd)
+{
+    __try { return NewWinMain2(inst, prev, cmdline, show_cmd); }
+    __except (Filter(GetExceptionCode(), GetExceptionInformation()))
+    { abort(); }
+}
+
 // msvc 2013 crt offset between entry point and call to WinMain+1
 constexpr size_t MAIN_CALL_OFFSET = -201+1;
 
@@ -156,6 +201,7 @@ constexpr size_t MAIN_CALL_OFFSET = -201+1;
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID)
 {
     if (reason != DLL_PROCESS_ATTACH) return true;
+    dll_base = inst;
 
     DisableThreadLibraryCalls(inst);
 
