@@ -100,6 +100,12 @@ struct DoNormalize<List<StringContainer<'s','r','c'>, InArgs...>, Out>
     using Value = typename DoNormalize<List<InArgs...>, List<>>::Value;
 };
 
+template <typename... InArgs, typename Out>
+struct DoNormalize<List<StringContainer<'e','x','t'>, InArgs...>, Out>
+{
+    using Value = typename DoNormalize<List<InArgs...>, List<>>::Value;
+};
+
 template <typename In0, typename... InRest, typename Out>
 struct DoNormalize<List<In0, InRest...>, Out>
 {

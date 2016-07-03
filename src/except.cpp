@@ -1,3 +1,4 @@
+#include "assert.hpp"
 #include "except.hpp"
 #include <boost/core/demangle.hpp>
 #include <boost/exception/diagnostic_information.hpp>

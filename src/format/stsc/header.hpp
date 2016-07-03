@@ -38,7 +38,7 @@ public:
 
 
     HeaderItem(Key k, Context* ctx, Source src);
-    static HeaderItem* CreateAndInsert(ItemPointer ptr);
+    static HeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
 

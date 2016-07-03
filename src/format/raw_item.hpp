@@ -19,18 +19,18 @@ public:
     FilePosition GetSize() const noexcept override { return src.GetSize(); }
 
     template <typename T>
-    T* Split(FilePosition pos, std::unique_ptr<T> nitem)
+    T& Split(FilePosition pos, boost::intrusive_ptr<T> nitem)
     {
-        T* ret = nitem.get();
+        T& ret = *nitem.get();
         Split2(pos, std::move(nitem));
         return ret;
     }
 
     template <typename T, typename... Args>
-    T* SplitCreate(FilePosition pos, Args&&... args)
-    { return Split(pos, GetContext()->Create<T>(std::forward<Args>(args)...)); }
+    T& SplitCreate(FilePosition pos, Args&&... args)
+    { return Split(pos, GetContext().Create<T>(std::forward<Args>(args)...)); }
 
-    RawItem* Split(FilePosition offset, FilePosition size);
+    RawItem& Split(FilePosition offset, FilePosition size);
 
     template <typename T>
     static auto Get(ItemPointer ptr)
@@ -59,9 +59,9 @@ public:
     }
 
 protected:
-    std::unique_ptr<RawItem> InternalSlice(
+    boost::intrusive_ptr<RawItem> InternalSlice(
         FilePosition offset, FilePosition size);
-    void Split2(FilePosition pos, std::unique_ptr<Item> nitem);
+    void Split2(FilePosition pos, boost::intrusive_ptr<Item> nitem);
 
 private:
     void Dump_(Sink& sink) const override;

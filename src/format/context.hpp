@@ -2,84 +2,66 @@
 #define UUID_C2DF26B7_DE7D_47B8_BAEE_9F6EEBB12891
 #pragma once
 
-#include "item_base.hpp"
+#include "item.hpp"
 #include "../dumpable.hpp"
+
 #include <boost/exception/info.hpp>
-#include <memory>
+#include <boost/intrusive/set.hpp>
 #include <string>
 #include <map>
-#include <unordered_map>
 
 namespace Neptools
 {
 
-class Context : public Dumpable
+class Context : public ItemWithChildren
 {
 public:
-    void Fixup() override { UpdatePositions(); }
+    Context();
+    ~Context();
 
-    Item* GetRoot() noexcept { return root.get(); }
-    const Item* GetRoot() const noexcept { return root.get(); }
-
-    FilePosition GetSize() const noexcept override { return size; }
+    void Fixup() override;
 
     template <typename T, typename... Args>
-    std::unique_ptr<T> Create(Args&&... args);
+    boost::intrusive_ptr<T> Create(Args&&... args)
+    {
+        return {new T{Item::Key{}, this, std::forward<Args>(args)...}};
+    }
 
-    const Label* GetLabel(std::string name) const;
-    const Label* CreateLabel(std::string name, ItemPointer ptr);
-    const Label* CreateLabelFallback(std::string name, ItemPointer ptr);
-    const Label* CreateLabelFallback(std::string name, FilePosition pos)
+    const Label& GetLabel(const std::string& name) const;
+    const Label& CreateLabel(std::string name, ItemPointer ptr);
+    const Label& CreateLabelFallback(std::string name, ItemPointer ptr);
+    const Label& CreateLabelFallback(std::string name, FilePosition pos)
     { return CreateLabelFallback(name, GetPointer(pos)); }
 
-    const Label* GetLabelTo(ItemPointer ptr);
-    const Label* GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
+    const Label& GetLabelTo(ItemPointer ptr);
+    const Label& GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
 
-    const Label* GetLabelTo(FilePosition pos, std::string name);
+    const Label& GetLabelTo(FilePosition pos, std::string name);
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
-    void UpdatePositions();
-
-    // properties needed: sorted
-    using PointerMap = std::map<FilePosition, Item*>;
-
 protected:
-    void SetRoot(std::unique_ptr<Item> nroot);
+    void SetupParseFrom(Item& item);
 
 private:
     static void FilterLabelName(std::string& name);
-    void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
 
     friend class Item;
-    FilePosition size = 0;
 
     // properties needed: stable pointers
-    using LabelsMap = std::unordered_map<std::string, ItemPointer>;
+    using LabelsMap = boost::intrusive::set<
+        Label,
+        boost::intrusive::base_hook<LabelNameHook>,
+        boost::intrusive::constant_time_size<false>,
+        boost::intrusive::key_of_value<LabelKeyOfValue>>;
     LabelsMap labels;
+
+    // properties needed: sorted
+    using PointerMap = std::map<FilePosition, Item*>;
     PointerMap pmap;
-
-    // can use stuff inside context
-    std::unique_ptr<Item> root;
-
-    const Label* PostCreateLabel(
-        std::pair<LabelsMap::iterator, bool> pair, ItemPointer ptr);
 };
 
 using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
 }
 
-#include "item.hpp"
-
-namespace Neptools
-{
-
-template <typename T, typename... Args>
-inline std::unique_ptr<T> Context::Create(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(Item::Key{}, this, std::forward<Args>(args)...));
-}
-
-}
 #endif

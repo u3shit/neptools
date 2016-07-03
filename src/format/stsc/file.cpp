@@ -19,10 +19,9 @@ File::File(Source src)
 void File::Parse_(Source& src)
 {
     auto root = Create<RawItem>(src);
-    auto root_sav = root.get();
-    SetRoot(std::move(root));
-    root_sav->Split(root_sav->GetSize(), Create<EofItem>());
-    HeaderItem::CreateAndInsert({root_sav, 0});
+    SetupParseFrom(*root);
+    root->Split(root->GetSize(), Create<EofItem>());
+    HeaderItem::CreateAndInsert({&*root, 0});
 }
 
 static const char SEP_DASH[] = {
@@ -33,9 +32,9 @@ static const char SEP_DASH[] = {
 
 void File::WriteTxt_(std::ostream& os) const
 {
-    for (auto it = GetRoot(); it; it = it->GetNext())
+    for (auto& it : GetChildren())
     {
-        auto str = dynamic_cast<const StringItem*>(it);
+        auto str = dynamic_cast<const StringItem*>(&it);
         if (str)
         {
             os << boost::replace_all_copy(str->str, "\\n", "\r\n")
@@ -47,23 +46,24 @@ void File::WriteTxt_(std::ostream& os) const
 void File::ReadTxt_(std::istream& is)
 {
     std::string line, msg;
-    auto it = GetRoot();
-    while (it && !dynamic_cast<StringItem*>(it)) it = it->GetNext();
+    auto it = GetChildren().begin();
+    auto end = GetChildren().end();
+    while (it != end && !dynamic_cast<StringItem*>(&*it)) ++it;
 
     is.exceptions(std::ios_base::badbit);
     while (!std::getline(is, line).fail())
     {
         if (line == SEP_DASH)
         {
-            if (!it)
+            if (it == end)
                 NEPTOOLS_THROW(DecodeError{"StscTxt: too many strings"});
 
             NEPTOOLS_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
             if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
-            static_cast<StringItem*>(it)->str = std::move(msg);
+            static_cast<StringItem&>(*it).str = std::move(msg);
 
-            it = it->GetNext();
-            while (it && !dynamic_cast<StringItem*>(it)) it = it->GetNext();
+            ++it;
+            while (it != end && !dynamic_cast<StringItem*>(&*it)) ++it;
 
             msg.clear();
         }
@@ -74,7 +74,7 @@ void File::ReadTxt_(std::istream& is)
         }
     }
 
-    if (it)
+    if (it != end)
         NEPTOOLS_THROW(DecodeError{"StscTxt: not enough strings"});
 }
 

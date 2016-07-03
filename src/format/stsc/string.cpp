@@ -10,7 +10,7 @@ StringItem::StringItem(Key k, Context* ctx, Source src)
     : Item{k, ctx}, str{src.PreadCString(0)}
 {}
 
-StringItem* StringItem::CreateAndInsert(ItemPointer ptr)
+StringItem& StringItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
     return x.ritem.SplitCreate<StringItem>(ptr.offset, x.src);

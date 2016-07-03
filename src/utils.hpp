@@ -25,6 +25,14 @@ T asserted_cast(U* ptr)
     return static_cast<T>(ptr);
 }
 
+template <typename T, typename U>
+T asserted_cast(U& ref)
+{
+    using raw_t = std::remove_reference_t<T>;
+    NEPTOOLS_ASSERT_MSG(dynamic_cast<raw_t*>(&ref), "U is not T");
+    return static_cast<T>(ref);
+}
+
 template <typename T>
 constexpr size_t EmptySizeof = std::is_empty<T>::value ? 0 : sizeof(T);
 

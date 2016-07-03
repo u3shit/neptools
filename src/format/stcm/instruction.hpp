@@ -85,7 +85,7 @@ public:
 
     InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context* ctx, Source src);
-    static InstructionItem* CreateAndInsert(ItemPointer ptr);
+    static InstructionItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
     void Fixup() override;

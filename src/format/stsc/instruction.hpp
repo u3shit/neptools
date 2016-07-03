@@ -17,7 +17,7 @@ public:
     InstructionBase(Key k, Context* ctx, uint8_t opcode)
         : Item{k, ctx}, opcode{opcode} {}
 
-    static InstructionBase* CreateAndInsert(ItemPointer ptr);
+    static InstructionBase& CreateAndInsert(ItemPointer ptr);
 
     uint8_t opcode;
 

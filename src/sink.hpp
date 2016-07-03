@@ -2,6 +2,7 @@
 #define UUID_8EC8FF70_7F93_4281_9370_FF756B846775
 #pragma once
 
+#include "assert.hpp"
 #include "nonowning_string.hpp"
 #include "utils.hpp"
 #include <boost/endian/arithmetic.hpp>

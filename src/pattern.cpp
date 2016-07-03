@@ -1,4 +1,5 @@
 #include "pattern.hpp"
+#include "assert.hpp"
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
 #define NEPTOOLS_LOG_NAME "pattern"

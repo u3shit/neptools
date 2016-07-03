@@ -28,11 +28,11 @@ void RawItem::Inspect_(std::ostream& os) const
     size_t i = 0;
     while (true)
     {
-        for (; it != GetLabels().end() && it->first == i; ++it)
-            os << '@' << it->second->first << ":\n";
+        for (; it != GetLabels().end() && it->ptr.offset == i; ++it)
+            os << '@' << it->name << ":\n";
         auto max = GetSize();
-        if (it != GetLabels().end() && it->first < max)
-            max = it->first;
+        if (it != GetLabels().end() && it->ptr.offset < max)
+            max = it->ptr.offset;
 
         os << std::setw(8) << std::setfill('0') << GetPosition() + i
            << ' ';
@@ -62,15 +62,15 @@ void RawItem::Inspect_(std::ostream& os) const
     os.flags(flags);
 }
 
-std::unique_ptr<RawItem> RawItem::InternalSlice(
+boost::intrusive_ptr<RawItem> RawItem::InternalSlice(
     FilePosition spos, FilePosition slen)
 {
     NEPTOOLS_ASSERT(spos+slen <= GetSize());
-    return GetContext()->Create<RawItem>(Source{src, spos, slen}, position+spos);
+    return GetContext().Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
-void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
+void RawItem::Split2(FilePosition pos, boost::intrusive_ptr<Item> nitem)
 {
     auto len = nitem->GetSize();
     NEPTOOLS_ASSERT(pos <= GetSize() && pos+len <= GetSize());
@@ -83,13 +83,13 @@ void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
     }
 
     SliceSeq seq;
-    if (pos != 0) seq.push_back({nullptr, 0});
-    seq.push_back({std::move(nitem), pos});
+    if (pos != 0) seq.push_back({this, pos});
+    seq.push_back({std::move(nitem), pos+len});
     if (rem_len > 0)
         if (pos == 0)
-            seq.push_back({nullptr, len});
+            seq.push_back({this, GetSize()});
         else
-            seq.push_back({InternalSlice(pos+len, rem_len), pos+len});
+            seq.push_back({InternalSlice(pos+len, rem_len), GetSize()});
 
     Item::Slice(std::move(seq));
     if (pos == 0)
@@ -101,10 +101,10 @@ void RawItem::Split2(FilePosition pos, std::unique_ptr<Item> nitem)
         src.Slice(0, pos);
 }
 
-RawItem* RawItem::Split(FilePosition offset, FilePosition size)
+RawItem& RawItem::Split(FilePosition offset, FilePosition size)
 {
     auto it = InternalSlice(offset, size);
-    auto ret = it.get();
+    auto& ret = *it.get();
     Split2(offset, std::move(it));
     return ret;
 }

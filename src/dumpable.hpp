@@ -4,11 +4,12 @@
 
 #include <boost/filesystem/path.hpp>
 #include "sink.hpp"
+#include "refcounted.hpp"
 
 namespace Neptools
 {
 
-class Dumpable
+class Dumpable : public RefCounted
 {
 public:
     Dumpable() = default;

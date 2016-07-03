@@ -18,7 +18,7 @@ void DataItem::Header::Validate(FilePosition chunk_size) const
 }
 
 DataItem::DataItem(Key k, Context* ctx, const Header& raw, size_t chunk_size)
-    : Item{k, ctx}
+    : ItemWithChildren{k, ctx}
 {
     raw.Validate(chunk_size);
 
@@ -27,27 +27,29 @@ DataItem::DataItem(Key k, Context* ctx, const Header& raw, size_t chunk_size)
     field_8 = raw.field_8;
 }
 
-DataItem* DataItem::CreateAndInsert(ItemPointer ptr)
+DataItem& DataItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::Get<Header>(ptr);
 
-    auto ret = x.ritem.SplitCreate<DataItem>(
+    auto& ret = x.ritem.SplitCreate<DataItem>(
         ptr.offset, x.t, x.ritem.GetSize() - ptr.offset - sizeof(Header));
     if (x.t.length > 0)
-        ret->PrependChild(asserted_cast<RawItem*>(
-            ret->GetNext())->Split(0, x.t.length)->Remove());
-    NEPTOOLS_ASSERT(ret->GetSize() == sizeof(Header) + x.t.length);
+        ret.MoveNextToChild(x.t.length);
+
+    NEPTOOLS_ASSERT(ret.GetSize() == sizeof(Header) + x.t.length);
 
     // hack
-    auto child = dynamic_cast<RawItem*>(ret->GetChildren());
-    if (child && child->GetSize() > sizeof(Gbnl::Header))
+    if (!ret.GetChildren().empty())
     {
-        char buf[4];
-        child->GetSource().Pread(child->GetSize() - sizeof(Gbnl::Header), buf, 4);
-        if (memcmp(buf, "GBNL", 4) == 0)
-            GbnlItem::CreateAndInsert({child, 0});
+        auto child = dynamic_cast<RawItem*>(&ret.GetChildren().front());
+        if (child && child->GetSize() > sizeof(Gbnl::Header))
+        {
+            char buf[4];
+            child->GetSource().Pread(child->GetSize() - sizeof(Gbnl::Header), buf, 4);
+            if (memcmp(buf, "GBNL", 4) == 0)
+                GbnlItem::CreateAndInsert({child, 0});
+        }
     }
-
     return ret;
 }
 
@@ -60,30 +62,25 @@ void DataItem::Dump_(Sink& sink) const
     hdr.length = GetSize() - sizeof(Header);
     sink.WriteGen(hdr);
 
-    for (auto it = GetChildren(); it; it = it->GetNext())
-        it->Dump(sink);
+    ItemWithChildren::Dump_(sink);
 }
 
 void DataItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
     os << "data(" << type << ", " << offset_unit << ", " << field_8 << ") {";
-    if (GetChildren()) os << '\n' << *GetChildren();
+    ItemWithChildren::Inspect_(os);
     os << '}';
 }
 
 FilePosition DataItem::GetSize() const noexcept
 {
-    FilePosition ret = sizeof(Header);
-    for (auto it = GetChildren(); it; it = it->GetNext())
-        ret += it->GetSize();
-    return ret;
+    return ItemWithChildren::GetSize() + sizeof(Header);
 }
 
 void DataItem::Fixup()
 {
-    if (GetChildren())
-        GetChildren()->UpdatePositions(position + sizeof(Header));
+    ItemWithChildren::Fixup_(sizeof(Header));
 }
 
 }

@@ -26,7 +26,7 @@ namespace
 
 struct State
 {
-    std::unique_ptr<Dumpable> file;
+    boost::intrusive_ptr<Dumpable> dump;
     Cl3* cl3;
     Stcm::File* stcm;
     Gbnl* gbnl;
@@ -42,30 +42,26 @@ State SmartOpen_(const boost::filesystem::path& fname)
     src.Pread(0, buf, 4);
     if (memcmp(buf, "CL3L", 4) == 0)
     {
-        auto cl3 = std::make_unique<Cl3>(src);
-        auto ret2 = cl3.get();
-        return {std::move(cl3), ret2, nullptr, nullptr, nullptr};
+        auto cl3 = MakeRefCounted<Cl3>(src);
+        return {cl3, cl3.get(), nullptr, nullptr, nullptr};
     }
     else if (memcmp(buf, "STCM", 4) == 0)
     {
-        auto stcm = std::make_unique<Stcm::File>(src);
-        auto ret2 = stcm.get();
-        return {std::move(stcm), nullptr, ret2, nullptr, nullptr};
+        auto stcm = MakeRefCounted<Stcm::File>(src);
+        return {stcm, nullptr, stcm.get(), nullptr, nullptr};
     }
     else if (memcmp(buf, "STSC", 4) == 0)
     {
-        auto stsc = std::make_unique<Stsc::File>(src);
-        auto ret2 = stsc.get();
-        return {std::move(stsc), nullptr, nullptr, nullptr, ret2};
+        auto stsc = MakeRefCounted<Stsc::File>(src);
+        return {stsc, nullptr, nullptr, nullptr, stsc.get()};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
              (memcmp(buf, "GSTL", 4) == 0 ||
               (src.Pread(src.GetSize() - sizeof(Gbnl::Header), buf, 4),
                memcmp(buf, "GBNL", 4) == 0)))
     {
-        auto gbnl = std::make_unique<Gbnl>(src);
-        auto ret2 = gbnl.get();
-        return {std::move(gbnl), nullptr, nullptr, ret2, ret2};
+        auto gbnl = MakeRefCounted<Gbnl>(src);
+        return {gbnl, nullptr, nullptr, gbnl.get(), gbnl.get()};
     }
     else
         NEPTOOLS_THROW(DecodeError{"Unknown input file"});
@@ -106,7 +102,7 @@ void ShellInspect(const T* item, const char* name)
 void EnsureStcm(State& st)
 {
     if (st.stcm) return;
-    if (!st.file) throw InvalidParam{"no file loaded"};
+    if (!st.dump) throw InvalidParam{"no file loaded"};
     if (!st.cl3)
         throw InvalidParam{"invalid file loaded: can't find STCM without CL3"};
 
@@ -187,8 +183,8 @@ void DoAutoFun(const boost::filesystem::path& p)
     {
         st.txt->ReadTxt(OpenIn(txt));
         if (st.stcm) st.stcm->Fixup();
-        st.file->Fixup();
-        st.file->Dump(cl3);
+        st.dump->Fixup();
+        st.dump->Dump(cl3);
     }
     else
         st.txt->WriteTxt(OpenOut(txt));
@@ -347,18 +343,17 @@ int main(int argc, char** argv)
         [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw InvalidParam{"no file loaded"};
-            st.file->Fixup();
-            ShellDump(st.file.get(), args.front());
+            if (!st.dump) throw InvalidParam{"no file loaded"};
+            st.dump->Fixup();
+            ShellDump(st.dump.get(), args.front());
         }};
     Option create_cl3_opt{
         lgrp, "create-cl3", 0, nullptr, "Creates an empty cl3 file",
         [&](auto&&)
         {
             mode = Mode::MANUAL;
-            auto c = std::make_unique<Cl3>();
-            auto c2 = c.get();
-            st = {std::move(c), c2, nullptr, nullptr, nullptr};
+            auto c = MakeRefCounted<Cl3>();
+            st = {c, c.get(), nullptr, nullptr, nullptr};
         }};
     Option list_files_opt{
         lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive\n",
@@ -459,8 +454,8 @@ int main(int argc, char** argv)
         [&](auto&& args)
         {
             mode = Mode::MANUAL;
-            if (!st.file) throw InvalidParam{"No file loaded"};
-            ShellInspect(st.file.get(), args.front());
+            if (!st.dump) throw InvalidParam{"No file loaded"};
+            ShellInspect(st.dump.get(), args.front());
         }};
     Option inspect_stcm_opt{
         lgrp, "inspect-stcm", 1, "OUT|-",

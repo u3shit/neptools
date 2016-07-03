@@ -2,6 +2,7 @@
 #include "../context.hpp"
 #include "collection_link.hpp"
 #include "exports.hpp"
+#include "../../utils.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -23,22 +24,22 @@ void HeaderItem::Header::Validate(FilePosition file_size) const
 HeaderItem::HeaderItem(Key k, Context* ctx, const Header& hdr)
     : Item{k, ctx}
 {
-    hdr.Validate(GetContext()->GetSize());
+    hdr.Validate(GetContext().GetSize());
 
     msg = hdr.msg;
-    export_sec = ctx->CreateLabelFallback("exports", hdr.export_offset);
-    collection_link = ctx->CreateLabelFallback(
+    export_sec = &ctx->CreateLabelFallback("exports", hdr.export_offset);
+    collection_link = &ctx->CreateLabelFallback(
         "collection_link_hdr", hdr.collection_link_offset);;
     field_28 = hdr.field_28;
 }
 
-HeaderItem* HeaderItem::CreateAndInsert(ItemPointer ptr)
+HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::Get<Header>(ptr);
 
-    auto ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.t);
-    CollectionLinkHeaderItem::CreateAndInsert(ret->collection_link->second);
-    ExportsItem::CreateAndInsert(ret->export_sec->second, x.t.export_count);
+    auto& ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.t);
+    CollectionLinkHeaderItem::CreateAndInsert(ret.collection_link->ptr);
+    ExportsItem::CreateAndInsert(ret.export_sec->ptr, x.t.export_count);
     return ret;
 }
 
@@ -46,10 +47,10 @@ void HeaderItem::Dump_(Sink& sink) const
 {
     Header hdr;
     hdr.msg = msg;
-    hdr.export_offset = ToFilePos(export_sec->second);
-    hdr.export_count = export_sec->second.As0<ExportsItem>().entries.size();
+    hdr.export_offset = ToFilePos(export_sec->ptr);
+    hdr.export_count = export_sec->ptr.As0<ExportsItem>().entries.size();
     hdr.field_28 = field_28;
-    hdr.collection_link_offset = ToFilePos(collection_link->second);
+    hdr.collection_link_offset = ToFilePos(collection_link->ptr);
 
     sink.WriteGen(hdr);
 }
@@ -60,7 +61,7 @@ void HeaderItem::Inspect_(std::ostream& os) const
 
     os << "stcm_header(";
     DumpBytes(os, msg.c_str());
-    os << ", @" << export_sec->first << ", @" << collection_link->first
+    os << ", @" << export_sec->name << ", @" << collection_link->name
        << ", " << field_28 << ")";
 }
 

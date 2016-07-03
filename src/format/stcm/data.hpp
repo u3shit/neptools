@@ -10,7 +10,7 @@ namespace Neptools
 namespace Stcm
 {
 
-class DataItem final : public Item
+class DataItem final : public ItemWithChildren
 {
 public:
     struct Header
@@ -26,7 +26,7 @@ public:
 
 
     DataItem(Key k, Context* ctx, const Header& hdr, size_t chunk_size);
-    static DataItem* CreateAndInsert(ItemPointer ptr);
+    static DataItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
     void Fixup() override;

@@ -4,10 +4,19 @@
 
 #include <cstdint>
 #include <functional>
+#include <boost/intrusive/set_hook.hpp>
+
+#include "../assert.hpp"
 #include "../utils.hpp"
 
 namespace Neptools
 {
+
+#ifdef NDEBUG
+using LinkMode = boost::intrusive::link_mode<boost::intrusive::normal_link>;
+#else
+using LinkMode = boost::intrusive::link_mode<boost::intrusive::safe_link>;
+#endif
 
 class Item;
 class Context;
@@ -24,6 +33,8 @@ struct ItemPointer
     { return item == o.item && offset == o.offset; }
     bool operator!=(const ItemPointer& o) const
     { return item != o.item || offset != o.offset; }
+
+    Item* operator->() const { return item; }
 
     template <typename T>
     T& As() const { return *asserted_cast<T*>(item); }
@@ -56,7 +67,37 @@ struct ItemPointer
     }
 };
 
-using Label = std::pair<const std::string, ItemPointer>;
+using LabelNameHook = boost::intrusive::set_base_hook<
+    boost::intrusive::tag<struct NameTag>,
+    boost::intrusive::optimize_size<true>, LinkMode>;
+using LabelOffsetHook = boost::intrusive::set_base_hook<
+    boost::intrusive::tag<struct OffsetTag>,
+    boost::intrusive::optimize_size<true>, LinkMode>;
+
+struct Label : LabelNameHook, LabelOffsetHook
+{
+    std::string name;
+    ItemPointer ptr;
+
+    Label(std::string name, ItemPointer ptr)
+        : name{std::move(name)}, ptr{ptr} {}
+    // prevent accidental copying with auto x = ...;
+    Label(const Label&) = delete;
+    void operator=(const Label&) = delete;
+};
+
+// to be used by boost::intrusive::set
+struct LabelKeyOfValue
+{
+    using type = std::string;
+    const type& operator()(const Label& l) { return l.name; }
+};
+
+struct LabelOffsetKeyOfValue
+{
+    using type = FilePosition;
+    const type& operator()(const Label& l) { return l.ptr.offset; }
+};
 
 }
 

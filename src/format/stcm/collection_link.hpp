@@ -38,7 +38,7 @@ public:
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
     CollectionLinkHeaderItem(Key k, Context* ctx, const Header& s);
-    static CollectionLinkHeaderItem* CreateAndInsert(ItemPointer ptr);
+    static CollectionLinkHeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override
     { return sizeof(Header); }

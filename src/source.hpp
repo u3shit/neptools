@@ -222,11 +222,11 @@ private:
     void Inspect_(std::ostream& os) const override;
 };
 
-#define ADD_SOURCE(src)                                 \
-    [&](auto& e)                                        \
-    {                                                   \
-        if (!::boost::get_error_info<UsedSource>(e))    \
-            e << UsedSource{src};                       \
+#define ADD_SOURCE(src)                                         \
+    [&](auto& add_source_e)                                     \
+    {                                                           \
+        if (!::boost::get_error_info<UsedSource>(add_source_e)) \
+            add_source_e << UsedSource{src};                    \
     }
 
 }

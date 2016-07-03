@@ -103,11 +103,11 @@ InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
 void InstructionItem::Parse_(Source& src)
 {
     auto instr = src.ReadGen<Header>();
-    instr.Validate(GetContext()->GetSize());
+    instr.Validate(GetContext().GetSize());
 
     is_call = instr.is_call;
     if (is_call)
-        target = GetContext()->GetLabelTo(instr.opcode);
+        target = &GetContext().GetLabelTo(instr.opcode);
     else
         opcode = instr.opcode;
 
@@ -115,7 +115,7 @@ void InstructionItem::Parse_(Source& src)
     for (size_t i = 0; i < instr.param_count; ++i)
     {
         auto p = src.ReadGen<Parameter>();
-        p.Validate(GetContext()->GetSize());
+        p.Validate(GetContext().GetSize());
         ConvertParam(params[i], p);
     }
 }
@@ -126,7 +126,7 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
     {
     case Parameter::Type0::MEM_OFFSET:
         out.type = Param::MEM_OFFSET;
-        out.param_0.label = GetContext()->GetLabelTo(
+        out.param_0.label = &GetContext().GetLabelTo(
             Parameter::Value(in.param_0));
         ConvertParam48(out.param_4, in.param_4);
         ConvertParam48(out.param_8, in.param_8);
@@ -154,17 +154,17 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR0)
         {
             out.type = Param::INSTR_PTR0;
-            out.param_4.label = GetContext()->GetLabelTo(in.param_4);
+            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
         }
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR1)
         {
             out.type = Param::INSTR_PTR1;
-            out.param_4.label = GetContext()->GetLabelTo(in.param_4);
+            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
         }
         else if (in.param_0 == Parameter::Type0Special::COLL_LINK)
         {
             out.type = Param::COLL_LINK;
-            out.param_4.label = GetContext()->GetLabelTo(in.param_4);
+            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
         }
         else
             NEPTOOLS_UNREACHABLE("Invalid special parameter type");
@@ -181,7 +181,7 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
     {
     case Parameter::Type48::MEM_OFFSET:
         out.type = Param48::MEM_OFFSET;
-        out.label = GetContext()->GetLabelTo(Parameter::Value(in));
+        out.label = &GetContext().GetLabelTo(Parameter::Value(in));
         break;
     case Parameter::Type48::IMMEDIATE:
         out.type = Param48::IMMEDIATE;
@@ -215,7 +215,7 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
 
 static const std::set<uint32_t> no_returns{0, 6};
 
-InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
+InstructionItem& InstructionItem::CreateAndInsert(ItemPointer ptr)
 {
     auto x = RawItem::GetSource(ptr, -1);
 
@@ -223,28 +223,27 @@ InstructionItem* InstructionItem::CreateAndInsert(ItemPointer ptr)
     auto inst = x.src.PreadGen<Header>(0);
     x.src.CheckSize(inst.size);
 
-    auto ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
+    auto& ret = x.ritem.SplitCreate<InstructionItem>(ptr.offset, x.src);
 
     auto rem_data = inst.size - sizeof(Header) -
         sizeof(Parameter) * inst.param_count;
     if (rem_data)
-        ret->PrependChild(asserted_cast<RawItem*>(
-            ret->GetNext())->Split(0, rem_data)->Remove());
+        ret.MoveNextToChild(rem_data);
 
-    NEPTOOLS_ASSERT(ret->GetSize() == inst.size);
+    NEPTOOLS_ASSERT(ret.GetSize() == inst.size);
 
     // recursive parse
-    if (ret->is_call)
-        MaybeCreate<InstructionItem>(ret->target->second);
-    if (ret->is_call || !no_returns.count(ret->opcode))
-        MaybeCreate<InstructionItem>({ret->GetNext(), 0});
-    for (const auto& p : ret->params)
+    if (ret.is_call)
+        MaybeCreate<InstructionItem>(ret.target->ptr);
+    if (ret.is_call || !no_returns.count(ret.opcode))
+        MaybeCreate<InstructionItem>({&*++ret.Iterator(), 0});
+    for (const auto& p : ret.params)
     {
         if (p.type == InstructionItem::Param::MEM_OFFSET)
-            MaybeCreate<DataItem>(p.param_0.label->second);
+            MaybeCreate<DataItem>(p.param_0.label->ptr);
         else if (p.type == InstructionItem::Param::INSTR_PTR0 ||
             p.type == InstructionItem::Param::INSTR_PTR1)
-            MaybeCreate<InstructionItem>(p.param_4.label->second);
+            MaybeCreate<InstructionItem>(p.param_4.label->ptr);
     }
 
     return ret;
@@ -263,7 +262,7 @@ void InstructionItem::Dump48(
     switch (in.type)
     {
     case Param48::MEM_OFFSET:
-        out = Parameter::Tag(Parameter::Type48::MEM_OFFSET, ToFilePos(in.label->second));
+        out = Parameter::Tag(Parameter::Type48::MEM_OFFSET, ToFilePos(in.label->ptr));
         return;
     case Param48::IMMEDIATE:
         out = Parameter::Tag(Parameter::Type48::IMMEDIATE, in.num);
@@ -283,9 +282,7 @@ void InstructionItem::Dump48(
 
 void InstructionItem::Fixup()
 {
-    if (GetChildren())
-        GetChildren()->UpdatePositions(
-            position + sizeof(Header) + params.size() * sizeof(Parameter));
+    ItemWithChildren::Fixup_(sizeof(Header) + params.size() * sizeof(Parameter));
 }
 
 void InstructionItem::Dump_(Sink& sink) const
@@ -294,7 +291,7 @@ void InstructionItem::Dump_(Sink& sink) const
     hdr.is_call = is_call;
 
     if (is_call)
-        hdr.opcode = ToFilePos(target->second);
+        hdr.opcode = ToFilePos(target->ptr);
     else
         hdr.opcode = opcode;
     hdr.param_count = params.size();
@@ -308,7 +305,7 @@ void InstructionItem::Dump_(Sink& sink) const
         {
         case Param::MEM_OFFSET:
             pp.param_0 =
-                Parameter::Tag(Parameter::Type0::MEM_OFFSET, ToFilePos(p.param_0.label->second));
+                Parameter::Tag(Parameter::Type0::MEM_OFFSET, ToFilePos(p.param_0.label->ptr));
             Dump48(pp.param_4, p.param_4);
             Dump48(pp.param_8, p.param_8);
             break;
@@ -333,19 +330,19 @@ void InstructionItem::Dump_(Sink& sink) const
 
         case Param::INSTR_PTR0:
             pp.param_0 = Parameter::Type0Special::INSTR_PTR0;
-            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_4 = ToFilePos(p.param_4.label->ptr);
             pp.param_8 = 0x40000000;
             break;
 
         case Param::INSTR_PTR1:
             pp.param_0 = Parameter::Type0Special::INSTR_PTR1;
-            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_4 = ToFilePos(p.param_4.label->ptr);
             pp.param_8 = 0x40000000;
             break;
 
         case Param::COLL_LINK:
             pp.param_0 = Parameter::Type0Special::COLL_LINK;
-            pp.param_4 = ToFilePos(p.param_4.label->second);
+            pp.param_4 = ToFilePos(p.param_4.label->ptr);
             pp.param_8 = 0;
             break;
         }
@@ -360,7 +357,7 @@ void InstructionItem::Inspect_(std::ostream &os) const
     Item::Inspect_(os);
 
     if (is_call)
-        os << "call @" << target->first;
+        os << "call @" << target->name;
     else
         os << "instr " << opcode;
     os << '(';
@@ -372,7 +369,7 @@ void InstructionItem::Inspect_(std::ostream &os) const
         os << p;
     }
     os << ") {";
-    if (GetChildren()) os << '\n' << *GetChildren();
+    ItemWithChildren::Inspect_(os);
     os << "}\n";
 }
 
@@ -381,7 +378,7 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
     switch (p.type)
     {
     case InstructionItem::Param48::MEM_OFFSET:
-        return os << "@" << p.label->first;
+        return os << "@" << p.label->name;
     case InstructionItem::Param48::IMMEDIATE:
         return os << p.num;
     case InstructionItem::Param48::INDIRECT:
@@ -398,7 +395,7 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
     switch (p.type)
     {
     case InstructionItem::Param::MEM_OFFSET:
-        return os << "mem_offset(@" << p.param_0.label->first << ", "
+        return os << "mem_offset(@" << p.param_0.label->name << ", "
                   << p.param_4 << ", " << p.param_8 << ')';
     case InstructionItem::Param::INDIRECT:
         return os << "indirect(" << p.param_0.num << ", " << p.param_8 << ')';
@@ -407,11 +404,11 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
     case InstructionItem::Param::READ_4AC:
         return os << "4ac(" << p.param_0.num << ")";
     case InstructionItem::Param::INSTR_PTR0:
-        return os << "instr_ptr0(@" << p.param_4.label->first << ')';
+        return os << "instr_ptr0(@" << p.param_4.label->name << ')';
     case InstructionItem::Param::INSTR_PTR1:
-        return os << "instr_ptr1(@" << p.param_4.label->first << ')';
+        return os << "instr_ptr1(@" << p.param_4.label->name << ')';
     case InstructionItem::Param::COLL_LINK:
-        return os << "coll_link(@" << p.param_4.label->first << ')';
+        return os << "coll_link(@" << p.param_4.label->name << ')';
     }
     abort();
 }
