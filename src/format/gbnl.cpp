@@ -36,6 +36,7 @@ static size_t GetSize(uint16_t type)
     case Gbnl::TypeDescriptor::UINT8: return 1;
     case Gbnl::TypeDescriptor::UINT16: return 2;
     case Gbnl::TypeDescriptor::UINT32: return 4;
+    case Gbnl::TypeDescriptor::UINT64: return 8;
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
     }
@@ -96,6 +97,9 @@ void Gbnl::Parse_(Source& src)
         case TypeDescriptor::UINT32:
             bld.Add<uint32_t>();
             break;
+        case TypeDescriptor::UINT64:
+            bld.Add<uint64_t>();
+            break;
         case TypeDescriptor::FLOAT:
             bld.Add<float>();
             break;
@@ -129,6 +133,9 @@ void Gbnl::Parse_(Source& src)
                 break;
             case Struct::GetIndexFromType<uint32_t>():
                 m.Get<uint32_t>(i) = src.ReadLittleUint32();
+                break;
+            case Struct::GetIndexFromType<uint64_t>():
+                m.Get<uint64_t>(i) = src.ReadLittleUint64();
                 break;
             case Struct::GetIndexFromType<float>():
             {
@@ -192,6 +199,7 @@ struct WriteDescr
 {
     WriteDescr(Byte* ptr) : ptr{ptr} {}
     Byte* ptr;
+    // todo: template
     void operator()(uint8_t x, size_t)
     {
         *reinterpret_cast<boost::endian::little_uint8_t*>(ptr) = x;
@@ -206,6 +214,11 @@ struct WriteDescr
     {
         *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
         ptr += 4;
+    }
+    void operator()(uint64_t x, size_t)
+    {
+        *reinterpret_cast<boost::endian::little_uint64_t*>(ptr) = x;
+        ptr += 8;
     }
     void operator()(float y, size_t)
     {
@@ -267,6 +280,10 @@ void Gbnl::Dump_(Sink& sink) const
         case Struct::GetIndexFromType<uint32_t>():
             ctrl.type = TypeDescriptor::UINT32;
             offs += 4;
+            break;
+        case Struct::GetIndexFromType<uint64_t>():
+            ctrl.type = TypeDescriptor::UINT64;
+            offs += 8;
             break;
         case Struct::GetIndexFromType<float>():
             ctrl.type = TypeDescriptor::FLOAT;
@@ -376,6 +393,7 @@ void Gbnl::Inspect_(std::ostream& os) const
         case Struct::GetIndexFromType<uint8_t>():      os << "uint8";  break;
         case Struct::GetIndexFromType<uint16_t>():     os << "uint16"; break;
         case Struct::GetIndexFromType<uint32_t>():     os << "uint32"; break;
+        case Struct::GetIndexFromType<uint64_t>():     os << "uint64"; break;
         case Struct::GetIndexFromType<float>():        os << "float";  break;
         case Struct::GetIndexFromType<OffsetString>(): os << "string"; break;
         case Struct::GetIndexFromType<FixStringTag>():
@@ -410,6 +428,7 @@ void Gbnl::RecalcSize()
         case Struct::GetIndexFromType<uint8_t>():      len += 1; ++count; break;
         case Struct::GetIndexFromType<uint16_t>():     len += 2; ++count; break;
         case Struct::GetIndexFromType<uint32_t>():     len += 4; ++count; break;
+        case Struct::GetIndexFromType<uint64_t>():     len += 8; ++count; break;
         case Struct::GetIndexFromType<float>():        len += 4; ++count; break;
         case Struct::GetIndexFromType<OffsetString>(): len += 4; ++count; break;
         case Struct::GetIndexFromType<FixStringTag>():

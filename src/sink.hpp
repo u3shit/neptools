@@ -72,6 +72,7 @@ public:
     void WriteLittleUint8 (boost::endian::little_uint8_t  i) { WriteGen(i); }
     void WriteLittleUint16(boost::endian::little_uint16_t i) { WriteGen(i); }
     void WriteLittleUint32(boost::endian::little_uint32_t i) { WriteGen(i); }
+    void WriteLittleUint64(boost::endian::little_uint64_t i) { WriteGen(i); }
     void WriteCString(NonowningString str)
     { Write({str.c_str(), str.size()+1}); }
 
@@ -80,6 +81,8 @@ public:
     void CheckedWriteLittleUint16(boost::endian::little_uint16_t i)
     { CheckedWriteGen(i); }
     void CheckedWriteLittleUint32(boost::endian::little_uint32_t i)
+    { CheckedWriteGen(i); }
+    void CheckedWriteLittleUint64(boost::endian::little_uint64_t i)
     { CheckedWriteGen(i); }
     void CheckedWriteCString(NonowningString str)
     { CheckedWrite({str.c_str(), str.size()+1}); }

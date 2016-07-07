@@ -113,32 +113,20 @@ public:
     { CheckedPread(offs, reinterpret_cast<Byte*>(buf), len); }
 
     // helper
-    uint8_t ReadLittleUint8()
-    { return ReadGen<boost::endian::little_uint8_t>(); }
-    uint8_t PreadLittleUint8(FilePosition offs) const
-    { return PreadGen<boost::endian::little_uint8_t>(offs); }
-    uint8_t CheckedReadLittleUint8()
-    { return CheckedReadGen<boost::endian::little_uint8_t>(); }
-    uint8_t CheckedPreadLittleUint8(FilePosition offs) const
-    { return CheckedPreadGen<boost::endian::little_uint8_t>(offs); }
-
-    uint16_t ReadLittleUint16()
-    { return ReadGen<boost::endian::little_uint16_t>(); }
-    uint16_t PreadLittleUint16(FilePosition offs) const
-    { return PreadGen<boost::endian::little_uint16_t>(offs); }
-    uint16_t CheckedReadLittleUint16()
-    { return CheckedReadGen<boost::endian::little_uint16_t>(); }
-    uint16_t CheckedPreadLittleUint16(FilePosition offs) const
-    { return CheckedPreadGen<boost::endian::little_uint16_t>(offs); }
-
-    uint32_t ReadLittleUint32()
-    { return ReadGen<boost::endian::little_uint32_t>(); }
-    uint32_t PreadLittleUint32(FilePosition offs) const
-    { return PreadGen<boost::endian::little_uint32_t>(offs); }
-    uint32_t CheckedReadLittleUint32()
-    { return CheckedReadGen<boost::endian::little_uint32_t>(); }
-    uint32_t CheckedPreadLittleUint32(FilePosition offs) const
-    { return CheckedPreadGen<boost::endian::little_uint32_t>(offs); }
+#define NEPTOOLS_GEN_HLP(bits)                                              \
+    uint##bits##_t ReadLittleUint##bits()                                   \
+    { return ReadGen<boost::endian::little_uint##bits##_t>(); }             \
+    uint##bits##_t PreadLittleUint##bits(FilePosition offs) const           \
+    { return PreadGen<boost::endian::little_uint##bits##_t>(offs); }        \
+    uint##bits##_t CheckedReadLittleUint##bits()                            \
+    { return CheckedReadGen<boost::endian::little_uint##bits##_t>(); }      \
+    uint##bits##_t CheckedPreadLittleUint##bits(FilePosition offs) const    \
+    { return CheckedPreadGen<boost::endian::little_uint##bits##_t>(offs); }
+    NEPTOOLS_GEN_HLP(8)
+    NEPTOOLS_GEN_HLP(16)
+    NEPTOOLS_GEN_HLP(32)
+    NEPTOOLS_GEN_HLP(64)
+#undef NEPTOOLS_GEN_HLP
 
     static constexpr size_t GET_C_BUF_SIZE = 16;
     std::string ReadCString()

@@ -50,6 +50,7 @@ public:
             UINT16 = 2,
             FLOAT  = 3,
             STRING = 5,
+            UINT64 = 6,
         };
         boost::endian::little_uint16_t type;
         boost::endian::little_uint16_t offset;
@@ -70,7 +71,8 @@ public:
     struct FixStringTag { char str[1]; };
     struct PaddingTag { char pad[1]; };
     using Struct = DynamicStruct<
-        uint8_t, uint16_t, uint32_t, float, OffsetString, FixStringTag, PaddingTag>;
+        uint8_t, uint16_t, uint32_t, uint64_t, float, OffsetString,
+        FixStringTag, PaddingTag>;
 
     bool is_gstl;
     uint32_t flags, field_28, field_30;
