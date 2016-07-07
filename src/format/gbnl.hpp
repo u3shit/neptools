@@ -68,8 +68,9 @@ public:
     };
 
     struct FixStringTag { char str[1]; };
+    struct PaddingTag { char pad[1]; };
     using Struct = DynamicStruct<
-        uint8_t, uint16_t, uint32_t, float, OffsetString, FixStringTag>;
+        uint8_t, uint16_t, uint32_t, float, OffsetString, FixStringTag, PaddingTag>;
 
     bool is_gstl;
     uint32_t flags, field_28, field_30;
@@ -92,6 +93,7 @@ private:
 
     void Parse_(Source& src);
     void DumpHeader(Sink& sink) const;
+    void Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& uint8_in_progress);
     FilePosition Align(FilePosition x) const noexcept;
 
     uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
@@ -99,6 +101,7 @@ private:
                    size_t& index) const;
 
     size_t msg_descr_size, msgs_size;
+    size_t real_item_count; // excluding dummy pad items
 };
 
 }

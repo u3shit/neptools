@@ -16,9 +16,15 @@ class HeaderItem;
 class ExportsItem final : public Item
 {
 public:
+    enum Type : uint32_t
+    {
+        CODE = 0,
+        DATA = 1,
+    };
+
     struct Entry
     {
-        boost::endian::little_uint32_t field_0;
+        boost::endian::little_uint32_t type;
         FixedString<0x20> name;
         boost::endian::little_uint32_t offset;
 
@@ -32,7 +38,12 @@ public:
     FilePosition GetSize() const noexcept override
     { return sizeof(Entry) * entries.size(); }
 
-    using EntryType = std::pair<FixedString<0x20>, const Label*>;
+    struct EntryType
+    {
+        Type type;
+        FixedString<0x20> name;
+        const Label* lbl;
+    };
     std::vector<EntryType> entries;
 
 private:

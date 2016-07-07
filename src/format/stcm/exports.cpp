@@ -1,4 +1,5 @@
 #include "exports.hpp"
+#include "data.hpp"
 #include "header.hpp"
 #include "instruction.hpp"
 #include "../context.hpp"
@@ -12,7 +13,7 @@ namespace Stcm
 void ExportsItem::Entry::Validate(FilePosition file_size) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
-    VALIDATE(field_0 == 0);
+    VALIDATE(type == Type::CODE || type == Type::DATA);
     VALIDATE(name.is_valid());
     VALIDATE(offset < file_size);
 #undef VALIDATE
@@ -32,9 +33,10 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
     {
         auto e = src.ReadGen<Entry>();
         e.Validate(size);
-        entries.emplace_back(
+        entries.push_back({
+            static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
-            GetContext()->CreateLabelFallback(e.name.c_str(), e.offset));
+            GetContext()->CreateLabelFallback(e.name.c_str(), e.offset)});
     }
 }
 
@@ -46,19 +48,27 @@ ExportsItem* ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
         ptr.offset, x.src, export_count);
 
     for (const auto& e : ret->entries)
-        MaybeCreate<InstructionItem>(e.second->second);
+        switch (e.type)
+        {
+        case Type::CODE:
+            MaybeCreate<InstructionItem>(e.lbl->second);
+            break;
+        case Type::DATA:
+            MaybeCreate<DataItem>(e.lbl->second);
+            break;
+        }
     return ret;
 }
 
 void ExportsItem::Dump_(Sink& sink) const
 {
     Entry ee;
-    ee.field_0 = 0;
 
     for (auto& e : entries)
     {
-        ee.name = e.first;
-        ee.offset = ToFilePos(e.second->second);
+        ee.type = e.type;
+        ee.name = e.name;
+        ee.offset = ToFilePos(e.lbl->second);
         sink.WriteGen(ee);
     }
 }
@@ -68,7 +78,11 @@ void ExportsItem::Inspect_(std::ostream& os) const
     Item::Inspect_(os);
 
     for (auto& e : entries)
-        os << e.first << " -> @" << e.second->first << '\n';
+    {
+        os << '{' << e.type << ", ";
+        DumpBytes(os, e.name.c_str());
+        os << ", @" << e.lbl->first << ")\n";
+    }
 }
 
 }

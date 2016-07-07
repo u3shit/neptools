@@ -29,11 +29,6 @@ void Gbnl::Header::Validate(size_t chunk_size) const
 #undef VALIDATE
 }
 
-static constexpr size_t Align(size_t val, size_t align)
-{
-    return (val+align-1) / align * align;
-}
-
 static size_t GetSize(uint16_t type)
 {
     switch (type)
@@ -43,8 +38,8 @@ static size_t GetSize(uint16_t type)
     case Gbnl::TypeDescriptor::UINT32: return 4;
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
-    default: NEPTOOLS_THROW(DecodeError{"Gbnl: invalid type"});
     }
+    NEPTOOLS_THROW(DecodeError{"Gbnl: invalid type"});
 }
 
 Gbnl::Gbnl(Source src)
@@ -77,38 +72,23 @@ void Gbnl::Parse_(Source& src)
     msg_descr_size = foot.msg_descr_size;
     size_t calc_offs = 0;
 
-    std::vector<uint16_t> offsets;
-    offsets.reserve(foot.count_types);
+    //std::vector<uint16_t> offsets;
+    //offsets.reserve(foot.count_types);
     Struct::TypeBuilder bld;
+    bool uint8_in_progress;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
         auto type = src.ReadGen<TypeDescriptor>();
+        VALIDATE("unordered types", calc_offs <= type.offset);
 
-        auto bytes = ::Neptools::GetSize(type.type);
-        calc_offs = ::Neptools::Align(calc_offs, bytes);
-        VALIDATE("", calc_offs == type.offset);
-        calc_offs += bytes;
-        offsets.push_back(type.offset);
+        Pad(type.offset - calc_offs, bld, uint8_in_progress);
+        calc_offs = type.offset + ::Neptools::GetSize(type.type);
 
         switch (type.type)
         {
         case TypeDescriptor::UINT8:
-            if (i+1 != foot.count_types)
-            {
-                auto t2 = src.PreadGen<TypeDescriptor>(src.Tell());
-                // if it longer than 1, make it a string
-                if (t2.offset != ::Neptools::Align(
-                        type.offset+1, ::Neptools::GetSize(t2.type)))
-                {
-                    auto len = t2.offset - type.offset;
-                    calc_offs += len-1;
-                    bld.Add<FixStringTag>(len);
-                    break;
-                }
-            }
-
-            // single char
-            bld.Add<uint8_t>();
+            NEPTOOLS_ASSERT(uint8_in_progress == false);
+            uint8_in_progress = true;
             break;
         case TypeDescriptor::UINT16:
             bld.Add<uint16_t>();
@@ -126,8 +106,7 @@ void Gbnl::Parse_(Source& src)
             NEPTOOLS_THROW(DecodeError{"GBNL: invalid type"});
         }
     }
-    VALIDATE(" type array incomplete/bad padding",
-             ((calc_offs + 3) & ~3) == msg_descr_size);
+    Pad(msg_descr_size - calc_offs, bld, uint8_in_progress);
 
     type = bld.Build();
 
@@ -137,9 +116,9 @@ void Gbnl::Parse_(Source& src)
     {
         messages.emplace_back(type);
         auto& m = messages.back();
-        for (size_t i = 0; i < foot.count_types; ++i)
+        src.Seek(msgs);
+        for (size_t i = 0; i < type->item_count; ++i)
         {
-            src.Seek(msgs + offsets[i]);
             switch (type->items[i].idx)
             {
             case Struct::GetIndexFromType<uint8_t>():
@@ -173,12 +152,11 @@ void Gbnl::Parse_(Source& src)
                 break;
             }
             case Struct::GetIndexFromType<FixStringTag>():
-            {
-                auto len = type->items[i].size;
-                auto dst = m.Get<FixStringTag>(i).str;
-                src.Read(dst, len);
+                src.Read(m.Get<FixStringTag>(i).str, type->items[i].size);
                 break;
-            }
+            case Struct::GetIndexFromType<PaddingTag>():
+                src.Read(m.Get<PaddingTag>(i).pad, type->items[i].size);
+                break;
             }
         }
 
@@ -191,48 +169,65 @@ void Gbnl::Parse_(Source& src)
 #undef VALIDATE
 }
 
+void Gbnl::Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& uint8_in_progress)
+{
+    if (uint8_in_progress)
+    {
+        uint8_in_progress = false;
+        if (diff <= 3) // probably padding
+            bld.Add<uint8_t>();
+        else
+        {
+            bld.Add<FixStringTag>(diff+1);
+            return;
+        }
+    }
+
+    if (diff) bld.Add<PaddingTag>(diff);
+}
+
 namespace
 {
 struct WriteDescr
 {
     WriteDescr(Byte* ptr) : ptr{ptr} {}
     Byte* ptr;
-    size_t offs = 0;
     void operator()(uint8_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint8_t*>(ptr+offs) = x;
-        offs += 1;
+        *reinterpret_cast<boost::endian::little_uint8_t*>(ptr) = x;
+        ptr += 1;
     }
     void operator()(uint16_t x, size_t)
     {
-        offs = (offs+1) & ~1;
-        *reinterpret_cast<boost::endian::little_uint16_t*>(ptr+offs) = x;
-        offs += 2;
+        *reinterpret_cast<boost::endian::little_uint16_t*>(ptr) = x;
+        ptr += 2;
     }
     void operator()(uint32_t x, size_t)
     {
-        offs = (offs+3) & ~3;
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = x;
-        offs += 4;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
+        ptr += 4;
     }
     void operator()(float y, size_t)
     {
-        offs = (offs+3) & ~3;
         uint32_t x = *reinterpret_cast<uint32_t*>(&y);
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = x;
-        offs += 4;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
+        ptr += 4;
     }
     void operator()(const Gbnl::OffsetString& os, size_t)
     {
-        offs = (offs+3) & ~3;
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr+offs) = os.offset;
-        offs += 4;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = os.offset;
+        ptr += 4;
     }
     void operator()(const Gbnl::FixStringTag& fs, size_t len)
     {
-        memset(ptr+offs, 0, len);
-        strncpy(reinterpret_cast<char*>(ptr+offs), fs.str, len-1);
-        offs += len;
+        memset(ptr, 0, len);
+        strncpy(reinterpret_cast<char*>(ptr), fs.str, len-1);
+        ptr += len;
+    }
+    void operator()(const Gbnl::PaddingTag& pd, size_t len)
+    {
+        memcpy(ptr, pd.pad, len);
+        ptr += len;
     }
 };
 }
@@ -258,46 +253,41 @@ void Gbnl::Dump_(Sink& sink) const
     uint16_t offs = 0;
     for (size_t i = 0; i < type->item_count; ++i)
     {
+        ctrl.offset = offs;
         switch (type->items[i].idx)
         {
         case Struct::GetIndexFromType<uint8_t>():
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::UINT8;
             offs += 1;
             break;
         case Struct::GetIndexFromType<uint16_t>():
-            offs = (offs+1) & ~1;
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::UINT16;
             offs += 2;
             break;
         case Struct::GetIndexFromType<uint32_t>():
-            offs = (offs+3) & ~3;
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::UINT32;
             offs += 4;
             break;
         case Struct::GetIndexFromType<float>():
-            offs = (offs+3) & ~3;
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::FLOAT;
             offs += 4;
             break;
         case Struct::GetIndexFromType<OffsetString>():
-            offs = (offs+3) & ~3;
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::STRING;
             offs += 4;
             break;
         case Struct::GetIndexFromType<FixStringTag>():
-            ctrl.offset = offs;
             ctrl.type = TypeDescriptor::UINT8;
             offs += type->items[i].size;
             break;
-        };
+        case Struct::GetIndexFromType<PaddingTag>():
+            offs += type->items[i].size;
+            goto skip;
+        }
         sink.WriteGen(ctrl);
+    skip: ;
     }
-    auto control_end = msgs_end_round + sizeof(TypeDescriptor) * type->item_count;
+    auto control_end = msgs_end_round + sizeof(TypeDescriptor) * real_item_count;
     auto control_end_round = Align(control_end);
     sink.Pad(control_end_round - control_end);
 
@@ -321,7 +311,7 @@ void Gbnl::Dump_(Sink& sink) const
     // sanity checks
     NEPTOOLS_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
     NEPTOOLS_ASSERT(control_end_round == Align(msgs_end_round +
-        sizeof(TypeDescriptor) * type->item_count));
+        sizeof(TypeDescriptor) * real_item_count));
     if (!is_gstl) DumpHeader(sink);
 }
 
@@ -337,13 +327,13 @@ void Gbnl::DumpHeader(Sink& sink) const
     head.descr_offset = offset;
     head.count_msgs = messages.size();
     head.msg_descr_size = msg_descr_size;
-    head.count_types = type->item_count;
+    head.count_types = real_item_count;
     head.field_22 = 0;
     auto msgs_end_round = Align(offset + msg_descr_size * messages.size());
     head.offset_types = msgs_end_round;;
     head.field_28 = field_28;
     auto control_end_round = Align(msgs_end_round +
-        sizeof(TypeDescriptor) * type->item_count);
+        sizeof(TypeDescriptor) * real_item_count);
     head.offset_msgs = msgs_size ? control_end_round : 0;
     head.field_30 = field_30;
     head.field_34 = 0;
@@ -364,7 +354,10 @@ struct Print
         else
             DumpBytes(os, ofs.str);
     }
-    void operator()(const Gbnl::FixStringTag& fs, size_t) { DumpBytes(os, fs.str); }
+    void operator()(const Gbnl::FixStringTag& fs, size_t)
+    { DumpBytes(os, fs.str); }
+    void operator()(const Gbnl::PaddingTag& pd, size_t size)
+    { DumpBytes(os, {pd.pad, size}); }
     void operator()(uint8_t x, size_t) { os << static_cast<unsigned>(x); }
     template <typename T> void operator()(T x, size_t) { os << x; }
 };
@@ -388,6 +381,9 @@ void Gbnl::Inspect_(std::ostream& os) const
         case Struct::GetIndexFromType<FixStringTag>():
             os << "fix_string(" << type->items[i].size << ")";
             break;
+        case Struct::GetIndexFromType<PaddingTag>():
+            os << "pad(" << type->items[i].size << ")";
+            break;
         }
     }
 
@@ -407,18 +403,22 @@ void Gbnl::Inspect_(std::ostream& os) const
 
 void Gbnl::RecalcSize()
 {
-    size_t len = 0;
+    size_t len = 0, count = 0;
     for (size_t i = 0; i < type->item_count; ++i)
         switch (type->items[i].idx)
         {
-        case Struct::GetIndexFromType<uint8_t>():      len += 1; break;
-        case Struct::GetIndexFromType<uint16_t>():     len = (len+2+1) & ~1; break;
-        case Struct::GetIndexFromType<uint32_t>():     len = (len+4+3) & ~3; break;
-        case Struct::GetIndexFromType<float>():        len = (len+4+3) & ~3; break;
-        case Struct::GetIndexFromType<OffsetString>(): len = (len+4+3) & ~3; break;
-        case Struct::GetIndexFromType<FixStringTag>(): len += type->items[i].size; break;
+        case Struct::GetIndexFromType<uint8_t>():      len += 1; ++count; break;
+        case Struct::GetIndexFromType<uint16_t>():     len += 2; ++count; break;
+        case Struct::GetIndexFromType<uint32_t>():     len += 4; ++count; break;
+        case Struct::GetIndexFromType<float>():        len += 4; ++count; break;
+        case Struct::GetIndexFromType<OffsetString>(): len += 4; ++count; break;
+        case Struct::GetIndexFromType<FixStringTag>():
+            len += type->items[i].size; ++count; break;
+        case Struct::GetIndexFromType<PaddingTag>():
+            len += type->items[i].size; break;
         }
-    msg_descr_size = (len+3) & ~3;
+    msg_descr_size = len;
+    real_item_count = count;
 
     std::map<std::string, size_t> offset_map;
     size_t offset = 0;
@@ -442,7 +442,7 @@ void Gbnl::RecalcSize()
 FilePosition Gbnl::GetSize() const noexcept
 {
     FilePosition ret = msg_descr_size * messages.size();
-    ret = Align(ret) + sizeof(TypeDescriptor) * type->item_count;
+    ret = Align(ret) + sizeof(TypeDescriptor) * real_item_count;
     ret = Align(ret) + msgs_size;
     ret = Align(ret) + sizeof(Header);
     return ret;
@@ -473,7 +473,10 @@ uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
     else
         return -1;
 
-    if (!is_gstl && i == 8 && m.GetSize() == 9 && m.Is<uint32_t>(0)) // todo
+    // hack
+    if (!is_gstl && m.Is<uint32_t>(0) && (
+            (i == 8 && m.GetSize() == 9) || // rebirths
+            (i == 105 && m.GetSize() == 107))) // vii
         return m.Get<uint32_t>(0);
     else if (is_gstl && m.GetSize() == 3 && m.Is<uint32_t>(1))
     {

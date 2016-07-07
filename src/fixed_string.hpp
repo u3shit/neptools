@@ -34,10 +34,7 @@ public:
     bool is_valid() const noexcept
     {
         auto len = strnlen(str, N-1);
-        for (size_t i = len; i < N; ++i)
-            if (str[i] != '\0')
-                return false;
-        return true;
+        return str[len] == '\0';
     }
 
     char& operator[](size_t i) noexcept { return str[i]; }

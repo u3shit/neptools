@@ -19,7 +19,7 @@ public:
         struct MsgParts
         {
             char magic[5];
-            char version;
+            char endian;
             char rest[0x20-5-1];
         };
         union
@@ -45,6 +45,7 @@ public:
     FixedString<0x20> msg;
     const Label* export_sec;
     const Label* collection_link;
+    uint32_t field_28;
 
 private:
     void Dump_(Sink& sink) const override;

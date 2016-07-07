@@ -43,7 +43,7 @@ void DumpBytes(std::ostream& os, StringView data)
         else if (data[i] >= ' ' && data[i] <= '~')
             os << data[i];
         else
-            os << "\\x" << std::setw(2) << data.uindex(i);
+            os << "\\x" << std::setw(2) << unsigned(data.uindex(i));
     os << '"';
     os.flags(flags);
 }
