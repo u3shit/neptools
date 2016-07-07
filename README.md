@@ -2,11 +2,12 @@ NepTools
 ========
 
 This is a collection tools to mod in Hyperdimension Neptunia Re;Birth 3: V
-Century (and probably RB 1 and 2 too) and some rudimentary support for
-Hyperdevotion Noire: Goddess Black Heart `.bin` files (only stuff under `Main`).
-It contains a `.cl3` extractor/importer, a text editor for
-`.cl3`/`.gstr`/`.gbin`/`.bin`, and a tool to use these files in the game without
-repacking the `.pac` files in case of the Re;Births (like KitServer).
+Century (and probably RB 1 and 2 too) and Megadimension Neptunia VII and some
+rudimentary support for Hyperdevotion Noire: Goddess Black Heart `.bin` files
+(only stuff under `Main`). It contains a `.cl3` extractor/importer, a text
+editor for `.cl3`/`.gstr`/`.gbin`/`.bin`, and a tool to use these files in the
+game without repacking the `.pac` files in case of the Re;Births/VII (like
+KitServer).
 
 stcm-editor/cl3-tool
 ====================
@@ -92,8 +93,8 @@ Usage
 There are two ways to use it. The first one mirrors the original KitServer:
 extract `launcher.exe` and `neptools-server.dll` into the game directory. In
 this case you'll have to use launcher.exe to launch the game, if you simply
-launch `NeptuniaReBirth[123].exe`, Neptools won't be loaded, and you'll run an
-unmodded game.
+launch `NeptuniaReBirth[123].exe`/`NeptuniaVII.exe`, Neptools won't be loaded,
+and you'll run an unmodded game.
 
 The second way is to extract only `neptools-server.dll` and rename it to
 `dinput8.dll`. In this case there's no launcher, simply start the original
@@ -103,6 +104,9 @@ Windows DLL loader, and will treat `;` as a path separator. If you do not want
 to rename the directory (which would upset steam), you'll have to place
 `dinput8.dll` into a subdirectory named `Birth3` (so it should end up in
 `steamapps\common\Hyperdimension Neptunia Re;Birth3\Birth3\dinput8.dll`).
+(If you're an Arfoire/Magiquone supporter and installed RB1/2 into somethin like
+`whatever\Neptunia Re;Birth2`, you'll have to put it into `Birth2`. Basically
+create a directory named whatever after the semicolon is.)
 
 *Note for Linux/Wine users*: wine by default gives priority to it's builtin
 version of `dinput8.dll`, ignoring this custom version. To fix it run `winecfg`,
