@@ -88,9 +88,16 @@ static int mymain(void)
         if (attrib != INVALID_FILE_ATTRIBUTES &&
             !(attrib & FILE_ATTRIBUTE_ENCRYPTED))
             break;
+
         if (i == '1')
         {
-            MessageBoxA(NULL, "Couldn't find NeptuniaReBirth[123].exe",
+            strwcpy(&last_slash[9], L"VII.exe");
+            unsigned attrib = GetFileAttributesW(buf);
+            if (attrib != INVALID_FILE_ATTRIBUTES &&
+                !(attrib & FILE_ATTRIBUTE_ENCRYPTED))
+                break;
+
+            MessageBoxA(NULL, "Couldn't find Neptunia",
                         NULL, MB_OK | MB_ICONERROR);
             return 2;
         }
