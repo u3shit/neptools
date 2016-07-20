@@ -76,7 +76,7 @@ void Gbnl::Parse_(Source& src)
     //std::vector<uint16_t> offsets;
     //offsets.reserve(foot.count_types);
     Struct::TypeBuilder bld;
-    bool uint8_in_progress;
+    bool uint8_in_progress = false;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
         auto type = src.ReadGen<TypeDescriptor>();
