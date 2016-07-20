@@ -10,7 +10,7 @@ try:
         stderr = subprocess.PIPE,
         universal_newlines = True).strip('\n').lstrip('v')
 except:
-    VERSION = '0.3.5'
+    VERSION = '0.3.5.1'
 
 def fixup_msvc():
     from waflib.TaskGen import after_method, feature
@@ -165,7 +165,7 @@ def build_common(bld):
             rc_file(self, node)
 
     import re
-    rc_ver = re.sub('-.*', '', re.sub('\.', ',', VERSION)) + ',0'
+    rc_ver = re.sub('-.*', '', re.sub('\.', ',', VERSION))
     bld(features = 'subst',
         source = 'src/version.hpp.in',
         target = 'src/version.hpp',
