@@ -17,7 +17,7 @@ OptionGroup::OptionGroup(OptionParser& parser, const char* name, const char* hel
 OptionParser::OptionParser()
     : help_version{*this, "General options"},
       help_option{help_version, "help", 'h', 0, nullptr, "Show this help message",
-              [this](auto&&) { ShowHelp(); throw Exit{true}; }},
+              [this](auto&&) { this->ShowHelp(); throw Exit{true}; }},
       version_option{help_version, "version", 0, nullptr, "Show program version",
               [this](auto&&) { *os << version << std::endl; throw Exit{true}; }},
       os{&std::clog}
