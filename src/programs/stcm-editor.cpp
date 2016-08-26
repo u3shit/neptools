@@ -225,30 +225,30 @@ inline bool is_file(const boost::filesystem::path& pth)
 bool IsBin(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
-        boost::ends_with(p.native(), ".cl3") ||
-        boost::ends_with(p.native(), ".gbin") ||
-        boost::ends_with(p.native(), ".gstr") ||
-        boost::ends_with(p.native(), ".bin"));
+        boost::iends_with(p.native(), ".cl3") ||
+        boost::iends_with(p.native(), ".gbin") ||
+        boost::iends_with(p.native(), ".gstr") ||
+        boost::iends_with(p.native(), ".bin"));
 }
 
 bool IsTxt(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
-        boost::ends_with(p.native(), ".cl3.txt") ||
-        boost::ends_with(p.native(), ".gbin.txt") ||
-        boost::ends_with(p.native(), ".gstr.txt") ||
-        boost::ends_with(p.native(), ".bin.txt"));
+        boost::iends_with(p.native(), ".cl3.txt") ||
+        boost::iends_with(p.native(), ".gbin.txt") ||
+        boost::iends_with(p.native(), ".gstr.txt") ||
+        boost::iends_with(p.native(), ".bin.txt"));
 }
 
 bool IsCl3(const boost::filesystem::path& p, bool = false)
 {
-    return is_file(p) && boost::ends_with(p.native(), ".cl3");
+    return is_file(p) && boost::iends_with(p.native(), ".cl3");
 }
 
 bool IsCl3Dir(const boost::filesystem::path& p, bool = false)
 {
     return boost::filesystem::is_directory(p) &&
-        boost::ends_with(p.native(), ".cl3.out");
+        boost::iends_with(p.native(), ".cl3.out");
 }
 
 void DoAuto(const boost::filesystem::path& path)
