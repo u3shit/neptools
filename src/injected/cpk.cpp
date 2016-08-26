@@ -20,14 +20,22 @@ namespace
 
 auto OPEN_FILE  = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 81 ec 3c "
                   "06 00 00"_pattern;
+
 auto FILE_CLOSE = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 "
                   "57 a1 ?? ?? ?? ?? 33 c5 50 8d 45 f4 64 a3 00 00 00 00 8b f9 "
                   "8d 77 38 56 89 75 f0 ff 15 ?? ?? ?? ?? c7 45 fc 00 00 00 00 "
                   "8b 47 10"_pattern;
+auto FILE_CLOSE_RB1PATCH =
+    "55 8b ec 53 56 57 8b f9 8d 77 38 56 ff 15 ?? ?? ?? ?? 8b 4f 0c"_pattern;
+
 auto FILE_READ  = "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 "
                   "57 a1 ?? ?? ?? ?? 33 c5 50 8d 45 f4 64 a3 00 00 00 00 8b d9 "
                   "8d 73 38 56 89 75 f0 ff 15 ?? ?? ?? ?? c7 45 fc 00 00 00 00 "
                   "8b 55 08"_pattern;
+auto FILE_READ_RB1PATCH =
+    "55 8b ec 6a ff 68 ?? ?? ?? ?? 64 a1 00 00 00 00 50 51 53 56 57 a1 ?? ?? "
+    "?? ?? 33 c5 50 8d 45 f4 64 a3 00 00 00 00 8b d9 8d 73 38 56 89 75 f0 ff "
+    "15 ?? ?? ?? ?? 8b 55 08"_pattern;
 
 constexpr const FileMemSize CPK_CHUNK = 128*1024*1024; // default size used by if
 
@@ -290,9 +298,18 @@ Source CpkHandler::GetSource(const char* fname)
 
 void CpkHandler::Init()
 {
+    DBG(1) << "Finding OPEN_FILE" << std::endl;
     orig_open_file = Hook(FindImage(OPEN_FILE), &CpkHandler::OpenFile, 5);
-    orig_close_file = Hook(FindImage(FILE_CLOSE), &CpkHandler::CloseFile, 5);
-    orig_read = Hook(FindImage(FILE_READ), &CpkHandler::Read, 5);
+
+    DBG(1) << "Finding FILE_CLOSE" << std::endl;
+    auto offs = MaybeFindImage(FILE_CLOSE);
+    if (!offs) offs = FindImage(FILE_CLOSE_RB1PATCH);
+    orig_close_file = Hook(offs, &CpkHandler::CloseFile, 5);
+
+    DBG(1) << "Finding FILE_READ" << std::endl;
+    offs = MaybeFindImage(FILE_READ);
+    if (!offs) offs = FindImage(FILE_READ_RB1PATCH);
+    orig_read = Hook(offs, &CpkHandler::Read, 5);
 }
 
 }
