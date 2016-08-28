@@ -3,6 +3,7 @@
 #pragma once
 
 #include "utils.hpp"
+#include <atomic>
 #include <iostream>
 #include <cstdint>
 #include <memory>
@@ -60,7 +61,7 @@ public:
         void operator=(const Type&) = delete;
         ~Type() = delete;
 
-        size_t refcount;
+        mutable std::atomic<size_t> refcount;
         size_t item_count, size;
         struct Item
         {
@@ -71,6 +72,15 @@ public:
         Item items[1];
     };
     using TypePtr = boost::intrusive_ptr<const Type>;
+
+    friend void intrusive_ptr_add_ref(const Type* t)
+    { ++t->refcount; }
+
+    friend void intrusive_ptr_release(const Type* t)
+    {
+        if (--t->refcount == 0) // op-- == fetch_sub(1)-1
+            ::operator delete(const_cast<Type*>(t));
+    }
 
     class TypeBuilder
     {
@@ -216,18 +226,6 @@ constexpr const size_t DynamicStruct<Args...>::SIZE_OF[];
 
 template <typename... Args>
 constexpr const size_t DynamicStruct<Args...>::ALIGN_OF[];
-
-// TODO: SFINAE T is DynamicStruct::Type
-template <typename T>
-inline void intrusive_ptr_add_ref(const T* t)
-{ ++const_cast<T*>(t)->refcount; }
-
-template <typename T>
-inline void intrusive_ptr_release(const T* t)
-{
-    if (--const_cast<T*>(t)->refcount == 0)
-        ::operator delete(const_cast<T*>(t));
-}
 
 }
 #endif
