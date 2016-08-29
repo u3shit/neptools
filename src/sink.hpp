@@ -2,7 +2,7 @@
 #define UUID_8EC8FF70_7F93_4281_9370_FF756B846775
 #pragma once
 
-#include "assert.hpp"
+#include "check.hpp"
 #include "nonowning_string.hpp"
 #include "utils.hpp"
 #include <boost/endian/arithmetic.hpp>
@@ -24,17 +24,15 @@ public:
 
     FilePosition Tell() const noexcept { return offset + buf_put; }
 
-    template <typename T>
+    template <typename Checker = Check::Assert, typename T>
     void WriteGen(const T& x)
-    { Write({reinterpret_cast<const char*>(&x), EmptySizeof<T>}); }
+    { Write<Checker>({reinterpret_cast<const char*>(&x), EmptySizeof<T>}); }
 
-    template <typename T>
-    void CheckedWriteGen(const T& x)
-    { CheckedWrite({reinterpret_cast<const char*>(&x), EmptySizeof<T>}); }
-
+    template <typename Checker = Check::Assert>
     void Write(StringView data)
     {
-        NEPTOOLS_ASSERT_MSG(offset+buf_put+data.length() <= size, "sink overflow");
+        NEPTOOLS_CHECK(SinkOverflow, offset+buf_put+data.length() <= size,
+                       "Sink overflow during write");
         auto cp = std::min(data.length(), size_t(buf_size - buf_put));
         memcpy(buf+buf_put, data.data(), cp);
         data.remove_prefix(cp);
@@ -43,16 +41,11 @@ public:
         if (!data.empty()) Write_(data);
     }
 
-    void CheckedWrite(StringView data)
-    {
-        if (offset+buf_put+data.length() > size)
-            NEPTOOLS_THROW(SinkOverflow{"Sink overflow"});
-        Write(data);
-    }
-
+    template <typename Checker = Check::Assert>
     void Pad(FileMemSize len)
     {
-        NEPTOOLS_ASSERT_MSG(offset+buf_put+len <= size, "sink overflow");
+        NEPTOOLS_CHECK(SinkOverflow, offset+buf_put+len <= size,
+                       "Sink overflow during pad");
         auto cp = std::min(len, buf_size - buf_put);
         memset(buf+buf_put, 0, cp);
         buf_put += cp;
@@ -61,32 +54,18 @@ public:
         if (len) Pad_(len);
     }
 
-    void CheckedPad(FileMemSize len)
-    {
-        if (offset+buf_put+len > size)
-            NEPTOOLS_THROW(SinkOverflow{"Sink overflow"});
-        Pad(len);
-    }
-
     virtual void Flush() {}
 
-    void WriteLittleUint8 (boost::endian::little_uint8_t  i) { WriteGen(i); }
-    void WriteLittleUint16(boost::endian::little_uint16_t i) { WriteGen(i); }
-    void WriteLittleUint32(boost::endian::little_uint32_t i) { WriteGen(i); }
-    void WriteLittleUint64(boost::endian::little_uint64_t i) { WriteGen(i); }
-    void WriteCString(NonowningString str)
-    { Write({str.c_str(), str.size()+1}); }
+#define NEPTOOLS_GEN(bits)                                                  \
+    template <typename Checker = Check::Assert>                             \
+    void WriteLittleUint##bits (boost::endian::little_uint##bits##_t  i)    \
+    { WriteGen<Checker>(i); }
+    NEPTOOLS_GEN(8) NEPTOOLS_GEN(16) NEPTOOLS_GEN(32) NEPTOOLS_GEN(64)
+#undef NEPTOOLS_GEN
 
-    void CheckedWriteLittleUint8 (boost::endian::little_uint8_t  i)
-    { CheckedWriteGen(i); }
-    void CheckedWriteLittleUint16(boost::endian::little_uint16_t i)
-    { CheckedWriteGen(i); }
-    void CheckedWriteLittleUint32(boost::endian::little_uint32_t i)
-    { CheckedWriteGen(i); }
-    void CheckedWriteLittleUint64(boost::endian::little_uint64_t i)
-    { CheckedWriteGen(i); }
-    void CheckedWriteCString(NonowningString str)
-    { CheckedWrite({str.c_str(), str.size()+1}); }
+    template <typename Checker = Check::Assert>
+    void WriteCString(NonowningString str)
+    { Write<Checker>({str.c_str(), str.size()+1}); }
 
 protected:
     Sink(FileMemSize size) : size{size} {}

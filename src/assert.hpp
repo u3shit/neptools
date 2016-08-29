@@ -14,14 +14,15 @@
 #  define NEPTOOLS_BUILTIN_UNREACHABLE() abort()
 #endif
 
+#if __has_builtin(__builtin_assume)
+#  define NEPTOOLS_ASSUME(expr) __builtin_assume(!!(expr))
+#else
+#  define NEPTOOLS_ASSUME(expr) ((void) 0)
+#endif
+
 #ifdef NDEBUG
-#  if __has_builtin(__builtin_assume)
-#    define NEPTOOLS_ASSERT(expr) __builtin_assume(!!(expr))
-#    define NEPTOOLS_ASSERT_MSG(expr, msg) __builtin_assume(!!(expr))
-#  else
-#    define NEPTOOLS_ASSERT(expr) ((void)0)
-#    define NEPTOOLS_ASSERT_MSG(expr, msg) ((void)0)
-#  endif
+#  define NEPTOOLS_ASSERT(expr) NEPTOOLS_ASSUME(expr)
+#  define NEPTOOLS_ASSERT_MSG(expr, msg) NEPTOOLS_ASSUME(expr)
 #  define NEPTOOLS_UNREACHABLE(x) NEPTOOLS_BUILTIN_UNREACHABLE()
 
 #else

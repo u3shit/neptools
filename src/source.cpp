@@ -72,32 +72,24 @@ Source Source::FromFile_(boost::filesystem::path fname)
     return {std::move(p), size};
 }
 
-void Source::Pread(FilePosition offs, Byte* buf, FileMemSize len) const
+void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
 {
-    AddInfo([&]
+    offs += offset;
+    while (len)
     {
-        NEPTOOLS_ASSERT_MSG(offs <= size && offs+len <= size, "source overflow");
-        offs += offset;
-        while (len)
+        if (p->LruGet(offs))
         {
-            if (p->LruGet(offs))
-            {
-                auto& x = p->lru[0];
-                auto buf_offs = offs - x.offset;
-                auto to_cpy = std::min(len, x.size - buf_offs);
-                memcpy(buf, x.ptr + buf_offs, to_cpy);
-                offs += to_cpy;
-                buf += to_cpy;
-                len -= to_cpy;
-            }
-            else
-                return p->Pread(offs, buf, len);
+            auto& x = p->lru[0];
+            auto buf_offs = offs - x.offset;
+            auto to_cpy = std::min(len, x.size - buf_offs);
+            memcpy(buf, x.ptr + buf_offs, to_cpy);
+            offs += to_cpy;
+            buf += to_cpy;
+            len -= to_cpy;
         }
-    },
-    [=] (auto& e)
-    {
-        e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
-    });
+        else
+            return p->Pread(offs, buf, len);
+    }
 }
 
 Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const

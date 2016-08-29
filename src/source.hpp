@@ -7,13 +7,14 @@
 #include <boost/exception/info.hpp>
 #include <boost/exception/get_error_info.hpp>
 #include <boost/filesystem/path.hpp>
+#include "check.hpp"
 #include "dumpable.hpp"
 #include "low_io.hpp"
 
 namespace Neptools
 {
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(SourceUnderflow, std::logic_error);
+NEPTOOLS_GEN_EXCEPTION_TYPE(SourceOverflow, std::logic_error);
 
 class Source;
 using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
@@ -37,10 +38,11 @@ public:
 
     static Source FromFile(boost::filesystem::path fname);
 
+    template <typename Checker = Check::Assert>
     void Slice(FilePosition offset, FilePosition size) noexcept
     {
-        NEPTOOLS_ASSERT_MSG(offset <= this->size &&
-                            offset + size <= this->size, "source overflow");
+        NEPTOOLS_CHECK(SourceOverflow, offset <= this->size &&
+                       offset + size <= this->size, "Slice: invalid sizes");
         this->offset += offset;
         this->get -= offset;
         this->size = size;
@@ -53,9 +55,10 @@ public:
 
     FilePosition GetSize() const noexcept { return size; }
 
+    template <typename Checker = Check::Assert>
     void Seek(FilePosition pos) noexcept
     {
-        NEPTOOLS_ASSERT_MSG(pos <= size, "source overflow");
+        NEPTOOLS_CHECK(SourceOverflow, pos <= size, "Seek past end of source");
         get = pos;
     }
     FilePosition Tell() const noexcept { return get; }
@@ -71,57 +74,57 @@ public:
     }
     void CheckRemainingSize(FilePosition size) const { CheckSize(get + size); }
 
-    template <typename T>
-    void ReadGen(T& x) { Read(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
-    template <typename T>
-    T ReadGen() { T ret; ReadGen(ret); return ret; }
-    template <typename T>
-    void CheckedReadGen(T& x)
-    { CheckedRead(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
-    template <typename T>
-    T CheckedReadGen() { T ret; CheckedReadGen(ret); return ret; }
+    template <typename Checker = Check::Assert, typename T>
+    void ReadGen(T& x)
+    { Read<Checker>(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
 
-    template <typename T>
+    template <typename T, typename Checker = Check::Assert>
+    T ReadGen() { T ret; ReadGen<Checker>(ret); return ret; }
+
+
+    template <typename Checker = Check::Assert, typename T>
     void PreadGen(FilePosition offs, T& x) const
-    { Pread(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
-    template <typename T>
+    { Pread<Checker>(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+
+    template <typename T, typename Checker = Check::Assert>
     T PreadGen(FilePosition offs) const
-    { T ret; PreadGen(offs, ret); return ret; }
-    template <typename T>
-    void CheckedPreadGen(FilePosition offs, T& x) const
-    { CheckedPread(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
-    template <typename T>
-    T CheckedPreadGen(FilePosition offs) const
-    { T ret; CheckedPreadGen(offs, ret); return ret; }
+    { T ret; PreadGen<Checker>(offs, ret); return ret; }
 
 
-    void Read(Byte* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
-    void Read(char* buf, FileMemSize len) { Pread(get, buf, len); get += len; }
-    void Pread(FilePosition offs, Byte* buf, FileMemSize len) const;
-    void Pread(FilePosition offs, char* buf, FileMemSize len) const
-    { Pread(offs, reinterpret_cast<Byte*>(buf), len); }
+    template <typename Checker = Check::Assert>
+    void Read(Byte* buf, FileMemSize len)
+    { Pread<Checker>(get, buf, len); get += len; }
+    template <typename Checker = Check::Assert>
+    void Read(char* buf, FileMemSize len)
+    { Pread<Checker>(get, buf, len); get += len; }
 
-    void CheckedRead(Byte* buf, FileMemSize len) { CheckedPread(get, buf, len); get += len; }
-    void CheckedRead(char* buf, FileMemSize len) { CheckedPread(get, buf, len); get += len; }
-    void CheckedPread(FilePosition offs, Byte* buf, FileMemSize len) const
+    template <typename Checker = Check::Assert>
+    void Pread(FilePosition offs, Byte* buf, FileMemSize len) const
     {
-        if (offs > size || offs+len > size)
-            NEPTOOLS_THROW(SourceUnderflow{"Source underflow"} << UsedSource{*this});
-        return Pread(offs, buf, len);
+        AddInfo([&]
+        {
+            NEPTOOLS_CHECK(SourceOverflow, offs <= size && offs+len <= size,
+                           "Source overflow");
+            Pread_(offs, buf, len);
+        },
+        [=] (auto& e)
+        {
+            e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
+        });
     }
-    void CheckedPread(FilePosition offs, char* buf, FileMemSize len) const
-    { CheckedPread(offs, reinterpret_cast<Byte*>(buf), len); }
+    template <typename Checker = Check::Assert>
+    void Pread(FilePosition offs, char* buf, FileMemSize len) const
+    { Pread<Checker>(offs, reinterpret_cast<Byte*>(buf), len); }
 
     // helper
 #define NEPTOOLS_GEN_HLP(bits)                                              \
+    template <typename Checker = Check::Assert>                             \
     uint##bits##_t ReadLittleUint##bits()                                   \
-    { return ReadGen<boost::endian::little_uint##bits##_t>(); }             \
+    { return ReadGen<boost::endian::little_uint##bits##_t, Checker>(); }    \
+    template <typename Checker = Check::Assert>                             \
     uint##bits##_t PreadLittleUint##bits(FilePosition offs) const           \
-    { return PreadGen<boost::endian::little_uint##bits##_t>(offs); }        \
-    uint##bits##_t CheckedReadLittleUint##bits()                            \
-    { return CheckedReadGen<boost::endian::little_uint##bits##_t>(); }      \
-    uint##bits##_t CheckedPreadLittleUint##bits(FilePosition offs) const    \
-    { return CheckedPreadGen<boost::endian::little_uint##bits##_t>(offs); }
+    { return PreadGen<boost::endian::little_uint##bits##_t, Checker>(offs); }
+
     NEPTOOLS_GEN_HLP(8)
     NEPTOOLS_GEN_HLP(16)
     NEPTOOLS_GEN_HLP(32)
@@ -200,6 +203,7 @@ protected:
     BufEntry GetTemporaryEntry(FilePosition offs) const;
 
 private:
+    void Pread_(FilePosition offs, Byte* buf, FileMemSize len) const;
     static Source FromFile_(boost::filesystem::path fname);
 
     FilePosition offset = 0, size, get = 0;
