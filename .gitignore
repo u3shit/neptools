@@ -12,3 +12,5 @@ wscript_user.py
 
 ext/boost
 ext/boost.tar.bz2
+
+pkg/
