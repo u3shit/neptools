@@ -45,8 +45,8 @@ struct Assert
 struct Throw
 {
     template <typename ExceptT, typename Fun>
-    void operator()(Fun f, const char* expr, const char* msg, const char* file,
-                    unsigned line, const char* fun)
+    void Check(Fun f, const char* expr, const char* msg, const char* file,
+               unsigned line, const char* fun)
     {
         if (!f())
             throw ::boost::enable_error_info(ExceptT{msg}) <<
