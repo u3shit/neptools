@@ -26,7 +26,7 @@ namespace
 
 struct State
 {
-    boost::intrusive_ptr<Dumpable> dump;
+    SharedPtr<Dumpable> dump;
     Cl3* cl3;
     Stcm::File* stcm;
     Gbnl* gbnl;
@@ -42,17 +42,17 @@ State SmartOpen_(const boost::filesystem::path& fname)
     src.Pread(0, buf, 4);
     if (memcmp(buf, "CL3L", 4) == 0)
     {
-        auto cl3 = MakeRefCounted<Cl3>(src);
+        auto cl3 = MakeShared<Cl3>(src);
         return {cl3, cl3.get(), nullptr, nullptr, nullptr};
     }
     else if (memcmp(buf, "STCM", 4) == 0)
     {
-        auto stcm = MakeRefCounted<Stcm::File>(src);
+        auto stcm = MakeShared<Stcm::File>(src);
         return {stcm, nullptr, stcm.get(), nullptr, nullptr};
     }
     else if (memcmp(buf, "STSC", 4) == 0)
     {
-        auto stsc = MakeRefCounted<Stsc::File>(src);
+        auto stsc = MakeShared<Stsc::File>(src);
         return {stsc, nullptr, nullptr, nullptr, stsc.get()};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
@@ -60,7 +60,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
               (src.Pread(src.GetSize() - sizeof(Gbnl::Header), buf, 4),
                memcmp(buf, "GBNL", 4) == 0)))
     {
-        auto gbnl = MakeRefCounted<Gbnl>(src);
+        auto gbnl = MakeShared<Gbnl>(src);
         return {gbnl, nullptr, nullptr, gbnl.get(), gbnl.get()};
     }
     else
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
         [&](auto&&)
         {
             mode = Mode::MANUAL;
-            auto c = MakeRefCounted<Cl3>();
+            auto c = MakeShared<Cl3>();
             st = {c, c.get(), nullptr, nullptr, nullptr};
         }};
     Option list_files_opt{

@@ -4,6 +4,7 @@
 
 #include "item_base.hpp"
 #include "../dumpable.hpp"
+#include "../shared_ptr.hpp"
 
 #include <iosfwd>
 #include <vector>
@@ -17,7 +18,8 @@ namespace Neptools
 
 class ItemWithChildren;
 
-class Item : public Dumpable, public boost::intrusive::list_base_hook<LinkMode>
+class Item : public RefCounted, public Dumpable,
+             public boost::intrusive::list_base_hook<LinkMode>
 {
 protected:
     struct Key {};
