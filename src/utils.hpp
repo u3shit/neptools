@@ -21,7 +21,8 @@ using FileMemSize = uint32_t; // min(FilePos, size_t)
 template <typename T, typename U>
 T asserted_cast(U* ptr)
 {
-    NEPTOOLS_ASSERT_MSG(dynamic_cast<T>(ptr), "U is not T");
+    NEPTOOLS_ASSERT_MSG(
+        dynamic_cast<T>(ptr) == static_cast<T>(ptr), "U is not T");
     return static_cast<T>(ptr);
 }
 
@@ -29,7 +30,8 @@ template <typename T, typename U>
 T asserted_cast(U& ref)
 {
     using raw_t = std::remove_reference_t<T>;
-    NEPTOOLS_ASSERT_MSG(dynamic_cast<raw_t*>(&ref), "U is not T");
+    NEPTOOLS_ASSERT_MSG(
+        dynamic_cast<raw_t*>(&ref) == static_cast<raw_t*>(&ref), "U is not T");
     return static_cast<T>(ref);
 }
 
