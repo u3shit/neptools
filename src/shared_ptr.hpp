@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <boost/intrusive_ptr.hpp>
+#include "not_null.hpp"
 
 namespace Neptools
 {
@@ -154,8 +155,8 @@ template <typename T>
 struct MakeSharedHelper<T, std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
 {
     template <typename... Args>
-    static SharedPtr<T> Make(Args&&... args)
-    { return {new T(std::forward<Args>(args)...)}; }
+    static NotNull<SharedPtr<T>> Make(Args&&... args)
+    { return NotNull<SharedPtr<T>>{new T(std::forward<Args>(args)...)}; }
 };
 
 template <typename T>
@@ -169,15 +170,15 @@ struct MakeSharedHelper<T, std::enable_if_t<!std::is_base_of<RefCounted, T>::val
     };
 
     template <typename... Args>
-    static SharedPtr<T> Make(Args&&... args)
+    static NotNull<SharedPtr<T>> Make(Args&&... args)
     {
         auto a = new Alloc{std::forward<Args>(args)...};
-        return {a, &a->t, false};
+        return NotNull<SharedPtr<T>>{a, &a->t, false};
     }
 };
 
 template <typename T, typename... Args>
-SharedPtr<T> MakeShared(Args&&... args)
+NotNull<SharedPtr<T>> MakeShared(Args&&... args)
 { return MakeSharedHelper<T>::Make(std::forward<Args>(args)...); }
 
 }
