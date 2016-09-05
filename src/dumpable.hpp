@@ -3,10 +3,12 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
-#include "sink.hpp"
+#include "utils.hpp"
 
 namespace Neptools
 {
+
+class Sink;
 
 class Dumpable
 {

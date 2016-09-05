@@ -5,6 +5,7 @@
 #include <atomic>
 #include <boost/intrusive_ptr.hpp>
 #include "not_null.hpp"
+#include "utils.hpp"
 
 namespace Neptools
 {
@@ -34,11 +35,14 @@ private:
     explicit RefCounted(size_t rc_init) : refcount{rc_init} {}
 };
 
+template <typename T>
+using RefCountedPtr = boost::intrusive_ptr<T>;
+
 template<typename T, typename... Args>
-inline boost::intrusive_ptr<T> MakeRefCounted(Args&&... args)
+inline NotNull<RefCountedPtr<T>> MakeRefCounted(Args&&... args)
 {
     NEPTOOLS_STATIC_ASSERT(std::is_base_of<RefCounted, T>::value);
-    return {new T(std::forward<Args>(args)...)};
+    return NotNull<RefCountedPtr<T>>{new T(std::forward<Args>(args)...)};
 }
 
 template <typename T>
@@ -72,7 +76,7 @@ public:
 
     template <typename U, typename =
               std::enable_if_t<std::is_base_of<RefCounted, U>::value>>
-    SharedPtr(boost::intrusive_ptr<U> ptr) noexcept
+    SharedPtr(RefCountedPtr<U> ptr) noexcept
         : SharedPtr{ptr.detach(), false} {}
 
     SharedPtr& operator=(SharedPtr p) noexcept
@@ -85,7 +89,7 @@ public:
     { if (ctrl) intrusive_ptr_release(ctrl); }
 
     template <typename U>
-    operator boost::intrusive_ptr<U>() const & noexcept
+    operator RefCountedPtr<U>() const & noexcept
     {
         CheckRefCounted(); CheckRefCounted<U>();
         NEPTOOLS_ASSERT(ctrl == ptr);
@@ -93,7 +97,7 @@ public:
     }
 
     template <typename U>
-    operator boost::intrusive_ptr<U>() && noexcept
+    operator RefCountedPtr<U>() && noexcept
     {
         CheckRefCounted(); CheckRefCounted<U>();
         NEPTOOLS_ASSERT(ctrl == ptr);
@@ -155,8 +159,12 @@ template <typename T>
 struct MakeSharedHelper<T, std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
 {
     template <typename... Args>
-    static NotNull<SharedPtr<T>> Make(Args&&... args)
+    static NotNull<SharedPtr<T>> MakeShared(Args&&... args)
     { return NotNull<SharedPtr<T>>{new T(std::forward<Args>(args)...)}; }
+
+    template <typename... Args>
+    static NotNull<RefCountedPtr<T>> MakeSmart(Args&&... args)
+    { return NotNull<RefCountedPtr<T>>{new T(std::forward<Args>(args)...)}; }
 };
 
 template <typename T>
@@ -170,16 +178,30 @@ struct MakeSharedHelper<T, std::enable_if_t<!std::is_base_of<RefCounted, T>::val
     };
 
     template <typename... Args>
-    static NotNull<SharedPtr<T>> Make(Args&&... args)
+    static NotNull<SharedPtr<T>> MakeShared(Args&&... args)
     {
         auto a = new Alloc{std::forward<Args>(args)...};
         return NotNull<SharedPtr<T>>{a, &a->t, false};
     }
+
+    template <typename... Args>
+    static constexpr auto MakeSmart = &MakeShared<Args...>;
 };
 
 template <typename T, typename... Args>
 NotNull<SharedPtr<T>> MakeShared(Args&&... args)
-{ return MakeSharedHelper<T>::Make(std::forward<Args>(args)...); }
+{ return MakeSharedHelper<T>::MakeShared(std::forward<Args>(args)...); }
+
+// nice helper
+template <typename T>
+using SmartPtr = std::conditional_t<
+    std::is_base_of<RefCounted, T>::value,
+    RefCountedPtr<T>,
+    SharedPtr<T>>;
+
+template <typename T, typename... Args>
+NotNull<SmartPtr<T>> MakeSmart(Args&&... args)
+{ return MakeSharedHelper<T>::template MakeSmart<Args...>(std::forward<Args>(args)...); }
 
 }
 

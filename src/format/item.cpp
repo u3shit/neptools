@@ -43,7 +43,7 @@ void Item::UpdatePosition(FilePosition npos)
     Fixup();
 }
 
-void Item::Replace(boost::intrusive_ptr<Item> nitem) noexcept
+void Item::Replace(NotNull<SmartPtr<Item>> nitem) noexcept
 {
 #ifndef NDEBUG
     auto nsize = nitem->GetSize();
@@ -75,7 +75,7 @@ void Item::Slice(SliceSeq seq)
     NEPTOOLS_ASSERT(std::is_sorted(seq.begin(), seq.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; }));
 
-    boost::intrusive_ptr<Item> do_not_delete_this_until_returning{this};
+    SmartPtr<Item> do_not_delete_this_until_returning{this};
 
     LabelsContainer lbls{std::move(labels)};
     auto& list = parent->GetChildren();
@@ -185,7 +185,7 @@ void ItemWithChildren::MoveNextToChild(size_t size) noexcept
 {
     auto& list = GetParent().GetChildren();
     // make sure we have a ref when erasing...
-    boost::intrusive_ptr<Item> nchild = &asserted_cast<RawItem&>(
+    SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
         *++Iterator()).Split(0, size);
     list.erase(nchild->Iterator());
     GetChildren().push_back(*nchild);

@@ -7,11 +7,12 @@ using namespace Neptools;
 TEST_CASE("small simple write", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-    auto sink = Sink::ToFile("tmp", 16, MAYBE);
-    REQUIRE(sink->Tell() == 0);
-    sink->WriteGen(buf);
-    REQUIRE(sink->Tell() == 16);
-    sink.reset();
+    {
+        auto sink = Sink::ToFile("tmp", 16, MAYBE);
+        REQUIRE(sink->Tell() == 0);
+        sink->WriteGen(buf);
+        REQUIRE(sink->Tell() == 16);
+    }
 
     char buf2[16];
     std::ifstream is{"tmp", std::ios_base::binary};
@@ -29,14 +30,15 @@ TEST_CASE("many small writes", "[Sink]")
     NEPTOOLS_STATIC_ASSERT(sizeof(buf) == 24);
 
     static constexpr FilePosition SIZE = 2*1024*1024 / 24 * 24;
-    auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
-    for (FilePosition i = 0; i < SIZE; i += 24)
     {
-        buf[0] = i/24;
-        sink->WriteGen(buf);
+        auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
+        for (FilePosition i = 0; i < SIZE; i += 24)
+        {
+            buf[0] = i/24;
+            sink->WriteGen(buf);
+        }
+        REQUIRE(sink->Tell() == SIZE);
     }
-    REQUIRE(sink->Tell() == SIZE);
-    sink.reset();
 
     std::unique_ptr<char[]> buf_exp{new char[SIZE]};
     for (FilePosition i = 0; i < SIZE; i += 24)
@@ -62,11 +64,12 @@ TEST_CASE("big write", "[Sink]")
     for (size_t i = 0; i < SIZE; ++i)
         buf[i] = i;
 
-    auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
-    REQUIRE(sink->Tell() == 0);
-    sink->Write({buf.get(), SIZE});
-    REQUIRE(sink->Tell() == SIZE);
-    sink.reset();
+    {
+        auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
+        REQUIRE(sink->Tell() == 0);
+        sink->Write({buf.get(), SIZE});
+        REQUIRE(sink->Tell() == SIZE);
+    }
 
     std::unique_ptr<char[]> buf2{new char[SIZE]};
     std::ifstream is{"tmp", std::ios_base::binary};
@@ -81,15 +84,16 @@ TEST_CASE("big write", "[Sink]")
 TEST_CASE("small pad", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-    auto sink = Sink::ToFile("tmp", 16*3, MAYBE);
-    REQUIRE(sink->Tell() == 0);
-    sink->WriteGen(buf);
-    REQUIRE(sink->Tell() == 16);
-    sink->Pad(16);
-    REQUIRE(sink->Tell() == 2*16);
-    sink->WriteGen(buf);
-    REQUIRE(sink->Tell() == 3*16);
-    sink.reset();
+    {
+        auto sink = Sink::ToFile("tmp", 16*3, MAYBE);
+        REQUIRE(sink->Tell() == 0);
+        sink->WriteGen(buf);
+        REQUIRE(sink->Tell() == 16);
+        sink->Pad(16);
+        REQUIRE(sink->Tell() == 2*16);
+        sink->WriteGen(buf);
+        REQUIRE(sink->Tell() == 3*16);
+    }
 
     char buf2[16];
     std::ifstream is{"tmp", std::ios_base::binary};
@@ -113,15 +117,16 @@ TEST_CASE("many small pad", "[Sink]")
 {
     char buf[10] = {4,5,6,7,8,9,10,11,12,13};
     static constexpr FilePosition SIZE = 2*1024*1024 / 24 * 24;
-    auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
-
-    for (FilePosition i = 0; i < SIZE; i += 24)
     {
-        sink->WriteGen(buf);
-        sink->Pad(14);
+        auto sink = Sink::ToFile("tmp", SIZE, MAYBE);
+
+        for (FilePosition i = 0; i < SIZE; i += 24)
+        {
+            sink->WriteGen(buf);
+            sink->Pad(14);
+        }
+        REQUIRE(sink->Tell() == SIZE);
     }
-    REQUIRE(sink->Tell() == SIZE);
-    sink.reset();
 
     std::unique_ptr<char[]> buf_exp{new char[SIZE]};
     for (FilePosition i = 0; i < SIZE; i += 24)
@@ -144,15 +149,16 @@ TEST_CASE("large pad", "[Sink]")
 {
     char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     static constexpr FilePosition ZERO_SIZE = 2*1024*1024;
-    auto sink = Sink::ToFile("tmp", 16*2 + ZERO_SIZE, MAYBE);
-    REQUIRE(sink->Tell() == 0);
-    sink->WriteGen(buf);
-    REQUIRE(sink->Tell() == 16);
-    sink->Pad(ZERO_SIZE);
-    REQUIRE(sink->Tell() == 16+ZERO_SIZE);
-    sink->WriteGen(buf);
-    REQUIRE(sink->Tell() == 2*16+ZERO_SIZE);
-    sink.reset();
+    {
+        auto sink = Sink::ToFile("tmp", 16*2 + ZERO_SIZE, MAYBE);
+        REQUIRE(sink->Tell() == 0);
+        sink->WriteGen(buf);
+        REQUIRE(sink->Tell() == 16);
+        sink->Pad(ZERO_SIZE);
+        REQUIRE(sink->Tell() == 16+ZERO_SIZE);
+        sink->WriteGen(buf);
+        REQUIRE(sink->Tell() == 2*16+ZERO_SIZE);
+    }
 
     std::unique_ptr<char[]> buf2{new char[ZERO_SIZE]};
     std::ifstream is{"tmp", std::ios_base::binary};
@@ -174,13 +180,14 @@ TEST_CASE("large pad", "[Sink]")
 
 TEST_CASE("sink helpers", "[Sink]")
 {
-    auto sink = Sink::ToFile("tmp", 15, MAYBE);
-    sink->WriteLittleUint8(247);
-    sink->WriteLittleUint16(1234);
-    sink->WriteLittleUint32(98765);
-    sink->WriteCString("asd");
-    sink->WriteCString(std::string{"def"});
-    sink.reset();
+    {
+        auto sink = Sink::ToFile("tmp", 15, MAYBE);
+        sink->WriteLittleUint8(247);
+        sink->WriteLittleUint16(1234);
+        sink->WriteLittleUint32(98765);
+        sink->WriteCString("asd");
+        sink->WriteCString(std::string{"def"});
+    }
 
     Byte exp[15] = { 247, 0xd2, 0x04, 0xcd, 0x81, 0x01, 0x00,
                      'a', 's', 'd', 0, 'd', 'e', 'f', 0 };

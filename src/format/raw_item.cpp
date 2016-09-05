@@ -62,7 +62,7 @@ void RawItem::Inspect_(std::ostream& os) const
     os.flags(flags);
 }
 
-boost::intrusive_ptr<RawItem> RawItem::InternalSlice(
+NotNull<RefCountedPtr<RawItem>> RawItem::InternalSlice(
     FilePosition spos, FilePosition slen)
 {
     NEPTOOLS_ASSERT(spos+slen <= GetSize());
@@ -70,7 +70,7 @@ boost::intrusive_ptr<RawItem> RawItem::InternalSlice(
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
-void RawItem::Split2(FilePosition pos, boost::intrusive_ptr<Item> nitem)
+void RawItem::Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem)
 {
     auto len = nitem->GetSize();
     NEPTOOLS_ASSERT(pos <= GetSize() && pos+len <= GetSize());
@@ -83,11 +83,11 @@ void RawItem::Split2(FilePosition pos, boost::intrusive_ptr<Item> nitem)
     }
 
     SliceSeq seq;
-    if (pos != 0) seq.push_back({this, pos});
+    if (pos != 0) seq.push_back({MakeNotNull(this), pos});
     seq.push_back({std::move(nitem), pos+len});
     if (rem_len > 0)
         if (pos == 0)
-            seq.push_back({this, GetSize()});
+            seq.push_back({MakeNotNull(this), GetSize()});
         else
             seq.push_back({InternalSlice(pos+len, rem_len), GetSize()});
 

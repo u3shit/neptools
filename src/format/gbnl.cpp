@@ -1,4 +1,5 @@
 #include "gbnl.hpp"
+#include "../sink.hpp"
 #include "../except.hpp"
 #include <map>
 #include <boost/preprocessor/repetition/repeat.hpp>

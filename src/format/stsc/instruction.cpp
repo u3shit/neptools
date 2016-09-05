@@ -1,6 +1,7 @@
 #include "instruction.hpp"
 #include "string.hpp"
 #include "../raw_item.hpp"
+#include "../../sink.hpp"
 
 namespace Neptools
 {
@@ -10,11 +11,11 @@ namespace Stsc
 // helpers for generic CreateAndInsert
 namespace
 {
-using CreateType = boost::intrusive_ptr<InstructionBase>
+using CreateType = NotNull<SmartPtr<InstructionBase>>
     (*)(Context&, const Source&);
 
 template <uint8_t I>
-boost::intrusive_ptr<InstructionBase>
+NotNull<SmartPtr<InstructionBase>>
 CreateAdapt(Context& ctx, const Source& src)
 { return ctx.Create<InstructionItem<I>>(I, src); }
 

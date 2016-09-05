@@ -98,7 +98,7 @@ void Cl3::Parse_(Source& src)
 
         entries.emplace_back(
             e.name.c_str(), e.field_200,
-            std::make_unique<DumpableSource>(
+            MakeSmart<DumpableSource>(
                 src, file_offset+e.data_offset, e.data_size));
 
         auto& ls = entries.back().links;
@@ -121,8 +121,11 @@ void Cl3::Fixup()
     link_count = 0;
     for (auto& e : entries)
     {
-        e.src->Fixup();
-        data_size += e.src->GetSize();
+        if (e.src)
+        {
+            e.src->Fixup();
+            data_size += e.src->GetSize();
+        }
         data_size = (data_size + PAD) & ~PAD;
         link_count += e.links.size();
     }
@@ -152,6 +155,7 @@ void Cl3::ExtractTo(const boost::filesystem::path& dir) const
 
     for (const auto& e : entries)
     {
+        if (!e.src) continue;
         auto sink = Sink::ToFile(dir / e.name.c_str(), e.src->GetSize());
         e.src->Dump(*sink);
     }
@@ -161,7 +165,7 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
 {
     for (auto& e : boost::filesystem::directory_iterator(dir))
         GetOrCreateFile(e.path().filename().string()).src =
-            std::make_unique<DumpableSource>(Source::FromFile(e));
+            MakeSmart<DumpableSource>(Source::FromFile(e));
 
     for (size_t i = 0; i < entries.size(); )
         if (!boost::filesystem::exists(dir / entries[i].name))
@@ -204,7 +208,10 @@ void Cl3::Inspect_(std::ostream& os) const
             os << l;
         }
         os << "], ";
-        e.src->Inspect(os);
+        if (e.src)
+            e.src->Inspect(os);
+        else
+            os << "nil";
         os << ")\n";
     }
 }
@@ -252,7 +259,7 @@ void Cl3::Dump_(Sink& sink) const
         fe.name = e.name;
         fe.field_200 = e.field_200;
         fe.data_offset = offset;
-        auto size = e.src->GetSize();
+        auto size = e.src ? e.src->GetSize() : 0;
         fe.data_size = size;
         fe.link_start = link_i;
         fe.link_count = e.links.size();
@@ -266,6 +273,7 @@ void Cl3::Dump_(Sink& sink) const
     // file data
     for (auto& e : entries)
     {
+        if (!e.src) continue;
         e.src->Dump(sink);
         sink.Pad((PAD_BYTES - (e.src->GetSize() & PAD)) & PAD);
     }
@@ -288,13 +296,14 @@ void Cl3::Dump_(Sink& sink) const
 Stcm::File& Cl3::GetStcm()
 {
     auto dat = GetFile("main.DAT");
-    if (!dat) NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+    if (!dat || !dat->src)
+        NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
 
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
     if (stcm) return *stcm;
 
     auto src = asserted_cast<DumpableSource*>(dat->src.get());
-    auto nstcm = std::make_unique<Stcm::File>(*src);
+    auto nstcm = MakeSmart<Stcm::File>(*src);
     auto ret = nstcm.get();
     dat->src = std::move(nstcm);
     return *ret;

@@ -1,4 +1,5 @@
 #include "dumpable.hpp"
+#include "sink.hpp"
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -34,9 +35,10 @@ namespace Neptools
 void Dumpable::Dump(const boost::filesystem::path& path) const
 {
     auto path2 = path;
-    auto sink = Sink::ToFile(path2+=boost::filesystem::unique_path(), GetSize());
-    Dump(*sink);
-    sink.reset();
+    {
+        auto sink = Sink::ToFile(path2+=boost::filesystem::unique_path(), GetSize());
+        Dump(*sink);
+    }
 
 #ifdef WINDOWS
     if (boost::filesystem::is_regular_file(path))

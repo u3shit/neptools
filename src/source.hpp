@@ -10,6 +10,8 @@
 #include "check.hpp"
 #include "dumpable.hpp"
 #include "low_io.hpp"
+#include "not_null.hpp"
+#include "shared_ptr.hpp"
 
 namespace Neptools
 {
@@ -178,7 +180,7 @@ public:
     }
 
 
-    struct Provider
+    struct Provider : public RefCounted
     {
         Provider(boost::filesystem::path file_name, FilePosition size)
             : file_name{std::move(file_name)}, size{size} {}
@@ -195,7 +197,7 @@ public:
         boost::filesystem::path file_name;
         FilePosition size;
     };
-    Source(std::shared_ptr<Provider> p, FilePosition size)
+    Source(NotNull<SmartPtr<Provider>> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
 protected:
@@ -208,7 +210,7 @@ private:
 
     FilePosition offset = 0, size, get = 0;
 
-    std::shared_ptr<Provider> p;
+    NotNull<SmartPtr<Provider>> p;
 };
 
 class DumpableSource : public Dumpable, public Source

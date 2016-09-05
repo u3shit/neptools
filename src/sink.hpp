@@ -4,6 +4,7 @@
 
 #include "check.hpp"
 #include "nonowning_string.hpp"
+#include "shared_ptr.hpp"
 #include "utils.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <boost/filesystem/path.hpp>
@@ -14,13 +15,12 @@ namespace Neptools
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(SinkOverflow, std::logic_error);
 
-class Sink
+class Sink : public RefCounted
 {
 public:
-    virtual ~Sink() = default;
-    static std::unique_ptr<Sink> ToFile(
+    static NotNull<RefCountedPtr<Sink>> ToFile(
         boost::filesystem::path fname, FilePosition size, bool try_mmap = true);
-    static std::unique_ptr<Sink> ToStdOut();
+    static NotNull<RefCountedPtr<Sink>> ToStdOut();
 
     FilePosition Tell() const noexcept { return offset + buf_put; }
 

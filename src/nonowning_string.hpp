@@ -2,6 +2,7 @@
 #define UUID_4B926C10_9735_4A15_BC4B_22DE65201DD1
 #pragma once
 
+#include "assert.hpp"
 #include "except.hpp"
 
 #include <cstring>

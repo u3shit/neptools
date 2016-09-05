@@ -2,6 +2,7 @@
 #include "../context.hpp"
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
+#include "../../sink.hpp"
 
 namespace Neptools
 {

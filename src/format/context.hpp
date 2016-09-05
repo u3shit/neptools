@@ -22,10 +22,8 @@ public:
     void Fixup() override;
 
     template <typename T, typename... Args>
-    boost::intrusive_ptr<T> Create(Args&&... args)
-    {
-        return {new T{Item::Key{}, this, std::forward<Args>(args)...}};
-    }
+    NotNull<SmartPtr<T>> Create(Args&&... args)
+    { return MakeSmart<T>(Item::Key{}, this, std::forward<Args>(args)...); }
 
     const Label& GetLabel(const std::string& name) const;
     const Label& CreateLabel(std::string name, ItemPointer ptr);

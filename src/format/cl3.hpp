@@ -7,6 +7,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include "../source.hpp"
+#include "../sink.hpp"
 #include "../fixed_string.hpp"
 
 namespace Neptools
@@ -99,10 +100,10 @@ public:
         uint32_t field_200 = 0;
         std::vector<uint32_t> links;
 
-        std::unique_ptr<Dumpable> src;
+        SmartPtr<Dumpable> src;
 
         Entry(std::string name) : name{std::move(name)} {}
-        Entry(std::string name, uint32_t field_200, std::unique_ptr<Dumpable> src)
+        Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
     };
     std::vector<Entry> entries;

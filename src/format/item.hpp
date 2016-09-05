@@ -11,7 +11,6 @@
 #include <map>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/set.hpp>
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 
 namespace Neptools
 {
@@ -40,7 +39,7 @@ public:
 
     FilePosition GetPosition() const noexcept { return position; }
 
-    void Replace(boost::intrusive_ptr<Item> nitem) noexcept;
+    void Replace(NotNull<RefCountedPtr<Item>> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
     // update Slice if no longer ordered
@@ -56,7 +55,7 @@ protected:
 
     void Inspect_(std::ostream& os) const override = 0;
 
-    using SlicePair = std::pair<boost::intrusive_ptr<Item>, FilePosition>;
+    using SlicePair = std::pair<NotNull<RefCountedPtr<Item>>, FilePosition>;
     using SliceSeq = std::vector<SlicePair>;
     void Slice(SliceSeq seq);
 
@@ -72,6 +71,8 @@ private:
     friend class ItemList;
     friend class ItemWithChildren;
 };
+NEPTOOLS_STATIC_ASSERT(
+    std::is_same<SmartPtr<Item>, RefCountedPtr<Item>>::value);
 
 std::ostream& operator<<(std::ostream& os, const Item& item);
 inline FilePosition ToFilePos(ItemPointer ptr) noexcept

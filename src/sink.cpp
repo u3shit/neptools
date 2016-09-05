@@ -173,30 +173,30 @@ void SimpleSink::Pad_(FileMemSize len)
     buf_put = len % LowIo::MEM_CHUNK;
 }
 
-std::unique_ptr<Sink> Sink::ToFile(
+NotNull<RefCountedPtr<Sink>> Sink::ToFile(
     boost::filesystem::path fname, FilePosition size, bool try_mmap)
 {
     return AddInfo(
-        [&]() -> std::unique_ptr<Sink>
+        [&]() -> NotNull<RefCountedPtr<Sink>>
         {
             LowIo io{fname.c_str(), true};
             if (!try_mmap)
-                return std::make_unique<SimpleSink>(std::move(io), size);
+                return MakeRefCounted<SimpleSink>(std::move(io), size);
 
-            try { return std::make_unique<MmapSink>(std::move(io), size); }
+            try { return MakeRefCounted<MmapSink>(std::move(io), size); }
             catch (const std::system_error& e)
             {
                 WARN << "Mmmap failed, falling back to normal writing: "
                      << ExceptionToString() << std::endl;
-                return std::make_unique<SimpleSink>(std::move(io), size);
+                return MakeRefCounted<SimpleSink>(std::move(io), size);
             }
         },
         [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; });
 }
 
-std::unique_ptr<Sink> Sink::ToStdOut()
+NotNull<RefCountedPtr<Sink>> Sink::ToStdOut()
 {
-    return std::make_unique<SimpleSink>(LowIo::OpenStdOut(), -1);
+    return MakeRefCounted<SimpleSink>(LowIo::OpenStdOut(), -1);
 }
 
 void MemorySink::Write_(StringView)

@@ -26,7 +26,7 @@ namespace
 
 struct State
 {
-    SharedPtr<Dumpable> dump;
+    SmartPtr<Dumpable> dump;
     Cl3* cl3;
     Stcm::File* stcm;
     Gbnl* gbnl;
@@ -42,17 +42,17 @@ State SmartOpen_(const boost::filesystem::path& fname)
     src.Pread(0, buf, 4);
     if (memcmp(buf, "CL3L", 4) == 0)
     {
-        SharedPtr<Cl3> cl3 = MakeShared<Cl3>(src);
+        auto cl3 = MakeSmart<Cl3>(src);
         return {cl3, cl3.get(), nullptr, nullptr, nullptr};
     }
     else if (memcmp(buf, "STCM", 4) == 0)
     {
-        SharedPtr<Stcm::File> stcm = MakeShared<Stcm::File>(src);
+        auto stcm = MakeSmart<Stcm::File>(src);
         return {stcm, nullptr, stcm.get(), nullptr, nullptr};
     }
     else if (memcmp(buf, "STSC", 4) == 0)
     {
-        SharedPtr<Stsc::File> stsc = MakeShared<Stsc::File>(src);
+        auto stsc = MakeSmart<Stsc::File>(src);
         return {stsc, nullptr, nullptr, nullptr, stsc.get()};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
@@ -60,7 +60,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
               (src.Pread(src.GetSize() - sizeof(Gbnl::Header), buf, 4),
                memcmp(buf, "GBNL", 4) == 0)))
     {
-        SharedPtr<Gbnl> gbnl = MakeShared<Gbnl>(src);
+        auto gbnl = MakeSmart<Gbnl>(src);
         return {gbnl, nullptr, nullptr, gbnl.get(), gbnl.get()};
     }
     else
@@ -78,7 +78,7 @@ State SmartOpen(const boost::filesystem::path& fname)
 template <typename T>
 void ShellDump(const T* item, const char* name)
 {
-    std::unique_ptr<Sink> sink;
+    RefCountedPtr<Sink> sink;
     if (name[0] == '-' && name[1] == '\0')
         sink = Sink::ToStdOut();
     else
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
         [&](auto&&)
         {
             mode = Mode::MANUAL;
-            SharedPtr<Cl3> c = MakeShared<Cl3>();
+            SmartPtr<Cl3> c = MakeSmart<Cl3>();
             st = {c, c.get(), nullptr, nullptr, nullptr};
         }};
     Option list_files_opt{
@@ -401,7 +401,7 @@ int main(int argc, char** argv)
             if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
 
             auto& e = st.cl3->GetOrCreateFile(args[0]);
-            e.src = std::make_unique<DumpableSource>(Source::FromFile(args[1]));
+            e.src = MakeSmart<DumpableSource>(Source::FromFile(args[1]));
         }};
     Option remove_file_opt{
         lgrp, "remove-file", 1, "NAME", "Removes NAME from cl3 archive",

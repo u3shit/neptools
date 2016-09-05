@@ -19,7 +19,7 @@ public:
     FilePosition GetSize() const noexcept override { return src.GetSize(); }
 
     template <typename T>
-    T& Split(FilePosition pos, boost::intrusive_ptr<T> nitem)
+    T& Split(FilePosition pos, NotNull<RefCountedPtr<T>> nitem)
     {
         T& ret = *nitem.get();
         Split2(pos, std::move(nitem));
@@ -59,9 +59,9 @@ public:
     }
 
 protected:
-    boost::intrusive_ptr<RawItem> InternalSlice(
+    NotNull<RefCountedPtr<RawItem>> InternalSlice(
         FilePosition offset, FilePosition size);
-    void Split2(FilePosition pos, boost::intrusive_ptr<Item> nitem);
+    void Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem);
 
 private:
     void Dump_(Sink& sink) const override;

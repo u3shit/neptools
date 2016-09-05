@@ -22,6 +22,9 @@ public:
     constexpr explicit NotNull(Args&&... args) : t{std::forward<Args>(args)...}
     { NEPTOOLS_ASSERT(t); }
 
+    template <typename U>
+    NotNull(NotNull<U> o) : t{std::move(o.t)} {}
+
     NotNull& operator=(const NotNull&) = default;
     NotNull& operator=(NotNull&&) = default;
 
@@ -34,8 +37,13 @@ public:
     bool operator==(const NotNull& o) const noexcept { return t == o.t; }
     bool operator!=(const NotNull& o) const noexcept { return t != o.t; }
 
+    decltype(auto) get() const { return t.get(); }
+    template <typename U, typename = std::enable_if_t<std::is_convertible<T, U>::value>>
+    operator U() const { NEPTOOLS_ASSERT(t); return static_cast<U>(t); }
 private:
     T t;
+
+    template <typename U> friend class NotNull;
 };
 
 template <typename T>

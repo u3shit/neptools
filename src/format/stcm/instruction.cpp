@@ -3,6 +3,7 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include "../../except.hpp"
+#include "../../sink.hpp"
 #include <set>
 #include <iostream>
 
