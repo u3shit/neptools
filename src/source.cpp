@@ -1,7 +1,7 @@
 #include "source.hpp"
 #include "sink.hpp"
 #include "except.hpp"
-#include "lua/user_type.hpp"
+#include "lua/function_call.hpp"
 
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
@@ -253,6 +253,7 @@ std::string to_string(const UsedSource& src)
     return ss.str();
 }
 
+NEPTOOLS_LUAGEN(name="read")
 static Lua::RetNum LuaRead(Lua::StateRef vm, Source& src, FileMemSize len)
 {
     std::unique_ptr<char[]> ptr{new char[len]};
@@ -261,6 +262,7 @@ static Lua::RetNum LuaRead(Lua::StateRef vm, Source& src, FileMemSize len)
     return {1};
 }
 
+NEPTOOLS_LUAGEN(name="pread")
 static Lua::RetNum LuaPread(
     Lua::StateRef vm, Source& src, FilePosition offs, FileMemSize len)
 {
@@ -270,40 +272,6 @@ static Lua::RetNum LuaPread(
     return {1};
 }
 
-namespace Lua
-{
-template<>
-void TypeRegister::DoRegister<Source>(StateRef, TypeBuilder& bld)
-{
-#define FT(x) decltype(&x), &x
-    bld.ValueDtor<Source>()
-        .ValueCtor<Source, const Source&, FilePosition, FilePosition>()
-        .Add<FT(Source::FromFile)>("from_file")
-        .Add<FT(Source::Slice<Check::Assert>)>("slice")
-        .Add<FT(Source::GetOffset)>("get_offset")
-        .Add<FT(Source::GetOrigSize)>("get_orig_size")
-        .Add<FT(Source::GetFileName)>("get_file_name")
-        .Add<FT(Source::GetSize)>("get_size")
-        .Add<FT(Source::Seek<Check::Assert>)>("seek")
-        .Add<FT(Source::Tell)>("tell")
-        .Add<FT(Source::GetRemainingSize)>("get_remaining_size")
-        .Add<FT(Source::Eof)>("eof")
-        .Add<FT(Source::CheckSize)>("check_size")
-        .Add<FT(Source::CheckRemainingSize)>("check_remaining_size")
-        .Add<FT(LuaRead)>("read")
-        .Add<FT(LuaPread)>("pread")
-        .Add<FT(Source::ReadLittleUint8<Check::Assert>)>("read_little_uint8_t")
-        .Add<FT(Source::PreadLittleUint8<Check::Assert>)>("pread_little_uint8_t")
-        .Add<FT(Source::ReadLittleUint16<Check::Assert>)>("read_little_uint16_t")
-        .Add<FT(Source::PreadLittleUint16<Check::Assert>)>("pread_little_uint16_t")
-        .Add<FT(Source::ReadLittleUint32<Check::Assert>)>("read_little_uint32_t")
-        .Add<FT(Source::PreadLittleUint32<Check::Assert>)>("pread_little_uint32_t")
-        .Add<FT(Source::ReadCString)>("read_cstring")
-        .Add<FT(Source::PreadCString)>("pread_cstring")
-        ;
 }
 
-static TypeRegister::StateRegister<Source> reg;
-
-}
-}
+#include "source.binding.hpp"

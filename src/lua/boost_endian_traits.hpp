@@ -21,6 +21,7 @@ struct IsBoostEndian<boost::endian::endian_arithmetic<Order, T, N, A>>
 X(little_uint8_t);
 X(little_uint16_t);
 X(little_uint32_t);
+X(little_uint64_t);
 #undef X
 
 }

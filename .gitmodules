@@ -4,3 +4,6 @@
 [submodule "ext/ljx/"]
 	path = ext/ljx
 	url = git://github.com/u3shit/ljx.git
+[submodule "ext/ljclang"]
+	path = ext/ljclang
+	url = git://github.com/u3shit/ljclang.git

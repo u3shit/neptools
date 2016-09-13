@@ -3,13 +3,14 @@
 #pragma once
 
 #include "type_traits.hpp"
+#include "../meta.hpp"
 
 namespace Neptools
 {
 namespace Lua
 {
 
-struct ValueObject {};
+struct NEPTOOLS_LUAGEN(no_inherit=true,value_object=true) ValueObject {};
 
 // specialize if needed
 template <typename T>

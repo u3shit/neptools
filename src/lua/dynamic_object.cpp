@@ -1,6 +1,5 @@
 #include "dynamic_object.hpp"
 #include "userdata.hpp"
-#include "user_type.hpp"
 
 namespace Neptools
 {
@@ -42,22 +41,20 @@ template <> struct TypeTraits<UserdataBase>
     { return *reinterpret_cast<UserdataBase*>(lua_touserdata(vm, idx)); }
 };
 
+NEPTOOLS_LUAGEN(name="__gc", class="Neptools::Lua::DynamicObject")
 static void Dtor(StateRef vm)
 {
     if (!TypeTraits<DynamicObject>::Is(vm, 1))
         vm.TypeError(true, "neptools.object", 1);
     auto ub = reinterpret_cast<RefCountedUserdataBase*>(lua_touserdata(vm, 1));
+    NEPTOOLS_ASSERT(ub);
     ub->Destroy(vm);
 
     lua_pushnil(vm);
     lua_setmetatable(vm, 1);
 }
 
-template<>
-void TypeRegister::DoRegister<DynamicObject>(StateRef, TypeBuilder& bld)
-{
-    bld.Add<decltype(&Dtor), &Dtor>("__gc");
+}
 }
 
-}
-}
+#include "dynamic_object.binding.hpp"

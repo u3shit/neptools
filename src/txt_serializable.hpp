@@ -13,10 +13,10 @@ class TxtSerializable : public Lua::DynamicObject
 public:
     static constexpr const char* TYPE_NAME = "neptools.txt_serializable";
 
-    void WriteTxt(std::ostream& os) const { WriteTxt_(os); }
-    void WriteTxt(std::ostream&& os) const { WriteTxt_(os); }
-    void ReadTxt(std::istream& is) { ReadTxt_(is); }
-    void ReadTxt(std::istream&& is) { ReadTxt_(is); }
+    NEPTOOLS_NOLUA void WriteTxt(std::ostream& os) const { WriteTxt_(os); }
+    NEPTOOLS_NOLUA void WriteTxt(std::ostream&& os) const { WriteTxt_(os); }
+    NEPTOOLS_NOLUA void ReadTxt(std::istream& is) { ReadTxt_(is); }
+    NEPTOOLS_NOLUA void ReadTxt(std::istream&& is) { ReadTxt_(is); }
 
 private:
     virtual void WriteTxt_(std::ostream& os) const = 0;

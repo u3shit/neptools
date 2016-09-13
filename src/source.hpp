@@ -97,13 +97,14 @@ public:
 
 
     template <typename Checker = Check::Assert>
-    void Read(Byte* buf, FileMemSize len)
+    NEPTOOLS_NOLUA void Read(Byte* buf, FileMemSize len)
     { Pread<Checker>(get, buf, len); get += len; }
     template <typename Checker = Check::Assert>
-    void Read(char* buf, FileMemSize len)
+    NEPTOOLS_NOLUA void Read(char* buf, FileMemSize len)
     { Pread<Checker>(get, buf, len); get += len; }
 
     template <typename Checker = Check::Assert>
+    NEPTOOLS_NOLUA
     void Pread(FilePosition offs, Byte* buf, FileMemSize len) const
     {
         AddInfo([&]
@@ -117,7 +118,9 @@ public:
             e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
         });
     }
+
     template <typename Checker = Check::Assert>
+    NEPTOOLS_NOLUA
     void Pread(FilePosition offs, char* buf, FileMemSize len) const
     { Pread<Checker>(offs, reinterpret_cast<Byte*>(buf), len); }
 
@@ -200,6 +203,7 @@ public:
         boost::filesystem::path file_name;
         FilePosition size;
     };
+    NEPTOOLS_NOLUA
     Source(NotNull<SmartPtr<Provider>> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
@@ -220,7 +224,10 @@ class DumpableSource final : public Dumpable, public Source
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    static constexpr const char* TYPE_NAME = "neptools.dumpable_source";
+
     DumpableSource(const Source& s) : Source{s} {}
+    NEPTOOLS_NOLUA
     DumpableSource(Source&& s) : Source{std::move(s)} {}
     using Source::Source;
 

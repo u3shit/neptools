@@ -1,0 +1,159 @@
+diff --git a/include/clang-c/Index.h b/include/clang-c/Index.h
+index 13db208..212eca0 100644
+--- a/include/clang-c/Index.h
++++ b/include/clang-c/Index.h
+@@ -3346,6 +3346,16 @@ CINDEX_LINKAGE CXType clang_getCursorResultType(CXCursor C);
+ CINDEX_LINKAGE unsigned clang_isPODType(CXType T);
+ 
+ /**
++ * \brief Return 1 if the CXType is a final class type, and 0 otherwise.
++ */
++CINDEX_LINKAGE unsigned clang_isFinalType(CXType T);
++
++/**
++ * \bried Return 1 if the CXType is an abstract class type, and 0 otherwise.
++ */
++CINDEX_LINKAGE unsigned clang_isAbstractType(CXType T);
++
++/**
+  * \brief Return the element type of an array, complex, or vector type.
+  *
+  * If a type is passed in that is not an array, complex, or vector type,
+@@ -4118,6 +4128,12 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
+  */
+ 
+ /**
++ * \brief Determine if a C++ function or method has been deleted with
++ * '= delete'.
++ */
++CINDEX_LINKAGE unsigned clang_CXX_isDeleted(CXCursor C);
++
++/**
+  * \brief Determine if a C++ constructor is a converting constructor.
+  */
+ CINDEX_LINKAGE unsigned clang_CXXConstructor_isConvertingConstructor(CXCursor C);
+@@ -4167,6 +4183,12 @@ CINDEX_LINKAGE unsigned clang_CXXMethod_isStatic(CXCursor C);
+ CINDEX_LINKAGE unsigned clang_CXXMethod_isVirtual(CXCursor C);
+ 
+ /**
++ * \brief Determine if a C++ member function or member function template method
++ * overrides a virtual method from one of the base classes.
++ */
++CINDEX_LINKAGE unsigned clang_CXXMethod_isOverride(CXCursor C);
++
++/**
+  * \brief Determine if a C++ member function or member function template is
+  * declared 'const'.
+  */
+diff --git a/tools/libclang/CIndex.cpp b/tools/libclang/CIndex.cpp
+index 027bf95..5972be8 100644
+--- a/tools/libclang/CIndex.cpp
++++ b/tools/libclang/CIndex.cpp
+@@ -904,8 +904,8 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
+   // before visiting these template parameters.
+   if (VisitTemplateParameters(D->getTemplateParameters()))
+     return true;
+-  
+-  return VisitFunctionDecl(D->getTemplatedDecl());
++
++  return VisitAttributes(D->getTemplatedDecl()) || VisitFunctionDecl(D->getTemplatedDecl());
+ }
+ 
+ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
+@@ -7436,6 +7436,15 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit TU,
+ 
+ extern "C" {
+ 
++unsigned clang_CXX_isDeleted(CXCursor C) {
++  if (!clang_isDeclaration(C.kind))
++    return 0;
++
++  const Decl *D = cxcursor::getCursorDecl(C);
++  const FunctionDecl *Function = D->getAsFunction();
++  return (Function && Function->isDeleted()) ? 1 : 0;
++}
++
+ unsigned clang_CXXConstructor_isDefaultConstructor(CXCursor C) {
+   if (!clang_isDeclaration(C.kind))
+     return 0;
+@@ -7536,6 +7545,16 @@ unsigned clang_CXXMethod_isVirtual(CXCursor C) {
+       D ? dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()) : nullptr;
+   return (Method && Method->isVirtual()) ? 1 : 0;
+ }
++
++unsigned clang_CXXMethod_isOverride(CXCursor C) {
++  if (!clang_isDeclaration(C.kind))
++    return 0;
++
++  const Decl *D = cxcursor::getCursorDecl(C);
++  const CXXMethodDecl *Method =
++      D ? dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()) : nullptr;
++  return (Method && Method->size_overridden_methods()) ? 1 : 0;
++}
+ } // end: extern "C"
+ 
+ //===----------------------------------------------------------------------===//
+diff --git a/tools/libclang/CXType.cpp b/tools/libclang/CXType.cpp
+index 4fcd886..25f4220 100644
+--- a/tools/libclang/CXType.cpp
++++ b/tools/libclang/CXType.cpp
+@@ -615,6 +615,30 @@ unsigned clang_isPODType(CXType X) {
+   return T.isPODType(cxtu::getASTUnit(TU)->getASTContext()) ? 1 : 0;
+ }
+ 
++unsigned clang_isFinalType(CXType X) {
++  QualType T = GetQualType(X);
++  if (T.isNull())
++    return 0;
++
++  const CXXRecordDecl *RecordDecl = T->getAsCXXRecordDecl();
++  if (!RecordDecl)
++    return 0;
++
++  return RecordDecl->getAttr<FinalAttr>() ? 1 : 0;
++}
++
++unsigned clang_isAbstractType(CXType X) {
++  QualType T = GetQualType(X);
++  if (T.isNull())
++    return 0;
++
++  const CXXRecordDecl *RecordDecl = T->getAsCXXRecordDecl();
++  if (!RecordDecl)
++    return 0;
++
++  return RecordDecl->isAbstract() ? 1 : 0;
++}
++
+ CXType clang_getElementType(CXType CT) {
+   QualType ET = QualType();
+   QualType T = GetQualType(CT);
+diff --git a/tools/libclang/libclang.exports b/tools/libclang/libclang.exports
+index c8fe0a2..aab85b7 100644
+--- a/tools/libclang/libclang.exports
++++ b/tools/libclang/libclang.exports
+@@ -2,6 +2,7 @@ clang_CXCursorSet_contains
+ clang_CXCursorSet_insert
+ clang_CXIndex_getGlobalOptions
+ clang_CXIndex_setGlobalOptions
++clang_CXX_isDeleted
+ clang_CXXConstructor_isConvertingConstructor
+ clang_CXXConstructor_isCopyConstructor
+ clang_CXXConstructor_isDefaultConstructor
+@@ -12,6 +13,7 @@ clang_CXXMethod_isConst
+ clang_CXXMethod_isPureVirtual
+ clang_CXXMethod_isStatic
+ clang_CXXMethod_isVirtual
++clang_CXXMethod_isOverride
+ clang_Cursor_getArgument
+ clang_Cursor_getNumTemplateArguments
+ clang_Cursor_getTemplateArgumentKind
+@@ -279,6 +281,8 @@ clang_isFileMultipleIncludeGuarded
+ clang_isFunctionTypeVariadic
+ clang_isInvalid
+ clang_isPODType
++clang_isFinalType
++clang_isAbstractType
+ clang_isPreprocessing
+ clang_isReference
+ clang_isRestrictQualifiedType

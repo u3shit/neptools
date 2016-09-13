@@ -1,9 +1,9 @@
 #include "txt_serializable.hpp"
-#include "lua/user_type.hpp"
 
 namespace Neptools
 {
 
+NEPTOOLS_LUAGEN()
 static std::string WriteTxt(TxtSerializable& ser)
 {
     std::stringstream ss;
@@ -11,24 +11,13 @@ static std::string WriteTxt(TxtSerializable& ser)
     return ss.str();
 }
 
+NEPTOOLS_LUAGEN()
 static void ReadTxt(TxtSerializable& ser, std::string str)
 {
     std::stringstream ss{std::move(str)};
     ser.ReadTxt(ss);
 }
 
-namespace Lua
-{
-template<>
-void TypeRegister::DoRegister<TxtSerializable>(StateRef, TypeBuilder& bld)
-{
-#define FT(x) decltype(&x), &x
-    bld.Inherit<TxtSerializable, DynamicObject>()
-        .Add<FT(WriteTxt)>("write_txt")
-        .Add<FT(ReadTxt)>("read_txt")
-        ;
 }
 
-static TypeRegister::StateRegister<TxtSerializable> reg;
-}
-}
+#include "txt_serializable.binding.hpp"

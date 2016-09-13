@@ -41,7 +41,8 @@ namespace Neptools { namespace Lua {
 template<>
 void TypeRegister::DoRegister<Foo>(StateRef, TypeBuilder& bld)
 {
-    bld.Inherit<Foo, DynamicObject>().SharedCtor<Foo>()
+    bld.Inherit<Foo, DynamicObject>()
+        .Add<FT(MakeSmart<Foo>)>("new")
         .Add<FT(Foo::DoIt)>("do_it")
         ;
 }
@@ -49,13 +50,15 @@ void TypeRegister::DoRegister<Foo>(StateRef, TypeBuilder& bld)
 template<>
 void TypeRegister::DoRegister<Bar>(StateRef, TypeBuilder& bld)
 {
-    bld.Inherit<Bar, DynamicObject>().SharedCtor<Bar>();
+    bld.Inherit<Bar, DynamicObject>()
+        .Add<FT(MakeSmart<Bar>)>("new");
 }
 
 template<>
 void TypeRegister::DoRegister<Baz>(StateRef, TypeBuilder& bld)
 {
-    bld.Inherit<Baz, DynamicObject>().SharedCtor<Baz>()
+    bld.Inherit<Baz, DynamicObject>()
+        .Add<FT(MakeSmart<Baz>)>("new")
         .Add<FT(Baz::SetGlobal)>("set_global")
         .Add<FT(Baz::GetRandom)>("get_random")
         ;

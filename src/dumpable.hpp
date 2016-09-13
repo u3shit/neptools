@@ -24,10 +24,13 @@ public:
     virtual FilePosition GetSize() const = 0;
 
     void Dump(Sink& os) const { return Dump_(os); }
+    NEPTOOLS_NOLUA
     void Dump(Sink&& os) const { return Dump_(os); }
     void Dump(const boost::filesystem::path& path) const;
 
+    NEPTOOLS_NOLUA
     void Inspect(std::ostream& os) const { return Inspect_(os); }
+    NEPTOOLS_NOLUA
     void Inspect(std::ostream&& os) const { return Inspect_(os); }
     void Inspect(const boost::filesystem::path& path) const;
 

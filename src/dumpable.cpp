@@ -1,7 +1,5 @@
 #include "dumpable.hpp"
 #include "sink.hpp"
-#include "lua/function_call.hpp"
-#include "lua/user_type.hpp"
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -66,6 +64,7 @@ std::ostream& operator<<(std::ostream& os, const Dumpable& dmp)
     return os;
 }
 
+NEPTOOLS_LUAGEN(name="inspect")
 static std::string InspectToString(const Dumpable& dmp)
 {
     std::stringstream ss;
@@ -73,26 +72,6 @@ static std::string InspectToString(const Dumpable& dmp)
     return ss.str();
 }
 
-namespace Lua
-{
-template<>
-void TypeRegister::DoRegister<Dumpable>(StateRef, TypeBuilder& bld)
-{
-#define FT(x) decltype(&x), &x
-    bld.Inherit<Dumpable, DynamicObject>()
-        .Add<FT(Dumpable::Fixup)>("fixup")
-        .Add<FT(Dumpable::GetSize)>("get_size")
-        .Add<
-            Overload<void (Dumpable::*)(Sink&) const, &Dumpable::Dump>,
-            Overload<void (Dumpable::*)(const boost::filesystem::path&) const, &Dumpable::Dump>
-        >("dump")
-        .Add<
-            Overload<void (Dumpable::*)(const boost::filesystem::path&) const, &Dumpable::Inspect>,
-            Overload<FT(InspectToString)>
-        >("inspect")
-        ;
 }
 
-static TypeRegister::StateRegister<Dumpable> reg;
-}
-}
+#include "dumpable.binding.hpp"

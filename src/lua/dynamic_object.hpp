@@ -3,6 +3,7 @@
 #pragma once
 
 #include <type_traits>
+#include "../meta.hpp"
 #include "../not_null.hpp"
 #include "userdata.hpp"
 
@@ -11,7 +12,7 @@ namespace Neptools
 namespace Lua
 {
 
-class DynamicObject
+class NEPTOOLS_LUAGEN(smart_object=true) DynamicObject
 {
 public:
     static constexpr const char* TYPE_NAME = "neptools.object";
@@ -80,6 +81,21 @@ struct TypeTraits<T, std::enable_if_t<
     { static_cast<DynamicObject&>(obj).PushLua(vm, &obj); }
 };
 
+template <typename T>
+struct TypeTraits<NotNull<RefCountedPtr<T>>,
+                  std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
+{
+    using Type = NotNull<RefCountedPtr<T>>;
+
+    static Type Get(StateRef vm, bool arg, int idx)
+    { return Type{&UserdataTraits<T>::Get(vm, arg, idx)}; }
+    static Type UnsafeGet(StateRef vm, bool arg, int idx)
+    { return Type{&UserdataTraits<T>::UnsafeGet(vm, arg, idx)}; }
+    static bool Is(StateRef vm, int idx) { return UserdataTraits<T>::Is(vm, idx); }
+
+    static void Push(StateRef vm, const Type& obj)
+    { static_cast<DynamicObject&>(*obj).PushLua(vm, *obj); }
+};
 
 template <typename T>
 struct TypeTraits<

@@ -82,23 +82,34 @@ protected:
 private:
     virtual void Write_(StringView data) = 0;
     virtual void Pad_(FileMemSize len) = 0;
-};
+} NEPTOOLS_LUAGEN(post_register=[[
+    // hack to get close call __gc
+    lua_getfield(vm, -2, "__gc");
+    bld.SetField("close");
+]]);
 
-class MemorySink : public Sink
+class MemorySink final : public Sink
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
     static constexpr const char* TYPE_NAME = "neptools.memory_sink";
 
+    NEPTOOLS_NOLUA
     MemorySink(Byte* buffer, FileMemSize size) : Sink{size}
     { this->buf = buffer; this->buf_size = size; }
+
+    NEPTOOLS_NOLUA
+    MemorySink(std::unique_ptr<Byte[]> buffer, FileMemSize size)
+        : Sink{size}, uniq_buf{std::move(buffer)}
+    { this->buf = uniq_buf.get(); this->buf_size = size; }
 
     MemorySink(FileMemSize size) : Sink{size}, uniq_buf{new Byte[size]}
     { buf = uniq_buf.get(); buf_size = size; }
 
-    // to_string in lua
+    NEPTOOLS_LUAGEN(name="to_string")
     StringView GetStringView() const noexcept { return {buf, buf_size}; }
 
+    NEPTOOLS_NOLUA
     std::unique_ptr<Byte[]> Release() noexcept { return std::move(uniq_buf); }
 
 private:

@@ -15,6 +15,13 @@ template <typename T> class NotNull;
 namespace Lua
 {
 
+template <typename T, typename... Args>
+static RetNum ValueObjectCtorWrapper(StateRef vm, Args&&... args)
+{
+    TypeTraits<T>::Push(vm, std::forward<Args>(args)...);
+    return {1};
+}
+
 class TypeBuilder
 {
 public:
@@ -23,25 +30,11 @@ public:
 
     TypeBuilder& Name(const char* name);
 
-    template <typename Deriv, typename Base0, typename... Base>
+    template <typename Deriv, typename... Base>
     TypeBuilder& Inherit()
     {
-        InheritHelp<Deriv, Base0, Base...>::Do(*this);
+        InheritHelp<Deriv, Base...>::Do(*this);
         return *this;
-    }
-
-    template <typename Class, typename... Args>
-    TypeBuilder& ValueCtor()
-    {
-        return Add<decltype(&CtorFun<Class, Args...>),
-                   &CtorFun<Class, Args...>>("new");
-    }
-
-    template <typename Class, typename... Args>
-    TypeBuilder& SharedCtor()
-    {
-        return Add<decltype(&MakeShared<Class, Args...>),
-                   &MakeShared<Class, Args...>>("new");
     }
 
     template <typename T>
@@ -82,13 +75,6 @@ public:
 private:
     template <typename Deriv, typename... Base>
     struct InheritHelp;
-
-    template <typename T, typename... Args>
-    static RetNum CtorFun(StateRef vm, Args&&... args)
-    {
-        TypeTraits<T>::Push(vm, std::forward<Args>(args)...);
-        return {1};
-    }
 
     template <typename T>
     static void DtorFun(StateRef vm, T& t)
