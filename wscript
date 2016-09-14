@@ -10,7 +10,7 @@ try:
         stderr = subprocess.PIPE,
         universal_newlines = True).strip('\n').lstrip('v')
 except:
-    VERSION = '0.3.6'
+    VERSION = '0.3.7'
 
 def fixup_msvc():
     from waflib.TaskGen import after_method, feature
