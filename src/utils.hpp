@@ -29,9 +29,11 @@ T asserted_cast(U* ptr)
 template <typename T, typename U>
 T asserted_cast(U& ref)
 {
+#ifndef NDEBUG // gcc shut up about unused typedef
     using raw_t = std::remove_reference_t<T>;
     NEPTOOLS_ASSERT_MSG(
         dynamic_cast<raw_t*>(&ref) == static_cast<raw_t*>(&ref), "U is not T");
+#endif
     return static_cast<T>(ref);
 }
 

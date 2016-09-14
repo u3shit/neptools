@@ -185,7 +185,8 @@ struct MakeSharedHelper<T, std::enable_if_t<!std::is_base_of<RefCounted, T>::val
     }
 
     template <typename... Args>
-    static constexpr auto MakeSmart = &MakeShared<Args...>;
+    static auto MakeSmart(Args&&... args)
+    { return MakeShared(std::forward<Args>(args)...); }
 };
 
 template <typename T, typename... Args>

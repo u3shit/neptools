@@ -174,20 +174,20 @@ bool CpkHandler::OpenTxtFile(
         char hdr_buf[4];
         src.Pread(0, hdr_buf, 4);
 
-        std::unique_ptr<Dumpable> dmp;
-        Gbnl* gbnl;
+        SmartPtr<Dumpable> dmp;
+        TxtSerializable* txt;
         if (memcmp(hdr_buf, "CL3L", 4) == 0)
         {
-            dmp = std::make_unique<Cl3>(src);
-            gbnl = &static_cast<Cl3*>(dmp.get())->GetStcm().FindGbnl();
+            dmp = MakeSmart<Cl3>(src);
+            txt = &static_cast<Cl3*>(dmp.get())->GetStcm();
         }
         else
         {
-            dmp = std::make_unique<Gbnl>(src);
-            gbnl = static_cast<Gbnl*>(dmp.get());
+            dmp = MakeSmart<Gbnl>(src);
+            txt = static_cast<Gbnl*>(dmp.get());
         }
 
-        gbnl->ReadTxt(OpenIn(pthtxt));
+        txt->ReadTxt(OpenIn(pthtxt));
         dmp->Fixup();
         size = dmp->GetSize();
         buf.reset(new Byte[size]);
@@ -286,7 +286,7 @@ Source CpkHandler::GetSource(const char* fname)
                            CpkErrorCode{last_error});
     try
     {
-        return Source(std::make_shared<CpkSource>(fname, this, index),
+        return Source(MakeSmart<CpkSource>(fname, this, index),
                       entry_vect[index]->entry.uncompressed_size);
     }
     catch (...)

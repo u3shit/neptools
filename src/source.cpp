@@ -38,7 +38,10 @@ struct MmapProvider final : public UnixLike<MmapProvider>
 
 struct UnixProvider final : public UnixLike<UnixProvider>
 {
-    using UnixLike::UnixLike;
+    //using UnixLike::UnixLike;
+    // workaround clang bug...
+    UnixProvider(LowIo&& io, boost::filesystem::path file_name, FilePosition size)
+        : UnixLike{std::move(io), file_name, size} {}
 
     static FileMemSize CHUNK_SIZE;
     void* ReadChunk(FilePosition offs, FileMemSize size);
