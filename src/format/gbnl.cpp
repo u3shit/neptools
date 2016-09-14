@@ -540,7 +540,7 @@ void Gbnl::WriteTxt_(std::ostream& os) const
         ++j;
     }
     os.write(SEP_DASH, sizeof(SEP_DASH));
-    os << "EOF";
+    os << "EOF\r\n";
 }
 
 size_t Gbnl::FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,

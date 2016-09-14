@@ -22,38 +22,61 @@ void File::Parse_(Source& src)
     HeaderItem::CreateAndInsert({root.get(), 0});
 }
 
-GbnlItem& File::FindGbnl()
+std::vector<NotNull<SmartPtr<const GbnlItem>>> File::FindGbnl() const
 {
-    auto gbnl = FindGbnl_(*this);
-    if (!gbnl) NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
-    return *const_cast<GbnlItem*>(gbnl);
+    std::vector<NotNull<SmartPtr<const GbnlItem>>> ret;
+    FindGbnl_<const Item, const GbnlItem>(*this, ret);
+    return ret;
 }
 
-const GbnlItem& File::FindGbnl() const
+std::vector<NotNull<SmartPtr<GbnlItem>>> File::FindGbnl()
 {
-    auto gbnl = FindGbnl_(*this);
-    if (!gbnl) NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
-    return *gbnl;
+    std::vector<NotNull<SmartPtr<GbnlItem>>> ret;
+    FindGbnl_<Item, GbnlItem>(*this, ret);
+    return ret;
 }
 
-const GbnlItem* File::FindGbnl_(const Item& root) const
+namespace
 {
-    auto x = dynamic_cast<const Stcm::GbnlItem*>(&root);
-    if (x) return x;
+// automatically determine if we need dynamic_cast to ptr* or const ptr*
+template <typename T, typename Ref> struct MkPtr;
+template <typename T, typename Ref>
+struct MkPtr<T*, Ref> { using type = T*; };
+template <typename T, typename Ref>
+struct MkPtr<T*, const Ref> { using type = const T*; };
 
-    auto ch = dynamic_cast<const ItemWithChildren*>(&root);
+template <typename T, typename Ref>
+using MkPtrT = typename MkPtr<T, Ref>::type;
+}
+
+template <typename ItemT, typename GbnlT>
+void File::FindGbnl_(
+    ItemT& root, std::vector<NotNull<SmartPtr<GbnlT>>>& vect) const
+{
+    auto x = dynamic_cast<MkPtrT<Stcm::GbnlItem*, ItemT>>(&root);
+    if (x)
+    {
+        vect.emplace_back(x);
+        return;
+    }
+
+    auto ch = dynamic_cast<MkPtrT<ItemWithChildren*, ItemT>>(&root);
     if (ch)
         for (auto& c : ch->GetChildren())
-            if (x = FindGbnl_(c))
-                return x;
-    return nullptr;
+            FindGbnl_<ItemT, GbnlT>(c, vect);
 }
 
 void File::WriteTxt_(std::ostream& os) const
-{ FindGbnl().WriteTxt(os); }
+{
+    for (auto& x : FindGbnl())
+        x->WriteTxt(os);
+}
 
 void File::ReadTxt_(std::istream& is)
-{ FindGbnl().ReadTxt(is); }
+{
+    for (auto& x : FindGbnl())
+        x->ReadTxt(is);
+}
 
 
 }

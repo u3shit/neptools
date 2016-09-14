@@ -29,7 +29,6 @@ struct State
     SmartPtr<Dumpable> dump;
     Cl3* cl3;
     Stcm::File* stcm;
-    Gbnl* gbnl;
     TxtSerializable* txt;
 };
 
@@ -43,17 +42,17 @@ State SmartOpen_(const boost::filesystem::path& fname)
     if (memcmp(buf, "CL3L", 4) == 0)
     {
         auto cl3 = MakeSmart<Cl3>(src);
-        return {cl3, cl3.get(), nullptr, nullptr, nullptr};
+        return {cl3, cl3.get(), nullptr, nullptr};
     }
     else if (memcmp(buf, "STCM", 4) == 0)
     {
         auto stcm = MakeSmart<Stcm::File>(src);
-        return {stcm, nullptr, stcm.get(), nullptr, nullptr};
+        return {stcm, nullptr, stcm.get(), nullptr};
     }
     else if (memcmp(buf, "STSC", 4) == 0)
     {
         auto stsc = MakeSmart<Stsc::File>(src);
-        return {stsc, nullptr, nullptr, nullptr, stsc.get()};
+        return {stsc, nullptr, nullptr, stsc.get()};
     }
     else if (src.GetSize() >= sizeof(Gbnl::Header) &&
              (memcmp(buf, "GSTL", 4) == 0 ||
@@ -61,7 +60,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
                memcmp(buf, "GBNL", 4) == 0)))
     {
         auto gbnl = MakeSmart<Gbnl>(src);
-        return {gbnl, nullptr, nullptr, gbnl.get(), gbnl.get()};
+        return {gbnl, nullptr, nullptr, gbnl.get()};
     }
     else
         NEPTOOLS_THROW(DecodeError{"Unknown input file"});
@@ -109,18 +108,13 @@ void EnsureStcm(State& st)
     st.stcm = &st.cl3->GetStcm();
 }
 
-void EnsureGbnl(State& st)
-{
-    if (st.gbnl) return;
-    EnsureStcm(st);
-    st.txt = st.gbnl = &st.stcm->FindGbnl();
-}
-
 void EnsureTxt(State& st)
 {
     if (st.txt) return;
-    EnsureGbnl(st);
-    NEPTOOLS_ASSERT(st.txt);
+    EnsureStcm(st);
+    if (st.stcm->FindGbnl().empty())
+        NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
+    st.txt = st.stcm;
 }
 
 bool auto_failed = false;
@@ -353,7 +347,7 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             SmartPtr<Cl3> c = MakeSmart<Cl3>();
-            st = {c, c.get(), nullptr, nullptr, nullptr};
+            st = {c, c.get(), nullptr, nullptr};
         }};
     Option list_files_opt{
         lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive\n",
