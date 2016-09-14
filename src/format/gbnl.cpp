@@ -1,10 +1,11 @@
 #include "gbnl.hpp"
 #include "../sink.hpp"
 #include "../except.hpp"
-#include <map>
-#include <boost/preprocessor/repetition/repeat.hpp>
 
+#include <map>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/preprocessor/repetition/repeat.hpp>
 
 //#define STRTOOL_COMPAT
 
@@ -473,11 +474,23 @@ FilePosition Gbnl::Align(FilePosition x) const noexcept
     return is_gstl ? x : ((x+15) & ~15);
 }
 
-const char SEP_DASH[] = {
+static const char SEP_DASH_DATA[] = {
 #define REP_MACRO(x,y,z) char(0x81), char(0x5c),
     BOOST_PP_REPEAT(40, REP_MACRO, )
+#undef REP_MACRO
     ' '
 };
+static const StringView SEP_DASH{SEP_DASH_DATA, sizeof(SEP_DASH_DATA)};
+
+static const char SEP_DASH_UTF8_DATA[] = {
+#define REP_MACRO(x,y,z) char(0xe2), char(0x80), char(0x95),
+    BOOST_PP_REPEAT(40, REP_MACRO, )
+#undef REP_MACRO
+    ' '
+};
+static const StringView SEP_DASH_UTF8{
+    SEP_DASH_UTF8_DATA, sizeof(SEP_DASH_UTF8_DATA)};
+
 
 uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
 {
@@ -511,6 +524,7 @@ uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
 
 void Gbnl::WriteTxt_(std::ostream& os) const
 {
+    auto sep = field_30 == 8 ? SEP_DASH_UTF8 : SEP_DASH;
     size_t j = 0;
     for (const auto& m : messages)
     {
@@ -532,14 +546,14 @@ void Gbnl::WriteTxt_(std::ostream& os) const
                 if (!str.empty())
 #endif
                 {
-                    os.write(SEP_DASH, sizeof(SEP_DASH));
+                    os.write(sep.data(), sep.size());
                     os << id << "\r\n" << str << "\r\n";
                 }
             }
         }
         ++j;
     }
-    os.write(SEP_DASH, sizeof(SEP_DASH));
+    os.write(sep.data(), sep.size());
     os << "EOF\r\n";
 }
 
@@ -574,7 +588,9 @@ void Gbnl::ReadTxt_(std::istream& is)
     {
         std::getline(is, line);
 
-        if (line.compare(0, sizeof(SEP_DASH), SEP_DASH, sizeof(SEP_DASH)) == 0)
+        size_t offs;
+        if ((boost::algorithm::starts_with(line, SEP_DASH) && (offs = SEP_DASH.size())) ||
+            (boost::algorithm::starts_with(line, SEP_DASH_UTF8) && (offs = SEP_DASH_UTF8.size())))
         {
             if (pos != static_cast<size_t>(-1))
             {
@@ -589,12 +605,12 @@ void Gbnl::ReadTxt_(std::istream& is)
                 msg.clear();
             }
 
-            if (line.compare(sizeof(SEP_DASH), 3, "EOF") == 0)
+            if (line.compare(offs, 3, "EOF") == 0)
             {
                 RecalcSize();
                 return;
             }
-            uint32_t id = std::strtoul(line.data() + sizeof(SEP_DASH), nullptr, 10);
+            uint32_t id = std::strtoul(line.data() + offs, nullptr, 10);
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {
