@@ -8,7 +8,7 @@ local inst
 local check_lua_class
 
 local function lua_class(c, tbl)
-  if not tbl then return end
+  if tbl.hidden then return false end
 
   utils.default_arg(tbl, "name", utils.default_name_class, c:type())
   tbl.type = c:type()
@@ -28,11 +28,14 @@ local function is_lua_class(type)
   type:declaration():children(check_lua_class)
   inst.is_lua[#inst.is_lua] = nil
 
+  if tbl.ret == nil then tbl.ret = false end
   if tbl.ret == true then
     tbl.ret = lua_class(type:declaration(), {})
   end
-  if tbl.value_object then tbl.ret.value_object = true end
-  if tbl.smart_object then tbl.ret.smart_object = true end
+  if tbl.ret then
+    if tbl.value_object then tbl.ret.value_object = true end
+    if tbl.smart_object then tbl.ret.smart_object = true end
+  end
   inst.lua_classes[name] = tbl.ret
 
   return tbl.ret
@@ -44,14 +47,14 @@ check_lua_class = cl.regCursorVisitor(function (c, par)
     local lc = is_lua_class(c:type())
     if lc then
       local tbl = inst.is_lua[#inst.is_lua]
-      if not tbl.ret then tbl.ret = true end
+      if tbl.ret == nil then tbl.ret = true end
       if lc.value_object then tbl.value_object = true end
       if lc.smart_object then tbl.smart_object = true end
     end
   elseif kind == "AnnotateAttr" then
-    local x = lua_class(par, utils.is_lua_annotation(c))
-    if x then
-      inst.is_lua[#inst.is_lua].ret = x
+    local at = utils.is_lua_annotation(c)
+    if at then
+      inst.is_lua[#inst.is_lua].ret = lua_class(par, at)
     end
   end
   return vr.Continue
@@ -245,7 +248,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if kind == "Namespace" then return vr.Recurse end
 
-  if kind == "ClassDecl" and c:isDefinition() then -- ignore fwd decls
+  if (kind == "ClassDecl" or kind == "StructDecl") and c:isDefinition() then -- ignore fwd decls
     local x = is_lua_class(c:type())
     --print(c:type(), x, x.name)
     if x then

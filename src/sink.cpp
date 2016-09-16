@@ -14,7 +14,7 @@ namespace Neptools
 namespace
 {
 
-struct MmapSink : public Sink
+struct NEPTOOLS_NOLUA MmapSink : public Sink
 {
     MmapSink(LowIo&& io, FilePosition size);
     ~MmapSink();
@@ -26,7 +26,7 @@ struct MmapSink : public Sink
     LowIo io;
 };
 
-struct SimpleSink : public Sink
+struct NEPTOOLS_NOLUA SimpleSink : public Sink
 {
     SimpleSink(LowIo io, FilePosition size) : Sink{size}, io{std::move(io)}
     {
