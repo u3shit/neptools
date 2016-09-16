@@ -35,3 +35,6 @@ static TypeRegister::StateRegister<Neptools::Dumpable> reg_neptools_dumpable;
 
 }
 }
+
+const char Neptools::Dumpable::TYPE_NAME[] = "neptools.dumpable";
+

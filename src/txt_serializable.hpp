@@ -10,9 +10,8 @@ namespace Neptools
 
 class TxtSerializable : public Lua::DynamicObject
 {
+    NEPTOOLS_LUA_CLASS;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.txt_serializable";
-
     NEPTOOLS_NOLUA void WriteTxt(std::ostream& os) const { WriteTxt_(os); }
     NEPTOOLS_NOLUA void WriteTxt(std::ostream&& os) const { WriteTxt_(os); }
     NEPTOOLS_NOLUA void ReadTxt(std::istream& is) { ReadTxt_(is); }

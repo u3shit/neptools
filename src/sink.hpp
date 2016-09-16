@@ -21,8 +21,6 @@ class Sink : public RefCounted, public Lua::DynamicObject
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.sink";
-
     static NotNull<RefCountedPtr<Sink>> ToFile(
         boost::filesystem::path fname, FilePosition size, bool try_mmap = true);
     static NotNull<RefCountedPtr<Sink>> ToStdOut();
@@ -92,7 +90,6 @@ class MemorySink final : public Sink
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.memory_sink";
 
     NEPTOOLS_NOLUA
     MemorySink(Byte* buffer, FileMemSize size) : Sink{size}

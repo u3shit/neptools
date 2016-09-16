@@ -12,9 +12,8 @@ class Sink;
 
 class Dumpable : public Lua::DynamicObject
 {
+    NEPTOOLS_LUA_CLASS;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.dumpable";
-
     Dumpable() = default;
     Dumpable(const Dumpable&) = delete;
     void operator=(const Dumpable&) = delete;

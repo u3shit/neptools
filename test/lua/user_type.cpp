@@ -12,65 +12,40 @@ static int global;
 
 struct Foo final : public DynamicObject
 {
-    static constexpr const char* TYPE_NAME = "foo";
     int local = 0;
     void DoIt(int x) { local = x; }
 
+    Foo() = default; // no ctor generated otherwise.. (bug?)
     ~Foo() { global += 13; }
 
     NEPTOOLS_DYNAMIC_OBJECT;
 };
 
-struct Bar final : public DynamicObject
+namespace Bar
 {
-    static constexpr const char* TYPE_NAME = "bar.baz.asdfgh";
+namespace Baz
+{
+struct Asdfgh final : public DynamicObject
+{
+    Asdfgh() = default;
     NEPTOOLS_DYNAMIC_OBJECT;
 };
+}
+}
 
 struct Baz : public DynamicObject
 {
-    static constexpr const char* TYPE_NAME = "baz";
-
+    Baz() = default;
     void SetGlobal(int val) { global = val; }
     int GetRandom() { return 4; }
 
     NEPTOOLS_DYNAMIC_OBJECT;
 };
 
-namespace Neptools { namespace Lua {
-template<>
-void TypeRegister::DoRegister<Foo>(StateRef, TypeBuilder& bld)
-{
-    bld.Inherit<Foo, DynamicObject>()
-        .Add<FT(MakeSmart<Foo>)>("new")
-        .Add<FT(Foo::DoIt)>("do_it")
-        ;
-}
-
-template<>
-void TypeRegister::DoRegister<Bar>(StateRef, TypeBuilder& bld)
-{
-    bld.Inherit<Bar, DynamicObject>()
-        .Add<FT(MakeSmart<Bar>)>("new");
-}
-
-template<>
-void TypeRegister::DoRegister<Baz>(StateRef, TypeBuilder& bld)
-{
-    bld.Inherit<Baz, DynamicObject>()
-        .Add<FT(MakeSmart<Baz>)>("new")
-        .Add<FT(Baz::SetGlobal)>("set_global")
-        .Add<FT(Baz::GetRandom)>("get_random")
-        ;
-}
-
-}}
-
 TEST_CASE("shared check memory", "[lua]")
 {
     {
         State vm;
-        TypeRegister::Register<Foo>(vm);
 
         global = 0;
         const char* str = nullptr;
@@ -89,7 +64,6 @@ TEST_CASE("resurrect shared object", "[lua]")
 {
     {
         State vm;
-        TypeRegister::Register<Foo>(vm);
 
         global = 0;
         auto ptr = MakeShared<Foo>();
@@ -113,7 +87,6 @@ TEST_CASE("resurrect shared object", "[lua]")
 TEST_CASE("member function without helpers", "[lua]")
 {
     State vm;
-    TypeRegister::Register<Foo>(vm);
 
     REQUIRE(luaL_loadstring(vm, "local x = foo() x:do_it(77) return x") == 0);
     lua_call(vm, 0, 1);
@@ -123,7 +96,6 @@ TEST_CASE("member function without helpers", "[lua]")
 TEST_CASE("member function with helpers", "[lua]")
 {
     State vm;
-    TypeRegister::Register<Baz>(vm);
 
     const char* str = nullptr;
     int val;
@@ -140,8 +112,9 @@ TEST_CASE("member function with helpers", "[lua]")
 TEST_CASE("dotted type name", "[lua]")
 {
     State vm;
-    TypeRegister::Register<Bar>(vm);
 
     if (luaL_dostring(vm, "local x = bar.baz.asdfgh()"))
         FAIL(lua_tostring(vm, -1));
 }
+
+#include "user_type.binding.hpp"

@@ -52,6 +52,16 @@ void TypeRegister::DoRegister<Neptools::Sink>(StateRef vm, TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<Neptools::Sink> reg_neptools_sink;
 
+}
+}
+
+const char Neptools::Sink::TYPE_NAME[] = "neptools.sink";
+
+namespace Neptools
+{
+namespace Lua
+{
+
 // class neptools.memory_sink
 template<>
 void TypeRegister::DoRegister<Neptools::MemorySink>(StateRef vm, TypeBuilder& bld)
@@ -74,3 +84,6 @@ static TypeRegister::StateRegister<Neptools::MemorySink> reg_neptools_memory_sin
 
 }
 }
+
+const char Neptools::MemorySink::TYPE_NAME[] = "neptools.memory_sink";
+

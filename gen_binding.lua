@@ -17,6 +17,7 @@ local vr = cl.ChildVisitResult
 local args = {
   "-DNEPTOOLS_BINDING_GENERATOR",
   "-Iext/ljx/src",
+  "-Iext/catch/include",
   "-Isrc",
   "-std=c++14",
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies

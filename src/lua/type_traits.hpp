@@ -37,6 +37,10 @@ template<> struct TypeName<std::string>
 template <typename T>
 constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
 
+#define NEPTOOLS_LUA_CLASS         \
+    public:                        \
+    static const char TYPE_NAME[]
+
 // type tag
 template <typename T> char TYPE_TAG = {};
 

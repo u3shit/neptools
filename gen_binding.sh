@@ -7,7 +7,9 @@ cd "$(dirname ${BASH_SOURCE[0]})"
 export LUA_PATH=";;ext/ljclang/?.lua"
 export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
 
-src=(lua/dynamic_object dumpable sink source txt_serializable)
+src=(src/lua/dynamic_object src/dumpable src/sink src/source
+     src/txt_serializable
+     test/lua/user_type)
 
 req=()
 while (( "$#" )); do
@@ -20,5 +22,5 @@ shift
 
 for i in "${src[@]}"; do
     echo "$i.cpp" >&2
-    ${LUAJIT:-luajit} gen_binding.lua src/$i.cpp src/$i.binding.hpp "$@"
+    ${LUAJIT:-luajit} gen_binding.lua $i.cpp $i.binding.hpp "$@"
 done

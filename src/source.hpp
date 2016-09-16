@@ -28,9 +28,8 @@ std::string to_string(const UsedSource& src);
 /// A fixed size, read-only, seekable data source (or something that emulates it)
 class Source : public Lua::ValueObject
 {
+    NEPTOOLS_LUA_CLASS;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.source";
-
     struct BufEntry
     {
         Byte* ptr = nullptr;
@@ -224,8 +223,6 @@ class DumpableSource final : public Dumpable, public Source
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.dumpable_source";
-
     DumpableSource(const Source& s) : Source{s} {}
     NEPTOOLS_NOLUA
     DumpableSource(Source&& s) : Source{std::move(s)} {}

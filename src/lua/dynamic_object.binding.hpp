@@ -23,3 +23,6 @@ static TypeRegister::StateRegister<Neptools::Lua::DynamicObject> reg_neptools_lu
 
 }
 }
+
+const char Neptools::Lua::DynamicObject::TYPE_NAME[] = "neptools.lua.dynamic_object";
+

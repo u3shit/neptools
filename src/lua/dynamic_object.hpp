@@ -14,9 +14,8 @@ namespace Lua
 
 class NEPTOOLS_LUAGEN(smart_object=true) DynamicObject
 {
+    NEPTOOLS_LUA_CLASS;
 public:
-    static constexpr const char* TYPE_NAME = "neptools.object";
-
     DynamicObject() = default;
     DynamicObject(const DynamicObject&) = delete;
     void operator=(const DynamicObject&) = delete;
@@ -53,6 +52,7 @@ void PushLuaObjImpl(T* thiz, StateRef vm, RefCounted& ctrl)
 }
 
 #define NEPTOOLS_DYNAMIC_OBJ_GEN(...)                                           \
+    NEPTOOLS_LUA_CLASS;                                                         \
     private:                                                                    \
     void PushLuaObj(::Neptools::Lua::StateRef vm, ::Neptools::RefCounted& ctrl) override \
     { ::Neptools::Lua::PushLuaObjImpl<__VA_ARGS__>(this, vm, ctrl); }

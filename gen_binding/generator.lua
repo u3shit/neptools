@@ -17,12 +17,12 @@ local template_str = [=[
 // Auto generated code, do not edit. See gen_binding in project root.
 #include "lua/user_type.hpp"
 
+//$ for i,cls in ipairs(classes) do
 namespace Neptools
 {
 namespace Lua
 {
 
-//$ for i,cls in ipairs(classes) do
 // class /*$= cls.name */
 template<>
 void TypeRegister::DoRegister</*$= cls.cpp_name */>(StateRef vm, TypeBuilder& bld)
@@ -57,9 +57,12 @@ void TypeRegister::DoRegister</*$= cls.cpp_name */>(StateRef vm, TypeBuilder& bl
 }
 static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= cls.name:gsub("%.", "_") */;
 
+}
+}
+
+const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
+
 //$ end
-}
-}
 ]=]
 
 local function generate(out, classes)

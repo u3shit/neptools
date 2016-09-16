@@ -94,6 +94,16 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<Neptools::Source> reg_neptools_source;
 
+}
+}
+
+const char Neptools::Source::TYPE_NAME[] = "neptools.source";
+
+namespace Neptools
+{
+namespace Lua
+{
+
 // class neptools.dumpable_source
 template<>
 void TypeRegister::DoRegister<Neptools::DumpableSource>(StateRef vm, TypeBuilder& bld)
@@ -112,3 +122,6 @@ static TypeRegister::StateRegister<Neptools::DumpableSource> reg_neptools_dumpab
 
 }
 }
+
+const char Neptools::DumpableSource::TYPE_NAME[] = "neptools.dumpable_source";
+

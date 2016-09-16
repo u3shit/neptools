@@ -27,3 +27,6 @@ static TypeRegister::StateRegister<Neptools::TxtSerializable> reg_neptools_txt_s
 
 }
 }
+
+const char Neptools::TxtSerializable::TYPE_NAME[] = "neptools.txt_serializable";
+
