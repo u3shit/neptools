@@ -28,5 +28,12 @@ private:
 };
 
 }
+
+namespace Lua
+{
+inline DynamicObject& GetDynamicObject(Stcm::GbnlItem& item)
+{ return static_cast<Item&>(item); }
+}
+
 }
 #endif

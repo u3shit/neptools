@@ -32,5 +32,12 @@ private:
 };
 
 }
+
+namespace Lua
+{
+inline DynamicObject& GetDynamicObject(Stcm::File& file)
+{ return static_cast<Context&>(file); }
+}
+
 }
 #endif

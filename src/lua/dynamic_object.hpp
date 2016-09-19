@@ -71,6 +71,8 @@ struct TypeTraits<T, std::enable_if_t<
                          !std::is_base_of<RefCounted, T>::value>>
     : UserdataTraits<T> {};
 
+inline DynamicObject& GetDynamicObject(DynamicObject& obj) { return obj; }
+
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<
                          std::is_base_of<DynamicObject, T>::value &&
@@ -78,7 +80,7 @@ struct TypeTraits<T, std::enable_if_t<
     : UserdataTraits<T>
 {
     static void Push(StateRef vm, T& obj)
-    { static_cast<DynamicObject&>(obj).PushLua(vm, &obj); }
+    { GetDynamicObject(obj).PushLua(vm, obj); }
 };
 
 template <typename T>
@@ -94,7 +96,7 @@ struct TypeTraits<NotNull<RefCountedPtr<T>>,
     static bool Is(StateRef vm, int idx) { return UserdataTraits<T>::Is(vm, idx); }
 
     static void Push(StateRef vm, const Type& obj)
-    { static_cast<DynamicObject&>(*obj).PushLua(vm, *obj); }
+    { GetDynamicObject(*obj).PushLua(vm, *obj); }
 };
 
 template <typename T>
@@ -105,7 +107,7 @@ struct TypeTraits<
         !std::is_base_of<RefCounted, T>::value>>
 {
     static void Push(StateRef vm, const NotNull<SharedPtr<T>>& ptr)
-    { static_cast<DynamicObject&>(*ptr).PushLua(vm, *ptr.Get().GetCtrl()); }
+    { GetDynamicObject(*ptr).PushLua(vm, *ptr.Get().GetCtrl()); }
 };
 
 }
