@@ -74,11 +74,11 @@ public:
     using TypePtr = boost::intrusive_ptr<const Type>;
 
     friend void intrusive_ptr_add_ref(const Type* t)
-    { ++t->refcount; }
+    { t->refcount.fetch_add(1, std::memory_order_relaxed); }
 
     friend void intrusive_ptr_release(const Type* t)
     {
-        if (--t->refcount == 0) // op-- == fetch_sub(1)-1
+        if (t->refcount.fetch_sub(1, std::memory_order_acq_rel) == 1)
             ::operator delete(const_cast<Type*>(t));
     }
 
@@ -103,7 +103,7 @@ public:
             auto ptr = operator new(
                 sizeof(Type) + (desc.size() - 1) * sizeof(typename Type::Item));
             boost::intrusive_ptr<Type> ret{static_cast<Type*>(ptr), false};
-            ret->refcount = 1;
+            ret->refcount.store(1, std::memory_order_relaxed);
             ret->item_count = desc.size();
 
             size_t offs = 0;
