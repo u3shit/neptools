@@ -28,7 +28,10 @@ public:
 
     template <typename T, typename... Args>
     T& SplitCreate(FilePosition pos, Args&&... args)
-    { return Split(pos, GetContext().Create<T>(std::forward<Args>(args)...)); }
+    {
+        return Split(
+            pos, GetUnsafeContext().Create<T>(std::forward<Args>(args)...));
+    }
 
     RawItem& Split(FilePosition offset, FilePosition size);
 

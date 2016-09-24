@@ -25,7 +25,7 @@ void HeaderItem::Header::Validate(FilePosition file_size) const
 HeaderItem::HeaderItem(Key k, Context* ctx, const Header& hdr)
     : Item{k, ctx}
 {
-    hdr.Validate(GetContext().GetSize());
+    hdr.Validate(GetUnsafeContext().GetSize());
 
     msg = hdr.msg;
     export_sec = &ctx->CreateLabelFallback("exports", hdr.export_offset);

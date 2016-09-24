@@ -23,22 +23,34 @@ class Item : public RefCounted, public Dumpable,
 protected:
     struct Key {};
 public:
+    // do not change Context* to Weak/Shared ptr
+    // otherwise Context's constructor will try to construct a WeakPtr before
+    // RefCounted's constructor is finished, making an off-by-one error and
+    // freeing the context twice
     explicit Item(Key, Context* ctx, FilePosition position = 0) noexcept
-        : position{position}, ctx{ctx} {}
+        : position{position}, context{ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
     virtual ~Item();
 
-    Context& GetContext() noexcept { return *ctx; }
-    ItemWithChildren& GetParent() noexcept { return *parent; }
+    RefCountedPtr<Context> GetContext() noexcept
+    { return context.lock(); }
+    Context& GetUnsafeContext() noexcept { return *context.unsafe_get(); }
+    RefCountedPtr<ItemWithChildren> GetParent() noexcept
+    { return parent.lock(); }
 
-    const Context& GetContext() const noexcept { return *ctx; }
-    const ItemWithChildren& GetParent() const noexcept { return *parent; }
+    RefCountedPtr<const Context> GetContext() const noexcept
+    { return context.lock(); }
+    const Context& GetUnsafeContext() const noexcept
+    { return *context.unsafe_get(); }
+    RefCountedPtr<const ItemWithChildren> GetParent() const noexcept
+    { return parent.lock(); }
     auto Iterator() const noexcept;
     auto Iterator() noexcept;
 
     FilePosition GetPosition() const noexcept { return position; }
 
+    // requires: has valid parent
     void Replace(NotNull<RefCountedPtr<Item>> nitem) noexcept;
 
     // properties needed: none (might help if ordered)
@@ -49,6 +61,8 @@ public:
         boost::intrusive::constant_time_size<false>,
         boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
     const LabelsContainer& GetLabels() const { return labels; }
+
+    void Dispose() noexcept override;
 
 protected:
     void UpdatePosition(FilePosition npos);
@@ -62,8 +76,8 @@ protected:
     FilePosition position;
 
 private:
-    Context* ctx;
-    ItemWithChildren* parent = nullptr;
+    WeakRefCountedPtr<Context> context;
+    WeakRefCountedPtr<ItemWithChildren> parent;
 
     LabelsContainer labels;
 
@@ -217,6 +231,8 @@ public:
     void Fixup() override { Fixup_(0); }
 
     void MoveNextToChild(size_t size) noexcept;
+
+    void Dispose() noexcept override;
 
 protected:
     void Dump_(Sink& sink) const override;

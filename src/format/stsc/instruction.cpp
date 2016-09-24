@@ -39,7 +39,7 @@ InstructionBase& InstructionBase::CreateAndInsert(ItemPointer ptr)
     x.src.CheckSize(1);
     uint8_t opcode = x.src.ReadLittleUint8();
     auto& ret = x.ritem.Split(
-        ptr.offset, CreateMap::MAP[opcode](x.ritem.GetContext(), x.src));
+        ptr.offset, CreateMap::MAP[opcode](x.ritem.GetUnsafeContext(), x.src));
 
     ret.PostInsert();
     return ret;
@@ -260,8 +260,8 @@ void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
 
     Tuple raw = src.ReadGen<Tuple>();
 
-    Operations<Args...>::Validate(raw, GetContext().GetSize());
-    Operations<Args...>::Parse(args, raw, GetContext());
+    Operations<Args...>::Validate(raw, GetUnsafeContext().GetSize());
+    Operations<Args...>::Parse(args, raw, GetUnsafeContext());
 }
 
 template <bool NoReturn, typename... Args>
@@ -311,8 +311,8 @@ void Instruction0dItem::Parse_(Source& src)
     {
         uint32_t t = src.ReadLittleUint32();
         NEPTOOLS_VALIDATE_FIELD(
-            "Stsc::Instruction0dItem", t < GetContext().GetSize());
-        tgts.push_back(&GetContext().GetLabelTo(t));
+            "Stsc::Instruction0dItem", t < GetUnsafeContext().GetSize());
+        tgts.push_back(&GetUnsafeContext().GetLabelTo(t));
     }
 }
 
@@ -369,12 +369,18 @@ Instruction1dItem::Instruction1dItem(
     AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, src);
 }
 
+void Instruction1dItem::Dispose() noexcept
+{
+    tree.clear();
+    InstructionBase::Dispose();
+}
+
 void Instruction1dItem::Parse_(Source& src)
 {
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
-    fp.Validate(src.GetRemainingSize(), GetContext().GetSize());
-    tgt = &GetContext().GetLabelTo(fp.tgt);
+    fp.Validate(src.GetRemainingSize(), GetUnsafeContext().GetSize());
+    tgt = &GetUnsafeContext().GetLabelTo(fp.tgt);
 
     uint16_t n = fp.size;
     src.CheckRemainingSize(n * sizeof(NodeParams));
@@ -445,6 +451,12 @@ Instruction1eItem::Instruction1eItem(
     AddInfo(&Instruction1eItem::Parse_, ADD_SOURCE(src), this, src);
 }
 
+void Instruction1eItem::Dispose() noexcept
+{
+    expressions.clear();
+    InstructionBase::Dispose();
+}
+
 void Instruction1eItem::Parse_(Source& src)
 {
     src.CheckRemainingSize(sizeof(FixParams));
@@ -459,9 +471,9 @@ void Instruction1eItem::Parse_(Source& src)
     for (uint16_t i = 0; i < size; ++i)
     {
         auto exp = src.ReadGen<ExpressionParams>();
-        exp.Validate(GetContext().GetSize());
+        exp.Validate(GetUnsafeContext().GetSize());
         expressions.push_back({
-                exp.expression, &GetContext().GetLabelTo(exp.tgt)});
+                exp.expression, &GetUnsafeContext().GetLabelTo(exp.tgt)});
     }
 }
 

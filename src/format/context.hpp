@@ -38,6 +38,8 @@ public:
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 
+    void Dispose() noexcept override;
+
 protected:
     void SetupParseFrom(Item& item);
 

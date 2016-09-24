@@ -15,21 +15,7 @@ Context::Context()
 
 Context::~Context()
 {
-    pmap.clear();
-    struct Disposer
-    {
-        void operator()(Label* l)
-        {
-#ifndef NDEBUG
-            auto& lst = l->ptr.item->labels;
-            lst.erase(lst.iterator_to(*l));
-#endif
-            delete l;
-        }
-    };
-    labels.clear_and_dispose(Disposer{});
-    GetChildren().clear();
-    ctx = nullptr;
+    Context::Dispose();
 }
 
 void Context::SetupParseFrom(Item& item)
@@ -134,6 +120,26 @@ ItemPointer Context::GetPointer(FilePosition pos) const noexcept
     --it;
     NEPTOOLS_ASSERT(it->first == it->second->GetPosition());
     return {it->second, pos - it->first};
+}
+
+void Context::Dispose() noexcept
+{
+    pmap.clear();
+    struct Disposer
+    {
+        void operator()(Label* l)
+        {
+#ifndef NDEBUG
+            auto& lst = l->ptr.item->labels;
+            lst.erase(lst.iterator_to(*l));
+#endif
+            delete l;
+        }
+    };
+    labels.clear_and_dispose(Disposer{});
+    GetChildren().clear();
+
+    ItemWithChildren::Dispose();
 }
 
 }

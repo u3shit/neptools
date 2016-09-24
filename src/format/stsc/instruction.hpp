@@ -120,6 +120,8 @@ public:
     };
     std::vector<Node> tree;
 
+    void Dispose() noexcept override;
+
 private:
     void Parse_(Source& src);
     void Dump_(Sink& sink) const override;
@@ -157,6 +159,8 @@ public:
     bool flag;
 
     std::vector<std::pair<uint32_t, const Label*>> expressions;
+
+    void Dispose() noexcept override;
 
 private:
     void Parse_(Source& src);

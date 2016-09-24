@@ -39,9 +39,9 @@ CollectionLinkHeaderItem::CollectionLinkHeaderItem(
     Key k, Context* ctx, const Header& s)
     : Item{k, ctx}
 {
-    s.Validate(GetContext().GetSize());
+    s.Validate(GetUnsafeContext().GetSize());
 
-    data = &GetContext().CreateLabelFallback("collection_link", s.offset);
+    data = &GetUnsafeContext().CreateLabelFallback("collection_link", s.offset);
 }
 
 CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
@@ -59,7 +59,7 @@ CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
             "Stcm::CollectionLinkHeaderItem",
             ptr2.offset == 0 && x.t.count == 0);
         auto& eof = ptr2.AsChecked0<EofItem>();
-        eof.Replace(eof.GetContext().Create<CollectionLinkItem>());
+        eof.Replace(eof.GetUnsafeContext().Create<CollectionLinkItem>());
         return ret;
     }
 
@@ -91,16 +91,23 @@ CollectionLinkItem::CollectionLinkItem(
     AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, src, count);
 }
 
+void CollectionLinkItem::Dispose() noexcept
+{
+    entries.clear();
+    Item::Dispose();
+}
+
 void CollectionLinkItem::Parse_(Source& src, uint32_t count)
 {
+    auto& ctx = GetUnsafeContext();
     entries.reserve(count);
     for (uint32_t i = 0; i < count; ++i)
     {
         auto e = src.ReadGen<Entry>();
-        e.Validate(GetContext().GetSize());
+        e.Validate(ctx.GetSize());
         entries.push_back({
-            &GetContext().GetLabelTo(e.name_0),
-            &GetContext().GetLabelTo(e.name_1)});
+            &ctx.GetLabelTo(e.name_0),
+            &ctx.GetLabelTo(e.name_1)});
     }
 }
 

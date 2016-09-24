@@ -66,7 +66,8 @@ NotNull<RefCountedPtr<RawItem>> RawItem::InternalSlice(
     FilePosition spos, FilePosition slen)
 {
     NEPTOOLS_ASSERT(spos+slen <= GetSize());
-    return GetContext().Create<RawItem>(Source{src, spos, slen}, position+spos);
+    return GetUnsafeContext().
+        Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size

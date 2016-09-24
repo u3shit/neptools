@@ -104,11 +104,12 @@ InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
 void InstructionItem::Parse_(Source& src)
 {
     auto instr = src.ReadGen<Header>();
-    instr.Validate(GetContext().GetSize());
+    auto& ctx = GetUnsafeContext();
+    instr.Validate(ctx.GetSize());
 
     is_call = instr.is_call;
     if (is_call)
-        target = &GetContext().GetLabelTo(instr.opcode);
+        target = &ctx.GetLabelTo(instr.opcode);
     else
         opcode = instr.opcode;
 
@@ -116,7 +117,7 @@ void InstructionItem::Parse_(Source& src)
     for (size_t i = 0; i < instr.param_count; ++i)
     {
         auto p = src.ReadGen<Parameter>();
-        p.Validate(GetContext().GetSize());
+        p.Validate(ctx.GetSize());
         ConvertParam(params[i], p);
     }
 }
@@ -127,7 +128,7 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
     {
     case Parameter::Type0::MEM_OFFSET:
         out.type = Param::MEM_OFFSET;
-        out.param_0.label = &GetContext().GetLabelTo(
+        out.param_0.label = &GetUnsafeContext().GetLabelTo(
             Parameter::Value(in.param_0));
         ConvertParam48(out.param_4, in.param_4);
         ConvertParam48(out.param_8, in.param_8);
@@ -155,17 +156,17 @@ void InstructionItem::ConvertParam(Param& out, const Parameter& in)
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR0)
         {
             out.type = Param::INSTR_PTR0;
-            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
+            out.param_4.label = &GetUnsafeContext().GetLabelTo(in.param_4);
         }
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR1)
         {
             out.type = Param::INSTR_PTR1;
-            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
+            out.param_4.label = &GetUnsafeContext().GetLabelTo(in.param_4);
         }
         else if (in.param_0 == Parameter::Type0Special::COLL_LINK)
         {
             out.type = Param::COLL_LINK;
-            out.param_4.label = &GetContext().GetLabelTo(in.param_4);
+            out.param_4.label = &GetUnsafeContext().GetLabelTo(in.param_4);
         }
         else
             NEPTOOLS_UNREACHABLE("Invalid special parameter type");
@@ -182,7 +183,7 @@ void InstructionItem::ConvertParam48(Param48& out, uint32_t in)
     {
     case Parameter::Type48::MEM_OFFSET:
         out.type = Param48::MEM_OFFSET;
-        out.label = &GetContext().GetLabelTo(Parameter::Value(in));
+        out.label = &GetUnsafeContext().GetLabelTo(Parameter::Value(in));
         break;
     case Parameter::Type48::IMMEDIATE:
         out.type = Param48::IMMEDIATE;
@@ -284,6 +285,12 @@ void InstructionItem::Dump48(
 void InstructionItem::Fixup()
 {
     ItemWithChildren::Fixup_(sizeof(Header) + params.size() * sizeof(Parameter));
+}
+
+void InstructionItem::Dispose() noexcept
+{
+    params.clear();
+    ItemWithChildren::Dispose();
 }
 
 void InstructionItem::Dump_(Sink& sink) const

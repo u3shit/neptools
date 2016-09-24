@@ -29,7 +29,7 @@ ExportsItem::ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count)
 void ExportsItem::Parse_(Source& src, uint32_t export_count)
 {
     entries.reserve(export_count);
-    auto size = GetContext().GetSize();
+    auto size = GetUnsafeContext().GetSize();
     for (uint32_t i = 0; i < export_count; ++i)
     {
         auto e = src.ReadGen<Entry>();
@@ -37,7 +37,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
         entries.push_back({
             static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
-            &GetContext().CreateLabelFallback(e.name.c_str(), e.offset)});
+            &GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)});
     }
 }
 
@@ -59,6 +59,12 @@ ExportsItem& ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
             break;
         }
     return ret;
+}
+
+void ExportsItem::Dispose() noexcept
+{
+    entries.clear();
+    Item::Dispose();
 }
 
 void ExportsItem::Dump_(Sink& sink) const

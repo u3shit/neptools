@@ -46,6 +46,8 @@ public:
     };
     std::vector<EntryType> entries;
 
+    void Dispose() noexcept override;
+
 private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;

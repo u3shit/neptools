@@ -13,17 +13,8 @@ namespace Neptools
 
 Item::~Item()
 {
-    NEPTOOLS_ASSERT(labels.empty() && parent == nullptr);
-
-    if (ctx)
-    {
-        auto it = ctx->pmap.find(position);
-        if (it != ctx->pmap.end() && it->second == this)
-        {
-            WARN << "Item " << this << " unlinked from pmap in dtor" << std::endl;
-            ctx->pmap.erase(it);
-        }
-    }
+    NEPTOOLS_ASSERT(labels.empty() && parent.expired());
+    Item::Dispose();
 }
 
 void Item::Inspect_(std::ostream& os) const
@@ -58,12 +49,13 @@ void Item::Replace(NotNull<SmartPtr<Item>> nitem) noexcept
         l.ptr.item = nitem.get();
 
     // update pointermap
+    auto& pmap = GetUnsafeContext().pmap;
     nitem->position = position;
-    auto it = ctx->pmap.find(position);
-    if (it != ctx->pmap.end() && it->second == this)
+    auto it = pmap.find(position);
+    if (it != pmap.end() && it->second == this)
         it->second = nitem.get();
 
-    auto& list = parent->GetChildren();
+    auto& list = parent.unsafe_get()->GetChildren();
     auto self = Iterator();
 
     list.insert(self, *nitem);
@@ -78,11 +70,11 @@ void Item::Slice(SliceSeq seq)
     SmartPtr<Item> do_not_delete_this_until_returning{this};
 
     LabelsContainer lbls{std::move(labels)};
-    auto& list = parent->GetChildren();
+    auto& list = parent.unsafe_get()->GetChildren();
     auto it = Iterator();
     it = list.erase(it);
 
-    auto& pmap = ctx->pmap;
+    auto& pmap = GetUnsafeContext().pmap;
     auto empty = pmap.empty();
     // remove this from pmap
     if (!empty)
@@ -123,6 +115,22 @@ void Item::Slice(SliceSeq seq)
     NEPTOOLS_ASSERT(label == nullptr);
 }
 
+void Item::Dispose() noexcept
+{
+    if (auto ctx = GetContext())
+    {
+        auto it = ctx->pmap.find(position);
+        if (it != ctx->pmap.end() && it->second == this)
+        {
+            WARN << "Item " << this << " unlinked from pmap in dtor" << std::endl;
+            ctx->pmap.erase(it);
+        }
+    }
+
+    context.reset();
+    parent.reset();
+}
+
 std::ostream& operator<<(std::ostream& os, const Item& item)
 {
     item.Inspect(os);
@@ -132,18 +140,20 @@ std::ostream& operator<<(std::ostream& os, const Item& item)
 void ItemList::Add(reference it)
 {
     auto self = static_cast<ItemWithChildren*>(this);
-    NEPTOOLS_ASSERT_MSG(it.ctx == self->ctx, "wrong context");
+    NEPTOOLS_ASSERT_MSG(it.context == self->context, "wrong context");
     NEPTOOLS_ASSERT_MSG(it.parent == nullptr, "already added");
     // not in list: checked by boost::intrusive (but parent check should do it too)
     it.parent = self;
-    intrusive_ptr_add_ref(&it);
+    it.AddRef();
 }
 
 void ItemList::Disposer::operator()(pointer p)
 {
-    NEPTOOLS_ASSERT(p->parent == static_cast<ItemWithChildren*>(list));
-    p->parent = nullptr;
-    intrusive_ptr_release(p);
+    // GetPtr: it might be called from the parent's destructor, and the weak ptr
+    // is expired by then
+    NEPTOOLS_ASSERT(p->parent.GetPtr() == static_cast<ItemWithChildren*>(list));
+    p->parent.reset();
+    p->RemoveRef();
 }
 
 
@@ -183,12 +193,18 @@ void ItemWithChildren::Fixup_(FilePosition offset)
 
 void ItemWithChildren::MoveNextToChild(size_t size) noexcept
 {
-    auto& list = GetParent().GetChildren();
+    auto& list = parent.unsafe_get()->GetChildren();
     // make sure we have a ref when erasing...
     SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
         *++Iterator()).Split(0, size);
     list.erase(nchild->Iterator());
     GetChildren().push_back(*nchild);
+}
+
+void ItemWithChildren::Dispose() noexcept
+{
+    GetChildren().clear();
+    Item::Dispose();
 }
 
 }

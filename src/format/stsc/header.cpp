@@ -54,7 +54,7 @@ void HeaderItem::Parse_(Source& src)
     hdr.Validate(src.GetSize());
 
     entry_point =
-        &GetContext().CreateLabelFallback("entry_point", hdr.entry_point);
+        &GetUnsafeContext().CreateLabelFallback("entry_point", hdr.entry_point);
     flags = hdr.flags;
 
     if (flags & 1)

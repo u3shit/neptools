@@ -134,6 +134,8 @@ public:
     };
     std::vector<Param> params;
 
+    void Dispose() noexcept override;
+
 private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
