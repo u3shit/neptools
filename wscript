@@ -86,8 +86,7 @@ def configure(cfg):
     ])
     cfg.filter_flags(['CFLAGS_NEPTOOLS', 'CXXFLAGS_NEPTOOLS'], [
         '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
-        '-Wno-gnu-string-literal-operator-template',
-        '-Wno-vla-extension', '-Wno-vla', '-Wno-assume',
+        '-Wno-gnu-string-literal-operator-template', '-Wno-assume',
         '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
     ])
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [

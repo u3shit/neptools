@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/container/small_vector.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 
 //#define STRTOOL_COMPAT
@@ -251,13 +252,18 @@ void Gbnl::Dump_(Sink& sink) const
 {
     if (is_gstl) DumpHeader(sink);
 
-    Byte msgd[msg_descr_size];
-    memset(msgd, 0, msg_descr_size);
+    // RB2-3 scripts: 36
+    // VII scrips: 392
+    // gbin/gstrs are usually smaller than VII scripts
+    // RB3's stdungeon.gbin: 7576, stsqdungeon.gbin: 1588 though
+    //std::cerr << msg_descr_size << std::endl;
+    boost::container::small_vector<Byte, 392> msgd;
+    msgd.resize(msg_descr_size);
 
     for (const auto& m : messages)
     {
-        m.ForEach(WriteDescr{msgd});
-        sink.Write({msgd, msg_descr_size});
+        m.ForEach(WriteDescr{msgd.data()});
+        sink.Write({msgd.data(), msg_descr_size});
     }
 
     auto msgs_end = msg_descr_size * messages.size();
