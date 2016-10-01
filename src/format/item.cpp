@@ -13,7 +13,7 @@ namespace Neptools
 
 Item::~Item()
 {
-    NEPTOOLS_ASSERT(labels.empty() && parent.expired());
+    NEPTOOLS_ASSERT(labels.empty() && !parent);
     Item::Dispose();
 }
 
@@ -55,7 +55,7 @@ void Item::Replace(NotNull<SmartPtr<Item>> nitem) noexcept
     if (it != pmap.end() && it->second == this)
         it->second = nitem.get();
 
-    auto& list = parent.unsafe_get()->GetChildren();
+    auto& list = parent->GetChildren();
     auto self = Iterator();
 
     list.insert(self, *nitem);
@@ -70,7 +70,7 @@ void Item::Slice(SliceSeq seq)
     SmartPtr<Item> do_not_delete_this_until_returning{this};
 
     LabelsContainer lbls{std::move(labels)};
-    auto& list = parent.unsafe_get()->GetChildren();
+    auto& list = parent->GetChildren();
     auto it = Iterator();
     it = list.erase(it);
 
@@ -117,6 +117,7 @@ void Item::Slice(SliceSeq seq)
 
 void Item::Dispose() noexcept
 {
+    NEPTOOLS_ASSERT(parent == nullptr);
     if (auto ctx = GetContext())
     {
         auto it = ctx->pmap.find(position);
@@ -128,7 +129,6 @@ void Item::Dispose() noexcept
     }
 
     context.reset();
-    parent.reset();
 }
 
 std::ostream& operator<<(std::ostream& os, const Item& item)
@@ -137,23 +137,24 @@ std::ostream& operator<<(std::ostream& os, const Item& item)
     return os;
 }
 
-void ItemList::Add(reference it)
+void ItemListTraits::add(ItemList& list, Item& it) noexcept
 {
-    auto self = static_cast<ItemWithChildren*>(this);
-    NEPTOOLS_ASSERT_MSG(it.context == self->context, "wrong context");
+    auto& self = static_cast<ItemWithChildren&>(list);
+    NEPTOOLS_ASSERT_MSG(it.context == self.context, "wrong context");
     NEPTOOLS_ASSERT_MSG(it.parent == nullptr, "already added");
     // not in list: checked by boost::intrusive (but parent check should do it too)
-    it.parent = self;
+    it.parent = &self;
     it.AddRef();
 }
 
-void ItemList::Disposer::operator()(pointer p)
+void ItemListTraits::remove(ItemList& list, Item& it) noexcept
 {
     // GetPtr: it might be called from the parent's destructor, and the weak ptr
     // is expired by then
-    NEPTOOLS_ASSERT(p->parent.GetPtr() == static_cast<ItemWithChildren*>(list));
-    p->parent.reset();
-    p->RemoveRef();
+    NEPTOOLS_ASSERT_MSG(it.parent == static_cast<ItemWithChildren*>(&list),
+                        "item is added to a different list");
+    it.parent = nullptr;
+    it.RemoveRef();
 }
 
 
@@ -193,7 +194,7 @@ void ItemWithChildren::Fixup_(FilePosition offset)
 
 void ItemWithChildren::MoveNextToChild(size_t size) noexcept
 {
-    auto& list = parent.unsafe_get()->GetChildren();
+    auto& list = parent->GetChildren();
     // make sure we have a ref when erasing...
     SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
         *++Iterator()).Split(0, size);

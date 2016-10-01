@@ -2,21 +2,16 @@
 #define UUID_02043882_EC07_4CCA_BD13_1BB9F5C7DB9F
 #pragma once
 
+#include "../assert.hpp"
+#include "../utils.hpp"
+#include "../container/intrusive.hpp"
+
 #include <cstdint>
 #include <functional>
 #include <boost/intrusive/set_hook.hpp>
 
-#include "../assert.hpp"
-#include "../utils.hpp"
-
 namespace Neptools
 {
-
-#ifdef NDEBUG
-using LinkMode = boost::intrusive::link_mode<boost::intrusive::normal_link>;
-#else
-using LinkMode = boost::intrusive::link_mode<boost::intrusive::safe_link>;
-#endif
 
 class Item;
 class Context;
