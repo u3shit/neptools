@@ -328,6 +328,7 @@ def test(bld):
         'test/options.cpp',
         'test/pattern.cpp',
         'test/sink.cpp',
+        'test/container/ordered_map.cpp',
     ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include',

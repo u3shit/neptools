@@ -114,7 +114,7 @@ public:
     { return {str, len}; }
 
     template <typename Allocator>
-    explicit operator std::basic_string<Char, Traits, Allocator>() const
+    operator std::basic_string<Char, Traits, Allocator>() const
     { return {str, len}; }
 
     // copy, *find*, substr: too lazy

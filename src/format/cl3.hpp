@@ -9,6 +9,7 @@
 #include "../source.hpp"
 #include "../sink.hpp"
 #include "../fixed_string.hpp"
+#include "../container/ordered_map.hpp"
 
 namespace Neptools
 {
@@ -94,7 +95,7 @@ public:
 
     uint32_t field_14;
 
-    struct Entry
+    struct Entry : public OrderedMapItem
     {
         std::string name;
         uint32_t field_200 = 0;
@@ -102,29 +103,23 @@ public:
 
         SmartPtr<Dumpable> src;
 
-        Entry(std::string name) : name{std::move(name)} {}
+        explicit Entry(std::string name) : name{std::move(name)} {}
         Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
     };
-    std::vector<Entry> entries;
-
-    template <typename T>
-    Entry& GetOrCreateFile(T&& fname)
+    struct EntryKeyOfValue
     {
-        for (size_t i = 0; i < entries.size(); ++i)
-            if (entries[i].name == fname)
-                return entries[i];
-        entries.emplace_back(std::forward<T>(fname));
-        return entries.back();
-    }
+        using type = std::string;
+        const type& operator()(const Entry& e) { return e.name; }
+        static void remove(OrderedMap<Entry, EntryKeyOfValue>& map,
+                           Entry& entry) noexcept;
+    };
+    OrderedMap<Entry, struct EntryKeyOfValue> entries;
 
-    Entry* GetFile(StringView fname);
+    Entry& GetOrCreateFile(StringView fname);
 
     void ExtractTo(const boost::filesystem::path& dir) const;
     void UpdateFromDir(const boost::filesystem::path& dir);
-
-    void DeleteFile(size_t i);
-    void DeleteFile(Entry& e) { DeleteFile(&e - &entries.front()); }
 
     Stcm::File& GetStcm();
 

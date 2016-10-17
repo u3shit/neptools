@@ -371,9 +371,10 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args[0]);
+            auto& entries = st.cl3->entries;
+            auto e = entries.find(args[0]);
 
-            if (!e)
+            if (e == entries.end())
                 throw InvalidParam{"specified file not found"};
             else
                 ShellDump(e->src.get(), args[1]);
@@ -403,11 +404,12 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args.front());
-            if (!e)
+            auto& entries = st.cl3->entries;
+            auto e = entries.find(args.front());
+            if (e == entries.end())
                 throw InvalidParam{"specified file not found"};
             else
-                st.cl3->DeleteFile(*e);
+                entries.erase(e);
         }};
     Option set_link_opt{
         lgrp, "set-link", 3, "NAME ID DEST", "Sets link at NAME, ID to DEST",
@@ -415,15 +417,17 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args[0]);
+            auto& entries = st.cl3->entries;
+            auto e = entries.find(args[0]);
             auto i = std::stoul(args[1]);
-            auto e2 = st.cl3->GetFile(args[2]);
-            if (!e || !e2) throw InvalidParam{"specified file not found"};
+            auto e2 = entries.find(args[2]);
+            if (e == entries.end() || e2 == entries.end())
+                throw InvalidParam{"specified file not found"};
 
             if (i < e->links.size())
-                e->links[i] = e2 - &st.cl3->entries.front();
+                e->links[i] = entries.index_of(e2);
             else if (i == e->links.size())
-                e->links.push_back(e2 - &st.cl3->entries.front());
+                e->links.push_back(entries.index_of(e2));
             else
                 throw InvalidParam{"invalid link id"};
         }};
@@ -433,9 +437,11 @@ int main(int argc, char** argv)
         {
             mode = Mode::MANUAL;
             if (!st.cl3) throw InvalidParam{"no cl3 loaded"};
-            auto e = st.cl3->GetFile(args[0]);
+            auto& entries = st.cl3->entries;
+            auto e = entries.find(args[0]);
             auto i = std::stoul(args[1]);
-            if (!e) throw InvalidParam{"specified file not found"};
+            if (e == entries.end())
+                throw InvalidParam{"specified file not found"};
 
             if (i < e->links.size())
                 e->links.erase(e->links.begin() + i);

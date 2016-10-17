@@ -140,12 +140,15 @@ FilePosition Cl3::GetSize() const
     return ret;
 }
 
-Cl3::Entry* Cl3::GetFile(StringView fname)
+Cl3::Entry& Cl3::GetOrCreateFile(StringView fname)
 {
-    for (auto& e : entries)
-        if (e.name == fname)
-            return &e;
-    return nullptr;
+    auto it = entries.find(fname, std::less<>{});
+    if (it == entries.end())
+    {
+        entries.emplace_back(fname);
+        return entries.back();
+    }
+    return *it;
 }
 
 void Cl3::ExtractTo(const boost::filesystem::path& dir) const
@@ -167,17 +170,18 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
         GetOrCreateFile(e.path().filename().string()).src =
             MakeSmart<DumpableSource>(Source::FromFile(e));
 
-    for (size_t i = 0; i < entries.size(); )
-        if (!boost::filesystem::exists(dir / entries[i].name))
-            DeleteFile(i);
+    for (auto it = entries.begin(); it != entries.end(); )
+        if (!boost::filesystem::exists(dir / it->name))
+            it = entries.erase(it);
         else
-            ++i;
+            ++it;
 }
 
-void Cl3::DeleteFile(size_t i)
+void Cl3::EntryKeyOfValue::remove(
+    OrderedMap<Entry, struct EntryKeyOfValue>& map, Entry& entry) noexcept
 {
-    entries.erase(entries.begin() + i);
-    for (auto& e : entries)
+    auto i = map.index_of(map.iterator_to(entry));
+    for (auto& e : map)
         for (auto it = e.links.begin(); it != e.links.end(); )
         {
             if (*it == i)
@@ -295,8 +299,8 @@ void Cl3::Dump_(Sink& sink) const
 
 Stcm::File& Cl3::GetStcm()
 {
-    auto dat = GetFile("main.DAT");
-    if (!dat || !dat->src)
+    auto dat = entries.find("main.DAT", std::less<>{});
+    if (dat == entries.end() || !dat->src)
         NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
 
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
