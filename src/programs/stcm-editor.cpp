@@ -360,7 +360,7 @@ int main(int argc, char** argv)
             {
                 std::cout << i++ << '\t' << e.name << '\t' << e.src->GetSize()
                           << "\tlinks:";
-                for (auto l : e.links) std::cout << ' ' << l;
+                for (auto l : e.links) std::cout << ' ' << st.cl3->IndexOf(l);
                 std::cout << std::endl;
             }
         }};
@@ -425,9 +425,9 @@ int main(int argc, char** argv)
                 throw InvalidParam{"specified file not found"};
 
             if (i < e->links.size())
-                e->links[i] = entries.index_of(e2);
+                e->links[i] = &entries[entries.index_of(e2)];
             else if (i == e->links.size())
-                e->links.push_back(entries.index_of(e2));
+                e->links.push_back(&entries[entries.index_of(e2)]);
             else
                 throw InvalidParam{"invalid link id"};
         }};

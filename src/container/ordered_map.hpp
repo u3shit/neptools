@@ -264,6 +264,18 @@ public:
     iterator iterator_to(T& t) noexcept { return ToIt(t); }
     const_iterator iterator_to(const T& t) const noexcept { return ToIt(t); }
 
+    // return end() on invalid ptr
+    iterator checked_iterator_to(T& t) noexcept
+    {
+        if (vect[VectorIndex(t)].get() == &t) return ToIt(t);
+        else return end();
+    }
+    const_iterator checked_iterator_to(const T& t) const noexcept
+    {
+        if (vect[VectorIndex(t)].get() == &t) return ToIt(t);
+        else return cend();
+    }
+
     // we'd need pointer to smartptr inside vector
     // static iterator s_iterator_to(T& t) noexcept { return iterator{t}; }
     // static const_iterator s_iterator_to(const T& t) noexcept
@@ -291,11 +303,7 @@ private:
     void FixupIndex(typename VectorType::iterator b) noexcept
     { for (; b != vect.end(); ++b) VectorIndex(**b) = b - vect.begin(); }
 
-    void RemoveItem(T& t) noexcept
-    {
-        VectorIndex(t) = -1;
-        Traits::remove(*this, t);
-    }
+    void RemoveItem(T& t) noexcept { VectorIndex(t) = -1; }
 
     template <typename U>
     std::pair<iterator, bool> InsertGen(const_iterator p, U&& t)
@@ -314,8 +322,7 @@ private:
             set.insert_commit(ref, data);
             return {ToIt(it), true};
         }
-        else
-            Traits::remove(*this, *t);
+
         return {ToIt(*itp.first), false};
     }
 

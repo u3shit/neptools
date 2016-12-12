@@ -7,7 +7,7 @@ namespace
 {
 struct X : public OrderedMapItem
 {
-    X(int k, int v) : k{k}, v{v} { count += 2; }
+    X(int k, int v) : k{k}, v{v} { ++count; }
     ~X() { --count; }
     X(const X&) = delete;
     void operator=(const X&) = delete;
@@ -21,9 +21,6 @@ struct XTraits
 {
     using type = int;
     const int& operator()(const X& x) { return x.k; }
-
-    static void remove(OrderedMap<X, XTraits>&, X&)
-    { --X::count; }
 };
 
 using OM = OrderedMap<X, XTraits>;

@@ -99,7 +99,7 @@ public:
     {
         std::string name;
         uint32_t field_200 = 0;
-        std::vector<uint32_t> links;
+        std::vector<WeakRefCountedPtr<Entry>> links;
 
         SmartPtr<Dumpable> src;
 
@@ -111,10 +111,9 @@ public:
     {
         using type = std::string;
         const type& operator()(const Entry& e) { return e.name; }
-        static void remove(OrderedMap<Entry, EntryKeyOfValue>& map,
-                           Entry& entry) noexcept;
     };
     OrderedMap<Entry, struct EntryKeyOfValue> entries;
+    uint32_t IndexOf(const WeakPtr<Entry>& ptr) const noexcept;
 
     Entry& GetOrCreateFile(StringView fname);
 

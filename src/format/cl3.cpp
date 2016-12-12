@@ -90,6 +90,7 @@ void Cl3::Parse_(Source& src)
         }
     }
 
+    entries.reserve(file_count);
     src.Seek(file_offset);
     for (uint32_t i = 0; i < file_count; ++i)
     {
@@ -100,15 +101,21 @@ void Cl3::Parse_(Source& src)
             e.name.c_str(), e.field_200,
             MakeSmart<DumpableSource>(
                 src, file_offset+e.data_offset, e.data_size));
+    }
 
-        auto& ls = entries.back().links;
+    src.Seek(file_offset);
+    for (uint32_t i = 0; i < file_count; ++i)
+    {
+        auto e = src.ReadGen<FileEntry>();
+        auto& ls = entries[i].links;
         uint32_t lbase = e.link_start;
         uint32_t lcount = e.link_count;
+
         for (uint32_t i = lbase; i < lbase+lcount; ++i)
         {
             auto le = src.PreadGen<LinkEntry>(link_offset + i*sizeof(LinkEntry));
             le.Validate(i - lbase, file_count);
-            ls.push_back(le.linked_file_id);
+            ls.emplace_back(&entries[le.linked_file_id]);
         }
     }
 }
@@ -177,22 +184,13 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
             ++it;
 }
 
-void Cl3::EntryKeyOfValue::remove(
-    OrderedMap<Entry, struct EntryKeyOfValue>& map, Entry& entry) noexcept
+uint32_t Cl3::IndexOf(const WeakPtr<Entry>& ptr) const noexcept
 {
-    auto i = map.index_of(map.iterator_to(entry));
-    for (auto& e : map)
-        for (auto it = e.links.begin(); it != e.links.end(); )
-        {
-            if (*it == i)
-            {
-                it = e.links.erase(it);
-                continue;
-            }
-            else if (*it > i)
-                --*it;
-            ++it;
-        }
+    auto sptr = ptr.lock();
+    if (!sptr) return -1;
+    auto it = entries.checked_iterator_to(*sptr);
+    if (it == entries.end()) return -1;
+    return entries.index_of(it);
 }
 
 void Cl3::Inspect_(std::ostream& os) const
@@ -209,7 +207,9 @@ void Cl3::Inspect_(std::ostream& os) const
         {
             if (!first) os << ", ";
             first = false;
-            os << l;
+            auto ll = l.lock();
+            if (ll) DumpBytes(os, ll->name);
+            else os << "nil";
         }
         os << "], ";
         if (e.src)
@@ -290,7 +290,9 @@ void Cl3::Dump_(Sink& sink) const
         uint32_t i = 0;
         for (auto l : e.links)
         {
-            le.linked_file_id = l;
+            le.linked_file_id = IndexOf(l);
+            if (le.linked_file_id == uint32_t(-1))
+                NEPTOOLS_THROW(std::runtime_error{"Invalid file link"});
             le.link_id = i++;
             sink.WriteGen(le);
         }
