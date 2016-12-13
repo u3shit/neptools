@@ -386,12 +386,13 @@ struct MakeSharedHelper
     }
 };
 
-template <typename T, typename Ret>
-struct MakeSharedHelper<T, Ret, std::enable_if_t<IS_REFCOUNTED<T>>>
+template <typename T>
+struct MakeSharedHelper<T, RefCountedPtr<T>>
 {
     template <typename... Args>
-    static NotNull<Ret> Make(Args&&... args)
-    { return NotNull<Ret>{new T(std::forward<Args>(args)...), false}; }
+    static NotNull<RefCountedPtr<T>> Make(Args&&... args)
+    { return NotNull<RefCountedPtr<T>>{
+            new T(std::forward<Args>(args)...), false}; }
 };
 
 
