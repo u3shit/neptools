@@ -111,18 +111,18 @@ struct SharedPtrStorageRefCounted
     U* ptr = nullptr;
 };
 
-template <typename T, typename Storage> class WeakPtrBase;
+template <typename T, template<typename> class Storage> class WeakPtrBase;
 
 // shared (strong) ptr
-template <typename T, typename Storage>
+template <typename T, template<typename> class Storage>
 class SharedPtrBase
 {
     template <typename U = T>
     static constexpr bool IS_NORMAL_S = std::is_same<
-        Storage, SharedPtrStorageNormal<U>>::value && std::is_same<T, U>::value;
+        Storage<T>, SharedPtrStorageNormal<U>>::value;
     template <typename U = T>
     static constexpr bool IS_REFCOUNTED_S = std::is_same<
-        Storage, SharedPtrStorageRefCounted<U>>::value  && std::is_same<T, U>::value;
+        Storage<T>, SharedPtrStorageRefCounted<U>>::value;
     NEPTOOLS_STATIC_ASSERT(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
 
 public:
@@ -130,31 +130,44 @@ public:
     SharedPtrBase(std::nullptr_t) noexcept {}
 
     // alias ctor
-    template <typename U, typename UStorage,
+    template <typename U,
               typename V = T,
               typename = std::enable_if_t<IS_NORMAL_S<V>>>
-    SharedPtrBase(SharedPtrBase<U, UStorage> o, T* ptr) noexcept
+    SharedPtrBase(SharedPtrBase<U, Storage> o, T* ptr) noexcept
         : s{o.GetCtrl(), ptr}
     { o.s.Reset(); }
 
     // weak->strong, throws on error
-    template <typename U, typename UStorage>
-    SharedPtrBase(const WeakPtrBase<U, UStorage>& o);
+    template <typename U>
+    SharedPtrBase(const WeakPtrBase<U, Storage>& o);
 
     // copy/move/conv ctor
     SharedPtrBase(const SharedPtrBase& o) noexcept
         : SharedPtrBase{o.GetCtrl(), o.get(), true} {}
-    template <typename U, typename UStorage>
-    SharedPtrBase(const SharedPtrBase<U, UStorage>& o) noexcept
+    template <typename U>
+    SharedPtrBase(const SharedPtrBase<U, Storage>& o) noexcept
+        : SharedPtrBase{o.GetCtrl(), o.get(), true} {}
+    // refcounted->refcounted/shared ok
+    template <typename U,
+              typename V = T,
+              typename = std::enable_if_t<IS_NORMAL_S<V>>>
+    SharedPtrBase(const SharedPtrBase<U, SharedPtrStorageRefCounted>& o) noexcept
         : SharedPtrBase{o.GetCtrl(), o.get(), true} {}
 
     SharedPtrBase(SharedPtrBase&& o) noexcept
         : s{o.GetCtrl(), o.get()}
     { o.s.Reset(); }
-    template <typename U, typename UStorage>
-    SharedPtrBase(SharedPtrBase<U, UStorage>&& o) noexcept
+    template <typename U>
+    SharedPtrBase(SharedPtrBase<U, Storage>&& o) noexcept
         : s{o.GetCtrl(), o.get()}
     { o.s.Reset(); }
+    template <typename U,
+              typename V = T,
+              typename = std::enable_if_t<IS_NORMAL_S<V>>>
+    SharedPtrBase(SharedPtrBase<U, SharedPtrStorageRefCounted>&& o) noexcept
+        : s{o.GetCtrl(), o.get()}
+    { o.s.Reset(); }
+
 
     // raw ptr for RefCounted objects
     template <typename U, typename V = T,
@@ -203,29 +216,31 @@ public:
     RefCounted* GetCtrl() const noexcept { return s.GetCtrl(); }
 
 private:
-    Storage s;
+    Storage<T> s;
 
-    template <typename U, typename UStorage> friend class SharedPtrBase;
+    template <typename U, template<typename> class UStorage>
+    friend class SharedPtrBase;
 };
 
-template <typename T, typename Storage>
+template <typename T, template<typename> class Storage>
 inline void swap(SharedPtrBase<T, Storage>& a, SharedPtrBase<T, Storage>& b) noexcept
 { a.swap(b); }
 
 // comparison operators
-#define NEPTOOLS_GEN(type, get, op)                                             \
-    template <typename T, typename TStorage, typename U, typename UStorage>     \
-    inline bool operator op(                                                    \
-        const type##PtrBase<T, TStorage>& a,                                    \
-        const type##PtrBase<U, UStorage>& b) noexcept                           \
-    { return a.get() op b.get(); }                                              \
-    template <typename T, typename Storage>                                     \
-    inline bool operator op(                                                    \
-        const type##PtrBase<T, Storage>& p, std::nullptr_t) noexcept            \
-    { return p.get() op nullptr; }                                              \
-    template <typename T, typename Storage>                                     \
-    inline bool operator op(                                                    \
-        std::nullptr_t, const type##PtrBase<T, Storage>& p) noexcept            \
+#define NEPTOOLS_GEN(type, get, op)                                     \
+    template <typename T, template<typename> class TStorage,            \
+              typename U, template<typename> class UStorage>            \
+    inline bool operator op(                                            \
+        const type##PtrBase<T, TStorage>& a,                            \
+        const type##PtrBase<U, UStorage>& b) noexcept                   \
+    { return a.get() op b.get(); }                                      \
+    template <typename T, template<typename> class Storage>             \
+    inline bool operator op(                                            \
+        const type##PtrBase<T, Storage>& p, std::nullptr_t) noexcept    \
+    { return p.get() op nullptr; }                                      \
+    template <typename T, template<typename> class Storage>             \
+    inline bool operator op(                                            \
+        std::nullptr_t, const type##PtrBase<T, Storage>& p) noexcept    \
     { return nullptr op p.get(); }
 #define NEPTOOLS_GEN2(type, get)                            \
     NEPTOOLS_GEN(type, get, ==) NEPTOOLS_GEN(type, get, !=) \
@@ -236,40 +251,63 @@ NEPTOOLS_GEN2(Shared, get)
 // use these types. usually SmartPtr; use SharedPtr when you need aliasing with
 // an otherwise RefCounted type
 template <typename T>
-using SharedPtr = SharedPtrBase<T, SharedPtrStorageNormal<T>>;
+using SharedPtr = SharedPtrBase<T, SharedPtrStorageNormal>;
 template <typename T>
-using RefCountedPtr = SharedPtrBase<T, SharedPtrStorageRefCounted<T>>;
+using RefCountedPtr = SharedPtrBase<T, SharedPtrStorageRefCounted>;
 template <typename T>
-using SmartPtr = SharedPtrBase<T, std::conditional_t<
-    IS_REFCOUNTED<T>, SharedPtrStorageRefCounted<T>, SharedPtrStorageNormal<T>>>;
+using SmartPtr = std::conditional_t<
+    IS_REFCOUNTED<T>,
+    SharedPtrBase<T, SharedPtrStorageRefCounted>,
+    SharedPtrBase<T, SharedPtrStorageNormal>>;
 
 
 // weak ptr
-template <typename T, typename Storage>
+template <typename T, template<typename> class Storage>
 class WeakPtrBase
 {
     template <typename U = T>
+    static constexpr bool IS_NORMAL_S = std::is_same<
+        Storage<T>, SharedPtrStorageNormal<U>>::value;
+    template <typename U = T>
     static constexpr bool IS_REFCOUNTED_S = std::is_same<
-        Storage, SharedPtrStorageRefCounted<U>>::value  && std::is_same<T, U>::value;
+        Storage<T>, SharedPtrStorageRefCounted<U>>::value;
+    NEPTOOLS_STATIC_ASSERT(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
+
 public:
     WeakPtrBase() = default;
     WeakPtrBase(std::nullptr_t) noexcept {}
 
-    template <typename U, typename UStorage>
-    WeakPtrBase(const SharedPtrBase<U, UStorage>& o) noexcept
+    template <typename U>
+    WeakPtrBase(const SharedPtrBase<U, Storage>& o) noexcept
+        : WeakPtrBase{o.GetCtrl(), o.get(), true} {}
+    template <typename U,
+              typename V = T,
+              typename = std::enable_if_t<IS_NORMAL_S<V>>>
+    WeakPtrBase(const SharedPtrBase<U, SharedPtrStorageRefCounted>& o) noexcept
         : WeakPtrBase{o.GetCtrl(), o.get(), true} {}
 
     // copy/move/conv ctor
     WeakPtrBase(const WeakPtrBase& o) noexcept
         : WeakPtrBase{o.s.GetCtrl(), o.s.GetPtr(), true} {}
-    template <typename U, typename UStorage>
-    WeakPtrBase(const WeakPtrBase<U, UStorage>& o) noexcept
+    template <typename U>
+    WeakPtrBase(const WeakPtrBase<U, Storage>& o) noexcept
+        : WeakPtrBase{o.s.GetCtrl(), o.s.GetPtr(), true} {}
+    template <typename U,
+              typename V = T,
+              typename = std::enable_if_t<IS_NORMAL_S<V>>>
+    WeakPtrBase(const WeakPtrBase<U, SharedPtrStorageRefCounted>& o) noexcept
         : WeakPtrBase{o.s.GetCtrl(), o.s.GetPtr(), true} {}
 
     WeakPtrBase(WeakPtrBase&& o) noexcept : s{o.s.GetCtrl(), o.s.GetPtr()}
     { o.s.Reset(); }
-    template <typename U, typename UStorage>
-    WeakPtrBase(WeakPtrBase<U, UStorage>&& o) noexcept
+    template <typename U>
+    WeakPtrBase(WeakPtrBase<U, Storage>&& o) noexcept
+        : s{o.s.GetCtrl(), o.s.GetPtr()}
+    { o.s.Reset(); }
+    template <typename U,
+              typename V = T,
+              typename = std::enable_if_t<IS_NORMAL_S<V>>>
+    WeakPtrBase(WeakPtrBase<U, SharedPtrStorageRefCounted>&& o) noexcept
         : s{o.s.GetCtrl(), o.s.GetPtr()}
     { o.s.Reset(); }
 
@@ -329,33 +367,36 @@ public:
     T* GetPtr() const noexcept { return s.GetPtr(); }
 
 private:
-    Storage s;
+    Storage<T> s;
 
-    template <typename U, typename UStorage> friend class WeakPtrBase;
+    template <typename U, template<typename> class UStorage>
+    friend class WeakPtrBase;
 };
 
 NEPTOOLS_GEN2(Weak, GetPtr)
 #undef NEPTOOLS_GEN2
 #undef NEPTOOLS_GEN
 
-template <typename T, typename Storage>
+template <typename T, template<typename> class Storage>
 inline void swap(
     WeakPtrBase<T, Storage>& a, WeakPtrBase<T, Storage>& b) noexcept
 { a.swap(b); }
 
 
 template <typename T>
-using WeakPtr = WeakPtrBase<T, SharedPtrStorageNormal<T>>;
+using WeakPtr = WeakPtrBase<T, SharedPtrStorageNormal>;
 template <typename T>
-using WeakRefCountedPtr = WeakPtrBase<T, SharedPtrStorageRefCounted<T>>;
+using WeakRefCountedPtr = WeakPtrBase<T, SharedPtrStorageRefCounted>;
 template <typename T>
-using WeakSmartPtr = WeakPtrBase<T, std::conditional_t<
-    IS_REFCOUNTED<T>, SharedPtrStorageRefCounted<T>, SharedPtrStorageNormal<T>>>;
+using WeakSmartPtr = std::conditional_t<
+    IS_REFCOUNTED<T>,
+    WeakPtrBase<T, SharedPtrStorageRefCounted>,
+    WeakPtrBase<T, SharedPtrStorageNormal>>;
 
 
-template <typename T, typename Storage>
-template <typename U, typename UStorage>
-inline SharedPtrBase<T, Storage>::SharedPtrBase(const WeakPtrBase<U, UStorage>& o)
+template <typename T, template<typename> class Storage>
+template <typename U>
+inline SharedPtrBase<T, Storage>::SharedPtrBase(const WeakPtrBase<U, Storage>& o)
     : s{o.GetCtrl(), o.unsafe_get()}
 {
     if (!s.GetCtrl() || !s.GetCtrl()->LockWeak())

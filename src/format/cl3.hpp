@@ -113,7 +113,7 @@ public:
         const type& operator()(const Entry& e) { return e.name; }
     };
     OrderedMap<Entry, struct EntryKeyOfValue> entries;
-    uint32_t IndexOf(const WeakPtr<Entry>& ptr) const noexcept;
+    uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 
     Entry& GetOrCreateFile(StringView fname);
 

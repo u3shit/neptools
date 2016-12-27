@@ -184,7 +184,7 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
             ++it;
 }
 
-uint32_t Cl3::IndexOf(const WeakPtr<Entry>& ptr) const noexcept
+uint32_t Cl3::IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept
 {
     auto sptr = ptr.lock();
     if (!sptr) return -1;
