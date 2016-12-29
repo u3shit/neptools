@@ -71,7 +71,7 @@ void TypeRegister::DoRegister<Neptools::MemorySink>(StateRef vm, TypeBuilder& bl
         .Inherit<Neptools::MemorySink, Neptools::Sink>()
 
         .Add<
-            Overload<decltype(&::Neptools::MakeSmart<Neptools::MemorySink, FileMemSize>), &::Neptools::MakeSmart<Neptools::MemorySink, FileMemSize>>,
+            Overload<decltype(&::Neptools::MakeSmart<Neptools::MemorySink, LuaGetRef<FileMemSize>>), &::Neptools::MakeSmart<Neptools::MemorySink, LuaGetRef<FileMemSize>>>,
             Overload<NotNull<SmartPtr<Neptools::MemorySink> > (*)(StringView), &MemorySinkFromLua>
         >("new")
         .Add<

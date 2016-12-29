@@ -15,7 +15,7 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
         .ValueDtor<Neptools::Source>()
 
         .Add<
-            decltype(&::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, const Neptools::Source &,FilePosition,FilePosition>), &::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, const Neptools::Source &,FilePosition,FilePosition>
+            decltype(&::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>
         >("new")
         .Add<
             Neptools::Source (*)(boost::filesystem::path), &Neptools::Source::FromFile
@@ -113,7 +113,7 @@ void TypeRegister::DoRegister<Neptools::DumpableSource>(StateRef vm, TypeBuilder
         .Inherit<Neptools::DumpableSource, Neptools::Dumpable, Neptools::Source>()
 
         .Add<
-            decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, const Neptools::Source &>), &::Neptools::MakeSmart<Neptools::DumpableSource, const Neptools::Source &>
+            decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>
         >("new")
         ;
 

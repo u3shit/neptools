@@ -92,8 +92,8 @@ local collect_args_v = cl.regCursorVisitor(function (c, par)
   return vr.Continue
 end)
 
-local function collect_args(c)
-  inst.collect_args_tbl = {}
+local function collect_args(c, app_to)
+  inst.collect_args_tbl = app_to or {}
   c:children(collect_args_v)
   return inst.collect_args_tbl
 end
@@ -165,9 +165,9 @@ local function lua_method(c, class, tbl)
       end
     end
 
-    local tl = utils.type_list(collect_args(c))
-    if tl ~= "" then tl = ", "..tl end
-    tbl.value_str = "&"..tbl.maker.."<"..class.cpp_name..tl..">"
+    local tl = collect_args(c, {class.cpp_name})
+    for i=2,#tl do tl[i] = "LuaGetRef<"..tl[i]:type():name()..">" end
+    tbl.value_str = "&"..tbl.maker.."<"..table.concat(tl, ", ")..">"
   else
     local ptrpre = c:isStatic() and "" or class.cpp_name.."::"
     tbl.type_str = utils.type_name(c:resultType()).." ("..ptrpre.."*)("..

@@ -22,6 +22,31 @@ static RetNum ValueObjectCtorWrapper(StateRef vm, Args&&... args)
     return {1};
 }
 
+// When specifying T as template argument for vararg &&... argument,
+// std::forward will try to convert it to T&&. If TypeTraits::Get returns a T&,
+// it'll fail, even though normally it'd copy it. Thus we need to specify T& in
+// this case (or const T&).
+
+template <typename T, typename = void> struct LuaGetRefHlp;
+template <typename T>
+struct LuaGetRefHlp<T, std::enable_if_t<std::is_reference<T>::value>>
+{ using Type = T; };
+
+template <typename T>
+struct LuaGetRefHlp<T, std::enable_if_t<!std::is_reference<T>::value>>
+{
+    using Type = std::conditional_t<
+        !std::is_reference<
+            decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value ||
+        std::is_rvalue_reference<
+            decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value,
+        T, T&>;
+};
+
+template <typename T>
+using LuaGetRef = typename LuaGetRefHlp<T>::Type;
+
+
 class TypeBuilder
 {
 public:
