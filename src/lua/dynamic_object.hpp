@@ -86,17 +86,36 @@ struct TypeTraits<T, std::enable_if_t<
 template <typename T>
 struct TypeTraits<NotNull<RefCountedPtr<T>>,
                   std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
+    : UserdataTraits<T, NotNull<RefCountedPtr<T>>>
 {
-    using Type = NotNull<RefCountedPtr<T>>;
+    static void Push(StateRef vm, const NotNull<RefCountedPtr<T>>& obj)
+    { GetDynamicObject(*obj).PushLua(vm, *obj); }
+};
+
+template <typename T>
+struct TypeTraits<RefCountedPtr<T>,
+                  std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
+    : NullableTypeTraits<RefCountedPtr<T>> {};
+
+template <typename T>
+struct TypeTraits<WeakRefCountedPtr<T>,
+                  std::enable_if_t<std::is_base_of<RefCounted, T>::value>>
+{
+    using Type = WeakRefCountedPtr<T>;
 
     static Type Get(StateRef vm, bool arg, int idx)
-    { return Type{&UserdataTraits<T>::Get(vm, arg, idx)}; }
-    static Type UnsafeGet(StateRef vm, bool arg, int idx)
-    { return Type{&UserdataTraits<T>::UnsafeGet(vm, arg, idx)}; }
-    static bool Is(StateRef vm, int idx) { return UserdataTraits<T>::Is(vm, idx); }
+    { return lua_isnil(vm, idx) ? nullptr : Type{&UserdataTraits<T>::Get(vm, arg, idx)}; }
+    static Type UnsafeGet(StateRef vm, int idx)
+    { return lua_isnil(vm, idx) ? nullptr : Type{&UserdataTraits<T>::UnsafeGet(vm, idx)}; }
+    static bool Is(StateRef vm, int idx)
+    { return lua_isnil(vm, idx) || UserdataTraits<T>::Is(vm, idx); }
 
     static void Push(StateRef vm, const Type& obj)
-    { GetDynamicObject(*obj).PushLua(vm, *obj); }
+    {
+        auto sptr = obj.lock();
+        if (sptr) GetDynamicObject(*obj).PushLua(vm, *obj);
+        else lua_pushnil(vm);
+    }
 };
 
 template <typename T>
@@ -105,9 +124,33 @@ struct TypeTraits<
     std::enable_if_t<
         std::is_base_of<DynamicObject, T>::value &&
         !std::is_base_of<RefCounted, T>::value>>
+    : UserdataTraits<SharedPtr<T>>
 {
     static void Push(StateRef vm, const NotNull<SharedPtr<T>>& ptr)
     { GetDynamicObject(*ptr).PushLua(vm, *ptr.Get().GetCtrl()); }
+};
+
+template <typename T>
+struct TypeTraits<
+    SharedPtr<T>,
+    std::enable_if_t<
+        std::is_base_of<DynamicObject, T>::value &&
+        !std::is_base_of<RefCounted, T>::value>>
+    : NullableTypeTraits<SharedPtr<T>> {};
+
+template <typename T>
+struct TypeTraits<
+    WeakPtr<T>,
+    std::enable_if_t<
+        std::is_base_of<DynamicObject, T>::value &&
+        !std::is_base_of<RefCounted, T>::value>>
+{
+    static void Push(StateRef vm, const WeakPtr<T>& ptr)
+    {
+        auto sptr = ptr.lock();
+        if (sptr) GetDynamicObject(*ptr).PushLua(vm, *ptr.Get().GetCtrl());
+        else lua_pushnil(vm);
+    }
 };
 
 }

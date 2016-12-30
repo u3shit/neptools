@@ -49,8 +49,8 @@ struct RefCountedUserdataBase : UserdataBase
     virtual RefCounted* GetCtrl() const noexcept = 0;
 
     template <typename T>
-    SharedPtr<T> GetShared(size_t offs) const noexcept
-    { return {GetCtrl(), &Get<T>(offs), true}; }
+    NotNull<SharedPtr<T>> GetShared(size_t offs) const noexcept
+    { return NotNull<SharedPtr<T>>{GetCtrl(), &Get<T>(offs), true}; }
 
     void Destroy(StateRef vm) noexcept override
     {
@@ -106,41 +106,66 @@ private:
 };
 
 template <typename T>
+struct UserdataTraitsBase
+{
+    using Type = T;
+    using Ret = T&;
+    static Ret UBGet(UserdataBase* ud, size_t offs)
+    {
+        NEPTOOLS_ASSERT(ud);
+        return ud->Get<T>(offs);
+    }
+};
+
+template <typename T>
+struct UserdataTraitsBase<SharedPtr<T>>
+{
+    using Type = T;
+    using Ret = NotNull<SharedPtr<T>>;
+    static Ret UBGet(UserdataBase* ud, size_t offs)
+    {
+        NEPTOOLS_ASSERT(ud);
+        return static_cast<RefCountedUserdataBase*>(ud)->GetShared<T>(offs);
+    }
+};
+
+template <typename T, typename Ret = typename UserdataTraitsBase<T>::Ret>
 struct UserdataTraits
 {
-    static T& Get(StateRef vm, bool arg, int idx)
+    using Base = UserdataTraitsBase<T>;
+    using BaseType = typename Base::Type;
+
+    static Ret Get(StateRef vm, bool arg, int idx)
     {
         if (!lua_getmetatable(vm, idx)) // +1
-            vm.TypeError(arg, TYPE_NAME<T>, idx);
-        lua_rawgetp(vm, -1, &TYPE_TAG<T>); // +2
+            vm.TypeError(arg, TYPE_NAME<BaseType>, idx);
+        lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
 
         int isvalid;
         auto offs = lua_tointegerx(vm, -1, &isvalid);
         lua_pop(vm, 2); // 0
-        if (!isvalid) vm.TypeError(arg, TYPE_NAME<T>, idx);
+        if (!isvalid) vm.TypeError(arg, TYPE_NAME<BaseType>, idx);
 
         auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
-        NEPTOOLS_ASSERT(ud);
-
-        return ud->Get<T>(offs);
+        return Base::UBGet(ud, offs);
     }
 
-    static T& UnsafeGet(StateRef vm, int idx)
+    static Ret UnsafeGet(StateRef vm, int idx)
     {
         lua_getmetatable(vm, idx); // +1
-        lua_rawgetp(vm, -1, &TYPE_TAG<T>); // +2
+        lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
         auto offs = lua_tointeger(vm, -1);
         lua_pop(vm, 2); // 0
 
         auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
-        return ud->Get<T>(offs);
+        return Base::UBGet(ud, offs);
     }
 
     static bool Is(StateRef vm, int idx)
     {
         if (!lua_getmetatable(vm, idx)) // +1
             return false;
-        auto type = lua_rawgetp(vm, -1, &TYPE_TAG<T>); // +2
+        auto type = lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
         lua_pop(vm, 2); // 0
         return type == LUA_TNUMBER;
     }

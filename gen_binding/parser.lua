@@ -254,6 +254,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
     if x then
       inst.ret_lua_classes[#inst.ret_lua_classes+1] = parse_class(c:type(), x)
     end
+    return vr.Recurse -- support inner classes
   elseif kind == "FunctionDecl" then
     for _,a in ipairs(utils.get_annotations(c)) do
       freestanding_func(c, a)

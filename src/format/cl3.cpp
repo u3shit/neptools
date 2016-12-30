@@ -316,3 +316,5 @@ Stcm::File& Cl3::GetStcm()
 }
 
 }
+
+#include "cl3.binding.hpp"

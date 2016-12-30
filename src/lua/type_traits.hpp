@@ -10,6 +10,8 @@ namespace boost { namespace filesystem { class path; } }
 
 namespace Neptools
 {
+template <typename T> class NotNull;
+
 namespace Lua
 {
 
@@ -194,6 +196,31 @@ struct TypeTraits<boost::filesystem::path> : public TypeTraits<const char*>
 #else
         lua_pushlstring(vm, pth.c_str(), pth.size());
 #endif
+    }
+};
+
+template <typename T, typename Ret = T>
+struct NullableTypeTraits
+{
+    static Ret Get(StateRef vm, bool arg, int idx)
+    {
+        if (lua_isnil(vm, idx)) return nullptr;
+        return TypeTraits<NotNull<T>>::Get(vm, arg, idx);
+    }
+
+    static Ret UnsafeGet(StateRef vm, int idx)
+    {
+        if (lua_isnil(vm, idx)) return nullptr;
+        return TypeTraits<NotNull<T>>::UnsafeGet(vm, idx);
+    }
+
+    static bool Is(StateRef vm, int idx)
+    { return lua_isnil(vm, idx) || TypeTraits<NotNull<T>>::Is(vm, idx); }
+
+    static void Push(StateRef vm, const T& obj)
+    {
+        if (obj) TypeTraits<NotNull<T>>::Push(vm, obj);
+        else lua_pushnil(vm);
     }
 };
 

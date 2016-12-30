@@ -96,8 +96,10 @@ public:
 
     uint32_t field_14;
 
-    struct Entry : public OrderedMapItem
+    struct Entry : public OrderedMapItem, public Lua::DynamicObject
     {
+        NEPTOOLS_DYNAMIC_OBJECT;
+    public:
         std::string name;
         uint32_t field_200 = 0;
         std::vector<WeakRefCountedPtr<Entry>> links;
