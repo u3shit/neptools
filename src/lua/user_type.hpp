@@ -56,42 +56,34 @@ public:
     TypeBuilder& Name(const char* name);
 
     template <typename Deriv, typename... Base>
-    TypeBuilder& Inherit()
-    {
-        InheritHelp<Deriv, Base...>::Do(*this);
-        return *this;
-    }
+    void Inherit() { InheritHelp<Deriv, Base...>::Do(*this); }
 
     template <typename T>
-    TypeBuilder& ValueDtor()
+    void ValueDtor()
     {
         vm.Push<decltype(&DtorFun<T>), &DtorFun<T>>();
         SetField("__gc");
-        return *this;
     }
 
     template <typename T, T fun>
-    TypeBuilder& Add(const char* name)
+    void Add(const char* name)
     {
         vm.Push<T, fun>();
         SetField(name);
-        return *this;
     }
 
     template <typename... Args>
-    TypeBuilder& Add(const char* name)
+    void Add(const char* name)
     {
         vm.Push<Args...>();
         SetField(name);
-        return *this;
     }
 
     template <typename T>
-    TypeBuilder& Add(const char* name, T&& t)
+    void Add(const char* name, T&& t)
     {
         vm.Push(std::forward<T>(t));
         SetField(name);
-        return *this;
     }
 
     // low-level, pops value from lua stack

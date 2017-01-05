@@ -11,16 +11,14 @@ template<>
 void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld
-        .Inherit<Foo, Neptools::Lua::DynamicObject>()
+    bld.Inherit<Foo, Neptools::Lua::DynamicObject>();
 
-        .Add<
-            void (Foo::*)(int), &Foo::DoIt
-        >("do_it")
-        .Add<
-            decltype(&::Neptools::MakeSmart<Foo>), &::Neptools::MakeSmart<Foo>
-        >("new")
-        ;
+    bld.Add<
+        void (Foo::*)(int), &Foo::DoIt
+    >("do_it");
+    bld.Add<
+        decltype(&::Neptools::MakeSmart<Foo>), &::Neptools::MakeSmart<Foo>
+    >("new");
 
 }
 static TypeRegister::StateRegister<Foo> reg_foo;
@@ -40,13 +38,11 @@ template<>
 void TypeRegister::DoRegister<Bar::Baz::Asdfgh>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld
-        .Inherit<Bar::Baz::Asdfgh, Neptools::Lua::DynamicObject>()
+    bld.Inherit<Bar::Baz::Asdfgh, Neptools::Lua::DynamicObject>();
 
-        .Add<
-            decltype(&::Neptools::MakeSmart<Bar::Baz::Asdfgh>), &::Neptools::MakeSmart<Bar::Baz::Asdfgh>
-        >("new")
-        ;
+    bld.Add<
+        decltype(&::Neptools::MakeSmart<Bar::Baz::Asdfgh>), &::Neptools::MakeSmart<Bar::Baz::Asdfgh>
+    >("new");
 
 }
 static TypeRegister::StateRegister<Bar::Baz::Asdfgh> reg_bar_baz_asdfgh;
@@ -66,19 +62,17 @@ template<>
 void TypeRegister::DoRegister<Baz>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld
-        .Inherit<Baz, Neptools::Lua::DynamicObject>()
+    bld.Inherit<Baz, Neptools::Lua::DynamicObject>();
 
-        .Add<
-            decltype(&::Neptools::MakeSmart<Baz>), &::Neptools::MakeSmart<Baz>
-        >("new")
-        .Add<
-            void (Baz::*)(int), &Baz::SetGlobal
-        >("set_global")
-        .Add<
-            int (Baz::*)(), &Baz::GetRandom
-        >("get_random")
-        ;
+    bld.Add<
+        decltype(&::Neptools::MakeSmart<Baz>), &::Neptools::MakeSmart<Baz>
+    >("new");
+    bld.Add<
+        void (Baz::*)(int), &Baz::SetGlobal
+    >("set_global");
+    bld.Add<
+        int (Baz::*)(), &Baz::GetRandom
+    >("get_random");
 
 }
 static TypeRegister::StateRegister<Baz> reg_baz;

@@ -11,12 +11,10 @@ template<>
 void TypeRegister::DoRegister<Neptools::Lua::DynamicObject>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld
 
-        .Add<
-            void (*)(Neptools::Lua::StateRef), &Dtor
-        >("__gc")
-        ;
+    bld.Add<
+        void (*)(Neptools::Lua::StateRef), &Dtor
+    >("__gc");
 
 }
 static TypeRegister::StateRegister<Neptools::Lua::DynamicObject> reg_neptools_lua_dynamic_object;
