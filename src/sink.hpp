@@ -28,7 +28,7 @@ public:
     FilePosition Tell() const noexcept { return offset + buf_put; }
 
     template <typename Checker = Check::Assert, typename T>
-    void WriteGen(const T& x)
+    NEPTOOLS_NOLUA void WriteGen(const T& x)
     { Write<Checker>({reinterpret_cast<const char*>(&x), EmptySizeof<T>}); }
 
     template <typename Checker = Check::Assert>

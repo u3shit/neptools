@@ -14,7 +14,7 @@ void TypeRegister::DoRegister<Neptools::Sink>(StateRef vm, TypeBuilder& bld)
     bld.Inherit<Neptools::Sink, Neptools::Lua::DynamicObject>();
 
     bld.Add<
-        NotNull<RefCountedPtr<Neptools::Sink> > (*)(boost::filesystem::path,FilePosition,bool), &Neptools::Sink::ToFile
+        NotNull<RefCountedPtr<Neptools::Sink> > (*)(boost::filesystem::path, FilePosition, bool), &Neptools::Sink::ToFile
     >("to_file");
     bld.Add<
         NotNull<RefCountedPtr<Neptools::Sink> > (*)(), &Neptools::Sink::ToStdOut

@@ -1,4 +1,5 @@
 local utils = require("gen_binding.utils")
+local template = require("gen_binding.generator").template
 
 local cl = require("ljclang")
 local vr = cl.ChildVisitResult
@@ -109,19 +110,19 @@ local function default_hidden(c)
     c:name():sub(1,8) == "operator"
 end
 
-local function lua_method_pre(c, tbl)
-  local orig_hidden = tbl.hidden
-  utils.default_arg(tbl, "hidden", default_hidden, c)
-  if tbl.hidden then return false end
+-- function handlers begin
+local function func_common(c, info, tbl)
+  info.args = collect_args(c)
+  info.argsf = function(wrap, pre) return utils.type_list(info.args, wrap, pre) end
+  info.result_type = utils.type_name(c:resultType())
+  return true
+end
 
-  utils.default_arg(tbl, "name", utils.default_name_fun, c)
-
-  if not tbl.template_params and c:kind() == "FunctionTemplate" then
+local function method_tmpl(c, info, tbl)
+  if not tbl.template_params then
     local args = collect_template_args(c)
     if #args ~= 1 or args[1]:name() ~= "Checker" then
-      if orig_hidden ~= nil then
-        utils.print_error("Must specify template parameters", c)
-      end
+      utils.print_error("Must specify template parameters", c)
       return false
     end
     tbl.template_params = "Check::Throw"
@@ -129,19 +130,105 @@ local function lua_method_pre(c, tbl)
   return true
 end
 
-local function lua_method_post(c, class, tbl)
-  tbl.class = class
-  if tbl.template_params then
-    tbl.value_str = tbl.value_str.."<"..tbl.template_params..">"
+local function freestanding_func(c, info, tbl)
+  local typ
+  if tbl.class then -- user provided
+    local x = inst.lua_classes[tbl.class]
+    typ = x and x.type
+  else
+    local i = 1
+    while info.args[i]:type():name() == "Lua::StateRef" do i = i+1 end
+    typ = info.args[i]:type()
+    typ = typ:pointee() or typ -- get rid of &, *
+    typ = typ:declaration():type() -- and const, whatever
   end
-  if not tbl.type_str then tbl.type_str = "decltype("..tbl.value_str..")" end
+
+  tbl.class = is_lua_class(typ)
+  if not tbl.class then
+    utils.print_error("Invalid base class", c)
+    return false
+  end
+
+  info.ptr_type = info.result_type.." (*)("..utils.type_list(info.args)..")"
+
+  if not tbl.value_tmpl then
+    tbl.type_tmpl = "/*$= ptr_type */"
+    tbl.value_tmpl = "&/*$= name */"
+  end
+  return true
+end
+
+local function ctor(c, info, tbl)
+  if not tbl.value_tmpl and not tbl.maker then
+    if tbl.class.smart_object then
+      tbl.maker = "::Neptools::MakeSmart"
+    elseif tbl.class.value_object then
+      tbl.maker = "::Neptools::Lua::ValueObjectCtorWrapper"
+    else
+      utils.print_error("Unknown ctor maker", c)
+      return false
+    end
+  end
+  if not tbl.value_tmpl then
+    tbl.value_tmpl = [[
+&/*$= tbl.maker */</*$= tbl.class.cpp_name *//*$= argsf('LuaGetRef', true) */>]]
+    tbl.type_tmpl = nil
+  end
+  return true
+end
+
+local function general_method(c, info, tbl)
+  local ptrpre = c:isStatic() and "" or tbl.class.cpp_name.."::"
+  info.ptr_type = utils.type_name(c:resultType()).." ("..ptrpre.."*)("..
+    utils.type_list(collect_args(c))..")"
+  if c:isConst() then info.ptr_type = info.ptr_type.." const" end
+  info.value = "&"..tbl.class.cpp_name.."::"..c:name()
+  if tbl.template_params then
+    info.value = info.value.."<"..tbl.template_params..">"
+  end
+
+  if not tbl.value_tmpl then
+    tbl.type_tmpl = "/*$= ptr_type */"
+    tbl.value_tmpl = "/*$= value */"
+  end
+  return true
+end
+
+local func_type_handlers = {
+  FunctionDecl = { func_common, freestanding_func },
+  Constructor = { func_common, ctor },
+  CXXMethod = { func_common, general_method },
+  FunctionTemplate = { func_common, method_tmpl, general_method }
+}
+
+local function lua_function(c, tbl)
+  utils.default_arg(tbl, "hidden", default_hidden, c)
+  if tbl.hidden then return end
+  utils.default_arg(tbl, "name", utils.default_name_fun, c)
+
+  local info = {
+    name = c:name(),
+    tbl = tbl,
+
+    __index = tbl,
+  }
+
+  local lst = assert(func_type_handlers[c:kind()])
+  for k,v in ipairs(lst) do
+    if not v(c, info, tbl) then return end
+  end
+
+  assert(tbl.class)
+  assert(tbl.value_tmpl)
+  tbl.value_str = template(tbl.value_tmpl, info, c)
+  tbl.type_str = template(tbl.type_tmpl or "decltype(/*$= tbl.value_str */)", info, c)
 
   -- store method
-  local mets = class.methods
+  local mets = tbl.class.methods
   local name = tbl.name
   if not mets[name] then
     mets[name] = {}
-    class.methods_ord[#class.methods_ord+1] = name
+    tbl.class.methods_ord[#tbl.class.methods_ord+1] = name
   end
   if tbl.index then
     table.insert(mets[name], tbl.index, tbl)
@@ -150,35 +237,7 @@ local function lua_method_post(c, class, tbl)
   end
 end
 
-local function lua_method(c, class, tbl)
-  if not lua_method_pre(c, tbl) then return end
-
-  if c:kind() == "Constructor" then
-    if not tbl.maker then
-      if class.smart_object then
-        tbl.maker = "::Neptools::MakeSmart"
-      elseif class.value_object then
-        tbl.maker = "::Neptools::Lua::ValueObjectCtorWrapper"
-      else
-        utils.print_error("Unknown ctor maker", c)
-        return nil
-      end
-    end
-
-    local tl = collect_args(c, {class.cpp_name})
-    for i=2,#tl do tl[i] = "LuaGetRef<"..tl[i]:type():name()..">" end
-    tbl.value_str = "&"..tbl.maker.."<"..table.concat(tl, ", ")..">"
-  else
-    local ptrpre = c:isStatic() and "" or class.cpp_name.."::"
-    tbl.type_str = utils.type_name(c:resultType()).." ("..ptrpre.."*)("..
-      utils.type_list(collect_args(c))..")"
-    if c:isConst() then tbl.type_str = tbl.type_str.." const" end
-    tbl.value_str = "&"..class.cpp_name.."::"..c:name()
-  end
-
-  return lua_method_post(c, class, tbl)
-end
-
+-- inside class
 local parse_class_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if kind == "CXXBaseSpecifier" then
@@ -197,7 +256,8 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
   local ann = utils.get_annotations(c)
   if #ann == 0 then ann[1] = {} end
   for _,a in ipairs(ann) do
-    lua_method(c, inst.parse_class_class, a)
+    a.class = inst.parse_class_class
+    lua_function(c, a)
   end
   return vr.Continue
 end)
@@ -210,36 +270,6 @@ local function parse_class(type, class)
     utils.print_warning("Missing NEPTOOLS_DYNAMIC_OBJECT", type:declaration())
   end
   return class
-end
-
--- parse free-standing functions
-local function freestanding_func(c, tbl)
-  if not lua_method_pre(c, tbl) then return end
-
-  local typ
-  local args = collect_args(c)
-  if tbl.class then
-    local x = inst.lua_classes[tbl.class]
-    typ = x and x.type
-  else
-    local i = 1
-    while args[i]:type():name() == "Lua::StateRef" do i = i+1 end
-    typ = args[i]:type()
-    typ = typ:pointee() or typ -- get rid of &, *
-    typ = typ:declaration():type() -- and const, whatever
-  end
-
-  local lc = is_lua_class(typ)
-  if not lc then
-    utils.print_error("Invalid base class", c)
-    return nil
-  end
-
-  tbl.type_str = utils.type_name(c:resultType()).." (*)("..
-    utils.type_list(args)..")"
-  tbl.value_str = "&"..c:name()
-
-  return lua_method_post(c, lc, tbl)
 end
 
 -- top level parse
@@ -257,7 +287,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
     return vr.Recurse -- support inner classes
   elseif kind == "FunctionDecl" then
     for _,a in ipairs(utils.get_annotations(c)) do
-      freestanding_func(c, a)
+      lua_function(c, a)
     end
   end
 

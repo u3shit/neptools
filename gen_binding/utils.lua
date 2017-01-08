@@ -43,9 +43,15 @@ function ret.type_name(type)
   return type:name()
 end
 
-function ret.type_list(args)
-  for i,v in ipairs(args) do args[i] = args[i]:type():name() end
-  return table.concat(args, ",")
+function ret.type_list(args, wrap, pre)
+  if wrap then
+    for i,v in ipairs(args) do args[i] = wrap.."<"..args[i]:type():name()..">" end
+  else
+    for i,v in ipairs(args) do args[i] = args[i]:type():name() end
+  end
+  local cat = table.concat(args, ", ")
+  if pre and cat ~= "" then return ", "..cat end
+  return cat
 end
 
 function ret.is_lua_annotation(c)

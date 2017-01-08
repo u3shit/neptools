@@ -79,19 +79,19 @@ public:
     void CheckRemainingSize(FilePosition size) const { CheckSize(get + size); }
 
     template <typename Checker = Check::Assert, typename T>
-    void ReadGen(T& x)
+    NEPTOOLS_NOLUA void ReadGen(T& x)
     { Read<Checker>(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
 
     template <typename T, typename Checker = Check::Assert>
-    T ReadGen() { T ret; ReadGen<Checker>(ret); return ret; }
+    NEPTOOLS_NOLUA T ReadGen() { T ret; ReadGen<Checker>(ret); return ret; }
 
 
     template <typename Checker = Check::Assert, typename T>
-    void PreadGen(FilePosition offs, T& x) const
+    NEPTOOLS_NOLUA void PreadGen(FilePosition offs, T& x) const
     { Pread<Checker>(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
 
     template <typename T, typename Checker = Check::Assert>
-    T PreadGen(FilePosition offs) const
+    NEPTOOLS_NOLUA T PreadGen(FilePosition offs) const
     { T ret; PreadGen<Checker>(offs, ret); return ret; }
 
 

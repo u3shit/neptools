@@ -17,7 +17,7 @@ void TypeRegister::DoRegister<Neptools::TxtSerializable>(StateRef vm, TypeBuilde
         std::string (*)(Neptools::TxtSerializable &), &WriteTxt
     >("write_txt");
     bld.Add<
-        void (*)(Neptools::TxtSerializable &,std::string), &ReadTxt
+        void (*)(Neptools::TxtSerializable &, std::string), &ReadTxt
     >("read_txt");
 
 }

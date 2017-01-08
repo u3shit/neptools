@@ -1,16 +1,36 @@
 -- -*- poly-lua-c++-lua -*-
 
+local setfenv, setmetatable = setfenv, setmetatable
+
+local utils = require("gen_binding.utils")
+
+local cache = {}
+setmetatable(cache, {__mode="v"})
+local index_G_tbl = {__index=_G}
+
 local function template_code(str)
-  return "')"..str:gsub("\\(.)", "%1"):
-    gsub("^=(.*)$", "out:write(tostring(%1))").." out:write('"
+  return "'"..str:gsub("\\(.)", "%1"):
+    gsub("^=(.*)$", "out[#out+1]=tostring(%1)").." out[#out+1]='"
 end
-local function template(inp, out, tbl)
-  local ninp = inp:gsub("[\\'\n]", "\\%1"):gsub("//$([^\n]*\\\n)", template_code):
-    gsub("/%*$(.-)%*%/", template_code):gsub("out:write%(''%)", "")
-  --print("local out = ... out:write('"..ninp.."')")
-  local fun = assert(loadstring("local out = ... out:write('"..ninp.."')"))
-  setfenv(fun, setmetatable(tbl, {__index=_G}))
-  fun(out)
+local function template(inp, tbl, c)
+  local fun = cache[inp]
+  if not fun then
+    local ninp = inp:gsub("[\\'\n]", "\\%1"):gsub("//$([^\n]*\\\n)", template_code):
+      gsub("/%*$(.-)%*%/", template_code)
+    ninp = "local out = {} out[#out+1]='"..ninp.."' return table.concat(out)"
+    ninp = ninp:gsub("out%[%#out%+1%]%=''", "")
+    --print(ninp)
+    local err
+    fun, err = loadstring(ninp)
+    if not fun then
+      utils.print_error("Invalid template: "..err, c)
+      return
+    end
+    cache[inp] = fun
+  end
+
+  setfenv(fun, setmetatable(tbl, index_G_tbl))
+  return fun()
 end
 
 local template_str = [=[
@@ -63,8 +83,8 @@ const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
 //$ end
 ]=]
 
-local function generate(out, classes)
-  template(template_str, out, {classes=classes})
+local function generate(classes)
+  return assert(template(template_str, {classes=classes}), "Generate failed")
 end
 
-return { generate = generate }
+return { template = template, generate = generate }

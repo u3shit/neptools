@@ -20,7 +20,7 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
         Neptools::Source (*)(boost::filesystem::path), &Neptools::Source::FromFile
     >("from_file");
     bld.Add<
-        void (Neptools::Source::*)(FilePosition,FilePosition), &Neptools::Source::Slice<Check::Throw>
+        void (Neptools::Source::*)(FilePosition, FilePosition), &Neptools::Source::Slice<Check::Throw>
     >("slice");
     bld.Add<
         FilePosition (Neptools::Source::*)() const, &Neptools::Source::GetOffset
@@ -83,10 +83,10 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
         std::string (Neptools::Source::*)(FilePosition) const, &Neptools::Source::PreadCString
     >("pread_cstring");
     bld.Add<
-        Lua::RetNum (*)(Lua::StateRef,Neptools::Source &,FileMemSize), &LuaRead
+        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FileMemSize), &LuaRead
     >("read");
     bld.Add<
-        Lua::RetNum (*)(Lua::StateRef,Neptools::Source &,FilePosition,FileMemSize), &LuaPread
+        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FilePosition, FileMemSize), &LuaPread
     >("pread");
 
 }

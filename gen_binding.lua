@@ -66,11 +66,12 @@ local match_fname = remove_ext(fname)
 local classes = parser.parse(
   tu:cursor(), function(c) return remove_ext(c:location()) == match_fname end)
 
+local gen = generator.generate(classes)
 if fname_out == "-" then
-  generator.generate(io.stdout, classes)
+  io.stdout:write(gen)
 else
   local f = io.open(fname_out, "wb")
-  generator.generate(f, classes)
+  f:write(gen)
   f:close()
 end
 os.exit(utils.fail and 1 or 0)
