@@ -14,6 +14,12 @@ void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
     bld.Inherit<Foo, Neptools::Lua::DynamicObject>();
 
     bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>), &::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>
+    >("get_local_var");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Foo, int, &Foo::local_var>), &::Neptools::Lua::SetMember<Foo, int, &Foo::local_var>
+    >("set_local_var");
+    bld.Add<
         void (Foo::*)(int), &Foo::DoIt
     >("do_it");
     bld.Add<

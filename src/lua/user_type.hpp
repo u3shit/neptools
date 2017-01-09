@@ -47,6 +47,12 @@ template <typename T>
 using LuaGetRef = typename LuaGetRefHlp<T>::Type;
 
 
+template <typename Class, typename T, T Class::* member>
+T& GetMember(Class& cls) { return cls.*member; }
+
+template <typename Class, typename T, T Class::* member>
+void SetMember(Class& cls, const T& val) { cls.*member = val; }
+
 class TypeBuilder
 {
 public:

@@ -18,6 +18,12 @@ void TypeRegister::DoRegister<Neptools::Cl3>(StateRef vm, TypeBuilder& bld)
         Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3, LuaGetRef<Neptools::Source>>), &::Neptools::MakeSmart<Neptools::Cl3, LuaGetRef<Neptools::Source>>>
     >("new");
     bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>), &::Neptools::Lua::GetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>
+    >("get_field_14");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>), &::Neptools::Lua::SetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>
+    >("set_field_14");
+    bld.Add<
         uint32_t (Neptools::Cl3::*)(const WeakSmartPtr<Neptools::Cl3::Entry> &) const, &Neptools::Cl3::IndexOf
     >("index_of");
     bld.Add<
@@ -53,6 +59,24 @@ void TypeRegister::DoRegister<Neptools::Cl3::Entry>(StateRef vm, TypeBuilder& bl
     (void) vm;
     bld.Inherit<Neptools::Cl3::Entry, Neptools::Lua::DynamicObject>();
 
+    bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>
+    >("get_name");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>
+    >("set_name");
+    bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>
+    >("get_field_200");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>
+    >("set_field_200");
+    bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>
+    >("get_src");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>
+    >("set_src");
     bld.Add<
         Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>>), &::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>>>,
         Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>), &::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>>

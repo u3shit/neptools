@@ -219,7 +219,7 @@ struct NullableTypeTraits
 
     static void Push(StateRef vm, const T& obj)
     {
-        if (obj) TypeTraits<NotNull<T>>::Push(vm, obj);
+        if (obj) TypeTraits<NotNull<T>>::Push(vm, NotNull<T>{obj});
         else lua_pushnil(vm);
     }
 };

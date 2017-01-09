@@ -112,9 +112,16 @@ end
 
 -- function handlers begin
 local function func_common(c, info, tbl)
+  utils.default_arg(tbl, "name", utils.default_name_fun, c)
+
   info.args = collect_args(c)
   info.argsf = function(wrap, pre) return utils.type_list(info.args, wrap, pre) end
   info.result_type = utils.type_name(c:resultType())
+  return true
+end
+
+local function class_info(c, info, tbl)
+  info.class = tbl.class.cpp_name
   return true
 end
 
@@ -171,18 +178,18 @@ local function ctor(c, info, tbl)
   end
   if not tbl.value_tmpl then
     tbl.value_tmpl = [[
-&/*$= tbl.maker */</*$= tbl.class.cpp_name *//*$= argsf('LuaGetRef', true) */>]]
+&/*$= tbl.maker */</*$= class *//*$= argsf('LuaGetRef', true) */>]]
     tbl.type_tmpl = nil
   end
   return true
 end
 
 local function general_method(c, info, tbl)
-  local ptrpre = c:isStatic() and "" or tbl.class.cpp_name.."::"
-  info.ptr_type = utils.type_name(c:resultType()).." ("..ptrpre.."*)("..
+  local ptrpre = c:isStatic() and "" or info.class.."::"
+  info.ptr_type = info.result_type.." ("..ptrpre.."*)("..
     utils.type_list(collect_args(c))..")"
   if c:isConst() then info.ptr_type = info.ptr_type.." const" end
-  info.value = "&"..tbl.class.cpp_name.."::"..c:name()
+  info.value = "&"..info.class.."::"..info.name
   if tbl.template_params then
     info.value = info.value.."<"..tbl.template_params..">"
   end
@@ -194,17 +201,45 @@ local function general_method(c, info, tbl)
   return true
 end
 
+local function default_name_field(c, pref)
+  return pref..utils.default_name_fun(c)
+end
+
+local function field(c, info, tbl)
+  if (not tbl.get and not tbl.set) or (tbl.get and tbl.set) then
+    utils.print_error("Exactly one of get/set required", c)
+    return false
+  end
+
+  utils.default_arg(tbl, "name", default_name_field,
+                    c, tbl.get and "get_" or "set_")
+
+  info.type = utils.type_name(c:type())
+  info.ptr_type = info.type.." "..info.class.."::*"
+  info.value = "&"..info.class.."::"..info.name
+
+  if not tbl.value_tmpl then
+    if tbl.get then
+      info.key = tbl.get == true and "::Neptools::Lua::GetMember" or tbl.get
+    else
+      info.key = tbl.set == true and "::Neptools::Lua::SetMember" or tbl.set
+    end
+    tbl.value_tmpl = "&/*$= key */</*$= class */, /*$= type */, /*$= value */>"
+  end
+  return true
+end
+
 local func_type_handlers = {
-  FunctionDecl = { func_common, freestanding_func },
-  Constructor = { func_common, ctor },
-  CXXMethod = { func_common, general_method },
-  FunctionTemplate = { func_common, method_tmpl, general_method }
+  FunctionDecl = { func_common, freestanding_func, class_info },
+  Constructor = { func_common, class_info, ctor },
+  CXXMethod = { func_common, class_info, general_method },
+  FunctionTemplate = { func_common, class_info, method_tmpl, general_method },
+  FieldDecl = { class_info, field },
 }
 
 local function lua_function(c, tbl)
   utils.default_arg(tbl, "hidden", default_hidden, c)
   if tbl.hidden then return end
-  utils.default_arg(tbl, "name", utils.default_name_fun, c)
 
   local info = {
     name = c:name(),
@@ -248,13 +283,21 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
     end
   end
 
-  if kind ~= "CXXMethod" and kind ~= "FunctionTemplate" and kind ~= "Constructor" then
+  if kind ~= "CXXMethod" and kind ~= "FunctionTemplate" and
+     kind ~= "Constructor" and kind ~= "FieldDecl" then
     return vr.Continue
   end
   if c:name() == "PushLuaObj" then inst.parse_class_class.has_push_lua = true end
 
   local ann = utils.get_annotations(c)
-  if #ann == 0 then ann[1] = {} end
+  if #ann == 0 then
+    if kind == "FieldDecl" then
+      ann[1] = { get = true }
+      if not c:isConst() then ann[2] = { set = true } end
+    else
+      ann[1] = {}
+    end
+  end
   for _,a in ipairs(ann) do
     a.class = inst.parse_class_class
     lua_function(c, a)

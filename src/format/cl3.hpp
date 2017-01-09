@@ -102,6 +102,7 @@ public:
     public:
         std::string name;
         uint32_t field_200 = 0;
+        NEPTOOLS_NOLUA
         std::vector<WeakRefCountedPtr<Entry>> links;
 
         SmartPtr<Dumpable> src;
@@ -115,6 +116,7 @@ public:
         using type = std::string;
         const type& operator()(const Entry& e) { return e.name; }
     };
+    NEPTOOLS_NOLUA
     OrderedMap<Entry, struct EntryKeyOfValue> entries;
     uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 
