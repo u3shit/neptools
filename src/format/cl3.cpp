@@ -309,7 +309,7 @@ Stcm::File& Cl3::GetStcm()
     if (stcm) return *stcm;
 
     auto src = asserted_cast<DumpableSource*>(dat->src.get());
-    auto nstcm = MakeSmart<Stcm::File>(*src);
+    auto nstcm = MakeSmart<Stcm::File>(src->GetSource());
     auto ret = nstcm.get();
     dat->src = std::move(nstcm);
     return *ret;

@@ -106,11 +106,15 @@ template<>
 void TypeRegister::DoRegister<Neptools::DumpableSource>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Neptools::DumpableSource, Neptools::Dumpable, Neptools::Source>();
+    bld.Inherit<Neptools::DumpableSource, Neptools::Dumpable>();
 
     bld.Add<
-        decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>
+        Overload<decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>>,
+        Overload<decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>>
     >("new");
+    bld.Add<
+        Neptools::Source (Neptools::DumpableSource::*)() const, &Neptools::DumpableSource::GetSource
+    >("get_source");
 
 }
 static TypeRegister::StateRegister<Neptools::DumpableSource> reg_neptools_dumpable_source;

@@ -219,7 +219,7 @@ void UnixProvider::DeleteChunk(size_t i)
     delete[] lru[i].ptr;
 }
 
-void DumpableSource::Inspect_(std::ostream& os) const
+void Source::Inspect(std::ostream& os) const
 {
     auto flags = os.flags();
     os << std::hex << "bin(";
@@ -228,7 +228,7 @@ void DumpableSource::Inspect_(std::ostream& os) const
     os.flags(flags);
 }
 
-void DumpableSource::Dump_(Sink& sink) const
+void Source::Dump(Sink& sink) const
 {
     auto offset = GetOffset();
     auto rem_size = GetSize();

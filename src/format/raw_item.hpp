@@ -71,7 +71,7 @@ private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
 
-    DumpableSource src;
+    Source src;
 };
 
 template <typename T>

@@ -26,7 +26,7 @@ using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
 std::string to_string(const UsedSource& src);
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
-class Source : public Lua::ValueObject
+class Source final : public Lua::ValueObject
 {
     NEPTOOLS_LUA_CLASS;
 public:
@@ -206,11 +206,15 @@ public:
     Source(NotNull<SmartPtr<Provider>> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
-protected:
+    void Dump(Sink& sink) const;
+    void Dump(Sink&& sink) const { Dump(sink); }
+    void Inspect(std::ostream& os) const;
+    void Inspect(std::ostream&& os) const { Inspect(os); }
+
+private:
     // offset: in original file!
     BufEntry GetTemporaryEntry(FilePosition offs) const;
 
-private:
     void Pread_(FilePosition offs, Byte* buf, FileMemSize len) const;
     static Source FromFile_(boost::filesystem::path fname);
 
@@ -219,21 +223,24 @@ private:
     NotNull<SmartPtr<Provider>> p;
 };
 
-class DumpableSource final : public Dumpable, public Source
+class DumpableSource final : public Dumpable
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    DumpableSource(const Source& s) : Source{s} {}
+    DumpableSource(const Source& s) noexcept : src{s} {}
     NEPTOOLS_NOLUA
-    DumpableSource(Source&& s) : Source{std::move(s)} {}
-    using Source::Source;
+    DumpableSource(Source&& s) noexcept : src{std::move(s)} {}
+    DumpableSource(const Source& s, FilePosition offset, FilePosition size) noexcept
+        : src{s, offset, size} {}
 
     void Fixup() override {}
 
-    FilePosition GetSize() const override { return Source::GetSize(); }
+    FilePosition GetSize() const override { return src.GetSize(); }
+    Source GetSource() const noexcept { return src; }
 private:
-    void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    Source src;
+    void Dump_(Sink& sink) const override { src.Dump(sink); }
+    void Inspect_(std::ostream& os) const override { src.Inspect(os); }
 };
 
 #define ADD_SOURCE(src)                                         \

@@ -5,7 +5,6 @@
 #include <type_traits>
 #include "../meta.hpp"
 #include "../not_null.hpp"
-#include "value_object.hpp"
 #include "userdata.hpp"
 
 namespace Neptools
@@ -18,11 +17,6 @@ class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) SmartObject {};
 // specialize if needed
 template <typename T, typename Enable = void>
 struct IsSmartObject : std::is_base_of<SmartObject, T> {};
-
-// smart objects are no longer value objects
-template <typename T>
-struct IsValueObject<T, std::enable_if_t<IsSmartObject<T>::value>>
-    : std::false_type {};
 
 template <typename T>
 struct IsUserdataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
