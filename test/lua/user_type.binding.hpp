@@ -11,7 +11,6 @@ template<>
 void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Foo, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>), &::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>
@@ -44,7 +43,6 @@ template<>
 void TypeRegister::DoRegister<Bar::Baz::Asdfgh>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Bar::Baz::Asdfgh, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         decltype(&::Neptools::MakeSmart<Bar::Baz::Asdfgh>), &::Neptools::MakeSmart<Bar::Baz::Asdfgh>
@@ -68,7 +66,6 @@ template<>
 void TypeRegister::DoRegister<Baz>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Baz, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         decltype(&::Neptools::MakeSmart<Baz>), &::Neptools::MakeSmart<Baz>

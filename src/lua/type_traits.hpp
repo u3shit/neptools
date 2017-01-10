@@ -46,25 +46,6 @@ constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
 // type tag
 template <typename T> char TYPE_TAG = {};
 
-template <typename T, typename Deriv>
-struct TaggedTraits
-{
-    static decltype(auto) Get(StateRef vm, bool arg, int idx)
-    {
-        if (!Is(vm, idx))
-            vm.TypeError(arg, TYPE_NAME<T>, idx);
-        return Deriv::UnsafeGet(vm, idx);
-    }
-
-    static bool Is(StateRef vm, int idx)
-    {
-        if (!lua_getmetatable(vm, idx)) return false; // +1
-        auto type = lua_rawgetp(vm, -1, &TYPE_TAG<T>); // +2
-        lua_pop(vm, 2);
-        return !IsNoneOrNil(type);
-    }
-};
-
 // lauxlib operations:
 // luaL_check*: call lua_to*, fail if it fails
 // luaL_opt*: lua_isnoneornil ? default : luaL_check*
@@ -223,6 +204,9 @@ struct NullableTypeTraits
         else lua_pushnil(vm);
     }
 };
+
+// used by UserType
+template <typename T, typename Enable = void> struct UserTypeTraits;
 
 }
 }

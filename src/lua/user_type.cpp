@@ -6,7 +6,8 @@ namespace Neptools
 namespace Lua
 {
 
-TypeBuilder::TypeBuilder(StateRef vm, void* type_tag) : vm{vm}
+TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
+    : vm{vm}
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
@@ -35,6 +36,14 @@ TypeBuilder::TypeBuilder(StateRef vm, void* type_tag) : vm{vm}
     lua_pushvalue(vm, -1);
     lua_rawsetp(vm, LUA_REGISTRYINDEX, type_tag);
 
+    // type_table.__name = name
+    lua_pushstring(vm, name); // +1
+    lua_setfield(vm, -2, "__name"); // 0
+
+    // set global name
+    lua_pushglobaltable(vm); // +1
+    vm.SetRecTable(name, -3); // 0
+
     NEPTOOLS_LUA_CHECKTOP(vm, top+2);
 }
 
@@ -60,22 +69,6 @@ void TypeBuilder::Done()
     lua_remove(vm, -2); // -1
 
     NEPTOOLS_LUA_CHECKTOP(vm, top-1);
-}
-
-TypeBuilder& TypeBuilder::Name(const char* name)
-{
-    NEPTOOLS_LUA_GETTOP(vm, top);
-
-    // type_table.__name = name
-    lua_pushstring(vm, name); // +1
-    lua_setfield(vm, -2, "__name"); // 0
-
-    // set global name
-    lua_pushglobaltable(vm); // +1
-    vm.SetRecTable(name, -3); // 0
-
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
-    return *this;
 }
 
 void TypeBuilder::SetField(const char* name)

@@ -7,8 +7,7 @@ cd "$(dirname ${BASH_SOURCE[0]})"
 export LUA_PATH=";;ext/ljclang/?.lua"
 export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
 
-src=(src/lua/dynamic_object src/dumpable src/sink src/source
-     src/txt_serializable
+src=(src/dumpable src/sink src/source src/txt_serializable
      src/format/cl3
      test/lua/user_type)
 

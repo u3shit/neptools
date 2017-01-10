@@ -55,9 +55,6 @@ void TypeRegister::DoRegister</*$= cls.cpp_name */>(StateRef vm, TypeBuilder& bl
 //$   if x[2] then
     bld.Inherit</*$= table.concat(x, ", ") */>();
 //$   end
-//$   if cls.value_object and not cls.smart_object then
-    bld.ValueDtor</*$= cls.cpp_name */>();
-//$   end
 
 //$ for _,k in ipairs(cls.methods_ord) do
 //$   local v = cls.methods[k]

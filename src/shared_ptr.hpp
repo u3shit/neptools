@@ -103,7 +103,11 @@ struct SharedPtrStorageRefCounted
         NEPTOOLS_ASSERT(ctrl == ptr);
     }
 
-    RefCounted* GetCtrl() const noexcept { return ptr; }
+    RefCounted* GetCtrl() const noexcept
+    {
+        NEPTOOLS_STATIC_ASSERT(IS_REFCOUNTED<T>);
+        return ptr;
+    }
     T* GetPtr() const noexcept { return ptr; }
     void Reset() noexcept { ptr = nullptr; }
     void Swap(SharedPtrStorageRefCounted& o) noexcept { std::swap(ptr, o.ptr); }

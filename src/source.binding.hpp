@@ -11,7 +11,6 @@ template<>
 void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.ValueDtor<Neptools::Source>();
 
     bld.Add<
         decltype(&::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>

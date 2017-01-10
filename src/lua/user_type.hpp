@@ -56,20 +56,19 @@ void SetMember(Class& cls, const T& val) { cls.*member = val; }
 class TypeBuilder
 {
 public:
-    TypeBuilder(StateRef vm, void* type_tag);
-    void Done();
+    TypeBuilder(StateRef vm, void* type_tag, const char* name);
+    template <typename T>
+    void Init()
+    {
+        using UT = UserTypeTraits<T>;
+        UT::MetatableCreate(vm);
+        Add<decltype(&UT::GcFun), &UT::GcFun>("__gc");
+    }
 
-    TypeBuilder& Name(const char* name);
+    void Done();
 
     template <typename Deriv, typename... Base>
     void Inherit() { InheritHelp<Deriv, Base...>::Do(*this); }
-
-    template <typename T>
-    void ValueDtor()
-    {
-        vm.Push<decltype(&DtorFun<T>), &DtorFun<T>>();
-        SetField("__gc");
-    }
 
     template <typename T, T fun>
     void Add(const char* name)
@@ -99,14 +98,6 @@ private:
     template <typename Deriv, typename... Base>
     struct InheritHelp;
 
-    template <typename T>
-    static void DtorFun(StateRef vm, T& t)
-    {
-        t.~T();
-        lua_pushnil(vm);
-        lua_setmetatable(vm, 1);
-    }
-
     void DoInherit(ptrdiff_t offs);
 
     StateRef vm;
@@ -125,8 +116,8 @@ public:
         if (lua_isnil(vm, -1))
         {
             lua_pop(vm, 1);
-            TypeBuilder bld{vm, type_tag};
-            bld.Name(TYPE_NAME<Class>);
+            TypeBuilder bld{vm, type_tag, TYPE_NAME<Class>};
+            bld.Init<Class>();
             DoRegister<Class>(vm, bld);
             bld.Done();
         }

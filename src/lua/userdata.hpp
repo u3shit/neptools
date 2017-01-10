@@ -29,6 +29,7 @@ protected:
     void* obj;
 };
 
+/* probably makes no sense
 template <typename T>
 class ValueUserdata final : public UserdataBase
 {
@@ -42,6 +43,7 @@ private:
     ~ValueUserdata() = default;
     T t;
 };
+*/
 
 struct RefCountedUserdataBase : UserdataBase
 {
@@ -52,35 +54,20 @@ struct RefCountedUserdataBase : UserdataBase
     NotNull<SharedPtr<T>> GetShared(size_t offs) const noexcept
     { return NotNull<SharedPtr<T>>{GetCtrl(), &Get<T>(offs), true}; }
 
-    void Destroy(StateRef vm) noexcept override
-    {
-        auto ctrl = GetCtrl();
-        ClearCache(vm, ctrl);
-        ctrl->RemoveRef();
-        this->~RefCountedUserdataBase();
-    }
+    void Destroy(StateRef vm) noexcept override;
 
 protected:
-    static void ClearCache(StateRef vm, RefCounted* ctrl)
-    {
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
-        NEPTOOLS_ASSERT(type == LUA_TTABLE);
-        lua_pushnil(vm); // +2
-        lua_rawsetp(vm, -2, ctrl); // +1
-        lua_pop(vm, 1); // 0
-    }
-
     ~RefCountedUserdataBase() = default;
 };
 
-template <typename T>
 class RefCountedUserdata final : public RefCountedUserdataBase
 {
 public:
+    template <typename T>
     RefCountedUserdata(RefCounted* ctrl, T* ptr) noexcept
-        : RefCountedUserdataBase{ctrl}
+        : RefCountedUserdataBase{ptr}
     {
-        NEPTOOLS_ASSERT(ctrl == ptr);
+        NEPTOOLS_ASSERT(static_cast<void*>(ctrl) == static_cast<void*>(ptr));
         ctrl->AddRef();
     }
 
@@ -105,70 +92,100 @@ private:
     RefCounted* ctrl;
 };
 
+// specialize
+template <typename T, typename Enable = void>
+struct IsUserdataObject : std::false_type {};
+
+namespace UserdataDetail
+{
+extern char TAG;
+
+struct TypeTraits
+{
+    inline static void MetatableCreate(StateRef vm)
+    {
+        lua_pushboolean(vm, true);
+        lua_rawsetp(vm, -2, &TAG);
+    }
+
+    static void GcFun(StateRef vm);
+};
+}
+
 template <typename T>
-struct UserdataTraitsBase
+struct UserTypeTraits<T, std::enable_if_t<IsUserdataObject<T>::value>>
+    : UserdataDetail::TypeTraits {};
+
+namespace UserdataDetail
+{
+
+struct UBArgs { UserdataBase* ud; lua_Integer offs; };
+
+template <typename T>
+struct TraitsBase
 {
     using Type = T;
     using Ret = T&;
-    static Ret UBGet(UserdataBase* ud, size_t offs)
-    {
-        NEPTOOLS_ASSERT(ud);
-        return ud->Get<T>(offs);
-    }
+
+    inline static Ret UBGet(UBArgs a) { return a.ud->Get<T>(a.offs); }
 };
 
 template <typename T>
-struct UserdataTraitsBase<SharedPtr<T>>
+struct TraitsBase<RefCountedPtr<T>>
+{
+    using Type = T;
+    using Ret = NotNull<RefCountedPtr<T>>;
+
+    inline static Ret UBGet(UBArgs a)
+    {
+        NEPTOOLS_ASSERT(
+            static_cast<RefCountedUserdataBase*>(a.ud)->GetCtrl() == a.ud->Get());
+        return a.ud->Get<T>(a.offs);
+    };
+};
+
+template <typename T>
+struct TraitsBase<SharedPtr<T>>
 {
     using Type = T;
     using Ret = NotNull<SharedPtr<T>>;
-    static Ret UBGet(UserdataBase* ud, size_t offs)
+
+    inline static Ret UBGet(UBArgs a)
     {
-        NEPTOOLS_ASSERT(ud);
-        return static_cast<RefCountedUserdataBase*>(ud)->GetShared<T>(offs);
+        return static_cast<RefCountedUserdataBase*>(a.ud)->GetShared<T>(a.offs);
     }
 };
 
-template <typename T, typename Ret = typename UserdataTraitsBase<T>::Ret>
+UBArgs GetBase(
+    StateRef vm, bool arg, int idx, const char* name, void* tag);
+UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag);
+bool IsBase(StateRef vm, int idx, void* tag);
+template <typename Userdata>
+void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag);
+
+}
+
+template <typename T>
 struct UserdataTraits
 {
-    using Base = UserdataTraitsBase<T>;
+    using Base = UserdataDetail::TraitsBase<T>;
     using BaseType = typename Base::Type;
+    using Ret = typename Base::Ret;
 
-    static Ret Get(StateRef vm, bool arg, int idx)
+    inline static Ret Get(StateRef vm, bool arg, int idx)
     {
-        if (!lua_getmetatable(vm, idx)) // +1
-            vm.TypeError(arg, TYPE_NAME<BaseType>, idx);
-        lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
-
-        int isvalid;
-        auto offs = lua_tointegerx(vm, -1, &isvalid);
-        lua_pop(vm, 2); // 0
-        if (!isvalid) vm.TypeError(arg, TYPE_NAME<BaseType>, idx);
-
-        auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
-        return Base::UBGet(ud, offs);
+        return Base::UBGet(UserdataDetail::GetBase(
+            vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
     }
 
-    static Ret UnsafeGet(StateRef vm, int idx)
+    inline static Ret UnsafeGet(StateRef vm, int idx)
     {
-        lua_getmetatable(vm, idx); // +1
-        lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
-        auto offs = lua_tointeger(vm, -1);
-        lua_pop(vm, 2); // 0
-
-        auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
-        return Base::UBGet(ud, offs);
+        return Base::UBGet(UserdataDetail::UnsafeGetBase(
+            vm, idx, &TYPE_TAG<BaseType>));
     }
 
-    static bool Is(StateRef vm, int idx)
-    {
-        if (!lua_getmetatable(vm, idx)) // +1
-            return false;
-        auto type = lua_rawgetp(vm, -1, &TYPE_TAG<BaseType>); // +2
-        lua_pop(vm, 2); // 0
-        return type == LUA_TNUMBER;
-    }
+    inline static bool Is(StateRef vm, int idx)
+    { return UserdataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
 };
 
 }

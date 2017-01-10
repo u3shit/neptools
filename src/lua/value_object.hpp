@@ -10,10 +10,11 @@ namespace Neptools
 namespace Lua
 {
 
+// no inheritance support for now
 struct NEPTOOLS_LUAGEN(no_inherit=true,value_object=true) ValueObject {};
 
 // specialize if needed
-template <typename T>
+template <typename T, typename Enable = void>
 struct IsValueObject : std::is_base_of<ValueObject, T> {};
 
 template <typename T>
@@ -52,20 +53,16 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 };
 
 template <typename T>
-struct TypeTraits<T*, std::enable_if_t<IsValueObject<T>::value>>
+struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
-    static T* Get(StateRef vm, bool arg, int idx)
+    inline static void MetatableCreate(StateRef) {}
+
+    static void GcFun(StateRef vm, T& t)
     {
-        if (!Is(vm, idx))
-            vm.TypeError(arg, TYPE_NAME<T>, idx);
-        return UnsafeGet(vm, idx);
+        t.~T();
+        lua_pushnil(vm);
+        lua_setmetatable(vm, 1);
     }
-
-    static T* UnsafeGet(StateRef vm, int idx)
-    { return reinterpret_cast<T*>(lua_touserdata(vm, idx)); }
-
-    static bool Is(StateRef vm, int idx)
-    { return TypeTraits<T>::Is(vm, idx); }
 };
 
 }

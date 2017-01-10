@@ -11,7 +11,6 @@ template<>
 void TypeRegister::DoRegister<Neptools::TxtSerializable>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Neptools::TxtSerializable, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         std::string (*)(Neptools::TxtSerializable &), &WriteTxt

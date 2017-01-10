@@ -11,7 +11,6 @@ template<>
 void TypeRegister::DoRegister<Neptools::Dumpable>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Neptools::Dumpable, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         void (Neptools::Dumpable::*)(), &Neptools::Dumpable::Fixup

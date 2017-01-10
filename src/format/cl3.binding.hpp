@@ -57,7 +57,6 @@ template<>
 void TypeRegister::DoRegister<Neptools::Cl3::Entry>(StateRef vm, TypeBuilder& bld)
 {
     (void) vm;
-    bld.Inherit<Neptools::Cl3::Entry, Neptools::Lua::DynamicObject>();
 
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>

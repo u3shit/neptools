@@ -287,7 +287,7 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
      kind ~= "Constructor" and kind ~= "FieldDecl" then
     return vr.Continue
   end
-  if c:name() == "PushLuaObj" then inst.parse_class_class.has_push_lua = true end
+  if c:name() == "PushLua" then inst.parse_class_class.has_push_lua = true end
 
   local ann = utils.get_annotations(c)
   if #ann == 0 then
