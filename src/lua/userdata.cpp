@@ -5,19 +5,19 @@ namespace Neptools
 namespace Lua
 {
 
-static void ClearCache(StateRef vm, RefCounted* ctrl)
+static void ClearCache(StateRef vm, void* ptr)
 {
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
     NEPTOOLS_ASSERT(type == LUA_TTABLE);
     lua_pushnil(vm); // +2
-    lua_rawsetp(vm, -2, ctrl); // +1
+    lua_rawsetp(vm, -2, ptr); // +1
     lua_pop(vm, 1); // 0
 }
 
 void RefCountedUserdataBase::Destroy(StateRef vm) noexcept
 {
     auto ctrl = GetCtrl();
-    ClearCache(vm, ctrl);
+    ClearCache(vm, Get());
     ctrl->RemoveRef();
     this->~RefCountedUserdataBase();
 }
@@ -87,7 +87,7 @@ void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag)
     // check cache
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
     NEPTOOLS_ASSERT(type == LUA_TTABLE);
-    type = lua_rawgetp(vm, -1, &ctrl); // +2
+    type = lua_rawgetp(vm, -1, ptr); // +2
     if (type != LUA_TUSERDATA) // no hit
     {
         lua_pop(vm, 1); // +1
