@@ -24,7 +24,7 @@ void TypeRegister::DoRegister<Neptools::Dumpable>(StateRef vm, TypeBuilder& bld)
     >("dump");
     bld.Add<
         Overload<void (Neptools::Dumpable::*)(const boost::filesystem::path &) const, &Neptools::Dumpable::Inspect>,
-        Overload<std::string (*)(const Neptools::Dumpable &), &InspectToString>
+        Overload<std::string (Neptools::Dumpable::*)() const, &Neptools::Dumpable::Inspect>
     >("inspect");
 
 }

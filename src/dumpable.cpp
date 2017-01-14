@@ -64,11 +64,10 @@ std::ostream& operator<<(std::ostream& os, const Dumpable& dmp)
     return os;
 }
 
-NEPTOOLS_LUAGEN(name="inspect")
-static std::string InspectToString(const Dumpable& dmp)
+std::string Dumpable::Inspect() const
 {
     std::stringstream ss;
-    dmp.Inspect(ss);
+    Inspect(ss);
     return ss.str();
 }
 

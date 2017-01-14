@@ -32,6 +32,7 @@ public:
     NEPTOOLS_NOLUA
     void Inspect(std::ostream&& os) const { return Inspect_(os); }
     void Inspect(const boost::filesystem::path& path) const;
+    std::string Inspect() const;
 
 private:
     virtual void Dump_(Sink& sink) const = 0;

@@ -82,6 +82,12 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
         std::string (Neptools::Source::*)(FilePosition) const, &Neptools::Source::PreadCString
     >("pread_cstring");
     bld.Add<
+        void (Neptools::Source::*)(Neptools::Sink &) const, &Neptools::Source::Dump
+    >("dump");
+    bld.Add<
+        std::string (Neptools::Source::*)() const, &Neptools::Source::Inspect
+    >("inspect");
+    bld.Add<
         Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FileMemSize), &LuaRead
     >("read");
     bld.Add<

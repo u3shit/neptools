@@ -207,9 +207,10 @@ public:
         : size{size}, p{std::move(p)} {}
 
     void Dump(Sink& sink) const;
-    void Dump(Sink&& sink) const { Dump(sink); }
-    void Inspect(std::ostream& os) const;
-    void Inspect(std::ostream&& os) const { Inspect(os); }
+    NEPTOOLS_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
+    NEPTOOLS_NOLUA void Inspect(std::ostream& os) const;
+    NEPTOOLS_NOLUA void Inspect(std::ostream&& os) const { Inspect(os); }
+    std::string Inspect() const;
 
 private:
     // offset: in original file!

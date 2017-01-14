@@ -228,6 +228,13 @@ void Source::Inspect(std::ostream& os) const
     os.flags(flags);
 }
 
+std::string Source::Inspect() const
+{
+    std::stringstream ss;
+    Inspect(ss);
+    return ss.str();
+}
+
 void Source::Dump(Sink& sink) const
 {
     auto offset = GetOffset();
