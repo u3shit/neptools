@@ -1,9 +1,9 @@
 #! /bin/sh
 
 TGT=ext/boost
-DL=https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2
+DL=https://sourceforge.net/projects/boost/files/boost/1.63.0/boost_1_63_0.tar.bz2
 BZ2_FILE=ext/boost.tar.bz2
-SHA256=a547bd06c2fd9a71ba1d169d9cf0339da7ebf4753849a8f7d6fdb8feee99b640
+SHA1=9f1dd4fa364a3e3156a77dc17aa562ef06404ff6
 
 set -e
 if [[ -e $TGT ]]; then
@@ -11,8 +11,8 @@ if [[ -e $TGT ]]; then
     exit 1
 fi
 
-#wget "$DL" -O "$BZ2_FILE"
-echo "$SHA256 *$BZ2_FILE" | sha256sum -c
+wget "$DL" -O "$BZ2_FILE"
+echo "$SHA1 *$BZ2_FILE" | sha1sum -c
 
 mkdir "$TGT"
 tar -xf "$BZ2_FILE" -C "$TGT" --strip-components 1

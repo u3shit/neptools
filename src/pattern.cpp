@@ -45,7 +45,13 @@ const Byte* Pattern::MaybeFind(StringView data) const noexcept
     {
         DBG(4) << "finding " << static_cast<const void*>(ptr) << "..."
                <<  static_cast<const void*>(ptr_end) << std::endl;
-        auto match = bm(ptr, ptr_end);
+        auto match = bm(ptr, ptr_end)
+#if BOOST_VERSION >= 106200
+            // I hope you die a horrible death
+            // https://github.com/boostorg/algorithm/commit/205f5ff4bbb00ece289892089a6c94c975e97ca2
+            .first
+#endif
+            ;
         DBG(4) << "match @" << static_cast<const void*>(match) << std::endl;
         if (match == ptr_end) break;
 
