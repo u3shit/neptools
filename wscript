@@ -134,7 +134,7 @@ def configure(cfg):
     if cfg.env['COMPILER_CXX'] == 'msvc':
         cfg.define('_CRT_SECURE_NO_WARNINGS', 1)
         cfg.env.append_value('CXXFLAGS', [
-            '-Xclang', '-std=c++14',
+            '-Xclang', '-std=c++1z',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
             '-EHsa', '-MD'])
         cfg.env.append_value('CFLAGS_EXT', '-EHsa')
@@ -151,8 +151,8 @@ def configure(cfg):
         elif cfg.options.optimize_ext:
             cfg.env.prepend_value('CXXFLAGS_EXT', '-O2')
     else:
-        cfg.check_cxx(cxxflags='-std=c++14')
-        cfg.env.append_value('CXXFLAGS', ['-std=c++14'])
+        cfg.check_cxx(cxxflags='-std=c++1z')
+        cfg.env.append_value('CXXFLAGS', ['-std=c++1z'])
 
         if cfg.options.optimize:
             cfg.filter_flags(['CXXFLAGS', 'LINKFLAGS'], [

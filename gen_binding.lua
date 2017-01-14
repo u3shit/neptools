@@ -16,10 +16,11 @@ local vr = cl.ChildVisitResult
 -- add general options
 local args = {
   "-DNEPTOOLS_BINDING_GENERATOR",
+  "-Iext/boost",
   "-Iext/ljx/src",
   "-Iext/catch/include",
   "-Isrc",
-  "-std=c++14",
+  "-std=c++1z",
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies
   "-Wno-gnu-string-literal-operator-template", "-Wno-vla-extension", "-Wno-vla",
   "-Wno-assume",
