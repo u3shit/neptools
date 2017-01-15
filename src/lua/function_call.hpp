@@ -16,7 +16,11 @@ namespace Lua
 struct Skip {};
 
 // the function pushes result manually
-struct RetNum { int n; };
+struct RetNum
+{
+    RetNum(int n) : n{n} {}
+    int n;
+};
 
 namespace Detail
 {

@@ -20,6 +20,7 @@ local args = {
   "-Iext/ljx/src",
   "-Iext/catch/include",
   "-Isrc",
+  "-Ibuild/clang-debug/src", "-Ibuild/src",
   "-std=c++1z",
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies
   "-Wno-gnu-string-literal-operator-template", "-Wno-vla-extension", "-Wno-vla",
@@ -42,7 +43,7 @@ for i=3,#arg do args[#args+1] = arg[i] end
 
 -- let's go
 local idx = cl.createIndex()
-local tu = idx:parse(fname, args, {"SkipFunctionBodies"})
+local tu = idx:parse(fname, args, {"KeepGoing", "SkipFunctionBodies"})
 if tu == nil then
   io.stderr:write("\27[31mParse failed\27[0m\n")
   os.exit(-1)

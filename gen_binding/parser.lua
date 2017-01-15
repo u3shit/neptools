@@ -4,6 +4,8 @@ local template = require("gen_binding.generator").template
 local cl = require("ljclang")
 local vr = cl.ChildVisitResult
 
+local ffi = require("ffi")
+
 -- find lua exported classes
 local inst
 local check_lua_class
@@ -13,7 +15,7 @@ local function lua_class(c, tbl)
 
   utils.default_arg(tbl, "name", utils.default_name_class, c:type())
   tbl.type = c:type()
-  tbl.cpp_name = utils.type_name(c:type())
+  tbl.cpp_name = utils.type_name(c:type(), inst.aliases)
   tbl.methods = {}
   tbl.methods_ord = {}
   return tbl
@@ -21,7 +23,7 @@ end
 
 local function is_lua_class(type)
   if not type then return nil end
-  local name = type:name()
+  local name = type:canonical():name()
   if inst.lua_classes[name] ~= nil then return inst.lua_classes[name] end
 
   local tbl = {}
@@ -100,7 +102,8 @@ local function collect_args(c, app_to)
 end
 
 -- process lua methods inside classes
-local function default_hidden(c)
+local function default_hidden(c, tbl)
+  if not tbl.implicit then return false end
   -- special cases
   local kind = c:kind()
   if kind == "FunctionDecl" then return false end
@@ -114,14 +117,17 @@ end
 local function func_common(c, info, tbl)
   utils.default_arg(tbl, "name", utils.default_name_fun, c)
 
-  info.args = collect_args(c)
-  info.argsf = function(wrap, pre) return utils.type_list(info.args, wrap, pre) end
-  info.result_type = utils.type_name(c:resultType())
+  info.args = tbl.args or collect_args(c)
+  info.argsf = function(wrap, pre)
+    return utils.type_list(info.args, inst.aliases, wrap, pre)
+  end
+  info.result_type = tbl.result_type or utils.type_name(c:resultType(), inst.aliases)
   return true
 end
 
 local function class_info(c, info, tbl)
   info.class = tbl.class.cpp_name
+  info.use_class = tbl.use_class or info.class
   return true
 end
 
@@ -147,7 +153,15 @@ local function freestanding_func(c, info, tbl)
     while info.args[i]:type():name() == "Lua::StateRef" do i = i+1 end
     typ = info.args[i]:type()
     typ = typ:pointee() or typ -- get rid of &, *
-    typ = typ:declaration():type() -- and const, whatever
+    if inst.cur_template then
+      local based = typ:declaration():definition()
+      local exp = inst.cur_template:declaration():baseTemplate()
+      if based ~= exp then return false end
+      typ = inst.cur_template
+      info.args[i] = typ
+    else
+      typ = typ:declaration():type() -- and const, whatever
+    end
   end
 
   tbl.class = is_lua_class(typ)
@@ -156,7 +170,7 @@ local function freestanding_func(c, info, tbl)
     return false
   end
 
-  info.ptr_type = info.result_type.." (*)("..utils.type_list(info.args)..")"
+  info.ptr_type = info.result_type.." (*)("..info.argsf()..")"
 
   if not tbl.value_tmpl then
     tbl.type_tmpl = "/*$= ptr_type */"
@@ -185,18 +199,16 @@ local function ctor(c, info, tbl)
 end
 
 local function general_method(c, info, tbl)
-  local ptrpre = c:isStatic() and "" or info.class.."::"
-  info.ptr_type = info.result_type.." ("..ptrpre.."*)("..
-    utils.type_list(collect_args(c))..")"
-  if c:isConst() then info.ptr_type = info.ptr_type.." const" end
-  info.value = "&"..info.class.."::"..info.name
-  if tbl.template_params then
-    info.value = info.value.."<"..tbl.template_params..">"
-  end
+  info.ptr_prefix = c:isStatic() and "" or info.class.."::"
+  info.ptr_suffix = c:isConst() and " const" or ""
 
+  info.template_suffix = tbl.template_params and "<"..tbl.template_params..">" or ""
+
+  if not tbl.type_tmpl then
+    tbl.type_tmpl = "/*$= result_type*/ (/*$= ptr_prefix */*)(/*$= argsf() */)/*$= ptr_suffix */"
+  end
   if not tbl.value_tmpl then
-    tbl.type_tmpl = "/*$= ptr_type */"
-    tbl.value_tmpl = "/*$= value */"
+    tbl.value_tmpl = "&/*$= use_class */::/*$= name *//*$= template_suffix */"
   end
   return true
 end
@@ -214,7 +226,7 @@ local function field(c, info, tbl)
   utils.default_arg(tbl, "name", default_name_field,
                     c, tbl.get and "get_" or "set_")
 
-  info.type = utils.type_name(c:type())
+  info.type = utils.type_name(c:type(), inst.aliases)
   info.ptr_type = info.type.." "..info.class.."::*"
   info.value = "&"..info.class.."::"..info.name
 
@@ -238,16 +250,17 @@ local func_type_handlers = {
 }
 
 local function lua_function(c, tbl)
-  utils.default_arg(tbl, "hidden", default_hidden, c)
+  utils.default_arg(tbl, "hidden", default_hidden, c, tbl)
   if tbl.hidden then return end
 
   local info = {
-    name = c:name(),
+    name = utils.fun_qualified_name(c),
     tbl = tbl,
 
     __index = tbl,
   }
 
+  --print(c:kind(), c:templateKind())
   local lst = assert(func_type_handlers[c:kind()])
   for k,v in ipairs(lst) do
     if not v(c, info, tbl) then return end
@@ -292,10 +305,10 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
   local ann = utils.get_annotations(c)
   if #ann == 0 then
     if kind == "FieldDecl" then
-      ann[1] = { get = true }
-      if not c:isConst() then ann[2] = { set = true } end
+      ann[1] = { get = true, implicit = true }
+      if not c:isConst() then ann[2] = { set = true, implicit = true } end
     else
-      ann[1] = {}
+      ann[1] = { implicit = true }
     end
   end
   for _,a in ipairs(ann) do
@@ -332,17 +345,85 @@ local parse_v = cl.regCursorVisitor(function (c, par)
     for _,a in ipairs(utils.get_annotations(c)) do
       lua_function(c, a)
     end
+  elseif kind == "TypeAliasDecl" then
+    for _,a in ipairs(utils.get_annotations(c)) do
+      local t = c:typedefType()
+      --print(c:type():declaration():kind())
+      utils.add_alias(inst.aliases, t:canonical(), c:name())
+
+      local x = is_lua_class(t)
+      if x then
+        inst.templates[t] = c:name()
+        x.name = x.name.."_"..c:name()
+        x.template = true
+        inst.ret_lua_classes[#inst.ret_lua_classes+1] = parse_class(t, x)
+      else
+        utils.print_error("is not a lua class", c)
+      end
+    end
   end
 
   return vr.Continue
 end)
 
+local parse_templates2_v = cl.regCursorVisitor(function (c, par)
+  local kind = c:kind()
+  if kind == "NamespaceRef" or kind == "TypeRef" then return vr.Continue end
+  if kind == "TypeAliasDecl" and c:name() == "FakeClass" then
+    inst.fake_class = c:typedefType()
+    return vr.Continue
+  end
+  if not inst.fake_class then return vr.Break end
+
+  if kind == "CXXMethod" then
+    local anns = utils.get_annotations(c)
+    if not anns[1] then anns[1] = { implicit = true } end
+    for _,a in ipairs(anns) do
+      a.class = is_lua_class(inst.fake_class)
+      a.use_class = utils.type_name(par:type(), inst.aliases)
+      lua_function(c, a)
+    end
+  end
+  return vr.Continue
+end)
+
+local parse_templates_v = cl.regCursorVisitor(function (c, par)
+  if not inst.parse_filter(c, par) then return vr.Continue end
+  local kind = c:kind()
+  if kind == "Namespace" then return vr.Recurse end
+  if kind == "StructDecl" then
+    inst.fake_class = nil
+    c:children(parse_templates2_v)
+    return vr.Continue
+  end
+
+  return vr.Continue
+end)
+
+local function parse_templates(c)
+  local cwd = utils.getcwd()
+  local base = utils.parse_path(cwd, "src")
+  inst.parse_filter = function(c)
+    local this = utils.parse_path(cwd, c:location())
+    for i=1,#base do if base[i] ~= this[i] then return false end end
+    return true
+  end
+
+  for k,v in pairs(inst.templates) do
+    inst.cur_template = k
+    c:children(parse_templates_v)
+  end
+end
+
 local function parse(c, filter)
   if not filter then filter = function() return true end end
   inst = { lua_classes = {}, ret_lua_classes = {}, parse_filter = filter,
-           is_lua = {}}
+           is_lua = {}, templates = {}, aliases = {}}
 
   c:children(parse_v)
+
+  if next(inst.templates) then parse_templates(c) end
+
   local ret = inst.ret_lua_classes
   inst = nil
   return ret

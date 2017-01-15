@@ -16,7 +16,7 @@ namespace Neptools
 
 namespace Stcm { class File; }
 
-class Cl3 final : public Dumpable
+class Cl3 final : public RefCounted, public Dumpable
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
@@ -88,8 +88,8 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(LinkEntry) == 0x20);
 
-    Cl3() : field_14{0} {}
     Cl3(Source src);
+    Cl3() : field_14{0} {}
 
     void Fixup() override;
     FilePosition GetSize() const override;
@@ -107,17 +107,17 @@ public:
 
         SmartPtr<Dumpable> src;
 
-        explicit Entry(std::string name) : name{std::move(name)} {}
         Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
+        explicit Entry(std::string name) : name{std::move(name)} {}
     };
     struct EntryKeyOfValue
     {
         using type = std::string;
         const type& operator()(const Entry& e) { return e.name; }
     };
-    NEPTOOLS_NOLUA
-    OrderedMap<Entry, struct EntryKeyOfValue> entries;
+    NEPTOOLS_LUAGEN(get=true) // no setter - it doesn't work how you expect in lua
+    OrderedMap<Entry, EntryKeyOfValue> entries;
     uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 
     Entry& GetOrCreateFile(StringView fname);

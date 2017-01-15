@@ -4,6 +4,7 @@
 
 #include "intrusive.hpp"
 #include "../shared_ptr.hpp"
+#include "../lua/dynamic_object.hpp"
 
 #include <boost/intrusive/set.hpp>
 #include <vector>
@@ -84,8 +85,14 @@ private:
 };
 
 template <typename T, typename Traits, typename Compare>
-class OrderedMap
+class NEPTOOLS_LUAGEN(post_register="\
+  NEPTOOLS_LUA_RUNBC(vm, ipairs);\
+  luaL_getmetatable(vm, \"neptools_ipairs\");\
+  bld.SetField(\"__ipairs\");\
+") OrderedMap : public Lua::SmartObject
 {
+    NEPTOOLS_LUA_CLASS;
+private:
     using VectorType = std::vector<NotNull<SmartPtr<T>>>;
     using SetType = boost::intrusive::set<
         T, boost::intrusive::base_hook<OrderedMapItemHook>,
@@ -114,7 +121,7 @@ public:
         NEPTOOLS_ASSERT(VectorIndex(*vect.at(i)) == i);
         return *vect.at(i);
     }
-    const T& at(size_t i) const
+    NEPTOOLS_NOLUA const T& at(size_t i) const
     {
         NEPTOOLS_ASSERT(VectorIndex(*vect.at(i)) == i);
         return *vect.at(i);
@@ -127,37 +134,37 @@ public:
     }
     const T& operator[](size_t i) const
     {
-        NEPTOOLS_ASSERT(VectorIndex(*vect.get(i)) == i);
+        NEPTOOLS_ASSERT(VectorIndex(*vect.at(i)) == i);
         return *vect[i];
     }
 
-    T& front()
+    NEPTOOLS_NOLUA T& front()
     {
         NEPTOOLS_ASSERT(VectorIndex(*vect.front()) == 0);
         return *vect.front();
     }
-    const T& front() const
+    NEPTOOLS_NOLUA const T& front() const
     {
         NEPTOOLS_ASSERT(VectorIndex(*vect.front()) == 0);
         return *vect.front();
     }
-    T& back()
+    NEPTOOLS_NOLUA T& back()
     {
         NEPTOOLS_ASSERT(VectorIndex(*vect.back()) == vect.size()-1);
         return *vect.back();
     }
-    const T& back() const
+    NEPTOOLS_NOLUA const T& back() const
     {
         NEPTOOLS_ASSERT(VectorIndex(*vect.back()) == vect.size()-1);
         return *vect.back();
     }
 
-#define NEPTOOLS_GEN(dir, typ)                      \
-    typ##iterator dir() noexcept                    \
-    { return ToIt(vect.dir()); }                    \
-    const_##typ##iterator c##dir() const noexcept   \
-    { return ToIt(vect.c##dir()); }                 \
-    const_##typ##iterator dir() const noexcept      \
+#define NEPTOOLS_GEN(dir, typ)                                      \
+    NEPTOOLS_NOLUA typ##iterator dir() noexcept                     \
+    { return ToIt(vect.dir()); }                                    \
+    NEPTOOLS_NOLUA const_##typ##iterator c##dir() const noexcept    \
+    { return ToIt(vect.c##dir()); }                                 \
+    NEPTOOLS_NOLUA const_##typ##iterator dir() const noexcept       \
     { return ToIt(vect.c##dir()); }
     NEPTOOLS_GEN(begin,) NEPTOOLS_GEN(end,)
     NEPTOOLS_GEN(rbegin, reverse_) NEPTOOLS_GEN(rend, reverse_)
@@ -168,6 +175,7 @@ public:
         NEPTOOLS_ASSERT(vect.empty() == set.empty());
         return vect.empty();
     }
+    NEPTOOLS_LUAGEN() NEPTOOLS_LUAGEN(name="__len") // alias as # operator
     size_t size() const noexcept { return vect.size(); }
     // boost::intrusive doesn't have max size
     size_t max_size() const noexcept { return vect.max_size(); }
@@ -184,22 +192,25 @@ public:
         set.clear(); vect.clear();
     }
 
-    std::pair<iterator, bool> insert(
+    NEPTOOLS_NOLUA std::pair<iterator, bool> insert(
         const_iterator p, const NotNull<SmartPtr<T>>& t)
     { return InsertGen(p, t); }
-    std::pair<iterator, bool> insert(const_iterator p, NotNull<SmartPtr<T>>&& t)
+    NEPTOOLS_NOLUA std::pair<iterator, bool> insert(
+        const_iterator p, NotNull<SmartPtr<T>>&& t)
     { return InsertGen(p, std::move(t)); }
+
     template <typename... Args>
-    std::pair<iterator, bool> emplace(const_iterator p, Args&&... args)
+    NEPTOOLS_NOLUA std::pair<iterator, bool>
+    emplace(const_iterator p, Args&&... args)
     { return InsertGen(p, MakeSmart<T>(std::forward<Args>(args)...)); }
 
-    iterator erase(const_iterator it) noexcept
+    NEPTOOLS_NOLUA iterator erase(const_iterator it) noexcept
     {
         set.erase(ToSetIt(it));
         return VectErase(it);
     }
 
-    iterator erase(const_iterator b, const_iterator e) noexcept
+    NEPTOOLS_NOLUA iterator erase(const_iterator b, const_iterator e) noexcept
     {
         // RemoveItem would break assert in ToVecIt if it'd executed at vect.erase
         auto bi = ToVectIt(b), ei = ToVectIt(e);
@@ -213,21 +224,24 @@ public:
         return ToIt(ret);
     }
 
-    std::pair<iterator, bool> push_back(const NotNull<SmartPtr<T>>& t)
+    NEPTOOLS_NOLUA std::pair<iterator, bool> push_back(
+        const NotNull<SmartPtr<T>>& t)
     { return InsertGen(end(), t); }
-    std::pair<iterator, bool> push_back(NotNull<SmartPtr<T>>&& t)
+    NEPTOOLS_NOLUA std::pair<iterator, bool> push_back(NotNull<SmartPtr<T>>&& t)
     { return InsertGen(end(), std::move(t)); }
     template <typename... Args>
-    std::pair<iterator, bool> emplace_back(Args&&... args)
+    NEPTOOLS_NOLUA std::pair<iterator, bool> emplace_back(Args&&... args)
     { return InsertGen(end(), MakeSmart<T>(std::forward<Args>(args)...)); }
 
-    void pop_back() noexcept
+    NEPTOOLS_NOLUA void pop_back() noexcept
     {
         auto& back = *vect.back();
         RemoveItem(back);
         set.erase(Traits{}(back));
         vect.pop_back();
     }
+    NEPTOOLS_LUAGEN(name="pop_back") void checked_pop_back() noexcept
+    { if (!empty()) pop_back(); }
 
     void swap(OrderedMap& o)
     {
@@ -236,41 +250,67 @@ public:
     }
 
     // boost extensions
-    iterator nth(size_t i) noexcept { return ToIt(vect.begin() + i); }
-    const_iterator nth(size_t i) const noexcept { return ToIt(vect.begin() + i); }
-    size_t index_of(const_iterator it) const noexcept
+    NEPTOOLS_NOLUA iterator nth(size_t i) noexcept
+    { return ToIt(vect.begin() + i); }
+    NEPTOOLS_NOLUA iterator checked_nth(size_t i)
     {
-        return VectorIndex(*it);
+        if (i < size()) return nth(i);
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+    }
+    NEPTOOLS_NOLUA iterator checked_nth_end(size_t i)
+    {
+        if (i <= size()) return nth(i);
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
     }
 
-    // map portions
-    size_t count(const key_type& key) const { return set.count(key); }
-    template <typename Key, typename Comp>
-    size_t count(const Key& key, Comp comp) const { return set.count(key, comp); }
+    NEPTOOLS_NOLUA const_iterator nth(size_t i) const noexcept
+    { return ToIt(vect.begin() + i); }
+    NEPTOOLS_NOLUA const_iterator checked_nth(size_t i) const
+    {
+        if (i < size()) return nth(i);
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+    }
+    NEPTOOLS_NOLUA const_iterator checked_nth_end(size_t i) const
+    {
+        if (i <= size()) return nth(i);
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+    }
 
-    iterator find(const key_type& key)
+    NEPTOOLS_NOLUA size_t index_of(const_iterator it) const noexcept
+    { return VectorIndex(*it); }
+
+    // map portions
+    NEPTOOLS_LUAGEN(args={"const /*$= class */::key_type&"})
+    size_t count(const key_type& key) const { return set.count(key); }
+    // comp must yield the same ordering as the used comparator in the tree...
+    template <typename Key, typename Comp>
+    NEPTOOLS_NOLUA size_t count(const Key& key, Comp comp) const
+    { return set.count(key, comp); }
+
+    NEPTOOLS_NOLUA iterator find(const key_type& key)
     { return ToMaybeEndIt(set.find(key)); }
     template <typename Key, typename Comp>
-    iterator find(const Key& key, Comp comp)
+    NEPTOOLS_NOLUA iterator find(const Key& key, Comp comp)
     { return ToMaybeEndIt(set.find(key, comp)); }
 
-    const_iterator find(const key_type& key) const
+    NEPTOOLS_NOLUA const_iterator find(const key_type& key) const
     { return ToMaybeEndIt(set.find(key)); }
     template <typename Key, typename Comp>
-    const_iterator find(const Key& key, Comp comp) const
+    NEPTOOLS_NOLUA const_iterator find(const Key& key, Comp comp) const
     { return ToMaybeEndIt(set.find(key, comp)); }
 
     // misc intrusive
-    iterator iterator_to(T& t) noexcept { return ToIt(t); }
-    const_iterator iterator_to(const T& t) const noexcept { return ToIt(t); }
+    NEPTOOLS_NOLUA iterator iterator_to(T& t) noexcept { return ToIt(t); }
+    NEPTOOLS_NOLUA const_iterator iterator_to(const T& t) const noexcept
+    { return ToIt(t); }
 
     // return end() on invalid ptr
-    iterator checked_iterator_to(T& t) noexcept
+    NEPTOOLS_NOLUA iterator checked_iterator_to(T& t) noexcept
     {
         if (vect[VectorIndex(t)].get() == &t) return ToIt(t);
         else return end();
     }
-    const_iterator checked_iterator_to(const T& t) const noexcept
+    NEPTOOLS_NOLUA const_iterator checked_iterator_to(const T& t) const noexcept
     {
         if (vect[VectorIndex(t)].get() == &t) return ToIt(t);
         else return cend();
@@ -281,7 +321,7 @@ public:
     // static const_iterator s_iterator_to(const T& t) noexcept
     // { return const_iterator{t}; }
 
-    std::pair<iterator, bool> key_change(iterator it) noexcept
+    NEPTOOLS_NOLUA std::pair<iterator, bool> key_change(iterator it) noexcept
     {
         set.erase(ToSetIt(it));
         auto ins = set.insert(*it);

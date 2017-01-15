@@ -52,6 +52,7 @@ static TypeRegister::StateRegister<Neptools::Sink> reg_neptools_sink;
 }
 }
 
+
 const char Neptools::Sink::TYPE_NAME[] = "neptools.sink";
 
 namespace Neptools
@@ -68,7 +69,7 @@ void TypeRegister::DoRegister<Neptools::MemorySink>(StateRef vm, TypeBuilder& bl
 
     bld.Add<
         Overload<decltype(&::Neptools::MakeSmart<Neptools::MemorySink, LuaGetRef<FileMemSize>>), &::Neptools::MakeSmart<Neptools::MemorySink, LuaGetRef<FileMemSize>>>,
-        Overload<NotNull<SmartPtr<Neptools::MemorySink> > (*)(StringView), &MemorySinkFromLua>
+        Overload<NotNull<SmartPtr<Neptools::MemorySink> > (*)(StringView), &Neptools::MemorySinkFromLua>
     >("new");
     bld.Add<
         StringView (Neptools::MemorySink::*)() const, &Neptools::MemorySink::GetStringView
@@ -79,6 +80,7 @@ static TypeRegister::StateRegister<Neptools::MemorySink> reg_neptools_memory_sin
 
 }
 }
+
 
 const char Neptools::MemorySink::TYPE_NAME[] = "neptools.memory_sink";
 

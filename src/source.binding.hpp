@@ -88,10 +88,10 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
         std::string (Neptools::Source::*)() const, &Neptools::Source::Inspect
     >("inspect");
     bld.Add<
-        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FileMemSize), &LuaRead
+        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FileMemSize), &Neptools::LuaRead
     >("read");
     bld.Add<
-        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FilePosition, FileMemSize), &LuaPread
+        Lua::RetNum (*)(Lua::StateRef, Neptools::Source &, FilePosition, FileMemSize), &Neptools::LuaPread
     >("pread");
 
 }
@@ -99,6 +99,7 @@ static TypeRegister::StateRegister<Neptools::Source> reg_neptools_source;
 
 }
 }
+
 
 const char Neptools::Source::TYPE_NAME[] = "neptools.source";
 
@@ -127,6 +128,7 @@ static TypeRegister::StateRegister<Neptools::DumpableSource> reg_neptools_dumpab
 
 }
 }
+
 
 const char Neptools::DumpableSource::TYPE_NAME[] = "neptools.dumpable_source";
 

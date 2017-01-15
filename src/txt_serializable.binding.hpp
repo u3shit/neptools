@@ -13,10 +13,10 @@ void TypeRegister::DoRegister<Neptools::TxtSerializable>(StateRef vm, TypeBuilde
     (void) vm;
 
     bld.Add<
-        std::string (*)(Neptools::TxtSerializable &), &WriteTxt
+        std::string (*)(Neptools::TxtSerializable &), &Neptools::WriteTxt
     >("write_txt");
     bld.Add<
-        void (*)(Neptools::TxtSerializable &, std::string), &ReadTxt
+        void (*)(Neptools::TxtSerializable &, std::string), &Neptools::ReadTxt
     >("read_txt");
 
 }
@@ -24,6 +24,7 @@ static TypeRegister::StateRegister<Neptools::TxtSerializable> reg_neptools_txt_s
 
 }
 }
+
 
 const char Neptools::TxtSerializable::TYPE_NAME[] = "neptools.txt_serializable";
 

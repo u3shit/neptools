@@ -31,6 +31,7 @@ static TypeRegister::StateRegister<Foo> reg_foo;
 }
 }
 
+
 const char Foo::TYPE_NAME[] = "foo";
 
 namespace Neptools
@@ -53,6 +54,7 @@ static TypeRegister::StateRegister<Bar::Baz::Asdfgh> reg_bar_baz_asdfgh;
 
 }
 }
+
 
 const char Bar::Baz::Asdfgh::TYPE_NAME[] = "bar.baz.asdfgh";
 
@@ -82,6 +84,7 @@ static TypeRegister::StateRegister<Baz> reg_baz;
 
 }
 }
+
 
 const char Baz::TYPE_NAME[] = "baz";
 

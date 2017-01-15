@@ -3,12 +3,14 @@
 #pragma once
 
 #ifdef NEPTOOLS_BINDING_GENERATOR
-#define NEPTOOLS_META(...) __attribute__((annotate(#__VA_ARGS__)))
+#   define NEPTOOLS_META(...) __attribute__((annotate(#__VA_ARGS__)))
 #else
-#define NEPTOOLS_META(...)
+#   define NEPTOOLS_META(...)
 #endif
 
 #define NEPTOOLS_LUAGEN(...) NEPTOOLS_META(lua{__VA_ARGS__})
 #define NEPTOOLS_NOLUA NEPTOOLS_LUAGEN(hidden=true)
+#define NEPTOOLS_LUA_TEMPLATE(name, ...) \
+    using name NEPTOOLS_LUAGEN() = __VA_ARGS__
 
 #endif

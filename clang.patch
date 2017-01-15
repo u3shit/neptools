@@ -1,5 +1,5 @@
 diff --git a/include/clang-c/Index.h b/include/clang-c/Index.h
-index 13db208..212eca0 100644
+index 13db2085ba..212eca05dc 100644
 --- a/include/clang-c/Index.h
 +++ b/include/clang-c/Index.h
 @@ -3346,6 +3346,16 @@ CINDEX_LINKAGE CXType clang_getCursorResultType(CXCursor C);
@@ -46,21 +46,52 @@ index 13db208..212eca0 100644
   * declared 'const'.
   */
 diff --git a/tools/libclang/CIndex.cpp b/tools/libclang/CIndex.cpp
-index 027bf95..5972be8 100644
+index 027bf95b66..45d73e261a 100644
 --- a/tools/libclang/CIndex.cpp
 +++ b/tools/libclang/CIndex.cpp
-@@ -904,8 +904,8 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
-   // before visiting these template parameters.
+@@ -703,11 +703,11 @@ bool CursorVisitor::VisitClassTemplateSpecializationDecl(
+   case TSK_Undeclared:
+   case TSK_ImplicitInstantiation:
+     // Nothing to visit
+-    return false;
++    // return false;
+ 
+   case TSK_ExplicitInstantiationDeclaration:
+   case TSK_ExplicitInstantiationDefinition:
+-    break;
++    // break;
+ 
+   case TSK_ExplicitSpecialization:
+     ShouldVisitBody = true;
+@@ -905,7 +905,7 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
    if (VisitTemplateParameters(D->getTemplateParameters()))
      return true;
--  
+ 
 -  return VisitFunctionDecl(D->getTemplatedDecl());
-+
 +  return VisitAttributes(D->getTemplatedDecl()) || VisitFunctionDecl(D->getTemplatedDecl());
  }
  
  bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
-@@ -7436,6 +7436,15 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit TU,
+@@ -914,7 +914,17 @@ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
+   if (VisitTemplateParameters(D->getTemplateParameters()))
+     return true;
+ 
+-  return VisitCXXRecordDecl(D->getTemplatedDecl());
++  if (VisitAttributes(D->getTemplatedDecl()))
++    return true;
++
++  if (VisitCXXRecordDecl(D->getTemplatedDecl()))
++    return true;
++
++  for (auto DIt = D->spec_begin(), DE = D->spec_end(); DIt != DE; ++DIt)
++    if (Visit(MakeCXCursor(*DIt, TU)))
++      return true;
++
++  return false;
+ }
+ 
+ bool CursorVisitor::VisitTemplateTemplateParmDecl(TemplateTemplateParmDecl *D) {
+@@ -7436,6 +7446,15 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit TU,
  
  extern "C" {
  
@@ -76,7 +107,7 @@ index 027bf95..5972be8 100644
  unsigned clang_CXXConstructor_isDefaultConstructor(CXCursor C) {
    if (!clang_isDeclaration(C.kind))
      return 0;
-@@ -7536,6 +7545,16 @@ unsigned clang_CXXMethod_isVirtual(CXCursor C) {
+@@ -7536,6 +7555,16 @@ unsigned clang_CXXMethod_isVirtual(CXCursor C) {
        D ? dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()) : nullptr;
    return (Method && Method->isVirtual()) ? 1 : 0;
  }
@@ -94,7 +125,7 @@ index 027bf95..5972be8 100644
  
  //===----------------------------------------------------------------------===//
 diff --git a/tools/libclang/CXType.cpp b/tools/libclang/CXType.cpp
-index 4fcd886..25f4220 100644
+index 4fcd8864cd..1f54da1147 100644
 --- a/tools/libclang/CXType.cpp
 +++ b/tools/libclang/CXType.cpp
 @@ -615,6 +615,30 @@ unsigned clang_isPODType(CXType X) {
@@ -129,7 +160,7 @@ index 4fcd886..25f4220 100644
    QualType ET = QualType();
    QualType T = GetQualType(CT);
 diff --git a/tools/libclang/libclang.exports b/tools/libclang/libclang.exports
-index c8fe0a2..aab85b7 100644
+index c8fe0a21d0..aab85b74ea 100644
 --- a/tools/libclang/libclang.exports
 +++ b/tools/libclang/libclang.exports
 @@ -2,6 +2,7 @@ clang_CXCursorSet_contains

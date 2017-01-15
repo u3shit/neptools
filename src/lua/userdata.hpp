@@ -140,7 +140,7 @@ struct TraitsBase<RefCountedPtr<T>>
     {
         NEPTOOLS_ASSERT(
             static_cast<RefCountedUserdataBase*>(a.ud)->GetCtrl() == a.ud->Get());
-        return a.ud->Get<T>(a.offs);
+        return Ret{&a.ud->Get<T>(a.offs)};
     };
 };
 

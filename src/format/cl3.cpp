@@ -317,4 +317,7 @@ Stcm::File& Cl3::GetStcm()
 
 }
 
+#include "../container/ordered_map.lua.hpp"
+NEPTOOLS_ORDERED_MAP_LUAGEN(
+    cl3_entry, Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue);
 #include "cl3.binding.hpp"
