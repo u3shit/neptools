@@ -16,18 +16,13 @@ template <typename T> class NotNull;
 namespace Lua
 {
 
-template <typename T, typename... Args>
-static RetNum ValueObjectCtorWrapper(StateRef vm, Args&&... args)
-{
-    TypeTraits<T>::Push(vm, std::forward<Args>(args)...);
-    return {1};
-}
-
 // When specifying T as template argument for vararg &&... argument,
 // std::forward will try to convert it to T&&. If TypeTraits::Get returns a T&,
 // it'll fail, even though normally it'd copy it. Thus we need to specify T& in
 // this case (or const T&).
 
+namespace Detail
+{
 template <typename T, typename = void> struct LuaGetRefHlp;
 template <typename T>
 struct LuaGetRefHlp<T, std::enable_if_t<std::is_reference<T>::value>>
@@ -43,11 +38,13 @@ struct LuaGetRefHlp<T, std::enable_if_t<!std::is_reference<T>::value>>
             decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value,
         T, T&>;
 };
+}
 
 template <typename T>
-using LuaGetRef = typename LuaGetRefHlp<T>::Type;
+using LuaGetRef = typename Detail::LuaGetRefHlp<T>::Type;
 
-
+namespace Detail
+{
 template <typename Class, typename T, T Class::* Member, typename Enable = void>
 struct GetMemberHlp
 {
@@ -56,16 +53,17 @@ struct GetMemberHlp
 
 template <typename Class, typename T, T Class::* Member>
 struct GetMemberHlp<Class, T, Member, std::enable_if_t<
-    std::is_base_of<RefCounted, Class>::value &&
-    IsNormalSmartObject<T>::value>>
+    std::is_base_of_v<RefCounted, Class> &&
+    is_normal_smart_object_v<T>>>
 {
     inline static NotNull<SharedPtr<T>> Get(Class& cls)
     { return NotNull<SharedPtr<T>>{&cls, &(cls.*Member), true}; }
 };
+}
 
 template <typename Class, typename T, T Class::* Member>
 decltype(auto) GetMember(Class& cls)
-{ return GetMemberHlp<Class, T, Member>::Get(cls); }
+{ return Detail::GetMemberHlp<Class, T, Member>::Get(cls); }
 
 template <typename Class, typename T, T Class::* member>
 void SetMember(Class& cls, const T& val) { cls.*member = val; }

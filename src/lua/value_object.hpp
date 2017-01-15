@@ -3,6 +3,7 @@
 #pragma once
 
 #include "type_traits.hpp"
+#include "function_call_types.hpp"
 #include "../meta.hpp"
 
 namespace Neptools
@@ -11,7 +12,7 @@ namespace Lua
 {
 
 // no inheritance support for now
-struct NEPTOOLS_LUAGEN(no_inherit=true,value_object=true) ValueObject {};
+struct NEPTOOLS_LUAGEN(no_inherit=true) ValueObject {};
 
 // specialize if needed
 template <typename T, typename Enable = void>
@@ -49,6 +50,13 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 
         new (ptr) T{std::forward<Args>(args)...};
         lua_setmetatable(vm, -2); // +1
+    }
+
+    template <typename... Args>
+    static RetNum Make(StateRef vm, Args&&... args)
+    {
+        Push(vm, std::forward<Args>(args)...);
+        return 1;
     }
 };
 

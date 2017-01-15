@@ -36,7 +36,6 @@ local function is_lua_class(type)
     tbl.ret = lua_class(type:declaration(), {})
   end
   if tbl.ret then
-    if tbl.value_object then tbl.ret.value_object = true end
     if tbl.smart_object then tbl.ret.smart_object = true end
   end
   inst.lua_classes[name] = tbl.ret
@@ -51,7 +50,6 @@ check_lua_class = cl.regCursorVisitor(function (c, par)
     if lc then
       local tbl = inst.is_lua[#inst.is_lua]
       if tbl.ret == nil then tbl.ret = true end
-      if lc.value_object then tbl.value_object = true end
       if lc.smart_object then tbl.smart_object = true end
     end
   elseif kind == "AnnotateAttr" then
@@ -180,19 +178,9 @@ local function freestanding_func(c, info, tbl)
 end
 
 local function ctor(c, info, tbl)
-  if not tbl.value_tmpl and not tbl.maker then
-    if tbl.class.smart_object then
-      tbl.maker = "::Neptools::MakeSmart"
-    elseif tbl.class.value_object then
-      tbl.maker = "::Neptools::Lua::ValueObjectCtorWrapper"
-    else
-      utils.print_error("Unknown ctor maker", c)
-      return false
-    end
-  end
   if not tbl.value_tmpl then
     tbl.value_tmpl = [[
-&/*$= tbl.maker */</*$= class *//*$= argsf('LuaGetRef', true) */>]]
+&::Neptools::Lua::TypeTraits</*$= class */>::Make</*$= argsf('LuaGetRef') */>]]
     tbl.type_tmpl = nil
   end
   return true

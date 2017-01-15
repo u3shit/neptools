@@ -1,0 +1,12 @@
+// -*- c++ -*-
+#pragma once
+
+#include_next <type_traits>
+
+namespace std
+{
+
+template <typename Base, typename Derived>
+constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
+
+}

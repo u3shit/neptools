@@ -7,16 +7,25 @@
 #include "../not_null.hpp"
 #include "userdata.hpp"
 
+// todo: move to external header or just wait for gcc 7
+#if defined(__GLIBCXX__) && __cpp_lib_type_trait_variable_templates < 201510
+#include <experimental/type_traits>
+namespace std { using namespace experimental::fundamentals_v1; }
+#endif
+
 namespace Neptools
 {
 namespace Lua
 {
 
-class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) SmartObject {};
+class NEPTOOLS_LUAGEN(no_inherit=true) SmartObject {};
 
 // specialize if needed
 template <typename T, typename Enable = void>
 struct IsSmartObject : std::is_base_of<SmartObject, T> {};
+
+template <typename T>
+constexpr bool is_smart_object_v = IsSmartObject<T>::value;
 
 template <typename T>
 struct IsUserdataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
@@ -24,14 +33,15 @@ struct IsUserdataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
 
 
 template <typename T>
-struct IsRefCountedSmartObject : std::integral_constant<
-    bool, IsSmartObject<T>::value && std::is_base_of<RefCounted, T>::value> {};
+constexpr bool is_ref_counted_smart_object_v =
+    is_smart_object_v<T> && std::is_base_of_v<RefCounted, T>;
 
 template <typename T>
-struct IsNormalSmartObject : std::integral_constant<
-    bool, IsSmartObject<T>::value && !std::is_base_of<RefCounted, T>::value> {};
+constexpr bool is_normal_smart_object_v =
+    is_smart_object_v<T> && !std::is_base_of_v<RefCounted, T>;
 
-class NEPTOOLS_LUAGEN(no_inherit=true) DynamicObject : public SmartObject
+class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
+    : public SmartObject
 {
 public:
     DynamicObject() = default;
@@ -43,10 +53,8 @@ public:
 };
 
 template <typename T>
-struct IsSelfPushableDynamicObject : std::integral_constant<
-    bool,
-    std::is_base_of<DynamicObject, T>::value &&
-        std::is_base_of<RefCounted, T>::value> {};
+constexpr bool is_self_pushable_dynamic_object_v =
+    std::is_base_of_v<DynamicObject, T> && std::is_base_of_v<RefCounted, T>;
 
 #define NEPTOOLS_THIS_TYPE std::remove_pointer_t<decltype(this)>
 #define NEPTOOLS_DYNAMIC_OBJ_GEN(...)                                        \
@@ -92,12 +100,13 @@ struct SmartPush<T, std::enable_if_t<std::is_base_of<DynamicObject, T>::value>>
 }
 
 template <typename T>
-struct TypeTraits<T, std::enable_if_t<IsNormalSmartObject<T>::value>>
-    : UserdataTraits<T> {};
+struct TypeTraits<T, std::enable_if_t<
+        is_smart_object_v<T> && !is_self_pushable_dynamic_object_v<T>>>
+    : UserdataTraits<T>, MakeSharedHelper<T, SmartPtr<T>> {};
 
 template <typename T>
-struct TypeTraits<T, std::enable_if_t<IsSelfPushableDynamicObject<T>::value>>
-    : UserdataTraits<T>
+struct TypeTraits<T, std::enable_if_t<is_self_pushable_dynamic_object_v<T>>>
+    : UserdataTraits<T>, MakeSharedHelper<T, SmartPtr<T>>
 {
     static void Push(StateRef vm, T& obj)
     { GetDynamicObject(obj).PushLua(vm, obj); }

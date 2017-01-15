@@ -22,7 +22,7 @@ void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
         void (Foo::*)(int), &Foo::DoIt
     >("do_it");
     bld.Add<
-        decltype(&::Neptools::MakeSmart<Foo>), &::Neptools::MakeSmart<Foo>
+        decltype(&::Neptools::Lua::TypeTraits<Foo>::Make<>), &::Neptools::Lua::TypeTraits<Foo>::Make<>
     >("new");
 
 }
@@ -46,7 +46,7 @@ void TypeRegister::DoRegister<Bar::Baz::Asdfgh>(StateRef vm, TypeBuilder& bld)
     (void) vm;
 
     bld.Add<
-        decltype(&::Neptools::MakeSmart<Bar::Baz::Asdfgh>), &::Neptools::MakeSmart<Bar::Baz::Asdfgh>
+        decltype(&::Neptools::Lua::TypeTraits<Bar::Baz::Asdfgh>::Make<>), &::Neptools::Lua::TypeTraits<Bar::Baz::Asdfgh>::Make<>
     >("new");
 
 }
@@ -70,7 +70,7 @@ void TypeRegister::DoRegister<Baz>(StateRef vm, TypeBuilder& bld)
     (void) vm;
 
     bld.Add<
-        decltype(&::Neptools::MakeSmart<Baz>), &::Neptools::MakeSmart<Baz>
+        decltype(&::Neptools::Lua::TypeTraits<Baz>::Make<>), &::Neptools::Lua::TypeTraits<Baz>::Make<>
     >("new");
     bld.Add<
         void (Baz::*)(int), &Baz::SetGlobal

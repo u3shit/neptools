@@ -14,8 +14,8 @@ void TypeRegister::DoRegister<Neptools::Cl3>(StateRef vm, TypeBuilder& bld)
     bld.Inherit<Neptools::Cl3, Neptools::Dumpable>();
 
     bld.Add<
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3, LuaGetRef<Neptools::Source>>), &::Neptools::MakeSmart<Neptools::Cl3, LuaGetRef<Neptools::Source>>>,
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3>), &::Neptools::MakeSmart<Neptools::Cl3>>
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::Cl3>::Make<LuaGetRef<Neptools::Source>>), &::Neptools::Lua::TypeTraits<Neptools::Cl3>::Make<LuaGetRef<Neptools::Source>>>,
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::Cl3>::Make<>), &::Neptools::Lua::TypeTraits<Neptools::Cl3>::Make<>>
     >("new");
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>), &::Neptools::Lua::GetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>
@@ -81,8 +81,8 @@ void TypeRegister::DoRegister<Neptools::Cl3::Entry>(StateRef vm, TypeBuilder& bl
         decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>
     >("set_src");
     bld.Add<
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>), &::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>>,
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>>), &::Neptools::MakeSmart<Neptools::Cl3::Entry, LuaGetRef<std::string>>>
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>), &::Neptools::Lua::TypeTraits<Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>, LuaGetRef<uint32_t>, LuaGetRef<SmartPtr<Neptools::Dumpable>>>>,
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>>), &::Neptools::Lua::TypeTraits<Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>>>
     >("new");
 
 }
@@ -106,7 +106,7 @@ void TypeRegister::DoRegister<cl3_entry>(StateRef vm, TypeBuilder& bld)
     (void) vm;
 
     bld.Add<
-        decltype(&::Neptools::MakeSmart<cl3_entry>), &::Neptools::MakeSmart<cl3_entry>
+        decltype(&::Neptools::Lua::TypeTraits<cl3_entry>::Make<>), &::Neptools::Lua::TypeTraits<cl3_entry>::Make<>
     >("new");
     bld.Add<
         Neptools::Cl3::Entry & (cl3_entry::*)(size_t), &cl3_entry::at

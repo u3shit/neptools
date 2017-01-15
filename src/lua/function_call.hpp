@@ -2,6 +2,7 @@
 #define UUID_C721F2E1_C293_4D82_8244_2AA0F1B26774
 #pragma once
 
+#include "function_call_types.hpp"
 #include "type_traits.hpp"
 
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
@@ -11,16 +12,6 @@ namespace Neptools
 {
 namespace Lua
 {
-
-// placeholder to skip parsing this argument
-struct Skip {};
-
-// the function pushes result manually
-struct RetNum
-{
-    RetNum(int n) : n{n} {}
-    int n;
-};
 
 namespace Detail
 {

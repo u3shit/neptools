@@ -70,7 +70,7 @@ local function type_name(typ, aliases)
     n = n:gsub(k, v)
     --print(n, k, v)
   end
-  return n:gsub("std::__cxx11::", "std::")
+  return n:gsub("std::__cxx11::", "std::"):gsub("std::__1::", "std::")
 end
 ret.type_name = type_name
 

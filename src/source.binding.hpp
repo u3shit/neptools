@@ -13,7 +13,7 @@ void TypeRegister::DoRegister<Neptools::Source>(StateRef vm, TypeBuilder& bld)
     (void) vm;
 
     bld.Add<
-        decltype(&::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::Lua::ValueObjectCtorWrapper<Neptools::Source, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>
+        decltype(&::Neptools::Lua::TypeTraits<Neptools::Source>::Make<LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::Lua::TypeTraits<Neptools::Source>::Make<LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>
     >("new");
     bld.Add<
         Neptools::Source (*)(boost::filesystem::path), &Neptools::Source::FromFile
@@ -116,8 +116,8 @@ void TypeRegister::DoRegister<Neptools::DumpableSource>(StateRef vm, TypeBuilder
     bld.Inherit<Neptools::DumpableSource, Neptools::Dumpable>();
 
     bld.Add<
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>>>,
-        Overload<decltype(&::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::MakeSmart<Neptools::DumpableSource, LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>>
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::DumpableSource>::Make<LuaGetRef<const Neptools::Source &>>), &::Neptools::Lua::TypeTraits<Neptools::DumpableSource>::Make<LuaGetRef<const Neptools::Source &>>>,
+        Overload<decltype(&::Neptools::Lua::TypeTraits<Neptools::DumpableSource>::Make<LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>), &::Neptools::Lua::TypeTraits<Neptools::DumpableSource>::Make<LuaGetRef<const Neptools::Source &>, LuaGetRef<FilePosition>, LuaGetRef<FilePosition>>>
     >("new");
     bld.Add<
         Neptools::Source (Neptools::DumpableSource::*)() const, &Neptools::DumpableSource::GetSource
