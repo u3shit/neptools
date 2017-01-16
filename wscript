@@ -227,7 +227,6 @@ def build_common(bld):
         'src/source.cpp',
         'src/txt_serializable.cpp',
         'src/utils.cpp',
-        'src/container/ipairs.lua',
         'src/format/context.cpp',
         'src/format/gbnl.cpp',
         'src/format/item.cpp',

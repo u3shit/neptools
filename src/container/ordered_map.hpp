@@ -86,7 +86,6 @@ private:
 
 template <typename T, typename Traits, typename Compare>
 class NEPTOOLS_LUAGEN(post_register="\
-  NEPTOOLS_LUA_RUNBC(vm, ipairs);\
   luaL_getmetatable(vm, \"neptools_ipairs\");\
   bld.SetField(\"__ipairs\");\
 ") OrderedMap : public Lua::SmartObject

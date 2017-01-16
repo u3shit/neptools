@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ordered_map.hpp"
-#include "container/ipairs.lua.h"
 #include "../lua/function_call.hpp"
 
 namespace Neptools

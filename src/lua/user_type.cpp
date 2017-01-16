@@ -28,11 +28,6 @@ TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
     lua_pushinteger(vm, 0);
     lua_rawsetp(vm, -2, type_tag);
 
-    lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_mt_newindex");
-    lua_pushvalue(vm, -2);
-    lua_call(vm, 1, 1);
-    lua_setfield(vm, -2, "__newindex");
-
     lua_pushvalue(vm, -1);
     lua_rawsetp(vm, LUA_REGISTRYINDEX, type_tag);
 
@@ -47,33 +42,49 @@ TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
     NEPTOOLS_LUA_CHECKTOP(vm, top+2);
 }
 
+static void SetMt(StateRef vm, const char* dst, const char* mt)
+{
+    lua_getfield(vm, LUA_REGISTRYINDEX, mt);
+    NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
+    lua_pushvalue(vm, -2); // +2
+    lua_call(vm, 1, 1); // +1
+    lua_setfield(vm, -2, dst); // +0
+}
+
 void TypeBuilder::Done()
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
-    lua_pushnil(vm); // +1
-    while (lua_next(vm, -2)) // +2/0 on end
+    if (has_get_ || has_get)
+        SetMt(
+            vm, "__index",
+            has_get_ ? "neptools_mt_index" : "neptools_mt_index_light");
+
+    if (has_set_) SetMt(vm, "__newindex", "neptools_mt_newindex");
+    else if (has_set)
     {
-        if (lua_isstring(vm, -2) && strncmp(lua_tostring(vm, -2), "get", 3) == 0)
-        {
-            lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_mt_index"); // +3
-            lua_pushvalue(vm, -4); // +4
-            lua_call(vm, 1, 1); // +3
-            lua_setfield(vm, -4, "__index"); // +2
-            lua_pop(vm, 2); // +0
-            break;
-        }
-        lua_pop(vm, 1); // +1
+        lua_getfield(vm, -1, "set"); // +1
+        NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
+        lua_setfield(vm, -2, "__newindex"); // +0
     }
 
-    lua_remove(vm, -2); // -1
+    lua_remove(vm, -2);
 
     NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
+// force inlining so the optimizer can optimize out strcmp calls
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((always_inline))
+#endif
 void TypeBuilder::SetField(const char* name)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
+
+    if (strcmp(name, "get") == 0)      has_get  = true;
+    if (strncmp(name, "get_", 4) == 0) has_get_ = true;
+    if (strcmp(name, "set") == 0)      has_set  = true;
+    if (strncmp(name, "set_", 4) == 0) has_set_ = true;
 
     lua_pushvalue(vm, -1);
     lua_setfield(vm, -4, name);

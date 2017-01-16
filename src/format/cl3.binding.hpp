@@ -167,7 +167,7 @@ void TypeRegister::DoRegister<cl3_entry>(StateRef vm, TypeBuilder& bld)
     bld.Add<
         Lua::RetNum (*)(Lua::StateRef, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::to_table
     >("to_table");
-  NEPTOOLS_LUA_RUNBC(vm, ipairs);  luaL_getmetatable(vm, "neptools_ipairs");  bld.SetField("__ipairs");
+  luaL_getmetatable(vm, "neptools_ipairs");  bld.SetField("__ipairs");
 }
 static TypeRegister::StateRegister<cl3_entry> reg_neptools_ordered_map_cl3_entry;
 

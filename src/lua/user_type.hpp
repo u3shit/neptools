@@ -116,6 +116,7 @@ private:
     void DoInherit(ptrdiff_t offs);
 
     StateRef vm;
+    bool has_get_ = false, has_get = false, has_set_ = false, has_set = false;
 };
 
 class TypeRegister
