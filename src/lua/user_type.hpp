@@ -107,7 +107,24 @@ public:
     }
 
     // low-level, pops value from lua stack
-    void SetField(const char* name);
+    // force inlining so the optimizer can optimize out strcmp calls
+    BOOST_FORCEINLINE
+    void SetField(const char* name)
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+
+        if (strcmp(name, "get") == 0)      has_get  = true;
+        if (strncmp(name, "get_", 4) == 0) has_get_ = true;
+        if (strcmp(name, "set") == 0)      has_set  = true;
+        if (strncmp(name, "set_", 4) == 0) has_set_ = true;
+
+        lua_pushvalue(vm, -1);
+        lua_setfield(vm, -4, name);
+        lua_setfield(vm, -2, name);
+
+        NEPTOOLS_LUA_CHECKTOP(vm, top-1);
+    }
+
 
 private:
     template <typename Deriv, typename... Base>

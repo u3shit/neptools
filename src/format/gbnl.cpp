@@ -225,8 +225,10 @@ struct WriteDescr
     }
     void operator()(float y, size_t)
     {
-        uint32_t x = *reinterpret_cast<uint32_t*>(&y);
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
+        NEPTOOLS_STATIC_ASSERT(sizeof(float) == sizeof(uint32_t));
+        union { float f; uint32_t i; } x;
+        x.f = y;
+        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x.i;
         ptr += 4;
     }
     void operator()(const Gbnl::OffsetString& os, size_t)

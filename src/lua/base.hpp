@@ -117,7 +117,7 @@ inline bool IsNoneOrNil(int v) { return v <= 0; }
     {                                                                   \
         auto runbc_ret = luaL_loadbuffer(                               \
             vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, "neptools"); \
-        NEPTOOLS_ASSERT(runbc_ret == 0);                                \
+        NEPTOOLS_ASSERT(runbc_ret == 0); (void) runbc_ret;              \
         lua_call(vm, 0, 0);                                             \
     } while (0)
 

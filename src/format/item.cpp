@@ -153,6 +153,7 @@ void ItemListTraits::remove(ItemList& list, Item& it) noexcept
     // is expired by then
     NEPTOOLS_ASSERT_MSG(it.parent == static_cast<ItemWithChildren*>(&list),
                         "item is added to a different list");
+    (void) list;
     it.parent = nullptr;
     it.RemoveRef();
 }
