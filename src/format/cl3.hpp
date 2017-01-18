@@ -102,8 +102,8 @@ public:
     public:
         std::string name;
         uint32_t field_200 = 0;
-        NEPTOOLS_NOLUA
-        std::vector<WeakRefCountedPtr<Entry>> links;
+        NEPTOOLS_LUAGEN(get=true) // no setter - it doesn't work how you expect in lua
+        std::vector<WeakRefCountedPtr<Cl3::Entry>> links;
 
         SmartPtr<Dumpable> src;
 

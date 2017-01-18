@@ -259,7 +259,7 @@ public:
     NEPTOOLS_NOLUA iterator checked_nth_end(size_t i)
     {
         if (i <= size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
     }
 
     NEPTOOLS_NOLUA const_iterator nth(size_t i) const noexcept
@@ -272,7 +272,7 @@ public:
     NEPTOOLS_NOLUA const_iterator checked_nth_end(size_t i) const
     {
         if (i <= size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
     }
 
     NEPTOOLS_NOLUA size_t index_of(const_iterator it) const noexcept

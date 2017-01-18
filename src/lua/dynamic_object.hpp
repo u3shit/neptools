@@ -142,7 +142,7 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     static void Push(StateRef vm, const Type& obj)
     {
         auto sptr = obj.lock();
-        if (sptr) Detail::SmartPush<T>::Push(vm, *obj.Get().GetCtrl(), *obj);
+        if (sptr) Detail::SmartPush<T>::Push(vm, *sptr.GetCtrl(), *sptr);
         else lua_pushnil(vm);
     }
 };

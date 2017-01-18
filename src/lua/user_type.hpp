@@ -72,6 +72,9 @@ class TypeBuilder
 {
 public:
     TypeBuilder(StateRef vm, void* type_tag, const char* name);
+    TypeBuilder(const TypeBuilder&) = delete;
+    void operator=(const TypeBuilder&) = delete;
+
     template <typename T>
     void Init()
     {

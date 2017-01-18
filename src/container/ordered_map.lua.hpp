@@ -14,7 +14,7 @@ struct OrderedMapLua
 {
     using FakeClass = OrderedMap<T, Traits, Compare>;
 
-    static SmartPtr<T> get(OrderedMap<T, Traits, Compare>& om, size_t i)
+    static SmartPtr<T> get(OrderedMap<T, Traits, Compare>& om, size_t i) noexcept
     {
         if (i < om.size()) return &om[i];
         else return nullptr;

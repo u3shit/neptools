@@ -75,6 +75,9 @@ void TypeRegister::DoRegister<Neptools::Cl3::Entry>(StateRef vm, TypeBuilder& bl
         decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>
     >("set_field_200");
     bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>
+    >("get_links");
+    bld.Add<
         decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>
     >("get_src");
     bld.Add<

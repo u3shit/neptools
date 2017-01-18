@@ -318,6 +318,9 @@ Stcm::File& Cl3::GetStcm()
 }
 
 #include "../container/ordered_map.lua.hpp"
+#include "../container/vector.lua.hpp"
 NEPTOOLS_ORDERED_MAP_LUAGEN(
     cl3_entry, Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue);
+NEPTOOLS_STD_VECTOR_LUAGEN(
+    cl3_entry, Neptools::WeakRefCountedPtr<Neptools::Cl3::Entry>);
 #include "cl3.binding.hpp"
