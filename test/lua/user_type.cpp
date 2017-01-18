@@ -10,9 +10,17 @@ using namespace Neptools::Lua;
 
 static int global;
 
-struct Foo final : public DynamicObject
+struct Smart final : public SmartObject
+{
+    int x = 0;
+
+    NEPTOOLS_LUA_CLASS;
+};
+
+struct Foo final : public RefCounted, public DynamicObject
 {
     int local_var = 0;
+    Smart smart;
     void DoIt(int x) { local_var = x; }
 
     Foo() = default; // no ctor generated otherwise.. (bug?)
@@ -71,7 +79,7 @@ TEST_CASE("resurrect shared object", "[lua]")
         State vm;
 
         global = 0;
-        auto ptr = MakeShared<Foo>();
+        auto ptr = MakeSmart<Foo>();
         vm.Push(ptr);
         lua_setglobal(vm, "fooobj");
 
@@ -114,7 +122,7 @@ TEST_CASE("member function with helpers", "[lua]")
 TEST_CASE("field access", "[lua]")
 {
     State vm;
-    auto ptr = MakeShared<Foo>();
+    auto ptr = MakeSmart<Foo>();
     vm.Push(ptr);
     lua_setglobal(vm, "foo");
     ptr->local_var = 13;
@@ -150,9 +158,17 @@ TEST_CASE("invalid field access yields nil", "[lua]")
 TEST_CASE("dotted type name", "[lua]")
 {
     State vm;
+    Do(vm, "local x = bar.baz.asdfgh()");
+}
 
-    if (luaL_dostring(vm, "local x = bar.baz.asdfgh()"))
-        FAIL(lua_tostring(vm, -1));
+TEST_CASE("aliased objects", "[lua]")
+{
+    State vm;
+    Do(vm,
+       "local f = foo()\n"
+       "assert(f ~= f.smart and f.smart == f.smart)\n"
+       "f.smart.x = 7\n"
+       "assert(f.smart.x == 7)\n");
 }
 
 #include "user_type.binding.hpp"

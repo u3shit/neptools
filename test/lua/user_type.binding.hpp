@@ -6,6 +6,33 @@ namespace Neptools
 namespace Lua
 {
 
+// class smart
+template<>
+void TypeRegister::DoRegister<Smart>(StateRef vm, TypeBuilder& bld)
+{
+    (void) vm;
+
+    bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Smart, int, &Smart::x>), &::Neptools::Lua::GetMember<Smart, int, &Smart::x>
+    >("get_x");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Smart, int, &Smart::x>), &::Neptools::Lua::SetMember<Smart, int, &Smart::x>
+    >("set_x");
+
+}
+static TypeRegister::StateRegister<Smart> reg_smart;
+
+}
+}
+
+
+const char Smart::TYPE_NAME[] = "smart";
+
+namespace Neptools
+{
+namespace Lua
+{
+
 // class foo
 template<>
 void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
@@ -18,6 +45,12 @@ void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
     bld.Add<
         decltype(&::Neptools::Lua::SetMember<Foo, int, &Foo::local_var>), &::Neptools::Lua::SetMember<Foo, int, &Foo::local_var>
     >("set_local_var");
+    bld.Add<
+        decltype(&::Neptools::Lua::GetMember<Foo, Smart, &Foo::smart>), &::Neptools::Lua::GetMember<Foo, Smart, &Foo::smart>
+    >("get_smart");
+    bld.Add<
+        decltype(&::Neptools::Lua::SetMember<Foo, Smart, &Foo::smart>), &::Neptools::Lua::SetMember<Foo, Smart, &Foo::smart>
+    >("set_smart");
     bld.Add<
         void (Foo::*)(int), &Foo::DoIt
     >("do_it");

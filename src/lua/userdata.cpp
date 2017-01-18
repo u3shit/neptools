@@ -102,7 +102,7 @@ void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag)
 
         // cache it
         lua_pushvalue(vm, -1); // +3
-        lua_rawsetp(vm, -3, &ctrl); // +2
+        lua_rawsetp(vm, -3, ptr); // +2
     }
 
     lua_remove(vm, -2); // +1 remove reftbl
