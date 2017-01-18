@@ -81,6 +81,7 @@ public:
         using UT = UserTypeTraits<T>;
         UT::MetatableCreate(vm);
         Add<decltype(&UT::GcFun), &UT::GcFun>("__gc");
+        Add<decltype(&IsFunc<T>), &IsFunc<T>>("is");
     }
 
     void Done();
@@ -132,6 +133,10 @@ public:
 private:
     template <typename Deriv, typename... Base>
     struct InheritHelp;
+
+    template <typename T>
+    static bool IsFunc(StateRef vm)
+    { return TypeTraits<T>::Is(vm, 1); }
 
     void DoInherit(ptrdiff_t offs);
 

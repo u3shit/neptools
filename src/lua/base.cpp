@@ -17,12 +17,19 @@ State::State(int) : StateRef{luaL_newstate()}
 }
 
 // todo: do we need it?
-int panic(lua_State* vm)
+static int panic(lua_State* vm)
 {
     size_t len;
     auto msg = lua_tolstring(vm, -1, &len);
     if (msg) NEPTOOLS_THROW(Error{{msg, len}});
     else NEPTOOLS_THROW(Error{"Lua PANIC"});
+}
+
+static int type_name(lua_State* vm)
+{
+    if (!luaL_getmetafield(vm, 1, "__name"))
+        lua_pushstring(vm, luaL_typename(vm, 1));
+    return 1;
 }
 
 State::State() : State(0)
@@ -42,6 +49,9 @@ State::State() : State(0)
             lua_setfield(vm, -2, "__mode"); // +2
             lua_setmetatable(vm, -2);       // +1
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
+
+            lua_pushcfunction(vm, type_name); //+1
+            lua_setfield(vm, LUA_GLOBALSINDEX, "typename");
 
             // helper funs
             NEPTOOLS_LUA_RUNBC(vm, base_funcs);
@@ -82,9 +92,19 @@ void StateRef::HandleDotdotdotCatch()
 
 void StateRef::TypeError(bool arg, const char* expected, int idx)
 {
-    auto actual = luaL_typename(vm, idx);
+    const char* actual;
+    bool pop = false;
+    if (luaL_getmetafield(vm, idx, "__name"))
+    {
+        actual = lua_tostring(vm, -1);
+        pop = true;
+    }
+    else
+        actual = luaL_typename(vm, idx);
     std::stringstream ss;
     ss << expected << " expected, got " << actual;
+    if (pop) lua_pop(vm, 1);
+
     if (arg)
         luaL_argerror(vm, idx, ss.str().c_str());
     else
