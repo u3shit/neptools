@@ -8,9 +8,8 @@ namespace Lua
 
 // class neptools.sink
 template<>
-void TypeRegister::DoRegister<Neptools::Sink>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::Sink>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         NotNull<RefCountedPtr<Neptools::Sink> > (*)(boost::filesystem::path, FilePosition, bool), &Neptools::Sink::ToFile
@@ -45,7 +44,7 @@ void TypeRegister::DoRegister<Neptools::Sink>(StateRef vm, TypeBuilder& bld)
     bld.Add<
         void (Neptools::Sink::*)(NonowningString), &Neptools::Sink::WriteCString<Check::Throw>
     >("write_cstring");
- lua_getfield(vm, -2, "__gc"); bld.SetField("close"); 
+ lua_getfield(bld, -2, "__gc"); bld.SetField("close"); 
 }
 static TypeRegister::StateRegister<Neptools::Sink> reg_neptools_sink;
 
@@ -62,9 +61,8 @@ namespace Lua
 
 // class neptools.memory_sink
 template<>
-void TypeRegister::DoRegister<Neptools::MemorySink>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::MemorySink>(TypeBuilder& bld)
 {
-    (void) vm;
     bld.Inherit<Neptools::MemorySink, Neptools::Sink>();
 
     bld.Add<

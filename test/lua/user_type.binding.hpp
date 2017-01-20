@@ -8,9 +8,8 @@ namespace Lua
 
 // class smart
 template<>
-void TypeRegister::DoRegister<Smart>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Smart>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Smart, int, &Smart::x>), &::Neptools::Lua::GetMember<Smart, int, &Smart::x>
@@ -35,9 +34,8 @@ namespace Lua
 
 // class foo
 template<>
-void TypeRegister::DoRegister<Foo>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Foo>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>), &::Neptools::Lua::GetMember<Foo, int, &Foo::local_var>
@@ -74,9 +72,8 @@ namespace Lua
 
 // class bar.baz.asdfgh
 template<>
-void TypeRegister::DoRegister<Bar::Baz::Asdfgh>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Bar::Baz::Asdfgh>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::TypeTraits<Bar::Baz::Asdfgh>::Make<>), &::Neptools::Lua::TypeTraits<Bar::Baz::Asdfgh>::Make<>
@@ -98,9 +95,8 @@ namespace Lua
 
 // class baz
 template<>
-void TypeRegister::DoRegister<Baz>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Baz>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::TypeTraits<Baz>::Make<>), &::Neptools::Lua::TypeTraits<Baz>::Make<>

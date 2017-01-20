@@ -56,9 +56,8 @@ namespace Lua
 
 // class /*$= cls.name */
 template<>
-void TypeRegister::DoRegister</*$= cls.cpp_name */>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister</*$= cls.cpp_name */>(TypeBuilder& bld)
 {
-    (void) vm;
 //$   local x = { cls.cpp_name }
 //$   for i,v in ipairs(cls.parents) do
 //$     if not v.no_inherit then x[#x+1] = v.cpp_name end

@@ -86,7 +86,7 @@ struct VectorBinding
         return 1;
     }
 
-    static void Register(StateRef vm, TypeBuilder& bld)
+    static void Register(TypeBuilder& bld)
     {
 #define AP(...) decltype(__VA_ARGS__), __VA_ARGS__
         bld.Add<
@@ -125,7 +125,7 @@ struct VectorBinding
         bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<=>("__le");
 #undef AP
 
-        luaL_getmetatable(vm, "neptools_ipairs");
+        luaL_getmetatable(bld, "neptools_ipairs");
         bld.SetField("__ipairs");
     }
 };
@@ -134,8 +134,8 @@ struct VectorBinding
 
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)                               \
     template<> void Neptools::Lua::TypeRegister::DoRegister<                \
-        ::std::vector<__VA_ARGS__>>(StateRef vm, TypeBuilder& bld)          \
-    { ::Neptools::Lua::VectorBinding<__VA_ARGS__>::Register(vm, bld); }     \
+        ::std::vector<__VA_ARGS__>>(TypeBuilder& bld)                       \
+    { ::Neptools::Lua::VectorBinding<__VA_ARGS__>::Register(bld); }         \
                                                                             \
     static ::Neptools::Lua::TypeRegister::StateRegister<                    \
         ::std::vector<__VA_ARGS__>> reg_std_vector_##name;                  \

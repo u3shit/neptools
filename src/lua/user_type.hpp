@@ -75,6 +75,9 @@ public:
     TypeBuilder(const TypeBuilder&) = delete;
     void operator=(const TypeBuilder&) = delete;
 
+    StateRef GetVm() noexcept { return vm; }
+    operator lua_State*() { return static_cast<lua_State*>(vm); }
+
     template <typename T>
     void Init()
     {
@@ -159,7 +162,7 @@ public:
             lua_pop(vm, 1);
             TypeBuilder bld{vm, type_tag, TYPE_NAME<Class>};
             bld.Init<Class>();
-            DoRegister<Class>(vm, bld);
+            DoRegister<Class>(bld);
             bld.Done();
         }
 
@@ -181,7 +184,7 @@ public:
 
 private:
     template <typename Class>
-    static void DoRegister(StateRef vm, TypeBuilder& bld);
+    static void DoRegister(TypeBuilder& bld);
 };
 
 template <typename Deriv>

@@ -82,7 +82,7 @@ private:
     virtual void Pad_(FileMemSize len) = 0;
 } NEPTOOLS_LUAGEN(post_register=[[
     // hack to get close call __gc
-    lua_getfield(vm, -2, "__gc");
+    lua_getfield(bld, -2, "__gc");
     bld.SetField("close");
 ]]);
 

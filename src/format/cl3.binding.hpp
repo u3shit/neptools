@@ -8,9 +8,8 @@ namespace Lua
 
 // class neptools.cl3
 template<>
-void TypeRegister::DoRegister<Neptools::Cl3>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::Cl3>(TypeBuilder& bld)
 {
-    (void) vm;
     bld.Inherit<Neptools::Cl3, Neptools::Dumpable>();
 
     bld.Add<
@@ -58,9 +57,8 @@ namespace Lua
 
 // class neptools.cl3.entry
 template<>
-void TypeRegister::DoRegister<Neptools::Cl3::Entry>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::Cl3::Entry>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::string, &Neptools::Cl3::Entry::name>
@@ -104,9 +102,8 @@ namespace Lua
 
 // class neptools.ordered_map_cl3_entry
 template<>
-void TypeRegister::DoRegister<cl3_entry>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<cl3_entry>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         decltype(&::Neptools::Lua::TypeTraits<cl3_entry>::Make<>), &::Neptools::Lua::TypeTraits<cl3_entry>::Make<>
@@ -170,7 +167,7 @@ void TypeRegister::DoRegister<cl3_entry>(StateRef vm, TypeBuilder& bld)
     bld.Add<
         Lua::RetNum (*)(Lua::StateRef, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::to_table
     >("to_table");
-  luaL_getmetatable(vm, "neptools_ipairs");  bld.SetField("__ipairs");
+  luaL_getmetatable(bld, "neptools_ipairs");  bld.SetField("__ipairs");
 }
 static TypeRegister::StateRegister<cl3_entry> reg_neptools_ordered_map_cl3_entry;
 

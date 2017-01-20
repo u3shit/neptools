@@ -8,9 +8,8 @@ namespace Lua
 
 // class neptools.dumpable
 template<>
-void TypeRegister::DoRegister<Neptools::Dumpable>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::Dumpable>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         void (Neptools::Dumpable::*)(), &Neptools::Dumpable::Fixup

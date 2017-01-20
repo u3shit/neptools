@@ -8,9 +8,8 @@ namespace Lua
 
 // class neptools.txt_serializable
 template<>
-void TypeRegister::DoRegister<Neptools::TxtSerializable>(StateRef vm, TypeBuilder& bld)
+void TypeRegister::DoRegister<Neptools::TxtSerializable>(TypeBuilder& bld)
 {
-    (void) vm;
 
     bld.Add<
         std::string (*)(Neptools::TxtSerializable &), &Neptools::WriteTxt
