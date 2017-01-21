@@ -156,13 +156,13 @@ def configure(cfg):
 
         cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], ['-fvisibility=hidden'])
         if cfg.options.optimize:
-            cfg.filter_flags(['CXXFLAGS', 'LINKFLAGS'], [
+            cfg.filter_flags(['CFLAGS', 'CXXFLAGS', 'LINKFLAGS'], [
                 '-Ofast', '-flto', '-fno-fat-lto-objects',
                  '-fomit-frame-pointer'])
 
             cfg.env.append_value('LINKFLAGS', '-Wl,-O1')
         elif cfg.options.optimize_ext:
-            cfg.filter_flags(['CXXFLAGS_EXT'], ['-g0', '-Ofast'])
+            cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], ['-g0', '-Ofast'])
 
     def chkdef(cfg, defn):
         return cfg.check_cxx(fragment='''
