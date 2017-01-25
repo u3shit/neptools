@@ -5,7 +5,7 @@
 #include <type_traits>
 #include "../meta.hpp"
 #include "../not_null.hpp"
-#include "userdata.hpp"
+#include "user_data.hpp"
 
 // todo: move to external header or just wait for gcc 7
 #if defined(__GLIBCXX__) && __cpp_lib_type_trait_variable_templates < 201510
@@ -28,7 +28,7 @@ template <typename T>
 constexpr bool is_smart_object_v = IsSmartObject<T>::value;
 
 template <typename T>
-struct IsUserdataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
+struct IsUserDataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
     : std::true_type {};
 
 
@@ -63,7 +63,7 @@ constexpr bool is_self_pushable_dynamic_object_v =
     void PushLua(::Neptools::Lua::StateRef vm,                               \
                  ::Neptools::RefCounted& ctrl) override                      \
     {                                                                        \
-        ::Neptools::Lua::UserdataDetail::Push<__VA_ARGS__>(                  \
+        ::Neptools::Lua::UserDataDetail::Push<__VA_ARGS__>(                  \
             vm, ctrl, this, &::Neptools::Lua::TYPE_TAG<NEPTOOLS_THIS_TYPE>); \
     }
 
@@ -71,8 +71,8 @@ constexpr bool is_self_pushable_dynamic_object_v =
     NEPTOOLS_DYNAMIC_OBJ_GEN(                                                   \
         std::conditional_t<                                                     \
             std::is_base_of<::Neptools::RefCounted, NEPTOOLS_THIS_TYPE>::value, \
-            ::Neptools::Lua::RefCountedUserdata, \
-            ::Neptools::Lua::SharedUserdata>)
+            ::Neptools::Lua::RefCountedUserData, \
+            ::Neptools::Lua::SharedUserData>)
 
 inline DynamicObject& GetDynamicObject(DynamicObject& obj) { return obj; }
 
@@ -85,9 +85,9 @@ struct SmartPush
     {
         using UD = std::conditional_t<
             std::is_base_of<RefCounted, T>::value,
-            RefCountedUserdata,
-            SharedUserdata>;
-        UserdataDetail::Push<UD>(vm, ctrl, &ptr, &TYPE_TAG<T>);
+            RefCountedUserData,
+            SharedUserData>;
+        UserDataDetail::Push<UD>(vm, ctrl, &ptr, &TYPE_TAG<T>);
     }
 };
 
@@ -102,11 +102,11 @@ struct SmartPush<T, std::enable_if_t<std::is_base_of<DynamicObject, T>::value>>
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<
         is_smart_object_v<T> && !is_self_pushable_dynamic_object_v<T>>>
-    : UserdataTraits<T>, MakeSharedHelper<T, SmartPtr<T>> {};
+    : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>> {};
 
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<is_self_pushable_dynamic_object_v<T>>>
-    : UserdataTraits<T>, MakeSharedHelper<T, SmartPtr<T>>
+    : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>>
 {
     static void Push(StateRef vm, T& obj)
     { GetDynamicObject(obj).PushLua(vm, obj); }
@@ -115,7 +115,7 @@ struct TypeTraits<T, std::enable_if_t<is_self_pushable_dynamic_object_v<T>>>
 template <typename T, template<typename> class Storage>
 struct TypeTraits<NotNull<SharedPtrBase<T, Storage>>,
                   std::enable_if_t<IsSmartObject<T>::value>>
-    : UserdataTraits<SharedPtrBase<T, Storage>>
+    : UserDataTraits<SharedPtrBase<T, Storage>>
 {
     static void Push(StateRef vm, const NotNull<SharedPtrBase<T, Storage>>& obj)
     { Detail::SmartPush<T>::Push(vm, *obj.Get().GetCtrl(), *obj); }
@@ -133,11 +133,11 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     using Type = WeakPtrBase<T, Storage>;
 
     static Type Get(StateRef vm, bool arg, int idx)
-    { return lua_isnil(vm, idx) ? nullptr : Type{&UserdataTraits<T>::Get(vm, arg, idx)}; }
+    { return lua_isnil(vm, idx) ? nullptr : Type{&UserDataTraits<T>::Get(vm, arg, idx)}; }
     static Type UnsafeGet(StateRef vm, int idx)
-    { return lua_isnil(vm, idx) ? nullptr : Type{&UserdataTraits<T>::UnsafeGet(vm, idx)}; }
+    { return lua_isnil(vm, idx) ? nullptr : Type{&UserDataTraits<T>::UnsafeGet(vm, idx)}; }
     static bool Is(StateRef vm, int idx)
-    { return lua_isnil(vm, idx) || UserdataTraits<T>::Is(vm, idx); }
+    { return lua_isnil(vm, idx) || UserDataTraits<T>::Is(vm, idx); }
 
     static void Push(StateRef vm, const Type& obj)
     {

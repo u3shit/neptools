@@ -1,4 +1,4 @@
-#include "userdata.hpp"
+#include "user_data.hpp"
 
 namespace Neptools
 {
@@ -14,15 +14,15 @@ static void ClearCache(StateRef vm, void* ptr)
     lua_pop(vm, 1); // 0
 }
 
-void RefCountedUserdataBase::Destroy(StateRef vm) noexcept
+void RefCountedUserDataBase::Destroy(StateRef vm) noexcept
 {
     auto ctrl = GetCtrl();
     ClearCache(vm, Get());
     ctrl->RemoveRef();
-    this->~RefCountedUserdataBase();
+    this->~RefCountedUserDataBase();
 }
 
-namespace UserdataDetail
+namespace UserDataDetail
 {
 char TAG;
 
@@ -33,7 +33,7 @@ void TypeTraits::GcFun(StateRef vm)
         vm.TypeError(true, "neptools.object", 1);
     lua_pop(vm, 2);
 
-    auto ub = reinterpret_cast<UserdataBase*>(lua_touserdata(vm, 1));
+    auto ub = reinterpret_cast<UserDataBase*>(lua_touserdata(vm, 1));
     NEPTOOLS_ASSERT(ub);
     ub->Destroy(vm);
 
@@ -53,7 +53,7 @@ UBArgs GetBase(
     lua_pop(vm, 2); // 0
     if (!isvalid) vm.TypeError(arg, name, idx);
 
-    auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
+    auto ud = static_cast<UserDataBase*>(lua_touserdata(vm, idx));
     NEPTOOLS_ASSERT(ud);
     return {ud, offs};
 }
@@ -65,7 +65,7 @@ UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag)
     auto offs = lua_tointeger(vm, -1);
     lua_pop(vm, 2); // 0
 
-    auto ud = static_cast<UserdataBase*>(lua_touserdata(vm, idx));
+    auto ud = static_cast<UserDataBase*>(lua_touserdata(vm, idx));
     NEPTOOLS_ASSERT(ud);
     return {ud, offs};
 }
@@ -79,7 +79,7 @@ bool IsBase(StateRef vm, int idx, void* tag)
     return type == LUA_TNUMBER;
 }
 
-template <typename Userdata>
+template <typename UserData>
 void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
@@ -93,11 +93,11 @@ void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag)
         lua_pop(vm, 1); // +1
 
         // create object
-        auto ud = lua_newuserdata(vm, sizeof(Userdata)); // +1
+        auto ud = lua_newuserdata(vm, sizeof(UserData)); // +1
         auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, tag); // +2
         NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
 
-        new (ud) Userdata{&ctrl, ptr};
+        new (ud) UserData{&ctrl, ptr};
         lua_setmetatable(vm, -2); // +1
 
         // cache it
@@ -108,8 +108,8 @@ void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag)
     lua_remove(vm, -2); // +1 remove reftbl
     NEPTOOLS_LUA_CHECKTOP(vm, top+1);
 }
-template void Push<RefCountedUserdata>(StateRef, RefCounted&, void*, void*);
-template void Push<SharedUserdata>(StateRef, RefCounted&, void*, void*);
+template void Push<RefCountedUserData>(StateRef, RefCounted&, void*, void*);
+template void Push<SharedUserData>(StateRef, RefCounted&, void*, void*);
 
 }
 

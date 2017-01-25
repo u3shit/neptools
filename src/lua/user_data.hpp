@@ -10,12 +10,12 @@ namespace Neptools
 namespace Lua
 {
 
-class UserdataBase
+class UserDataBase
 {
 public:
-    UserdataBase(void* obj) noexcept : obj{obj} {}
-    UserdataBase(const UserdataBase&) = delete;
-    void operator=(const UserdataBase&) = delete;
+    UserDataBase(void* obj) noexcept : obj{obj} {}
+    UserDataBase(const UserDataBase&) = delete;
+    void operator=(const UserDataBase&) = delete;
     virtual void Destroy(StateRef) noexcept = 0;
 
     void* Get() const noexcept { return obj; }
@@ -25,29 +25,29 @@ public:
     { return *reinterpret_cast<T*>(static_cast<char*>(obj) + offs); }
 
 protected:
-    virtual ~UserdataBase() = default;
+    virtual ~UserDataBase() = default;
     void* obj;
 };
 
 /* probably makes no sense
 template <typename T>
-class ValueUserdata final : public UserdataBase
+class ValueUserData final : public UserDataBase
 {
 public:
     template <typename... Args>
-    ValueUserdata(Args&&... args)
-        : UserdataBase{&t}, T{std::forward<Args>(args)...} {}
-    virtual void Destroy(StateRef) noexcept override { this->~ValueUserdata(); }
+    ValueUserData(Args&&... args)
+        : UserDataBase{&t}, T{std::forward<Args>(args)...} {}
+    virtual void Destroy(StateRef) noexcept override { this->~ValueUserData(); }
 
 private:
-    ~ValueUserdata() = default;
+    ~ValueUserData() = default;
     T t;
 };
 */
 
-struct RefCountedUserdataBase : UserdataBase
+struct RefCountedUserDataBase : UserDataBase
 {
-    using UserdataBase::UserdataBase;
+    using UserDataBase::UserDataBase;
     virtual RefCounted* GetCtrl() const noexcept = 0;
 
     template <typename T>
@@ -57,15 +57,15 @@ struct RefCountedUserdataBase : UserdataBase
     void Destroy(StateRef vm) noexcept override;
 
 protected:
-    ~RefCountedUserdataBase() = default;
+    ~RefCountedUserDataBase() = default;
 };
 
-class RefCountedUserdata final : public RefCountedUserdataBase
+class RefCountedUserData final : public RefCountedUserDataBase
 {
 public:
     template <typename T>
-    RefCountedUserdata(RefCounted* ctrl, T* ptr) noexcept
-        : RefCountedUserdataBase{ptr}
+    RefCountedUserData(RefCounted* ctrl, T* ptr) noexcept
+        : RefCountedUserDataBase{ptr}
     {
         NEPTOOLS_ASSERT(static_cast<void*>(ctrl) == static_cast<void*>(ptr));
         ctrl->AddRef();
@@ -75,28 +75,28 @@ public:
     { return static_cast<RefCounted*>(obj); }
 
 private:
-    ~RefCountedUserdata() = default;
+    ~RefCountedUserData() = default;
 };
 
-class SharedUserdata final : public RefCountedUserdataBase
+class SharedUserData final : public RefCountedUserDataBase
 {
 public:
-    SharedUserdata(RefCounted* ctrl, void* ptr) noexcept
-        : RefCountedUserdataBase{ptr}, ctrl{ctrl}
+    SharedUserData(RefCounted* ctrl, void* ptr) noexcept
+        : RefCountedUserDataBase{ptr}, ctrl{ctrl}
     { ctrl->AddRef(); }
 
     RefCounted* GetCtrl() const noexcept override { return ctrl; }
 
 private:
-    ~SharedUserdata() = default;
+    ~SharedUserData() = default;
     RefCounted* ctrl;
 };
 
 // specialize
 template <typename T, typename Enable = void>
-struct IsUserdataObject : std::false_type {};
+struct IsUserDataObject : std::false_type {};
 
-namespace UserdataDetail
+namespace UserDataDetail
 {
 extern char TAG;
 
@@ -113,13 +113,13 @@ struct TypeTraits
 }
 
 template <typename T>
-struct UserTypeTraits<T, std::enable_if_t<IsUserdataObject<T>::value>>
-    : UserdataDetail::TypeTraits {};
+struct UserTypeTraits<T, std::enable_if_t<IsUserDataObject<T>::value>>
+    : UserDataDetail::TypeTraits {};
 
-namespace UserdataDetail
+namespace UserDataDetail
 {
 
-struct UBArgs { UserdataBase* ud; lua_Integer offs; };
+struct UBArgs { UserDataBase* ud; lua_Integer offs; };
 
 template <typename T>
 struct TraitsBase
@@ -139,7 +139,7 @@ struct TraitsBase<RefCountedPtr<T>>
     inline static Ret UBGet(UBArgs a)
     {
         NEPTOOLS_ASSERT(
-            static_cast<RefCountedUserdataBase*>(a.ud)->GetCtrl() == a.ud->Get());
+            static_cast<RefCountedUserDataBase*>(a.ud)->GetCtrl() == a.ud->Get());
         return Ret{&a.ud->Get<T>(a.offs)};
     };
 };
@@ -152,7 +152,7 @@ struct TraitsBase<SharedPtr<T>>
 
     inline static Ret UBGet(UBArgs a)
     {
-        return static_cast<RefCountedUserdataBase*>(a.ud)->GetShared<T>(a.offs);
+        return static_cast<RefCountedUserDataBase*>(a.ud)->GetShared<T>(a.offs);
     }
 };
 
@@ -160,32 +160,32 @@ UBArgs GetBase(
     StateRef vm, bool arg, int idx, const char* name, void* tag);
 UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag);
 bool IsBase(StateRef vm, int idx, void* tag);
-template <typename Userdata>
+template <typename UserData>
 void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag);
 
 }
 
 template <typename T>
-struct UserdataTraits
+struct UserDataTraits
 {
-    using Base = UserdataDetail::TraitsBase<T>;
+    using Base = UserDataDetail::TraitsBase<T>;
     using BaseType = typename Base::Type;
     using Ret = typename Base::Ret;
 
     inline static Ret Get(StateRef vm, bool arg, int idx)
     {
-        return Base::UBGet(UserdataDetail::GetBase(
+        return Base::UBGet(UserDataDetail::GetBase(
             vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
     }
 
     inline static Ret UnsafeGet(StateRef vm, int idx)
     {
-        return Base::UBGet(UserdataDetail::UnsafeGetBase(
+        return Base::UBGet(UserDataDetail::UnsafeGetBase(
             vm, idx, &TYPE_TAG<BaseType>));
     }
 
     inline static bool Is(StateRef vm, int idx)
-    { return UserdataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
+    { return UserDataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
 };
 
 }

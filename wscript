@@ -246,7 +246,7 @@ def build_common(bld):
         'src/format/stsc/string.cpp',
         'src/lua/base.cpp',
         'src/lua/base_funcs.lua',
-        'src/lua/userdata.cpp',
+        'src/lua/user_data.cpp',
         'src/lua/user_type.cpp',
     ]
 
