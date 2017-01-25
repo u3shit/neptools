@@ -3,11 +3,8 @@
 #pragma once
 
 #include "type_traits.hpp"
-#include "../shared_ptr.hpp"
 
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 class UserDataBase
@@ -25,71 +22,9 @@ public:
     { return *reinterpret_cast<T*>(static_cast<char*>(obj) + offs); }
 
 protected:
+    void ClearCache(StateRef vm) noexcept;
     virtual ~UserDataBase() = default;
     void* obj;
-};
-
-/* probably makes no sense
-template <typename T>
-class ValueUserData final : public UserDataBase
-{
-public:
-    template <typename... Args>
-    ValueUserData(Args&&... args)
-        : UserDataBase{&t}, T{std::forward<Args>(args)...} {}
-    virtual void Destroy(StateRef) noexcept override { this->~ValueUserData(); }
-
-private:
-    ~ValueUserData() = default;
-    T t;
-};
-*/
-
-struct RefCountedUserDataBase : UserDataBase
-{
-    using UserDataBase::UserDataBase;
-    virtual RefCounted* GetCtrl() const noexcept = 0;
-
-    template <typename T>
-    NotNull<SharedPtr<T>> GetShared(size_t offs) const noexcept
-    { return NotNull<SharedPtr<T>>{GetCtrl(), &Get<T>(offs), true}; }
-
-    void Destroy(StateRef vm) noexcept override;
-
-protected:
-    ~RefCountedUserDataBase() = default;
-};
-
-class RefCountedUserData final : public RefCountedUserDataBase
-{
-public:
-    template <typename T>
-    RefCountedUserData(RefCounted* ctrl, T* ptr) noexcept
-        : RefCountedUserDataBase{ptr}
-    {
-        NEPTOOLS_ASSERT(static_cast<void*>(ctrl) == static_cast<void*>(ptr));
-        ctrl->AddRef();
-    }
-
-    RefCounted* GetCtrl() const noexcept override
-    { return static_cast<RefCounted*>(obj); }
-
-private:
-    ~RefCountedUserData() = default;
-};
-
-class SharedUserData final : public RefCountedUserDataBase
-{
-public:
-    SharedUserData(RefCounted* ctrl, void* ptr) noexcept
-        : RefCountedUserDataBase{ptr}, ctrl{ctrl}
-    { ctrl->AddRef(); }
-
-    RefCounted* GetCtrl() const noexcept override { return ctrl; }
-
-private:
-    ~SharedUserData() = default;
-    RefCounted* ctrl;
 };
 
 // specialize
@@ -130,38 +65,40 @@ struct TraitsBase
     inline static Ret UBGet(UBArgs a) { return a.ud->Get<T>(a.offs); }
 };
 
-template <typename T>
-struct TraitsBase<RefCountedPtr<T>>
+template <typename T, typename... Args>
+void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
 {
-    using Type = T;
-    using Ret = NotNull<RefCountedPtr<T>>;
+    NEPTOOLS_LUA_GETTOP(vm, top);
 
-    inline static Ret UBGet(UBArgs a)
+    // check cache
+    auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
+    NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
+    type = lua_rawgetp(vm, -1, ptr); // +2
+    if (type != LUA_TUSERDATA) // no hit
     {
-        NEPTOOLS_ASSERT(
-            static_cast<RefCountedUserDataBase*>(a.ud)->GetCtrl() == a.ud->Get());
-        return Ret{&a.ud->Get<T>(a.offs)};
-    };
-};
+        lua_pop(vm, 1); // +1
 
-template <typename T>
-struct TraitsBase<SharedPtr<T>>
-{
-    using Type = T;
-    using Ret = NotNull<SharedPtr<T>>;
+        // create object
+        auto ud = lua_newuserdata(vm, sizeof(T)); // +1
+        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, tag); // +2
+        NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
 
-    inline static Ret UBGet(UBArgs a)
-    {
-        return static_cast<RefCountedUserDataBase*>(a.ud)->GetShared<T>(a.offs);
+        new (ud) T{std::forward<Args>(args)...};
+        lua_setmetatable(vm, -2); // +1
+
+        // cache it
+        lua_pushvalue(vm, -1); // +3
+        lua_rawsetp(vm, -3, ptr); // +2
     }
-};
+
+    lua_remove(vm, -2); // +1 remove reftbl
+    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+}
 
 UBArgs GetBase(
     StateRef vm, bool arg, int idx, const char* name, void* tag);
 UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag);
 bool IsBase(StateRef vm, int idx, void* tag);
-template <typename UserData>
-void Push(StateRef vm, RefCounted& ctrl, void* ptr, void* tag);
 
 }
 
@@ -188,7 +125,6 @@ struct UserDataTraits
     { return UserDataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
 };
 
-}
 }
 
 #endif

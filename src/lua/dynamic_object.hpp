@@ -5,7 +5,7 @@
 #include <type_traits>
 #include "../meta.hpp"
 #include "../not_null.hpp"
-#include "user_data.hpp"
+#include "ref_counted_user_data.hpp"
 
 // todo: move to external header or just wait for gcc 7
 #if defined(__GLIBCXX__) && __cpp_lib_type_trait_variable_templates < 201510
@@ -63,8 +63,8 @@ constexpr bool is_self_pushable_dynamic_object_v =
     void PushLua(::Neptools::Lua::StateRef vm,                               \
                  ::Neptools::RefCounted& ctrl) override                      \
     {                                                                        \
-        ::Neptools::Lua::UserDataDetail::Push<__VA_ARGS__>(                  \
-            vm, ctrl, this, &::Neptools::Lua::TYPE_TAG<NEPTOOLS_THIS_TYPE>); \
+        ::Neptools::Lua::UserDataDetail::CreateCachedUserData<__VA_ARGS__>(  \
+            vm, this, &::Neptools::Lua::TYPE_TAG<NEPTOOLS_THIS_TYPE>, &ctrl, this); \
     }
 
 #define NEPTOOLS_DYNAMIC_OBJECT                                                 \
@@ -87,7 +87,8 @@ struct SmartPush
             std::is_base_of<RefCounted, T>::value,
             RefCountedUserData,
             SharedUserData>;
-        UserDataDetail::Push<UD>(vm, ctrl, &ptr, &TYPE_TAG<T>);
+        UserDataDetail::CreateCachedUserData<UD>(
+            vm, &ptr, &TYPE_TAG<T>, &ctrl, &ptr);
     }
 };
 
