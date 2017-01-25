@@ -65,6 +65,7 @@ struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
     inline static void MetatableCreate(StateRef) {}
 
+    BOOST_FORCEINLINE
     static void GcFun(StateRef vm, T& t)
     {
         t.~T();

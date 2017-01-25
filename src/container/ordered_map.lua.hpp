@@ -36,9 +36,9 @@ struct OrderedMapLua
     // warning: return values swapped
     static std::tuple<bool, size_t> insert(
         OrderedMap<T, Traits, Compare>& om, size_t i,
-        const NotNull<SmartPtr<T>>& t)
+        NotNull<SmartPtr<T>>&& t)
     {
-        auto r = om.insert(om.checked_nth_end(i), t);
+        auto r = om.insert(om.checked_nth_end(i), std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 
@@ -68,9 +68,9 @@ struct OrderedMapLua
     // ret: pushed_back, index of old/new item
     static std::tuple<bool, size_t> push_back(
         OrderedMap<T, Traits, Compare>& om,
-        const NotNull<SmartPtr<T>>& t)
+        NotNull<SmartPtr<T>>&& t)
     {
-        auto r = om.push_back(t);
+        auto r = om.push_back(std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 

@@ -43,7 +43,7 @@ struct TypeTraits
         lua_rawsetp(vm, -2, &TAG);
     }
 
-    static void GcFun(StateRef vm);
+    static int GcFun(lua_State* vm);
 };
 }
 

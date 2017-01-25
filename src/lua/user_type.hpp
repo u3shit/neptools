@@ -48,7 +48,7 @@ namespace Detail
 template <typename Class, typename T, T Class::* Member, typename Enable = void>
 struct GetMemberHlp
 {
-    inline static T& Get(Class& cls) { return cls.*Member; }
+    BOOST_FORCEINLINE static T& Get(Class& cls) { return cls.*Member; }
 };
 
 template <typename Class, typename T, T Class::* Member>
@@ -56,16 +56,18 @@ struct GetMemberHlp<Class, T, Member, std::enable_if_t<
     std::is_base_of_v<RefCounted, Class> &&
     is_normal_smart_object_v<T>>>
 {
-    inline static NotNull<SharedPtr<T>> Get(Class& cls)
+    BOOST_FORCEINLINE static NotNull<SharedPtr<T>> Get(Class& cls)
     { return NotNull<SharedPtr<T>>{&cls, &(cls.*Member), true}; }
 };
 }
 
 template <typename Class, typename T, T Class::* Member>
+BOOST_FORCEINLINE
 decltype(auto) GetMember(Class& cls)
 { return Detail::GetMemberHlp<Class, T, Member>::Get(cls); }
 
 template <typename Class, typename T, T Class::* member>
+BOOST_FORCEINLINE
 void SetMember(Class& cls, const T& val) { cls.*member = val; }
 
 class TypeBuilder
@@ -138,7 +140,8 @@ private:
     struct InheritHelp;
 
     template <typename T>
-    static bool IsFunc(StateRef vm)
+    BOOST_FORCEINLINE
+    static bool IsFunc(StateRef vm) noexcept
     { return TypeTraits<T>::Is(vm, 1); }
 
     void DoInherit(ptrdiff_t offs);

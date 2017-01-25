@@ -16,11 +16,11 @@ namespace UserDataDetail
 {
 char TAG;
 
-void TypeTraits::GcFun(StateRef vm)
+int TypeTraits::GcFun(lua_State* vm)
 {
     if (!lua_getmetatable(vm, 1) || // +1
         IsNoneOrNil(lua_rawgetp(vm, -1, &TAG))) // +2
-        vm.TypeError(true, "neptools.object", 1);
+        StateRef{vm}.TypeError(true, "neptools.object", 1);
     lua_pop(vm, 2);
 
     auto ub = reinterpret_cast<UserDataBase*>(lua_touserdata(vm, 1));
@@ -29,6 +29,7 @@ void TypeTraits::GcFun(StateRef vm)
 
     lua_pushnil(vm);
     lua_setmetatable(vm, 1);
+    return 0;
 }
 
 UBArgs GetBase(

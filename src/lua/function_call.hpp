@@ -105,10 +105,18 @@ struct NothrowInvokable : std::integral_constant<
     bool, noexcept(Invoke(std::declval<Args>()...))> {};
 
 template <typename... Args>
+BOOST_FORCEINLINE
 auto CatchInvoke(StateRef, Args&&... args) -> typename std::enable_if<
     NothrowInvokable<Args&&...>::value,
     decltype(Invoke(std::forward<Args>(args)...))>::type
 { return Invoke(std::forward<Args>(args)...); }
+
+inline void ToLuaException(StateRef vm)
+{
+    auto s = ExceptionToString();
+    lua_pushlstring(vm, s.data(), s.size());
+    lua_error(vm);
+}
 
 template <typename... Args>
 auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
@@ -118,9 +126,7 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
     try { return Invoke(std::forward<Args>(args)...); }
     catch (const std::exception& e)
     {
-        auto s = ExceptionToString();
-        lua_pushlstring(vm, s.data(), s.size());
-        lua_error(vm);
+        ToLuaException(vm);
         NEPTOOLS_UNREACHABLE("lua_error returned");
     }
 }
@@ -160,7 +166,14 @@ struct WrapFunGen2<T, Fun, Unsafe, List<Args...>>
 {};
 
 template <typename T, T Fun, bool Unsafe>
-using WrapFunc = WrapFunGen2<T, Fun, Unsafe, typename FunctionTraits<T>::Arguments>;
+struct WrapFunc : WrapFunGen2<T, Fun, Unsafe, typename FunctionTraits<T>::Arguments>
+{};
+
+// allow plain old lua functions
+template <int (*Fun)(lua_State*)>
+struct WrapFunc<int (*)(lua_State*), Fun, false>
+{ static constexpr const auto Func = Fun; };
+
 
 // overload
 template <typename Args, typename Seq> struct OverloadCheck2;

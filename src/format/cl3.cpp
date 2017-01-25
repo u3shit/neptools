@@ -51,9 +51,20 @@ void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
 #undef VALIDATE
 }
 
+void Cl3::Entry::Dispose() noexcept
+{
+    links.clear();
+    src.reset();
+}
+
 Cl3::Cl3(Source src)
 {
     AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
+}
+
+void Cl3::Dispose() noexcept
+{
+    entries.clear();
 }
 
 void Cl3::Parse_(Source& src)

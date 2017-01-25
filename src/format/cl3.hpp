@@ -110,6 +110,8 @@ public:
         Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
         explicit Entry(std::string name) : name{std::move(name)} {}
+
+        void Dispose() noexcept override;
     };
     struct EntryKeyOfValue
     {
@@ -126,6 +128,8 @@ public:
     void UpdateFromDir(const boost::filesystem::path& dir);
 
     Stcm::File& GetStcm();
+
+    void Dispose() noexcept override;
 
 private:
     FilePosition data_size;

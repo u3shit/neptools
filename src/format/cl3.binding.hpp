@@ -149,7 +149,7 @@ void TypeRegister::DoRegister<cl3_entry>(TypeBuilder& bld)
         Overload<SmartPtr<Neptools::Cl3::Entry> (*)(cl3_entry&, const typename cl3_entry::key_type&), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::get>
     >("get");
     bld.Add<
-        std::tuple<bool, size_t> (*)(OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, size_t, const NotNull<SmartPtr<Neptools::Cl3::Entry> > &), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::insert
+        std::tuple<bool, size_t> (*)(OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, size_t, NotNull<SmartPtr<Neptools::Cl3::Entry> > &&), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::insert
     >("insert");
     bld.Add<
         Overload<size_t (*)(Lua::StateRef, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, size_t, size_t), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::erase>,
@@ -159,7 +159,7 @@ void TypeRegister::DoRegister<cl3_entry>(TypeBuilder& bld)
         NotNull<SmartPtr<Neptools::Cl3::Entry> > (*)(OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, size_t), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::remove
     >("remove");
     bld.Add<
-        std::tuple<bool, size_t> (*)(OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, const NotNull<SmartPtr<Neptools::Cl3::Entry> > &), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::push_back
+        std::tuple<bool, size_t> (*)(OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue, std::less<std::basic_string<char> > > &, NotNull<SmartPtr<Neptools::Cl3::Entry> > &&), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::push_back
     >("push_back");
     bld.Add<
         Lua::RetNum (*)(StateRef, cl3_entry&, const typename cl3_entry::key_type&), &Neptools::OrderedMapLua<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>::find
