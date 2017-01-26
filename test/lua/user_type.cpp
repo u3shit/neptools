@@ -20,6 +20,7 @@ struct Smart final : public SmartObject
 struct Foo final : public RefCounted, public DynamicObject
 {
     int local_var = 0;
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     Smart smart;
     void DoIt(int x) { local_var = x; }
 

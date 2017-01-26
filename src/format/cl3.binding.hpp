@@ -23,7 +23,7 @@ void TypeRegister::DoRegister<Neptools::Cl3>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::SetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>), &::Neptools::Lua::SetMember<Neptools::Cl3, uint32_t, &Neptools::Cl3::field_14>
     >("set_field_14");
     bld.Add<
-        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>, &Neptools::Cl3::entries>), &::Neptools::Lua::GetMember<Neptools::Cl3, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>, &Neptools::Cl3::entries>
+        decltype(&::Neptools::Lua::GetSmartOwnedMember<Neptools::Cl3, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>, &Neptools::Cl3::entries>), &::Neptools::Lua::GetSmartOwnedMember<Neptools::Cl3, OrderedMap<Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue>, &Neptools::Cl3::entries>
     >("get_entries");
     bld.Add<
         uint32_t (Neptools::Cl3::*)(const WeakSmartPtr<Neptools::Cl3::Entry> &) const, &Neptools::Cl3::IndexOf
@@ -73,7 +73,7 @@ void TypeRegister::DoRegister<Neptools::Cl3::Entry>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>), &::Neptools::Lua::SetMember<Neptools::Cl3::Entry, uint32_t, &Neptools::Cl3::Entry::field_200>
     >("set_field_200");
     bld.Add<
-        decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>
+        decltype(&::Neptools::Lua::GetSmartOwnedMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>), &::Neptools::Lua::GetSmartOwnedMember<Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<Cl3::Entry> >, &Neptools::Cl3::Entry::links>
     >("get_links");
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>), &::Neptools::Lua::GetMember<Neptools::Cl3::Entry, SmartPtr<Neptools::Dumpable>, &Neptools::Cl3::Entry::src>

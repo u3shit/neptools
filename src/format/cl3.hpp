@@ -102,7 +102,9 @@ public:
     public:
         std::string name;
         uint32_t field_200 = 0;
-        NEPTOOLS_LUAGEN(get=true) // no setter - it doesn't work how you expect in lua
+
+        // no setter - it doesn't work how you expect in lua
+        NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
         std::vector<WeakRefCountedPtr<Cl3::Entry>> links;
 
         SmartPtr<Dumpable> src;
@@ -118,7 +120,9 @@ public:
         using type = std::string;
         const type& operator()(const Entry& e) { return e.name; }
     };
-    NEPTOOLS_LUAGEN(get=true) // no setter - it doesn't work how you expect in lua
+
+    // no setter - it doesn't work how you expect in lua
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     OrderedMap<Entry, EntryKeyOfValue> entries;
     uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 

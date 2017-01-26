@@ -148,6 +148,10 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     }
 };
 
+template <typename Class, typename T, T Class::* Member>
+BOOST_FORCEINLINE NotNull<SharedPtr<T>> GetSmartOwnedMember(Class& cls)
+{ return NotNull<SharedPtr<T>>{&cls, &(cls.*Member), true}; }
+
 }
 }
 

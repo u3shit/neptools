@@ -2,7 +2,6 @@
 #define UUID_365580B3_AF64_4E79_8FC1_35F50DFF840F
 #pragma once
 
-#include "dynamic_object.hpp"
 #include "function_call.hpp"
 #include "type_traits.hpp"
 #include "../shared_ptr.hpp"
@@ -43,28 +42,9 @@ struct LuaGetRefHlp<T, std::enable_if_t<!std::is_reference<T>::value>>
 template <typename T>
 using LuaGetRef = typename Detail::LuaGetRefHlp<T>::Type;
 
-namespace Detail
-{
-template <typename Class, typename T, T Class::* Member, typename Enable = void>
-struct GetMemberHlp
-{
-    BOOST_FORCEINLINE static T& Get(Class& cls) { return cls.*Member; }
-};
-
-template <typename Class, typename T, T Class::* Member>
-struct GetMemberHlp<Class, T, Member, std::enable_if_t<
-    std::is_base_of_v<RefCounted, Class> &&
-    is_normal_smart_object_v<T>>>
-{
-    BOOST_FORCEINLINE static NotNull<SharedPtr<T>> Get(Class& cls)
-    { return NotNull<SharedPtr<T>>{&cls, &(cls.*Member), true}; }
-};
-}
-
 template <typename Class, typename T, T Class::* Member>
 BOOST_FORCEINLINE
-decltype(auto) GetMember(Class& cls)
-{ return Detail::GetMemberHlp<Class, T, Member>::Get(cls); }
+T& GetMember(Class& cls) { return cls.*Member; }
 
 template <typename Class, typename T, T Class::* member>
 BOOST_FORCEINLINE
