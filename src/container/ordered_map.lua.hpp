@@ -20,7 +20,6 @@ struct OrderedMapLua
         else return nullptr;
     }
 
-    NEPTOOLS_LUAGEN(args={"/*$= class */&", "const typename /*$= class */::key_type&"})
     static SmartPtr<T> get(
         OrderedMap<T, Traits, Compare>& om,
         const typename OrderedMap<T, Traits, Compare>::key_type& key)
@@ -76,7 +75,6 @@ struct OrderedMapLua
 
     // ret nil if not found
     // ret index, value if found
-    NEPTOOLS_LUAGEN(args={"StateRef", "/*$= class */&", "const typename /*$= class */::key_type&"})
     static Lua::RetNum find(
         Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om,
         const typename OrderedMap<T, Traits, Compare>::key_type& val)

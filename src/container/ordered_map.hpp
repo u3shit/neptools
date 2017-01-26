@@ -279,7 +279,6 @@ public:
     { return VectorIndex(*it); }
 
     // map portions
-    NEPTOOLS_LUAGEN(args={"const /*$= class */::key_type&"})
     size_t count(const key_type& key) const { return set.count(key); }
     // comp must yield the same ordering as the used comparator in the tree...
     template <typename Key, typename Comp>

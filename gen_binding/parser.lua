@@ -15,7 +15,7 @@ local function lua_class(c, tbl)
 
   utils.default_arg(tbl, "name", utils.default_name_class, c:type())
   tbl.type = c:type()
-  tbl.cpp_name = utils.type_name(c:type(), inst.aliases)
+  tbl.cpp_name = utils.type_name(c, inst.aliases)
   tbl.methods = {}
   tbl.methods_ord = {}
   return tbl
@@ -214,7 +214,7 @@ local function field(c, info, tbl)
   utils.default_arg(tbl, "name", default_name_field,
                     c, tbl.get and "get_" or "set_")
 
-  info.type = utils.type_name(c:type(), inst.aliases)
+  info.type = utils.type_name(c, inst.aliases)
   info.ptr_type = info.type.." "..info.class.."::*"
   info.value = "&"..info.class.."::"..info.name
 
@@ -368,7 +368,7 @@ local parse_templates2_v = cl.regCursorVisitor(function (c, par)
     if not anns[1] then anns[1] = { implicit = true } end
     for _,a in ipairs(anns) do
       a.class = is_lua_class(inst.fake_class)
-      a.use_class = utils.type_name(par:type(), inst.aliases)
+      a.use_class = utils.type_name(par, inst.aliases)
       lua_function(c, a)
     end
   end

@@ -56,12 +56,99 @@ function ret.add_alias(aliases, type, alias)
   aliases[type:name():gsub("[.%[%]*+%-?%%^$]", "%%%0")] = alias:gsub("%%", "%%%%")
 end
 
--- todo: fully qualified name
+-- extremely hacky way to get fully qualified-ish names
+-- totally not optimal, but this is probably the best we can get without
+-- hacking even more clang internals or writing a real libtooling tool in C++...
+
+-- collect fully qualified names of the type and all template arguments and all
+-- base types
+--
+-- the latter is required in case of templates:
+-- void foo(const typename Bar<T, Asd>::InnerStuff&)
+-- we need to turn Bar<...>::InnerStuff into Neptools::Bar...
+-- but we only get the InnerStuff type, it's path won't match the template hell
+-- calling :canonical() on it will resolve the typedef so it won't work
+--
+-- tbl: to be filled by this function
+--   key=fqn, value=path, a table: {start=integer, [start]="pathitem"...[1]="class name"}
+-- t: the type
+local function collect_ns(tbl, t)
+  if not t then return end
+
+  local p = t:pointee()
+  if p then collect_ns(tbl, p) end
+
+  local cur = t:declaration()
+  if cur:kind() == "NoDeclFound" then return end
+
+  for k,v in ipairs(t:templateArguments()) do collect_ns(tbl, v) end
+
+  local path = {cur:name()}
+  local repl = {cur:name()}
+  local i = 0
+  local par = cur:parent()
+  while par and par:kind() ~= "TranslationUnit" do
+    collect_ns(tbl, par:type())
+    path[i] = par:name()
+    repl[i] = par:displayName()
+    i=i-1
+    par = par:parent()
+  end
+
+  path.start = i+1
+  tbl["::"..table.concat(repl, "::", i+1, 1)] = path
+end
+
+-- generate gsub patterns for collected paths
+local function gen_gsub(tbl)
+  local pats = {}
+  --print() print("===============================start==========================")
+
+  for k,v in pairs(tbl) do
+    --local fqn = "::"..table.concat(v, "::", v.start, 1)
+    local repl = "%1"..k.."%2"
+    --print(k, v, repl)
+
+    for i=v.start,1 do
+      local pat = "([^a-zA-Z:])"..table.concat(v, "::", i, 1).."([^a-zA-Z0-9_])"
+      --print(pat)
+      assert(not pats[pat] or pats[pat] == repl, "Ambiguous name?")
+      pats[pat] = repl
+    end
+    --print()
+  end
+
+  return pats
+end
+
 local function get_type_intname(x)
+  local t
   if type(x) == "string" then return x
-  elseif ffi.istype(cl.Cursor_t, x) then return x:type():name()
-  elseif ffi.istype(cl.Type_t, x) then return x:name()
+  elseif ffi.istype(cl.Cursor_t, x) then t = x:type()
+  elseif ffi.istype(cl.Type_t, x) then t = x
   else error("invalid type parameter") end
+
+  local tbl = {}
+  collect_ns(tbl, t)
+  local pats = gen_gsub(tbl)
+
+  local ret = "#"..t:name().."#"
+  --print("\n\nstart", ret)
+  local chg = true
+  while chg do
+    chg = false
+    for k,v in pairs(pats) do
+      --print(k,"----",v)
+      local n = ret:gsub(k, v)
+      if n ~= ret then
+        ret = n
+        chg = true
+      end
+    end
+  end
+
+  --print("return", ret)
+  return ret:sub(2, -2)
 end
 
 local function type_name(typ, aliases)
