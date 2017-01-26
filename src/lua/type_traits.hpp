@@ -146,7 +146,7 @@ struct TypeTraits<T, std::enable_if_t<
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
-        if (BOOST_LIKELY(!!str)) return {str, len};
+        if (BOOST_LIKELY(!!str)) return T(str, len);
         vm.TypeError(arg, TYPE_NAME<std::string>, idx);
     };
 
@@ -154,7 +154,7 @@ struct TypeTraits<T, std::enable_if_t<
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
-        return {str, len};
+        return T(str, len);
     }
 
     static bool Is(StateRef vm, int idx)

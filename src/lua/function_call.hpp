@@ -32,6 +32,14 @@ struct FunctionTraits<Ret(C::*)(Args...)> : FunctionTraits<Ret(C&, Args...)> {};
 template <typename Ret, typename C, typename... Args>
 struct FunctionTraits<Ret(C::*)(Args...) const> : FunctionTraits<Ret(C&, Args...)> {};
 
+#if __cpp_noexcept_function_type >= 201510
+template <typename Ret, typename... Args>
+struct FunctionTraits<Ret(*)(Args...) noexcept> : FunctionTraits<Ret(Args...)> {};
+template <typename Ret, typename C, typename... Args>
+struct FunctionTraits<Ret(C::*)(Args...) noexcept> : FunctionTraits<Ret(C&, Args...)> {};
+template <typename Ret, typename C, typename... Args>
+struct FunctionTraits<Ret(C::*)(Args...) const noexcept> : FunctionTraits<Ret(C&, Args...)> {};
+#endif
 
 template <typename T, int Idx, bool Unsafe> struct GetArg
 {

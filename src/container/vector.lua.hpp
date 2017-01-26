@@ -90,10 +90,10 @@ struct VectorBinding
     {
 #define AP(...) decltype(__VA_ARGS__), __VA_ARGS__
         bld.Add<
-            Overload<AP(MakeShared<Vect, size_type, const T&>)>,
-            Overload<AP(MakeShared<Vect, size_type>)>,
-            Overload<AP(MakeShared<Vect, const Vect&>)>,
-            Overload<AP(MakeShared<Vect>)>
+            Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
+            Overload<AP(&MakeShared<Vect, size_type>)>,
+            Overload<AP(&MakeShared<Vect, const Vect&>)>,
+            Overload<AP(&MakeShared<Vect>)>
         >("new");
 
         bld.Add<
@@ -139,7 +139,7 @@ struct VectorBinding
                                                                             \
     static ::Neptools::Lua::TypeRegister::StateRegister<                    \
         ::std::vector<__VA_ARGS__>> reg_std_vector_##name;                  \
-    template<> struct ::Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>   \
+    template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>     \
     { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
 
 #endif
