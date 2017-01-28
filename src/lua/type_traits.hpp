@@ -4,7 +4,6 @@
 
 #include "base.hpp"
 #include "../nonowning_string.hpp"
-#include <boost/numeric/conversion/cast.hpp>
 
 namespace boost { namespace filesystem { class path; } }
 
@@ -60,19 +59,25 @@ struct TypeTraits<T, std::enable_if_t<
     static T Get(StateRef vm, bool arg, int idx)
     {
         int isnum;
-        auto ret = lua_tointegerx(vm, idx, &isnum);
-        if (BOOST_LIKELY(isnum)) return boost::numeric_cast<T>(ret);
+        // use tonumber instead of tointeger
+        // in luajit/ljx lua_Integer is ptrdiff_t, which means 32 or 64 bits
+        // depending on architecture... avoid this compatibility madness
+#ifndef LUA_VERSION_LJX
+#error "Update code for normal lua"
+#endif
+        auto ret = lua_tonumberx(vm, idx, &isnum);
+        if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
         vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
     static T UnsafeGet(StateRef vm, int idx)
-    { return boost::numeric_cast<T>(lua_tointeger(vm, idx)); }
+    { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
     { return lua_isnumber(vm, idx); }
 
     static void Push(StateRef vm, T val)
-    { lua_pushinteger(vm, val); }
+    { lua_pushnumber(vm, val); }
 };
 
 template <typename T>
@@ -82,12 +87,12 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
     {
         int isnum;
         auto ret = lua_tonumberx(vm, idx, &isnum);
-        if (BOOST_LIKELY(isnum)) return boost::numeric_cast<T>(ret);
+        if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
         vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
     static T UnsafeGet(StateRef vm, int idx)
-    { return boost::numeric_cast<T>(lua_tonumber(vm, idx)); }
+    { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
     { return lua_isnumber(vm, idx); }
