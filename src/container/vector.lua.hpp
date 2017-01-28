@@ -26,14 +26,18 @@ struct VectorBinding
 
     static void Assign(Vect& v, const Vect& o) { v = o; }
 
-    static typename Nullable<T>::Type Get(Vect& v, size_type i) noexcept
+    static typename Nullable<T>::Type Get0(Vect& v, size_type i) noexcept
     {
         if (i < v.size()) return v[i];
         else return nullptr;
     }
 
-    static void Set(Vect& v, size_type i, const T& val)
+    static void Get1() noexcept {}
+
+    static void Set(StateRef vm, Vect& v, size_type i, const T& val)
     {
+        if (BOOST_UNLIKELY(i == std::numeric_limits<size_type>::max()))
+            luaL_error(vm, "vector size overflow");
         if (i >= v.size()) v.resize(i+1);
         v[i] = val;
     }
@@ -105,7 +109,7 @@ struct VectorBinding
         S(empty); S(size); S(max_size); S(reserve); S(capacity);
         S(shrink_to_fit); S(clear); S(swap);
 #undef S
-        bld.Add<AP(&Get)>("get");
+        bld.Add<Overload<AP(&Get0)>, Overload<AP(&Get1)>>("get");
         bld.Add<AP(&Set)>("set");
         bld.Add<T& (Vect::*)(size_t), &Vect::at>("at");
         bld.Add<AP(&Vect::size)>("__len");
