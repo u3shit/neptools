@@ -25,7 +25,7 @@ template <typename T, typename Enable = void>
 struct IsSmartObject : std::is_base_of<SmartObject, T> {};
 
 template <typename T>
-constexpr bool is_smart_object_v = IsSmartObject<T>::value;
+constexpr bool IS_SMART_OBJECT = IsSmartObject<T>::value;
 
 template <typename T>
 struct IsUserDataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
@@ -34,11 +34,11 @@ struct IsUserDataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
 
 template <typename T>
 constexpr bool is_ref_counted_smart_object_v =
-    is_smart_object_v<T> && std::is_base_of_v<RefCounted, T>;
+    IS_SMART_OBJECT<T> && std::is_base_of_v<RefCounted, T>;
 
 template <typename T>
 constexpr bool is_normal_smart_object_v =
-    is_smart_object_v<T> && !std::is_base_of_v<RefCounted, T>;
+    IS_SMART_OBJECT<T> && !std::is_base_of_v<RefCounted, T>;
 
 class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
     : public SmartObject
@@ -53,7 +53,7 @@ public:
 };
 
 template <typename T>
-constexpr bool is_self_pushable_dynamic_object_v =
+constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
     std::is_base_of_v<DynamicObject, T> && std::is_base_of_v<RefCounted, T>;
 
 #define NEPTOOLS_THIS_TYPE std::remove_pointer_t<decltype(this)>
@@ -102,11 +102,11 @@ struct SmartPush<T, std::enable_if_t<std::is_base_of<DynamicObject, T>::value>>
 
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<
-        is_smart_object_v<T> && !is_self_pushable_dynamic_object_v<T>>>
+        IS_SMART_OBJECT<T> && !IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
     : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>> {};
 
 template <typename T>
-struct TypeTraits<T, std::enable_if_t<is_self_pushable_dynamic_object_v<T>>>
+struct TypeTraits<T, std::enable_if_t<IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
     : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>>
 {
     static void Push(StateRef vm, T& obj)

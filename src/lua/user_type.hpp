@@ -66,7 +66,11 @@ public:
         using UT = UserTypeTraits<T>;
         UT::MetatableCreate(vm);
         Add<decltype(&UT::GcFun), &UT::GcFun>("__gc");
-        Add<decltype(&IsFunc<T>), &IsFunc<T>>("is");
+
+        static_assert(TypeTraits<T>::TYPE_TAGGED);
+        lua_pushlightuserdata(vm, &TYPE_TAG<T>);
+        lua_pushcclosure(vm, &IsFunc, 1);
+        SetField("is");
     }
 
     void Done();
@@ -119,10 +123,7 @@ private:
     template <typename Deriv, typename... Base>
     struct InheritHelp;
 
-    template <typename T>
-    BOOST_FORCEINLINE
-    static bool IsFunc(StateRef vm) noexcept
-    { return TypeTraits<T>::Is(vm, 1); }
+    static int IsFunc(lua_State* vm) noexcept;
 
     void DoInherit(ptrdiff_t offs);
 

@@ -110,5 +110,21 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
     NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
+int TypeBuilder::IsFunc(lua_State* vm) noexcept
+{
+    if (!lua_getmetatable(vm, 1))
+    {
+        lua_pushboolean(vm, false);
+        return 1;
+    }
+
+    lua_pushvalue(vm, lua_upvalueindex(1));
+    NEPTOOLS_ASSERT(lua_islightuserdata(vm, -1));
+
+    auto type = lua_rawget(vm, -2);
+    lua_pushboolean(vm, type == LUA_TNUMBER);
+    return 1;
+}
+
 }
 }

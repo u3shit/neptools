@@ -19,6 +19,9 @@ template <typename T, typename Enable = void>
 struct IsValueObject : std::is_base_of<ValueObject, T> {};
 
 template <typename T>
+constexpr bool IS_VALUE_OBJECT = IsValueObject<T>::value;
+
+template <typename T>
 struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
     static T& Get(StateRef vm, bool arg, int idx)
@@ -58,6 +61,8 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
         Push(vm, std::forward<Args>(args)...);
         return 1;
     }
+
+    static constexpr bool TYPE_TAGGED = true;
 };
 
 template <typename T>

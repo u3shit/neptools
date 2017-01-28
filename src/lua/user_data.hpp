@@ -123,6 +123,8 @@ struct UserDataTraits
 
     inline static bool Is(StateRef vm, int idx)
     { return UserDataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
+
+    static constexpr bool TYPE_TAGGED = true;
 };
 
 }
