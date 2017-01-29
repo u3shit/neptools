@@ -71,13 +71,19 @@ public:
 
     struct FixStringTag { char str[1]; };
     struct PaddingTag { char pad[1]; };
+
     using Struct = DynamicStruct<
         uint8_t, uint16_t, uint32_t, uint64_t, float, OffsetString,
         FixStringTag, PaddingTag>;
+    using StructPtr = NotNull<boost::intrusive_ptr<Struct>>;
 
     bool is_gstl;
     uint32_t flags, field_28, field_30;
-    std::vector<Struct> messages;
+
+    // no setter - it doesn't work how you expect in lua
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    std::vector<StructPtr> messages;
+
     Struct::TypePtr type;
 
     void RecalcSize();
@@ -100,7 +106,7 @@ private:
     FilePosition Align(FilePosition x) const noexcept;
 
     uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
-    size_t FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,
+    size_t FindDst(uint32_t id, std::vector<StructPtr>& messages,
                    size_t& index) const;
 
     size_t msg_descr_size, msgs_size;

@@ -40,8 +40,8 @@ local function template(inp, tbl, c)
   return fun()
 end
 
-template_tostring = function(x)
-  return template(tostring(x), getfenv(2))
+template_tostring = function(x, env)
+  return template(tostring(x), env or getfenv(2))
 end
 
 local template_str = [=[
@@ -78,9 +78,9 @@ void TypeRegister::DoRegister</*$= cls.cpp_name */>(TypeBuilder& bld)
 //$       end
     >("/*$= k */");
 //$ end
-/*$= cls.post_register or "" */
+/*$= cls.post_register or "", cls */
 }
-static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= cls.name:gsub("%.", "_") */;
+static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
 
 }
 }

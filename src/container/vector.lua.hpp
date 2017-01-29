@@ -5,18 +5,30 @@
 #include <vector>
 
 #include "../lua/user_type.hpp"
+#include "../lua/dynamic_object.hpp"
 
 namespace Neptools::Lua
 {
 
-// todo: other types
-template <typename T> struct Nullable;
-template <typename T, template <typename> class Storage>
-struct Nullable<WeakPtrBase<T, Storage>>
-{ using Type = WeakPtrBase<T, Storage>; };
-
 template <typename T, typename Allocator>
 struct IsSmartObject<std::vector<T, Allocator>> : std::true_type {};
+
+namespace Detail
+{
+
+#define NEPTOOLS_COMP_CHECK(comp, COMP, op)         \
+    template <typename T, typename Enable = void>   \
+    struct Is##comp##Comp : std::false_type {};     \
+    template <typename T>                           \
+    struct Is##comp##Comp<T, std::void_t<decltype(  \
+        std::declval<T>() op std::declval<T>())>>   \
+        : std::true_type {};                        \
+    template <typename T>                           \
+    constexpr bool IS_##COMP##_COMP = Is##comp##Comp<T>::value
+NEPTOOLS_COMP_CHECK(Eq, EQ, ==);
+NEPTOOLS_COMP_CHECK(Lt, LT, <);
+
+}
 
 template <typename T, typename Allocator = std::allocator<T>>
 struct VectorBinding
@@ -26,10 +38,11 @@ struct VectorBinding
 
     static void Assign(Vect& v, const Vect& o) { v = o; }
 
-    static typename Nullable<T>::Type Get0(Vect& v, size_type i) noexcept
+    static RetNum Get0(StateRef vm, Vect& v, size_type i) noexcept
     {
-        if (i < v.size()) return v[i];
-        else return nullptr;
+        if (i < v.size()) vm.Push(v[i]);
+        else lua_pushnil(vm);
+        return 1;
     }
 
     static void Get1() noexcept {}
@@ -38,8 +51,17 @@ struct VectorBinding
     {
         if (BOOST_UNLIKELY(i == std::numeric_limits<size_type>::max()))
             luaL_error(vm, "vector size overflow");
-        if (i >= v.size()) v.resize(i+1);
-        v[i] = val;
+        if constexpr (std::is_default_constructible_v<T>)
+        {
+            if (i >= v.size()) v.resize(i+1);
+            v[i] = val;
+        }
+        else
+        {
+            if (i < v.size()) v[i] = val;
+            else if (i == v.size()) v.push_back(val);
+            else luaL_error(vm, "set invalid index");
+        }
     }
 
     static auto CheckedNthEnd(Vect& v, size_type i)
@@ -93,12 +115,19 @@ struct VectorBinding
     static void Register(TypeBuilder& bld)
     {
 #define AP(...) decltype(__VA_ARGS__), __VA_ARGS__
-        bld.Add<
-            Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
-            Overload<AP(&MakeShared<Vect, size_type>)>,
-            Overload<AP(&MakeShared<Vect, const Vect&>)>,
-            Overload<AP(&MakeShared<Vect>)>
-        >("new");
+        if constexpr (std::is_default_constructible_v<T>)
+            bld.Add<
+                Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
+                Overload<AP(&MakeShared<Vect, size_type>)>,
+                Overload<AP(&MakeShared<Vect, const Vect&>)>,
+                Overload<AP(&MakeShared<Vect>)>
+            >("new");
+        else
+            bld.Add<
+                Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
+                Overload<AP(&MakeShared<Vect, const Vect&>)>,
+                Overload<AP(&MakeShared<Vect>)>
+            >("new");
 
         bld.Add<
             Overload<void (Vect::*)(size_type, const T&), &Vect::assign>,
@@ -118,15 +147,22 @@ struct VectorBinding
         bld.Add<AP(&Remove)>("remove");
         bld.Add<void (Vect::*)(const T&), &Vect::push_back>("push_back");
         bld.Add<AP(&PopBack)>("pop_back");
-        bld.Add<
-            Overload<void (Vect::*)(size_type, const T&), &Vect::resize>,
-            Overload<void (Vect::*)(size_type), &Vect::resize>
-        >("resize");
+        if constexpr (std::is_default_constructible_v<T>)
+            bld.Add<
+                Overload<void (Vect::*)(size_type, const T&), &Vect::resize>,
+                Overload<void (Vect::*)(size_type), &Vect::resize>
+            >("resize");
+        else
+            bld.Add<void (Vect::*)(size_type, const T&), &Vect::resize>("resize");
         bld.Add<AP(&ToTable)>("to_table");
 
-        bld.Add<bool (*)(const Vect&, const Vect&), &std::operator==>("__eq");
-        bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<>("__lt");
-        bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<=>("__le");
+        if constexpr (Detail::IS_EQ_COMP<T>)
+            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator==>("__eq");
+        if constexpr (Detail::IS_LT_COMP<T>)
+        {
+            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<>("__lt");
+            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<=>("__le");
+        }
 #undef AP
 
         luaL_getmetatable(bld, "neptools_ipairs");

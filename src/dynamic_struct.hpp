@@ -2,10 +2,15 @@
 #define UUID_98C06485_8AE9_47DA_B99F_62CA5AF00FF4
 #pragma once
 
+#include "meta.hpp"
 #include "utils.hpp"
+
+#include "lua/intrusive_object.hpp"
+#include "lua/value_object.hpp"
+
 #include <atomic>
-#include <iostream>
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <typeindex>
 #include <vector>
@@ -29,8 +34,12 @@ constexpr auto IndexOfV = IndexOf<Item, Args...>::value;
 NEPTOOLS_STATIC_ASSERT(IndexOfV<int, float, double, int> == 2);
 
 template <typename... Args>
-class DynamicStruct
+class NEPTOOLS_LUAGEN(
+    post_register = "::Neptools::DynamicStructLua</*$= template_args */>::Register(bld);")
+DynamicStruct final : public Lua::IntrusiveObject
 {
+    NEPTOOLS_LUA_CLASS;
+private:
     template <typename Ret, size_t I, typename T, typename... TRest,
               typename Thiz, typename Fun, typename... FunArgs>
     static Ret VisitHlp(Thiz thiz, size_t i, Fun&& fun, FunArgs&&... args)
@@ -49,28 +58,33 @@ class DynamicStruct
 
 public:
     template <typename T>
-    static constexpr size_t GetIndexFromType()
+    NEPTOOLS_NOLUA static constexpr size_t GetIndexFromType()
     { return IndexOfV<T, Args...>; }
 
     static constexpr const size_t SIZE_OF[] = { sizeof(Args)... };
     static constexpr const size_t ALIGN_OF[] = { alignof(Args)... };
 
-    struct Type
+    struct Type : public Lua::IntrusiveObject
     {
+        NEPTOOLS_LUA_CLASS;
+    public:
         Type(const Type&) = delete;
         void operator=(const Type&) = delete;
         ~Type() = delete;
 
-        mutable std::atomic<size_t> refcount;
-        size_t item_count, size;
+        NEPTOOLS_NOLUA mutable std::atomic<size_t> refcount;
+        NEPTOOLS_LUAGEN(get=true) NEPTOOLS_LUAGEN(get=true,name="__len")
+        size_t item_count;
+        NEPTOOLS_LUAGEN(get=true) size_t byte_size;
         struct Item
         {
             size_t idx;
             size_t size;
             size_t offset;
         };
-        Item items[1];
+        NEPTOOLS_NOLUA Item items[1];
     };
+    static_assert(std::is_standard_layout_v<Type>);
     using TypePtr = boost::intrusive_ptr<const Type>;
 
     friend void intrusive_ptr_add_ref(const Type* t)
@@ -82,17 +96,20 @@ public:
             ::operator delete(const_cast<Type*>(t));
     }
 
-    class TypeBuilder
+    class TypeBuilder final : public Lua::ValueObject
     {
+        NEPTOOLS_LUA_CLASS;
     public:
-        auto& GetDesc() { return desc; }
-        const auto& GetDesc() const { return desc; }
+        TypeBuilder() = default; // force lua ctor
+
+        NEPTOOLS_NOLUA auto& GetDesc() { return desc; }
+        NEPTOOLS_NOLUA const auto& GetDesc() const { return desc; }
 
         template <typename T>
-        void Add(size_t size = sizeof(T))
+        NEPTOOLS_NOLUA void Add(size_t size = sizeof(T))
         { desc.emplace_back(IndexOfV<T, Args...>, size); }
 
-        void Add(size_t i, size_t size)
+        NEPTOOLS_NOLUA void Add(size_t i, size_t size)
         {
             NEPTOOLS_ASSERT_MSG(i < sizeof...(Args), "index out of range");
             desc.push_back({i, size});
@@ -117,7 +134,7 @@ public:
                 auto al = ALIGN_OF[desc[i].first];
                 offs = (offs + al - 1) / al * al;
             }
-            ret->size = offs;
+            ret->byte_size = offs;
 
             return ret;
         }
@@ -127,78 +144,83 @@ public:
     };
 
     // actual class begin
-    DynamicStruct() = default;
-    DynamicStruct(const TypePtr& type) : type{type}
+    static boost::intrusive_ptr<DynamicStruct> New(const TypePtr type)
     {
-        data.reset(new char[type->size]);
-        ForEach([](auto& x, size_t)
-                { new (&x) std::remove_reference_t<decltype(x)>; });
+        auto ptr = ::operator new(sizeof(DynamicStruct) + type->byte_size - 1);
+        try
+        {
+            auto obj = new (ptr) DynamicStruct{type};
+            return {obj, false};
+        }
+        catch (...)
+        {
+            ::operator delete(ptr);
+            throw;
+        }
     }
 
-    DynamicStruct(DynamicStruct&& o) : type{o.type}, data{std::move(o.data)}
-    { o.type = nullptr; o.data = nullptr; }
-    DynamicStruct& operator=(DynamicStruct&& o)
-    {
-        if (this != &o)
-        {
-            type = o.type;
-            data = std::move(o.data);
-            o.type = nullptr;
-            o.data = nullptr;
-        }
-        return *this;
-    }
+    DynamicStruct(const DynamicStruct&) = delete;
+    void operator=(const DynamicStruct&) = delete;
     ~DynamicStruct()
     {
-        ForEach([](auto& x, size_t)
-                {
-                    using T = std::remove_reference_t<decltype(x)>;
-                    x.~T();
-                });
+        if (type)
+            ForEach(Destroy{});
     }
 
-    size_t GetSize() const { return type->item_count; }
-    size_t GetSize(size_t i) const
+    NEPTOOLS_LUAGEN() NEPTOOLS_LUAGEN(name="__len")
+    size_t GetSize() const noexcept { return type->item_count; }
+    NEPTOOLS_NOLUA size_t GetSize(size_t i) const noexcept
     {
         NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].size;
     }
-    size_t GetTypeIndex(size_t i) const
+    NEPTOOLS_NOLUA size_t GetTypeIndex(size_t i) const noexcept
     {
         NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].idx;
     }
 
     template <typename T>
-    bool Is(size_t i) const
+    NEPTOOLS_NOLUA bool Is(size_t i) const noexcept
     {
         return GetTypeIndex(i) == GetIndexFromType<T>();
     }
 
-    TypePtr GetRawType() const { return type; }
-    void* GetData() { return data.get(); }
-    const void* GetData() const { return data.get(); }
+    TypePtr GetType() const noexcept { return type; }
+    NEPTOOLS_NOLUA void* GetData() noexcept { return data; }
+    NEPTOOLS_NOLUA const void* GetData() const noexcept { return data; }
+
+    NEPTOOLS_NOLUA void* GetData(size_t i) noexcept
+    {
+        NEPTOOLS_ASSERT_MSG(i <= GetSize(), "index out of range");
+        return &data[type->items[i].offset];
+    }
+    NEPTOOLS_NOLUA const void* GetData(size_t i) const noexcept
+    {
+        NEPTOOLS_ASSERT_MSG(i <= GetSize(), "index out of range");
+        return &data[type->items[i].offset];
+    }
 
     template <typename T>
-    T& Get(size_t i)
+    NEPTOOLS_NOLUA T& Get(size_t i) noexcept
     {
         NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<T*>(&data[type->items[i].offset]);
     }
 
     template <typename T>
-    const T& Get(size_t i) const
+    NEPTOOLS_NOLUA const T& Get(size_t i) const noexcept
     {
         NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<const T*>(&data[type->items[i].offset]);
     }
 
     template <typename Ret = void, typename... FunArgs>
-    Ret Visit(size_t i, FunArgs&&... f)
+    NEPTOOLS_NOLUA Ret Visit(size_t i, FunArgs&&... f)
     { return VisitHlp<Ret, 0, Args...>(this, i, std::forward<FunArgs>(f)...); }
 
     template <typename... FunArgs>
-    void ForEach(FunArgs&&... f)
+    NEPTOOLS_NOLUA void ForEach(FunArgs&&... f)
     {
         for (size_t i = 0; i < type->item_count; ++i)
             Visit(i, std::forward<FunArgs>(f)...);
@@ -206,19 +228,58 @@ public:
 
     // const version
     template <typename Ret = void, typename... FunArgs>
-    Ret Visit(size_t i, FunArgs&&... f) const
+    NEPTOOLS_NOLUA Ret Visit(size_t i, FunArgs&&... f) const
     { return VisitHlp<Ret, 0, Args...>(this, i, std::forward<FunArgs>(f)...); }
 
     template <typename... FunArgs>
-    void ForEach(FunArgs&&... args) const
+    NEPTOOLS_NOLUA void ForEach(FunArgs&&... args) const
     {
         for (size_t i = 0; i < type->item_count; ++i)
             Visit(i, std::forward<FunArgs>(args)...);
     }
 
 private:
+    DynamicStruct(const TypePtr& type) : type{type}
+    {
+        size_t i = 0;
+        try
+        {
+            for (i = 0; i < type->item_count; ++i)
+                Visit(i, Make{});
+        }
+        catch (...)
+        {
+            while (i > 0) Visit(--i, Destroy{});
+            throw;
+        }
+    }
+
+    struct Make
+    {
+        template <typename T>
+        void operator()(T& x, size_t)
+        { new (&x) T; }
+    };
+
+    struct Destroy
+    {
+        template <typename T>
+        void operator()(T& x, size_t)
+        { x.~T(); }
+    };
+
     TypePtr type;
-    std::unique_ptr<char[]> data;
+    mutable std::atomic<size_t> refcount{1};
+    char data[1];
+
+    friend void intrusive_ptr_add_ref(const DynamicStruct* t)
+    { t->refcount.fetch_add(1, std::memory_order_relaxed); }
+
+    friend void intrusive_ptr_release(const DynamicStruct* t)
+    {
+        if (t->refcount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+            ::operator delete(const_cast<DynamicStruct*>(t));
+    }
 };
 
 template <typename... Args>

@@ -64,6 +64,18 @@ template <int Idx, bool Unsafe> struct GetArg<StateRef, Idx, Unsafe>
     static bool Is(StateRef) { return true; }
 };
 
+template <int Type, int Idx, bool Unsafe> struct GetArg<Raw<Type>, Idx, Unsafe>
+{
+    static constexpr size_t NEXT_IDX = Idx+1;
+    static Raw<Type> Get(StateRef vm)
+    {
+        if (!Unsafe && !Is(vm))
+            vm.TypeError(true, lua_typename(vm, Type), Idx);
+        return {};
+    }
+    static bool Is(StateRef vm) noexcept { return lua_type(vm, Idx) == Type; }
+};
+
 template <bool Unsafe, int N, typename Seq, typename... Args>
 struct GenArgSequence;
 template <bool Unsafe, int N, int... Seq, typename Head, typename... Args>

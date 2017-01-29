@@ -8,7 +8,7 @@ export LUA_PATH=";;ext/ljclang/?.lua"
 export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
 
 src=(src/dumpable src/sink src/source src/txt_serializable
-     src/format/cl3
+     src/format/cl3 src/format/gbnl
      test/lua/user_type)
 
 req=()

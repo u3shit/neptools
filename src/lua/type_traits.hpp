@@ -43,7 +43,9 @@ constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
     static const char TYPE_NAME[]
 
 // type tag
-template <typename T> char TYPE_TAG = {};
+template <typename T>
+std::enable_if_t<!std::is_const_v<T> && !std::is_volatile_v<T>, char>
+TYPE_TAG = {};
 
 // lauxlib operations:
 // luaL_check*: call lua_to*, fail if it fails

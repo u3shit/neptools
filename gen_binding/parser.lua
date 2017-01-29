@@ -119,7 +119,7 @@ local function func_common(c, info, tbl)
   info.argsf = function(wrap, pre)
     return utils.type_list(info.args, inst.aliases, wrap, pre)
   end
-  info.result_type = tbl.result_type or utils.type_name(c:resultType(), inst.aliases)
+  info.result_type = tbl.result_type or utils.type_name(c:resultType(), inst.aliases, c)
   return true
 end
 
@@ -151,15 +151,7 @@ local function freestanding_func(c, info, tbl)
     while info.args[i]:type():name() == "Lua::StateRef" do i = i+1 end
     typ = info.args[i]:type()
     typ = typ:pointee() or typ -- get rid of &, *
-    if inst.cur_template then
-      local based = typ:declaration():definition()
-      local exp = inst.cur_template:declaration():baseTemplate()
-      if based ~= exp then return false end
-      typ = inst.cur_template
-      info.args[i] = typ
-    else
-      typ = typ:declaration():type() -- and const, whatever
-    end
+    typ = typ:declaration():type() -- and const, whatever
   end
 
   tbl.class = is_lua_class(typ)
@@ -342,8 +334,10 @@ local parse_v = cl.regCursorVisitor(function (c, par)
       local x = is_lua_class(t)
       if x then
         inst.templates[t] = c:name()
-        x.name = x.name.."_"..c:name()
+        x.name = x.name.."_"..(a.name or c:name())
         x.template = true
+        -- hack!
+        x.template_args = t:name():gsub("^[:0-9a-zA-Z ]*<", ""):gsub(">[ *&]*$", "")
         inst.ret_lua_classes[#inst.ret_lua_classes+1] = parse_class(t, x)
       else
         utils.print_error("is not a lua class", c)
@@ -368,8 +362,12 @@ local parse_templates2_v = cl.regCursorVisitor(function (c, par)
     if not anns[1] then anns[1] = { implicit = true } end
     for _,a in ipairs(anns) do
       a.class = is_lua_class(inst.fake_class)
-      a.use_class = utils.type_name(par, inst.aliases)
-      lua_function(c, a)
+      if a.class then
+        a.use_class = utils.type_name(par, inst.aliases)
+        lua_function(c, a)
+      else
+        utils.print_error("FakeClass is not lua class", c)
+      end
     end
   end
   return vr.Continue
@@ -397,10 +395,7 @@ local function parse_templates(c)
     return true
   end
 
-  for k,v in pairs(inst.templates) do
-    inst.cur_template = k
-    c:children(parse_templates_v)
-  end
+  c:children(parse_templates_v)
 end
 
 local function parse(c, filter)

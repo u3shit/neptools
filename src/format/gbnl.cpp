@@ -1,6 +1,7 @@
 #include "gbnl.hpp"
-#include "../sink.hpp"
+#include "../dynamic_struct.lua.hpp"
 #include "../except.hpp"
+#include "../sink.hpp"
 
 #include <map>
 #include <boost/algorithm/string/replace.hpp>
@@ -121,7 +122,7 @@ void Gbnl::Parse_(Source& src)
     messages.reserve(foot.count_msgs);
     for (size_t i = 0; i < foot.count_msgs; ++i)
     {
-        messages.emplace_back(type);
+        messages.emplace_back(Struct::New(type));
         auto& m = messages.back();
         src.Seek(msgs);
         for (size_t i = 0; i < type->item_count; ++i)
@@ -129,43 +130,43 @@ void Gbnl::Parse_(Source& src)
             switch (type->items[i].idx)
             {
             case Struct::GetIndexFromType<uint8_t>():
-                m.Get<uint8_t>(i) = src.ReadLittleUint8();
+                m->Get<uint8_t>(i) = src.ReadLittleUint8();
                 break;
             case Struct::GetIndexFromType<uint16_t>():
-                m.Get<uint16_t>(i) = src.ReadLittleUint16();
+                m->Get<uint16_t>(i) = src.ReadLittleUint16();
                 break;
             case Struct::GetIndexFromType<uint32_t>():
-                m.Get<uint32_t>(i) = src.ReadLittleUint32();
+                m->Get<uint32_t>(i) = src.ReadLittleUint32();
                 break;
             case Struct::GetIndexFromType<uint64_t>():
-                m.Get<uint64_t>(i) = src.ReadLittleUint64();
+                m->Get<uint64_t>(i) = src.ReadLittleUint64();
                 break;
             case Struct::GetIndexFromType<float>():
             {
                 union { float f; uint32_t i; } x;
                 x.i = src.ReadLittleUint32();
-                m.Get<float>(i) = x.f;
+                m->Get<float>(i) = x.f;
                 break;
             }
             case Struct::GetIndexFromType<OffsetString>():
             {
                 uint32_t offs = src.ReadLittleUint32();
                 if (offs == 0xffffffff)
-                    m.Get<OffsetString>(i).offset = -1;
+                    m->Get<OffsetString>(i).offset = -1;
                 else
                 {
                     VALIDATE("", offs < src.GetSize() - foot.offset_msgs);
                     auto str = foot.offset_msgs + offs;
 
-                    m.Get<OffsetString>(i) = {src.PreadCString(str), 0};
+                    m->Get<OffsetString>(i) = {src.PreadCString(str), 0};
                 }
                 break;
             }
             case Struct::GetIndexFromType<FixStringTag>():
-                src.Read(m.Get<FixStringTag>(i).str, type->items[i].size);
+                src.Read(m->Get<FixStringTag>(i).str, type->items[i].size);
                 break;
             case Struct::GetIndexFromType<PaddingTag>():
-                src.Read(m.Get<PaddingTag>(i).pad, type->items[i].size);
+                src.Read(m->Get<PaddingTag>(i).pad, type->items[i].size);
                 break;
             }
         }
@@ -264,7 +265,7 @@ void Gbnl::Dump_(Sink& sink) const
 
     for (const auto& m : messages)
     {
-        m.ForEach(WriteDescr{msgd.data()});
+        m->ForEach(WriteDescr{msgd.data()});
         sink.Write({msgd.data(), msg_descr_size});
     }
 
@@ -320,10 +321,10 @@ void Gbnl::Dump_(Sink& sink) const
 
     size_t offset = 0;
     for (const auto& m : messages)
-        for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.Is<OffsetString>(i))
+        for (size_t i = 0; i < m->GetSize(); ++i)
+            if (m->Is<OffsetString>(i))
             {
-                auto& ofs = m.Get<OffsetString>(i);
+                auto& ofs = m->Get<OffsetString>(i);
                 if (ofs.offset == offset)
                 {
                     sink.WriteCString(ofs.str);
@@ -419,10 +420,10 @@ void Gbnl::Inspect_(std::ostream& os) const
     for (const auto& m : messages)
     {
         os << "  (";
-        for (size_t i = 0; i < m.GetSize(); ++i)
+        for (size_t i = 0; i < m->GetSize(); ++i)
         {
             if (i != 0) os << ", ";
-            m.Visit<void>(i, Print{os});
+            m->Visit<void>(i, Print{os});
         }
         os << ")\n";
     }
@@ -453,11 +454,11 @@ void Gbnl::RecalcSize()
     size_t offset = 0;
     for (auto& m : messages)
     {
-        NEPTOOLS_ASSERT(m.GetRawType() == type);
-        for (size_t i = 0; i < m.GetSize(); ++i)
-            if (m.Is<OffsetString>(i))
+        NEPTOOLS_ASSERT(m->GetType() == type);
+        for (size_t i = 0; i < m->GetSize(); ++i)
+            if (m->Is<OffsetString>(i))
             {
-                auto& os = m.Get<OffsetString>(i);
+                auto& os = m->Get<OffsetString>(i);
                 if (os.offset == static_cast<uint32_t>(-1)) continue;
                 auto x = offset_map.emplace(os.str, offset);
                 if (x.second) // new item inserted
@@ -537,16 +538,16 @@ void Gbnl::WriteTxt_(std::ostream& os) const
     for (const auto& m : messages)
     {
         size_t k = 0;
-        for (size_t i = 0; i < m.GetSize(); ++i)
+        for (size_t i = 0; i < m->GetSize(); ++i)
         {
-            auto id = GetId(m, i, j, k);
+            auto id = GetId(*m, i, j, k);
             if (id != static_cast<uint32_t>(-1))
             {
                 std::string str;
-                if (m.Is<FixStringTag>(i))
-                    str = m.Get<FixStringTag>(i).str;
+                if (m->Is<FixStringTag>(i))
+                    str = m->Get<FixStringTag>(i).str;
                 else
-                    str = m.Get<OffsetString>(i).str;
+                    str = m->Get<OffsetString>(i).str;
                 boost::replace_all(str, "\n", "\r\n");
 
 #ifdef STRTOOL_COMPAT
@@ -565,7 +566,7 @@ void Gbnl::WriteTxt_(std::ostream& os) const
     os << "EOF\r\n";
 }
 
-size_t Gbnl::FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,
+size_t Gbnl::FindDst(uint32_t id, std::vector<StructPtr>& messages,
                      size_t& index) const
 {
     auto size = messages.size();
@@ -574,9 +575,9 @@ size_t Gbnl::FindDst(uint32_t id, std::vector<Gbnl::Struct>& messages,
         auto j2 = (index+j) % size;
         auto& m = messages[j2];
         size_t k = 0;
-        for (size_t i = 0; i < m.GetSize(); ++i)
+        for (size_t i = 0; i < m->GetSize(); ++i)
         {
-            auto tid = GetId(m, i, j2, k);
+            auto tid = GetId(*m, i, j2, k);
             if (tid == id)
             {
                 index = j2;
@@ -605,11 +606,11 @@ void Gbnl::ReadTxt_(std::istream& is)
                 NEPTOOLS_ASSERT(msg.empty() || msg.back() == '\n');
                 if (!msg.empty()) msg.pop_back();
                 auto& m = messages[last_index];
-                if (m.Is<OffsetString>(pos))
-                    m.Get<OffsetString>(pos).str = std::move(msg);
+                if (m->Is<OffsetString>(pos))
+                    m->Get<OffsetString>(pos).str = std::move(msg);
                 else
-                    strncpy(m.Get<FixStringTag>(pos).str, msg.c_str(),
-                            m.GetSize(pos)-1);
+                    strncpy(m->Get<FixStringTag>(pos).str, msg.c_str(),
+                            m->GetSize(pos)-1);
                 msg.clear();
             }
 
@@ -637,4 +638,99 @@ void Gbnl::ReadTxt_(std::istream& is)
     NEPTOOLS_THROW(DecodeError{"GbnlTxt: EOF"});
 }
 
+template <>
+struct DynamicStructTypeTraits<Gbnl::OffsetString>
+{
+    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    {
+        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString));
+        auto ofs = static_cast<const Gbnl::OffsetString*>(ptr);
+        if (ofs->offset == static_cast<uint32_t>(-1))
+            lua_pushnil(vm);
+        else
+            vm.Push(ofs->str);
+    }
+
+    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    {
+        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString));
+        auto ofs = static_cast<Gbnl::OffsetString*>(ptr);
+
+        if (Lua::IsNoneOrNil(lua_type(vm, idx)))
+        {
+            ofs->offset = static_cast<uint32_t>(-1);
+            ofs->str.clear();
+        }
+        else
+        {
+            ofs->str = vm.Check<std::string>(idx);
+            ofs->offset = 0; // no longer null
+        }
+    }
+
+    static constexpr bool SIZABLE = false;
+    static constexpr const char* NAME = "string";
+};
+
+// FixString is zero terminated, Padding is not
+template <>
+struct DynamicStructTypeTraits<Gbnl::FixStringTag>
+{
+    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    {
+        auto str = static_cast<const char*>(ptr);
+        lua_pushlstring(vm, str, strnlen(str, size));
+    }
+
+    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    {
+        auto str = vm.Check<StringView>(idx);
+        auto dst = static_cast<char*>(ptr);
+
+        auto n = std::min(size-1, str.length());
+        memcpy(dst, str.data(), n);
+        memset(dst+n, 0, size-n);
+    }
+
+    static constexpr bool SIZABLE = true;
+    static constexpr const char* NAME = "fix_string";
+};
+
+template<>
+struct DynamicStructTypeTraits<Gbnl::PaddingTag>
+{
+    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    {
+        auto str = static_cast<const char*>(ptr);
+        lua_pushlstring(vm, str, size);
+    }
+
+    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    {
+        auto str = vm.Check<StringView>(idx);
+        auto dst = static_cast<char*>(ptr);
+
+        auto n = std::min(size, str.length());
+        memcpy(dst, str.data(), n);
+        memset(dst+n, 0, size-n);
+    }
+
+    static constexpr bool SIZABLE = true;
+    static constexpr const char* NAME = "padding";
+};
+
 }
+
+#include "../container/vector.lua.hpp"
+
+NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(
+    gbnl, uint8_t, uint16_t, uint32_t, uint64_t, float,
+    ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag,
+    ::Neptools::Gbnl::PaddingTag);
+NEPTOOLS_STD_VECTOR_LUAGEN(gbnl_struct, Neptools::Gbnl::StructPtr);
+
+// this libclang is fucking broken and I'm fucking tired of it
+using OffsetString = Neptools::Gbnl::OffsetString;
+using FixStringTag = Neptools::Gbnl::FixStringTag;
+using PaddingTag = Neptools::Gbnl::PaddingTag;
+#include "gbnl.binding.hpp"

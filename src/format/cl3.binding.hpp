@@ -23,7 +23,7 @@ void TypeRegister::DoRegister<::Neptools::Cl3>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::SetMember<::Neptools::Cl3, ::uint32_t, &::Neptools::Cl3::field_14>), &::Neptools::Lua::SetMember<::Neptools::Cl3, ::uint32_t, &::Neptools::Cl3::field_14>
     >("set_field_14");
     bld.Add<
-        decltype(&::Neptools::Lua::GetSmartOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>), &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>
+        decltype(&::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>), &::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>
     >("get_entries");
     bld.Add<
         ::uint32_t (::Neptools::Cl3::*)(const WeakSmartPtr<::Neptools::Cl3::Entry> &) const, &::Neptools::Cl3::IndexOf
@@ -73,7 +73,7 @@ void TypeRegister::DoRegister<::Neptools::Cl3::Entry>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::SetMember<::Neptools::Cl3::Entry, ::uint32_t, &::Neptools::Cl3::Entry::field_200>), &::Neptools::Lua::SetMember<::Neptools::Cl3::Entry, ::uint32_t, &::Neptools::Cl3::Entry::field_200>
     >("set_field_200");
     bld.Add<
-        decltype(&::Neptools::Lua::GetSmartOwnedMember<::Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<::Neptools::Cl3::Entry> >, &::Neptools::Cl3::Entry::links>), &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<::Neptools::Cl3::Entry> >, &::Neptools::Cl3::Entry::links>
+        decltype(&::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<::Neptools::Cl3::Entry> >, &::Neptools::Cl3::Entry::links>), &::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3::Entry, std::vector<WeakRefCountedPtr<::Neptools::Cl3::Entry> >, &::Neptools::Cl3::Entry::links>
     >("get_links");
     bld.Add<
         decltype(&::Neptools::Lua::GetMember<::Neptools::Cl3::Entry, SmartPtr<::Neptools::Dumpable>, &::Neptools::Cl3::Entry::src>), &::Neptools::Lua::GetMember<::Neptools::Cl3::Entry, SmartPtr<::Neptools::Dumpable>, &::Neptools::Cl3::Entry::src>
@@ -109,7 +109,7 @@ void TypeRegister::DoRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::N
         decltype(&::Neptools::Lua::TypeTraits<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >>::Make<>), &::Neptools::Lua::TypeTraits<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >>::Make<>
     >("new");
     bld.Add<
-        Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::size_t), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::at
+        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::size_t), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::at
     >("at");
     bld.Add<
         bool (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::empty

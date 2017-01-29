@@ -149,8 +149,13 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
 };
 
 template <typename Class, typename T, T Class::* Member>
-BOOST_FORCEINLINE NotNull<SharedPtr<T>> GetSmartOwnedMember(Class& cls)
+BOOST_FORCEINLINE NotNull<SharedPtr<T>> GetRefCountedOwnedMember(Class& cls)
 { return NotNull<SharedPtr<T>>{&cls, &(cls.*Member), true}; }
+
+template <typename Class, typename T, T Class::* Member>
+BOOST_FORCEINLINE NotNull<SharedPtr<T>>
+GetSmartOwnedMember(const NotNull<SharedPtr<Class>>& cls)
+{ return NotNull<SharedPtr<T>>{cls.Get(), &(cls.get()->*Member)}; }
 
 }
 }

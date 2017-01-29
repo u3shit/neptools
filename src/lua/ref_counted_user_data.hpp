@@ -67,7 +67,7 @@ struct TraitsBase<RefCountedPtr<T>>
     inline static Ret UBGet(UBArgs a)
     {
         NEPTOOLS_ASSERT(
-            static_cast<RefCountedUserDataBase*>(a.ud)->GetCtrl() == a.ud->Get());
+            asserted_cast<RefCountedUserDataBase*>(a.ud)->GetCtrl() == a.ud->Get());
         return Ret{&a.ud->Get<T>(a.offs)};
     };
 };
@@ -80,7 +80,7 @@ struct TraitsBase<SharedPtr<T>>
 
     inline static Ret UBGet(UBArgs a)
     {
-        return static_cast<RefCountedUserDataBase*>(a.ud)->GetShared<T>(a.offs);
+        return asserted_cast<RefCountedUserDataBase*>(a.ud)->GetShared<T>(a.offs);
     }
 };
 

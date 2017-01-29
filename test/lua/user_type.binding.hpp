@@ -44,7 +44,7 @@ void TypeRegister::DoRegister<::Foo>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::SetMember<::Foo, int, &::Foo::local_var>), &::Neptools::Lua::SetMember<::Foo, int, &::Foo::local_var>
     >("set_local_var");
     bld.Add<
-        decltype(&::Neptools::Lua::GetSmartOwnedMember<::Foo, ::Smart, &::Foo::smart>), &::Neptools::Lua::GetSmartOwnedMember<::Foo, ::Smart, &::Foo::smart>
+        decltype(&::Neptools::Lua::GetRefCountedOwnedMember<::Foo, ::Smart, &::Foo::smart>), &::Neptools::Lua::GetRefCountedOwnedMember<::Foo, ::Smart, &::Foo::smart>
     >("get_smart");
     bld.Add<
         void (::Foo::*)(int), &::Foo::DoIt

@@ -38,6 +38,15 @@ T asserted_cast(U& ref)
 }
 
 template <typename T>
+struct AddConst { using Type = const T; };
+template <typename T>
+struct AddConst<T*> { using Type = typename AddConst<T>::Type* const; };
+
+template <typename T>
+inline T implicit_const_cast(typename AddConst<T>::Type x)
+{ return const_cast<T>(x); }
+
+template <typename T>
 constexpr size_t EmptySizeof = std::is_empty<T>::value ? 0 : sizeof(T);
 
 std::ofstream OpenOut(const boost::filesystem::path& pth);

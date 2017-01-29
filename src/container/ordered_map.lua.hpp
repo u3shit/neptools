@@ -112,6 +112,6 @@ struct OrderedMapLua
 
 #define NEPTOOLS_ORDERED_MAP_LUAGEN(name, ...)                          \
     template struct ::Neptools::OrderedMapLua<__VA_ARGS__>;             \
-    NEPTOOLS_LUA_TEMPLATE(name, ::Neptools::OrderedMap<__VA_ARGS__>)
+    NEPTOOLS_LUA_TEMPLATE(name, nil, ::Neptools::OrderedMap<__VA_ARGS__>)
 
 #endif

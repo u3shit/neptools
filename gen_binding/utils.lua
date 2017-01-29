@@ -37,7 +37,7 @@ end
 function ret.fun_qualified_name(c)
   local tbl = { c:name() }
   local x = c:parent()
-  i = 1
+  local i = 1
   while x and x:kind() == "Namespace" do
     i = i-1
     tbl[i] = x:name()
@@ -72,6 +72,7 @@ end
 -- tbl: to be filled by this function
 --   key=fqn, value=path, a table: {start=integer, [start]="pathitem"...[1]="class name"}
 -- t: the type
+local collect_ns_cur
 local function collect_ns(tbl, t)
   if not t then return end
 
@@ -82,7 +83,10 @@ local function collect_ns(tbl, t)
   if cur:kind() == "NoDeclFound" then return end
 
   for k,v in ipairs(t:templateArguments()) do collect_ns(tbl, v) end
+  collect_ns_cur(tbl, cur)
+end
 
+collect_ns_cur = function(tbl, cur)
   local path = {cur:name()}
   local repl = {cur:name()}
   local i = 0
@@ -105,7 +109,6 @@ local function gen_gsub(tbl)
   --print() print("===============================start==========================")
 
   for k,v in pairs(tbl) do
-    --local fqn = "::"..table.concat(v, "::", v.start, 1)
     local repl = "%1"..k.."%2"
     --print(k, v, repl)
 
@@ -121,15 +124,35 @@ local function gen_gsub(tbl)
   return pats
 end
 
-local function get_type_intname(x)
+local find_typedefs_tbl
+local find_typedefs_v = cl.regCursorVisitor(function (c, par)
+  local kind = c:kind()
+  if kind == "TypeAliasDecl" then
+    collect_ns_cur(find_typedefs_tbl, c)
+  --else print("Unhandled", kind, c:name())
+  end
+  return vr.Continue
+end)
+local function find_typedefs(tbl, cur)
+  if cur == nil then return end
+  find_typedefs_tbl = tbl
+  cur:children(find_typedefs_v)
+  return find_typedefs(tbl, cur:parent())
+end
+
+local function get_type_intname(x, cur)
   local t
   if type(x) == "string" then return x
-  elseif ffi.istype(cl.Cursor_t, x) then t = x:type()
+  elseif ffi.istype(cl.Cursor_t, x) then
+    t = x:type()
+    assert(not cur)
+    cur = x
   elseif ffi.istype(cl.Type_t, x) then t = x
   else error("invalid type parameter") end
 
   local tbl = {}
   collect_ns(tbl, t)
+  if cur then find_typedefs(tbl, cur, t:name()) end
   local pats = gen_gsub(tbl)
 
   local ret = "#"..t:name().."#"
@@ -151,8 +174,8 @@ local function get_type_intname(x)
   return ret:sub(2, -2)
 end
 
-local function type_name(typ, aliases)
-  local n = get_type_intname(typ)
+local function type_name(typ, aliases, cur)
+  local n = get_type_intname(typ, cur)
   for k,v in pairs(aliases) do
     n = n:gsub(k, v)
     --print(n, k, v)

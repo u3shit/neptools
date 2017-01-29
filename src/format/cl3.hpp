@@ -104,7 +104,7 @@ public:
         uint32_t field_200 = 0;
 
         // no setter - it doesn't work how you expect in lua
-        NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+        NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
         std::vector<WeakRefCountedPtr<Cl3::Entry>> links;
 
         SmartPtr<Dumpable> src;
@@ -122,7 +122,7 @@ public:
     };
 
     // no setter - it doesn't work how you expect in lua
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
     OrderedMap<Entry, EntryKeyOfValue> entries;
     uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 
