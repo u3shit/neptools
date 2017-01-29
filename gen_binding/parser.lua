@@ -125,6 +125,7 @@ end
 
 local function class_info(c, info, tbl)
   info.class = tbl.class.cpp_name
+  info.cls = tbl.class
   info.use_class = tbl.use_class or info.class
   return true
 end

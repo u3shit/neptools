@@ -643,7 +643,7 @@ struct DynamicStructTypeTraits<Gbnl::OffsetString>
 {
     static void Push(Lua::StateRef vm, const void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString));
+        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
         auto ofs = static_cast<const Gbnl::OffsetString*>(ptr);
         if (ofs->offset == static_cast<uint32_t>(-1))
             lua_pushnil(vm);
@@ -653,7 +653,7 @@ struct DynamicStructTypeTraits<Gbnl::OffsetString>
 
     static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString));
+        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
         auto ofs = static_cast<Gbnl::OffsetString*>(ptr);
 
         if (Lua::IsNoneOrNil(lua_type(vm, idx)))
@@ -729,8 +729,4 @@ NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(
     ::Neptools::Gbnl::PaddingTag);
 NEPTOOLS_STD_VECTOR_LUAGEN(gbnl_struct, Neptools::Gbnl::StructPtr);
 
-// this libclang is fucking broken and I'm fucking tired of it
-using OffsetString = Neptools::Gbnl::OffsetString;
-using FixStringTag = Neptools::Gbnl::FixStringTag;
-using PaddingTag = Neptools::Gbnl::PaddingTag;
 #include "gbnl.binding.hpp"

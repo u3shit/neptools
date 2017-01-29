@@ -28,32 +28,38 @@ struct IndexOfImpl<T, N, U, Args...>
 
 template <typename T, typename... Args>
 constexpr size_t IndexOf = IndexOfImpl<T, 0, Args...>::VALUE;
+
+template <typename T>
+struct DynamicStructTypeTraitsName
+{
+    static constexpr const char* NAME = Lua::TYPE_NAME<T>;
+};
+
 }
 
 template <typename T, typename Enable = void>
-struct DynamicStructTypeTraits
+struct DynamicStructTypeTraits : Detail::DynamicStructTypeTraitsName<T>
 {
     static void Push(Lua::StateRef vm, const void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(T));
+        NEPTOOLS_ASSERT(size == sizeof(T)); (void) size;
         vm.Push(*static_cast<const T*>(ptr));
     }
 
     static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(T));
+        NEPTOOLS_ASSERT(size == sizeof(T)); (void) size;
         *static_cast<T*>(ptr) = vm.Check<T>(idx);
     }
 
     static constexpr bool SIZABLE = false;
-    static constexpr const char* NAME = Lua::TYPE_NAME<T>;
 };
 
 // do not use standard lua names for them since they're only "integer"/"number"
 // as far as lua is concerned
 #define CNAME(type, name) \
-    template<> \
-    constexpr const char* DynamicStructTypeTraits<type>::NAME = name
+    template<> struct Detail::DynamicStructTypeTraitsName<type> \
+    { static constexpr const char* NAME = name; }
 CNAME(int8_t,   "int8");   CNAME(int16_t,  "int16");
 CNAME(int32_t,  "int32");  CNAME(int64_t,  "int64");
 CNAME(uint8_t,  "uint8");  CNAME(uint16_t, "uint16");

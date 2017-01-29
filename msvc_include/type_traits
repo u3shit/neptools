@@ -9,4 +9,19 @@ namespace std
 template <typename Base, typename Derived>
 constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
+template <typename T>
+constexpr bool is_const_v = is_const<T>::value;
+
+template <typename T>
+constexpr bool is_volatile_v = is_volatile<T>::value;
+
+template <typename T>
+constexpr bool is_standard_layout_v = is_standard_layout<T>::value;
+
+template <typename T>
+constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
+
+template <typename... T>
+using void_t = void;
+
 }

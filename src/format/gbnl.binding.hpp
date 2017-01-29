@@ -72,7 +72,7 @@ void TypeRegister::DoRegister<::DynStructBindgbnl>(TypeBuilder& bld)
 {
 
     bld.Add<
-        ::boost::intrusive_ptr<::Neptools::DynamicStruct<unsigned char, unsigned short, unsigned int, unsigned long, float, ::OffsetString, ::FixStringTag, ::PaddingTag> > (*)(const ::DynStructBindgbnl::TypePtr), &::DynStructBindgbnl::New
+        ::boost::intrusive_ptr<::Neptools::DynamicStruct<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>> (*)(const ::DynStructBindgbnl::TypePtr), &::DynStructBindgbnl::New
     >("new");
     bld.Add<
         ::size_t (::DynStructBindgbnl::*)() const, &::DynStructBindgbnl::GetSize

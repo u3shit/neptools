@@ -144,6 +144,8 @@ public:
     };
 
     // actual class begin
+    NEPTOOLS_LUAGEN(result_type=
+        "::boost::intrusive_ptr<::Neptools::DynamicStruct</*$= cls.template_args */>>")
     static boost::intrusive_ptr<DynamicStruct> New(const TypePtr type)
     {
         auto ptr = ::operator new(sizeof(DynamicStruct) + type->byte_size - 1);
@@ -205,14 +207,14 @@ public:
     NEPTOOLS_NOLUA T& Get(size_t i) noexcept
     {
         NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
-        return *reinterpret_cast<T*>(&data[type->items[i].offset]);
+        return *reinterpret_cast<T*>(data + type->items[i].offset);
     }
 
     template <typename T>
     NEPTOOLS_NOLUA const T& Get(size_t i) const noexcept
     {
         NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
-        return *reinterpret_cast<const T*>(&data[type->items[i].offset]);
+        return *reinterpret_cast<const T*>(data + type->items[i].offset);
     }
 
     template <typename Ret = void, typename... FunArgs>
