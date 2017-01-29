@@ -508,7 +508,8 @@ int main(int argc, char** argv)
             while (std::getline(std::cin, str))
                 if (luaL_dostring(vm, str.c_str()))
                 {
-                    ERR << lua_tostring(vm, -1) << std::endl;
+                    Logger::Log("lua", Logger::ERROR, nullptr, 0, nullptr)
+                        << lua_tostring(vm, -1) << std::endl;
                     lua_pop(vm, 1);
                 }
         }};

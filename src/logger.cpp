@@ -36,12 +36,12 @@ OptionGroup& GetOptionGroup()
 }
 
 int global_level = -1;
+bool show_fun = false;
 
 namespace
 {
 
 std::map<std::string, int, std::less<>> level_map;
-bool show_fun = false;
 
 Option show_fun_opt{
     GetOptionGroup(), "show-functions", 0, nullptr,

@@ -63,11 +63,17 @@ void AssertFailed(
     }
     _assert(fake_expr.c_str(), file, line);
 #else
-    ERR << "Assertion failed!\n" << file << ':' << line
-        << ": in function " << fun << "\nExpression: " << expr << '\n';
+    auto& log = Logger::Log("assert", Logger::ERROR, file, line, fun);
+    log << "Assertion failed!\n";
+#ifdef NDEBUG
+    log << file << ':' << line << ": in function " << fun << "\n";
+#else
+    if (!Logger::show_fun) log << "in function " << fun << "\n";
+#endif
+    log << "Expression: " << expr << '\n';
     if (msg)
-        ERR << "Message: " << msg << '\n';
-    ERR << std::flush;
+        log << "Message: " << msg << '\n';
+    log << std::flush;
     abort();
 #endif
 }
