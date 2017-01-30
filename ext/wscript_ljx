@@ -24,10 +24,10 @@ def configure(ctx):
     ctx.setenv(variant)
     host_env = ctx.all_envs[host_variant]
     ctx.env.LJX_CROSS = ctx.env.CROSS and \
-                        ctx.env.DASM_ARCH != host_env.DASM_ARCH or \
-                        ctx.env.DASM_DEFINES != host_env.DASM_DEFINES or \
-                        host_env.CFLAGS_BUILDVM != host_env.CFLAGS_BUILDVM_HOST or \
-                        host_env.DEFINES_BUILDVM != host_env.DEFINES_BUILDVM_HOST
+                        (ctx.env.DASM_ARCH != host_env.DASM_ARCH or \
+                         ctx.env.DASM_DEFINES != host_env.DASM_DEFINES or \
+                         host_env.CFLAGS_BUILDVM != host_env.CFLAGS_BUILDVM_HOST or \
+                         host_env.DEFINES_BUILDVM != host_env.DEFINES_BUILDVM_HOST)
     ctx.msg('Checking if cross compiling ljx',
             ctx.env.LJX_CROSS and 'yes' or 'no',
             color = ctx.env.LJX_CROSS and 'GREEN' or 'YELLOW')
