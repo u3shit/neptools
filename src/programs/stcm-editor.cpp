@@ -39,7 +39,7 @@ State SmartOpen_(const boost::filesystem::path& fname)
 
     char buf[4];
     src.Pread(0, buf, 4);
-    if (memcmp(buf, "CL3L", 4) == 0)
+    if (memcmp(buf, "CL3", 3) == 0)
     {
         auto cl3 = MakeSmart<Cl3>(src);
         return {cl3, cl3.get(), nullptr, nullptr};

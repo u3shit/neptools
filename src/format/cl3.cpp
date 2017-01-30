@@ -1,23 +1,27 @@
 #include "cl3.hpp"
 #include "stcm/file.hpp"
 #include "../except.hpp"
+
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
 namespace Neptools
 {
 
-void Cl3::Header::Validate(FilePosition file_size) const
+template <Order O>
+void Cl3::Header<O>::Validate(FilePosition file_size) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Header", x)
-    VALIDATE(memcmp(magic, "CL3L", 4) == 0);
+    VALIDATE(memcmp(magic, "CL3", 3) == 0);
+    VALIDATE(endian == (O == Order::little ? 'L' : 'B'));
     VALIDATE(field_04 == 0);
     VALIDATE(field_08 == 3);
-    VALIDATE(sections_offset + sections_count * sizeof(Section) <= file_size);
+    VALIDATE(sections_offset + sections_count * sizeof(Section<O>) <= file_size);
 #undef VALIDATE
 }
 
-void Cl3::Section::Validate(FilePosition file_size) const
+template <Order O>
+void Cl3::Section<O>::Validate(FilePosition file_size) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Section", x)
     VALIDATE(name.is_valid());
@@ -29,7 +33,8 @@ void Cl3::Section::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-void Cl3::FileEntry::Validate(uint32_t block_size) const
+template <Order O>
+void Cl3::FileEntry<O>::Validate(uint32_t block_size) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::FileEntry", x)
     VALIDATE(name.is_valid());
@@ -40,7 +45,8 @@ void Cl3::FileEntry::Validate(uint32_t block_size) const
 #undef VALIDATE
 }
 
-void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
+template <Order O>
+void Cl3::LinkEntry<O>::Validate(uint32_t i, uint32_t file_count) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::LinkEntry", x)
     VALIDATE(field_00 == 0);
@@ -58,8 +64,21 @@ Cl3::Cl3(Source src)
 
 void Cl3::Parse_(Source& src)
 {
-    src.CheckSize(sizeof(Header));
-    auto hdr = src.PreadGen<Header>(0);
+    union Hdr { Header<Order::little> little; Header<Order::big> big; };
+    src.CheckSize(sizeof(Hdr));
+    auto hdr = src.PreadGen<Hdr>(0);
+
+
+    if (hdr.little.endian == 'L')
+        DoParse<Order::little>(src, hdr.little);
+    else
+        DoParse<Order::big>(src, hdr.big);
+}
+
+template <Order O>
+void Cl3::DoParse(Source& src, const Header<O>& hdr)
+{
+    endian = O;
     hdr.Validate(src.GetSize());
 
     field_14 = hdr.field_14;
@@ -71,7 +90,7 @@ void Cl3::Parse_(Source& src)
         link_offset, link_count = 0;
     for (size_t i = 0; i < secs; ++i)
     {
-        auto sec = src.ReadGen<Section>();
+        auto sec = src.ReadGen<Section<O>>();
         sec.Validate(src.GetSize());
 
         if (sec.name == "FILE_COLLECTION")
@@ -86,7 +105,7 @@ void Cl3::Parse_(Source& src)
             link_count = sec.count;
             NEPTOOLS_VALIDATE_FIELD(
                 "Cl3::Section",
-                sec.data_size == link_count * sizeof(LinkEntry));
+                sec.data_size == link_count * sizeof(LinkEntry<O>));
         }
     }
 
@@ -94,7 +113,7 @@ void Cl3::Parse_(Source& src)
     src.Seek(file_offset);
     for (uint32_t i = 0; i < file_count; ++i)
     {
-        auto e = src.ReadGen<FileEntry>();
+        auto e = src.ReadGen<FileEntry<O>>();
         e.Validate(file_size);
 
         entries.emplace_back(
@@ -106,14 +125,15 @@ void Cl3::Parse_(Source& src)
     src.Seek(file_offset);
     for (uint32_t i = 0; i < file_count; ++i)
     {
-        auto e = src.ReadGen<FileEntry>();
+        auto e = src.ReadGen<FileEntry<O>>();
         auto& ls = entries[i].links;
         uint32_t lbase = e.link_start;
         uint32_t lcount = e.link_count;
 
         for (uint32_t i = lbase; i < lbase+lcount; ++i)
         {
-            auto le = src.PreadGen<LinkEntry>(link_offset + i*sizeof(LinkEntry));
+            auto le = src.PreadGen<LinkEntry<O>>(
+                link_offset + i*sizeof(LinkEntry<O>));
             le.Validate(i - lbase, file_count);
             ls.emplace_back(&entries[le.linked_file_id]);
         }
@@ -140,10 +160,10 @@ void Cl3::Fixup()
 
 FilePosition Cl3::GetSize() const
 {
-    FilePosition ret = (sizeof(Header)+PAD) & ~PAD;
-    ret = (ret+sizeof(Section)*2+PAD) & ~PAD;
-    ret = (ret+sizeof(FileEntry)*entries.size()+PAD) & ~PAD;
-    ret += data_size+sizeof(LinkEntry)*link_count;
+    FilePosition ret = (sizeof(Header<Order::little>)+PAD) & ~PAD;
+    ret = (ret+sizeof(Section<Order::little>)*2+PAD) & ~PAD;
+    ret = (ret+sizeof(FileEntry<Order::little>)*entries.size()+PAD) & ~PAD;
+    ret += data_size+sizeof(LinkEntry<Order::little>)*link_count;
     return ret;
 }
 
@@ -220,25 +240,37 @@ void Cl3::Inspect_(std::ostream& os) const
     }
 }
 
-void Cl3::Dump_(Sink& sink) const
+void Cl3::Dump_(Sink& os) const
 {
-    auto sections_offset = (sizeof(Header)+PAD) & ~PAD;
-    auto files_offset = (sections_offset+sizeof(Section)*2+PAD) & ~PAD;
-    auto data_offset = (files_offset+sizeof(FileEntry)*entries.size()+PAD) & ~PAD;
+    if (endian == Order::big)
+        DoDump<Order::big>(os);
+    else if (endian == Order::little)
+        DoDump<Order::little>(os);
+    else
+        NEPTOOLS_UNREACHABLE("Invalid endian");
+}
+
+template <Order O>
+void Cl3::DoDump(Sink& sink) const
+{
+    auto sections_offset = (sizeof(Header<O>)+PAD) & ~PAD;
+    auto files_offset = (sections_offset+sizeof(Section<O>)*2+PAD) & ~PAD;
+    auto data_offset = (files_offset+sizeof(FileEntry<O>)*entries.size()+PAD) & ~PAD;
     auto link_offset = data_offset + data_size;
 
-    Header hdr;
-    memcpy(hdr.magic, "CL3L", 4);
+    Header<O> hdr;
+    memcpy(hdr.magic, "CL3", 3);
+    hdr.endian = O == Order::little ? 'L' : 'B';
     hdr.field_04 = 0;
     hdr.field_08 = 3;
     hdr.sections_count = 2;
     hdr.sections_offset = sections_offset;
     hdr.field_14 = field_14;
     sink.WriteGen(hdr);
-    sink.Pad(sections_offset-sizeof(Header));
+    sink.Pad(sections_offset-sizeof(hdr));
 
-    Section sec;
-    memset(&sec, 0, sizeof(Section));
+    Section<O> sec;
+    memset(&sec, 0, sizeof(sec));
     sec.name = "FILE_COLLECTION";
     sec.count = entries.size();
     sec.data_size = link_offset - files_offset;
@@ -247,12 +279,12 @@ void Cl3::Dump_(Sink& sink) const
 
     sec.name = "FILE_LINK";
     sec.count = link_count;
-    sec.data_size = link_count * sizeof(LinkEntry);
+    sec.data_size = link_count * sizeof(LinkEntry<O>);
     sec.data_offset = link_offset;
     sink.WriteGen(sec);
-    sink.Pad((PAD_BYTES - ((2*sizeof(Section)) & PAD)) & PAD);
+    sink.Pad((PAD_BYTES - ((2*sizeof(Section<O>)) & PAD)) & PAD);
 
-    FileEntry fe;
+    FileEntry<O> fe;
     fe.field_214 = fe.field_218 = fe.field_21c = 0;
     fe.field_220 = fe.field_224 = fe.field_228 = fe.field_22c = 0;
 
@@ -272,7 +304,7 @@ void Cl3::Dump_(Sink& sink) const
         offset = (offset+size+PAD) & ~PAD;
         link_i += e.links.size();
     }
-    sink.Pad((PAD_BYTES - ((entries.size()*sizeof(FileEntry)) & PAD)) & PAD);
+    sink.Pad((PAD_BYTES - ((entries.size()*sizeof(FileEntry<O>)) & PAD)) & PAD);
 
     // file data
     for (auto& e : entries)
@@ -283,8 +315,8 @@ void Cl3::Dump_(Sink& sink) const
     }
 
     // links
-    LinkEntry le;
-    memset(&le, 0, sizeof(LinkEntry));
+    LinkEntry<O> le;
+    memset(&le, 0, sizeof(le));
     for (auto& e : entries)
     {
         uint32_t i = 0;
