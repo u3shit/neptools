@@ -9,6 +9,9 @@ namespace std
 template <typename Base, typename Derived>
 constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
+template <typename A, typename B>
+constexpr bool is_same_v = is_same<A, B>::value;
+
 template <typename T>
 constexpr bool is_const_v = is_const<T>::value;
 

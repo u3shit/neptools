@@ -26,7 +26,7 @@ struct XTraits
 using OM = OrderedMap<X, XTraits>;
 }
 
-TEST_CASE("basic", "[ordered_map]")
+TEST_CASE("OrderedMap::basic", "[ordered_map]")
 {
     X::count = 0;
     {

@@ -384,6 +384,7 @@ def test(bld):
         'test/pattern.cpp',
         'test/sink.cpp',
         'test/container/ordered_map.cpp',
+        'test/container/parent_list.cpp',
         'test/lua/base.cpp',
         'test/lua/function_call.cpp',
         'test/lua/user_type.cpp',

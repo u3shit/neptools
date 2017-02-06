@@ -3,6 +3,7 @@
 #pragma once
 
 #include "intrusive.hpp"
+#include "../check.hpp"
 #include "../shared_ptr.hpp"
 #include "../lua/dynamic_object.hpp"
 
@@ -11,8 +12,6 @@
 
 namespace Neptools
 {
-
-NEPTOOLS_GEN_EXCEPTION_TYPE(ItemAlreadyAdded, std::logic_error);
 
 template <typename T, typename KeyOfValue,
           typename Compare = std::less<typename KeyOfValue::type>>
