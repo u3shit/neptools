@@ -232,15 +232,15 @@ public:
     NEPTOOLS_NOLUA std::pair<iterator, bool> emplace_back(Args&&... args)
     { return InsertGen(end(), MakeSmart<T>(std::forward<Args>(args)...)); }
 
-    NEPTOOLS_NOLUA void pop_back() noexcept
+    template <typename Checker = Check::Assert>
+    void pop_back() noexcept
     {
+        NEPTOOLS_CHECK(std::out_of_range, !empty(), "pop_back");
         auto& back = *vect.back();
         RemoveItem(back);
         set.erase(Traits{}(back));
         vect.pop_back();
     }
-    NEPTOOLS_LUAGEN(name="pop_back") void checked_pop_back() noexcept
-    { if (!empty()) pop_back(); }
 
     void swap(OrderedMap& o)
     {
@@ -249,6 +249,7 @@ public:
     }
 
     // boost extensions
+    // not template checker -> we need 2 different checks...
     NEPTOOLS_NOLUA iterator nth(size_t i) noexcept
     { return ToIt(vect.begin() + i); }
     NEPTOOLS_NOLUA iterator checked_nth(size_t i)

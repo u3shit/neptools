@@ -54,21 +54,24 @@ void AssertFailed(
 {
 #ifdef WINDOWS
     std::string fake_expr = expr;
-    fake_expr += "\nFunction: ";
-    fake_expr += fun;
+    if (fun)
+    {
+        fake_expr += "\nFunction: ";
+        fake_expr += fun;
+    }
     if (msg)
     {
         fake_expr += "\nMessage: ";
         fake_expr += msg;
     }
-    _assert(fake_expr.c_str(), file, line);
+    _assert(fake_expr.c_str(), file ? file : "", line);
 #else
     auto& log = Logger::Log("assert", Logger::ERROR, file, line, fun);
     log << "Assertion failed!\n";
 #ifdef NDEBUG
     log << file << ':' << line << ": in function " << fun << "\n";
 #else
-    if (!Logger::show_fun) log << "in function " << fun << "\n";
+    if (!Logger::show_fun && fun) log << "in function " << fun << "\n";
 #endif
     log << "Expression: " << expr << '\n';
     if (msg)

@@ -21,26 +21,38 @@ namespace Check
 struct No
 {
     template <typename ExceptT, typename Fun>
-    void Check(Fun, const char*, const char*, const char*, unsigned,
-               const char*) noexcept {}
+    void Check(Fun f, const char*, const char*, const char*, unsigned,
+               const char*) noexcept
+    { NEPTOOLS_ASSUME(f()); (void) f; }
+
+    static constexpr bool IS_NOP = true;
+    static constexpr bool IS_NOEXCEPT = true;
 };
 
-struct Assert
+struct DoAssert
 {
     template <typename ExceptT, typename Fun>
     void Check(Fun f, const char* expr, const char* msg, const char* file,
                unsigned line, const char* fun)
     {
-#ifndef NDEBUG
         if (BOOST_UNLIKELY(!f()))
             AssertFailed(expr, msg, file, line, fun);
-#else
-        NEPTOOLS_ASSUME(f());
-        ((void) f); ((void) expr); ((void) msg); ((void) file); ((void) line);
-        ((void) fun);
-#endif
     }
+
+    static constexpr bool IS_NOP = false;
+    // theoretically Fun can throw, but it probably shouldn't do it. also
+    // marking this false could cause havoc as functions using
+    // noexcept(Checker::IS_NOEXCEPT)  would have different noexceptness on
+    // debug and release
+    static constexpr bool IS_NOEXCEPT = true;
 };
+
+#ifndef NDEBUG
+using Assert = DoAssert;
+#else
+using Assert = No;
+#endif
+
 
 struct Throw
 {
@@ -58,6 +70,9 @@ struct Throw
                 FailedExpression{expr};
         ((void) file); ((void) line); ((void) fun);
     }
+
+    static constexpr bool IS_NOP = false;
+    static constexpr bool IS_NOEXCEPT = false;
 };
 
 }
