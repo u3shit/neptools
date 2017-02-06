@@ -356,26 +356,20 @@ TEST_CASE("non-unique prefix with options", "[Options]")
 
     int argc;
     const char* argv[4] = {"foo"};
-    bool b = false;
     SECTION("space separated")
     {
         argc = 3;
         argv[1] = "--foo";
         argv[2] = "bar";
-        b = true;
     }
     SECTION("= separated")
     {
         argc = 2;
         argv[1] = "--foo=bar";
-        b = true;
     }
 
-    if (b) // catch+clang is buggy...
-    {
-        parser.Run(argc, argv);
-        CHECK(ss.str() == "");
-        CHECK_STREQ(b1, "bar");
-        CHECK(b2 == false);
-    }
+    parser.Run(argc, argv);
+    CHECK(ss.str() == "");
+    CHECK_STREQ(b1, "bar");
+    CHECK(b2 == false);
 }
