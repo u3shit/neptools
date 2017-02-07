@@ -553,11 +553,32 @@ public:
     static const_iterator s_iterator_to(const_reference ref)
         noexcept(Checker::IS_NOEXCEPT)
     {
-        node_ptr node = Traits::to_node_ptr(ref);
+        const_node_ptr node = Traits::to_node_ptr(ref);
         CheckLinkedAny<Checker>(node);
         return node;
     }
 
+    template <typename Checker = Check::Assert>
+    static ParentList& get_parent(reference ref) noexcept(Checker::IS_NOEXCEPT)
+    {
+        node_ptr node = Traits::to_node_ptr(ref);
+        CheckLinkedAny<Checker>(node);
+        return *static_cast<ParentList*>(node_traits::get_parent(node));
+    }
+
+    template <typename Checker = Check::Assert>
+    static const ParentList& get_parent(const_reference ref)
+        noexcept(Checker::IS_NOEXCEPT)
+    {
+        const_node_ptr node = Traits::to_node_ptr(ref);
+        CheckLinkedAny<Checker>(node);
+        return *static_cast<const ParentList*>(node_traits::get_parent(node));
+    }
+
+    static ParentList* opt_get_parent(reference ref) noexcept
+    { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
+    static const ParentList* opt_get_parent(const_reference ref) noexcept
+    { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
 private:
     void Init() noexcept
     {

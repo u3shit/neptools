@@ -5,7 +5,7 @@
 #include "item_base.hpp"
 #include "../dumpable.hpp"
 #include "../shared_ptr.hpp"
-#include "../container/list.hpp"
+#include "../container/parent_list.hpp"
 
 #include <iosfwd>
 #include <vector>
@@ -18,8 +18,7 @@ namespace Neptools
 class ItemWithChildren;
 struct ItemListTraits;
 
-class Item : public RefCounted, public Dumpable,
-             public boost::intrusive::list_base_hook<LinkMode>
+class Item : public RefCounted, public Dumpable, public ParentListBaseHook<>
 {
 protected:
     struct Key {};
@@ -37,13 +36,13 @@ public:
     RefCountedPtr<Context> GetContext() noexcept
     { return context.lock(); }
     Context& GetUnsafeContext() noexcept { return *context.unsafe_get(); }
-    ItemWithChildren* GetParent() noexcept { return parent; }
+    ItemWithChildren* GetParent() noexcept;
 
     RefCountedPtr<const Context> GetContext() const noexcept
     { return context.lock(); }
     const Context& GetUnsafeContext() const noexcept
     { return *context.unsafe_get(); }
-    const ItemWithChildren* GetParent() const noexcept { return parent; }
+    const ItemWithChildren* GetParent() const noexcept;
     auto Iterator() const noexcept;
     auto Iterator() noexcept;
 
@@ -76,7 +75,6 @@ protected:
 
 private:
     WeakRefCountedPtr<Context> context;
-    ItemWithChildren* parent = nullptr;
 
     LabelsContainer labels;
 
@@ -91,14 +89,15 @@ std::ostream& operator<<(std::ostream& os, const Item& item);
 inline FilePosition ToFilePos(ItemPointer ptr) noexcept
 { return ptr.item->GetPosition() + ptr.offset; }
 
-using ItemList = List<Item, ItemListTraits,
-                      boost::intrusive::constant_time_size<false>>;
+using ItemList = ParentList<Item, ItemListTraits>;
 struct ItemListTraits
 {
-    static constexpr bool is_movable = false;
-    static void add(ItemList& list, Item& item) noexcept;
-    static void remove(ItemList& list, Item& item) noexcept;
+    static void add(ItemList&, Item& item) noexcept
+    { item.AddRef(); }
+    static void remove(ItemList&, Item& item) noexcept
+    { item.RemoveRef(); }
 };
+
 inline auto Item::Iterator() const noexcept
 { return ItemList::s_iterator_to(*this); }
 inline auto Item::Iterator() noexcept
@@ -125,7 +124,13 @@ protected:
     void Fixup_(FilePosition offset);
 
     friend struct ::Neptools::ItemListTraits;
+    friend class Item;
 };
+
+inline ItemWithChildren* Item::GetParent() noexcept
+{ return static_cast<ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
+inline const ItemWithChildren* Item::GetParent() const noexcept
+{ return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
 
 }
 #endif

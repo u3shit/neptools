@@ -47,6 +47,27 @@ struct XTraits
 
 }
 
+TEST_CASE("ParentListHook", "[parent_list]")
+{
+    X x;
+    CHECK(x.is_linked() == false);
+    CHECK(x.is_root() == false);
+    CHECK(List::opt_get_parent(x) == nullptr);
+    CHECK_THROWS(List::get_parent<Check::Throw>(x));
+
+    List lst;
+    lst.push_back(x);
+    CHECK(x.is_linked() == true);
+    CHECK(x.is_root() == false);
+    CHECK(List::opt_get_parent(x) == &lst);
+    CHECK(&List::get_parent(x) == &lst);
+
+    x.unlink();
+
+    CHECK(x.is_linked() == false);
+    CHECK(lst.empty());
+}
+
 TEST_CASE("ParentList::default_ctor", "[parent_list]")
 {
     List lst;
@@ -84,6 +105,7 @@ TEST_CASE("ParentList::basic", "[parent_list]")
             List lst2{std::move(lst)};
             CHECK(Equal(xs, xs+3, lst2));
             CHECK(lst.empty()); // not part of API
+            CHECK(&List::get_parent(xs[0]) == &lst2);
         }
 
         SECTION("move assign")
@@ -92,6 +114,7 @@ TEST_CASE("ParentList::basic", "[parent_list]")
             lst2 = std::move(lst);
             CHECK(Equal(xs, xs+3, lst2));
             CHECK(lst.empty()); // not part of API
+            CHECK(&List::get_parent(xs[0]) == &lst2);
         }
 
         SECTION("swap")
@@ -100,6 +123,8 @@ TEST_CASE("ParentList::basic", "[parent_list]")
             lst.swap(lst2);
             CHECK(Equal(xs, xs+3, lst2));
             CHECK(Equal(xs+3, xs+6, lst));
+            CHECK(&List::get_parent(xs[0]) == &lst2);
+            CHECK(&List::get_parent(xs[3]) == &lst);
         }
 
         SECTION("push_back")
