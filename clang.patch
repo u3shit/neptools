@@ -46,37 +46,44 @@ index 13db2085ba..212eca05dc 100644
   * declared 'const'.
   */
 diff --git a/tools/libclang/CIndex.cpp b/tools/libclang/CIndex.cpp
-index 027bf95b66..45d73e261a 100644
+index 027bf95b66..5730a1c733 100644
 --- a/tools/libclang/CIndex.cpp
 +++ b/tools/libclang/CIndex.cpp
-@@ -703,11 +703,11 @@ bool CursorVisitor::VisitClassTemplateSpecializationDecl(
+@@ -703,12 +703,12 @@ bool CursorVisitor::VisitClassTemplateSpecializationDecl(
    case TSK_Undeclared:
    case TSK_ImplicitInstantiation:
      // Nothing to visit
 -    return false;
+-      
 +    // return false;
- 
++
    case TSK_ExplicitInstantiationDeclaration:
    case TSK_ExplicitInstantiationDefinition:
 -    break;
+-      
 +    // break;
- 
++
    case TSK_ExplicitSpecialization:
      ShouldVisitBody = true;
-@@ -905,7 +905,7 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
+     break;
+@@ -904,8 +904,8 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
+   // before visiting these template parameters.
    if (VisitTemplateParameters(D->getTemplateParameters()))
      return true;
- 
+-  
 -  return VisitFunctionDecl(D->getTemplatedDecl());
++
 +  return VisitAttributes(D->getTemplatedDecl()) || VisitFunctionDecl(D->getTemplatedDecl());
  }
  
  bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
-@@ -914,7 +914,17 @@ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
+@@ -913,8 +913,18 @@ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
+   // before visiting these template parameters.
    if (VisitTemplateParameters(D->getTemplateParameters()))
      return true;
- 
+-  
 -  return VisitCXXRecordDecl(D->getTemplatedDecl());
++
 +  if (VisitAttributes(D->getTemplatedDecl()))
 +    return true;
 +
@@ -125,7 +132,7 @@ index 027bf95b66..45d73e261a 100644
  
  //===----------------------------------------------------------------------===//
 diff --git a/tools/libclang/CXType.cpp b/tools/libclang/CXType.cpp
-index 4fcd8864cd..1f54da1147 100644
+index 4fcd8864cd..25f4220b5a 100644
 --- a/tools/libclang/CXType.cpp
 +++ b/tools/libclang/CXType.cpp
 @@ -615,6 +615,30 @@ unsigned clang_isPODType(CXType X) {
