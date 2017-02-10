@@ -56,10 +56,10 @@ def configure(cfg):
     cross = False
     # replace xxx with HOST_xxx env vars
     cfg.environ = environ.copy()
-    for k in cfg.environ.keys():
+    for k in list(cfg.environ):
         if k[0:5] == 'HOST_':
             cross = True
-            cfg.environ[k[6:]] = cfg.environ[k]
+            cfg.environ[k[5:]] = cfg.environ[k]
             del cfg.environ[k]
 
     cfg.load('compiler_c')
@@ -87,6 +87,7 @@ def configure(cfg):
         cfg.find_program('clang-cl', var='CXX')
         cfg.find_program('lld-link', var='LINK_CXX')
         cfg.find_program('llvm-lib', var='AR')
+        cfg.find_program(cfg.path.abspath()+'/rc.sh', var='WINRC')
 
         cfg.add_os_flags('WINRCFLAGS', dup=False)
         rcflags_save = cfg.env.WINRCFLAGS

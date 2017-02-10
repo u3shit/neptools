@@ -8,6 +8,10 @@ def options(ctx):
 def configure(ctx):
     variant = ctx.variant
     host_variant = variant + '_host'
+
+    if ctx.env['COMPILER_CXX'] != 'msvc':
+        ctx.env.append_value('CFLAGS_LJX', '-fexceptions')
+
     if ctx.options.host_lua:
         ctx.find_program(ctx.options.host_lua,
                          var='LUA',
@@ -15,7 +19,7 @@ def configure(ctx):
     else:
         ctx.setenv(variant + '_host')
         ctx.check_cc(lib='m', mandatory=False)
-        # ctx.setenv(variant) # restored by configure_ljx
+        ctx.setenv(variant)
 
     if ctx.env.CROSS:
         configure_ljx(ctx, host_variant, host_variant, '_HOST')
