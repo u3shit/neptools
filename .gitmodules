@@ -3,7 +3,7 @@
 	url = git://github.com/philsquared/Catch.git
 [submodule "ext/ljx"]
 	path = ext/ljx
-	url = git://github.com/u3shit/ljx.git
+	url = ../ljx.git
 [submodule "ext/ljclang"]
 	path = ext/ljclang
-	url = git://github.com/u3shit/ljclang.git
+	url = ../ljclang.git

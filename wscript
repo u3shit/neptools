@@ -40,6 +40,8 @@ def options(opt):
     opt.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
 
+    opt.add_option('--skip-run-tests', action='store_true', default=False,
+                   help="Skip actually running tests with `test'")
     opt.recurse('ext')
 
 def configure(cfg):
@@ -395,11 +397,13 @@ def test(bld):
                 uselib   = 'NEPTOOLS',
                 use      = 'common',
                 target   = 'run-tests')
-    bld.add_post_fun(lambda ctx:
-        ctx.exec_command([
-            bld.bldnode.find_or_declare('run-tests').abspath(),
-            '--use-colour', 'yes'], cwd=bld.variant_dir) == 0 or ctx.fatal('Test failure')
-    )
+
+    if not bld.options.skip_run_tests:
+        bld.add_post_fun(lambda ctx:
+            ctx.exec_command([
+                bld.bldnode.find_or_declare('run-tests').abspath(),
+                '--use-colour', 'yes'], cwd=bld.variant_dir) == 0 or ctx.fatal('Test failure')
+        )
 
 from waflib.Configure import conf
 @conf

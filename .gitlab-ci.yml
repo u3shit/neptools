@@ -1,0 +1,92 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  TERM: xterm
+
+cache:
+  paths:
+    - build/
+
+before_script:
+  - ln -sf /opt/boost ext/boost
+
+.gcc-env: &gcc_env
+  variables:
+    CC: gcc-7.0.0-pre9999
+    CXX: g++-7.0.0-pre9999
+    AR: gcc-ar
+    LINKFLAGS: -static-libstdc++
+
+.clang-env: &clang_env
+  variables:
+    CC: clang
+    CXX: clang++
+    CXXFLAGS: -stdlib=libc++
+    LINKFLAGS: "-stdlib=libc++ -fuse-ld=gold -static-libstdc++ -Wl,--as-needed -lpthread -Wl,--no-as-needed"
+
+.clang-msvc-env: &clang_msvc_env
+  variables:
+    CFLAGS: '-m32 -Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared'
+    CXXFLAGS: "$CFLAGS"
+    LINKFLAGS: '/libpath:/mnt/msvc/vc12/lib /libpath:/mnt/msvc/vc12/win_sdk/lib/winv6.3/um/x86'
+    WINRCFLAGS: -m32
+    HOST_CC: gcc
+    HOST_CXX: g++
+    HOST_CFLAGS: ''
+    HOST_CXXFLAGS: ''
+    HOST_LINKFLAGS: ''
+    CONFIG_OPTS: --clang-hack --optimize # pdbs don't work atm
+    RUN_OPTS: --skip-run-tests
+
+.debug-build: &debug_build
+  script:
+    - echo $CONFIG_OPTS
+    - ./waf --color=yes configure --optimize-ext $CONFIG_OPTS
+    - echo $RUN_OPTS
+    - ./waf --color=yes build test -j2 $RUN_OPTS
+  artifacts:
+    paths:
+      - build/stcm-editor
+      - build/stcm-editor.exe
+      - build/launcher.exe
+      - build/neptools-server.dll
+
+.rel-build: &rel_build
+  script:
+    - echo $CONFIG_OPTS
+    - ./waf --color=yes configure --release $CONFIG_OPTS
+    - echo $RUN_OPTS
+    - ./waf --color=yes build test -j2 $RUN_OPTS
+    - |
+      if [[ -f build/stcm-editor ]]; then
+        strip --strip-unneeded -R .comment -R .GCC.command.line build/stcm-editor
+      fi
+  artifacts:
+    paths:
+      - build/stcm-editor
+      - build/stcm-editor.exe
+      - build/launcher.exe
+      - build/neptools-server.dll
+
+clang-msvc-debug:
+  <<: *clang_msvc_env
+  <<: *debug_build
+
+clang-msvc-rel:
+  <<: *clang_msvc_env
+  <<: *rel_build
+
+gcc-debug:
+  <<: *gcc_env
+  <<: *debug_build
+
+gcc-rel:
+  <<: *gcc_env
+  <<: *rel_build
+
+clang-debug:
+  <<: *clang_env
+  <<: *debug_build
+
+clang-rel:
+  <<: *clang_env
+  <<: *rel_build
