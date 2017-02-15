@@ -103,6 +103,7 @@ TEST_CASE("ParentList::basic", "[parent_list]")
         SECTION("move ctor")
         {
             List lst2{std::move(lst)};
+            CAPTURE(lst2);
             CHECK(Equal(xs, xs+3, lst2));
             CHECK(lst.empty()); // not part of API
             CHECK(&List::get_parent(xs[0]) == &lst2);

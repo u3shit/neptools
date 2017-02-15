@@ -27,14 +27,14 @@ inline bool equal(
                      typename std::iterator_traits<InputIt2>::iterator_category>)
     {
         if (last1 - first1 != last2 - first2) return false;
-        for (; first1 != last1; ++first1, ++last1)
+        for (; first1 != last1; ++first1, ++first2)
             if (!p(*first1, *first2)) return false;
 
         return true;
     }
     else
     {
-        for (; first1 != last1 && first2 != last2; ++first1, ++last1)
+        for (; first1 != last1 && first2 != last2; ++first1, ++first2)
             if (!p(*first1, *first2)) return false;
 
         return first1 == last1 && first2 == last2;
