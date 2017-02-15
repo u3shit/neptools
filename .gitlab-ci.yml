@@ -9,6 +9,10 @@ cache:
 before_script:
   - ln -sf /opt/boost ext/boost
 
+stages:
+  - build
+  - test
+
 .gcc-env: &gcc_env
   variables:
     CC: gcc-7.0.0-pre9999
@@ -25,7 +29,7 @@ before_script:
 
 .clang-msvc-env: &clang_msvc_env
   variables:
-    CFLAGS: '-m32 -Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared'
+    CFLAGS: '-m32 -Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared -DCATCH_CONFIG_COLOUR_ANSI'
     CXXFLAGS: "$CFLAGS"
     LINKFLAGS: '/libpath:/mnt/msvc/vc12/lib /libpath:/mnt/msvc/vc12/win_sdk/lib/winv6.3/um/x86'
     WINRCFLAGS: -m32
@@ -35,58 +39,123 @@ before_script:
     HOST_CXXFLAGS: ''
     HOST_LINKFLAGS: ''
     CONFIG_OPTS: --clang-hack --optimize # pdbs don't work atm
-    RUN_OPTS: --skip-run-tests
+
+.clang-msvc64-env: &clang_msvc64_env
+  variables:
+    CFLAGS: '-Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared -DCATCH_CONFIG_COLOUR_ANSI'
+    CXXFLAGS: "$CFLAGS"
+    LINKFLAGS: '/libpath:/mnt/msvc/vc12/lib/amd64 /libpath:/mnt/msvc/vc12/win_sdk/lib/winv6.3/um/x64'
+    HOST_CC: gcc
+    HOST_CXX: g++
+    HOST_CFLAGS: ''
+    HOST_CXXFLAGS: ''
+    HOST_LINKFLAGS: ''
+    CONFIG_OPTS: --clang-hack --optimize # pdbs don't work atm
+
 
 .debug-build: &debug_build
+  stage: build
   script:
     - echo $CONFIG_OPTS
     - ./waf --color=yes configure --optimize-ext $CONFIG_OPTS
-    - echo $RUN_OPTS
-    - ./waf --color=yes build test -j2 $RUN_OPTS
-  artifacts:
-    paths:
-      - build/stcm-editor
-      - build/stcm-editor.exe
-      - build/launcher.exe
-      - build/neptools-server.dll
+    - ./waf --color=yes build test -j2 --skip-run-tests
 
 .rel-build: &rel_build
+  stage: build
   script:
     - echo $CONFIG_OPTS
     - ./waf --color=yes configure --release $CONFIG_OPTS
-    - echo $RUN_OPTS
-    - ./waf --color=yes build test -j2 $RUN_OPTS
+    - ./waf --color=yes build test -j2 --skip-run-tests
     - |
       if [[ -f build/stcm-editor ]]; then
         strip --strip-unneeded -R .comment -R .GCC.command.line build/stcm-editor
       fi
+
+.win-artifacts: &win_artifacts
   artifacts:
     paths:
-      - build/stcm-editor
       - build/stcm-editor.exe
       - build/launcher.exe
       - build/neptools-server.dll
+      - build/run-tests.exe
 
-clang-msvc-debug:
+.linux-artifacts: &linux_artifacts
+  artifacts:
+    paths:
+      - build/stcm-editor
+      - build/run-tests
+
+.wine-test: &wine_test
+  stage: test
+  script:
+    - wine build/run-tests.exe
+
+.test: &test
+  stage: test
+  script:
+    - build/run-tests
+
+build-clang-msvc-debug:
   <<: *clang_msvc_env
   <<: *debug_build
+  <<: *win_artifacts
+test-wine-clang-msvc-debug:
+  <<: *wine_test
+  dependencies:
+    - build-clang-msvc-debug
 
-clang-msvc-rel:
+build-clang-msvc-rel:
   <<: *clang_msvc_env
   <<: *rel_build
+  <<: *win_artifacts
+test-wine-clang-msvc-rel:
+  <<: *wine_test
+  dependencies:
+    - build-clang-msvc-rel
 
-gcc-debug:
+build-clang-msvc64-rel:
+  <<: *clang_msvc64_env
+  <<: *rel_build
+  <<: *win_artifacts
+test-wine-clang-msvc64-rel:
+  <<: *wine_test
+  dependencies:
+    - build-clang-msvc64-rel
+
+
+
+build-gcc-amd64-debug:
   <<: *gcc_env
   <<: *debug_build
+  <<: *linux_artifacts
+test-gcc-amd64-debug:
+  <<: *test
+  dependencies:
+    - build-gcc-amd64-debug
 
-gcc-rel:
+build-gcc-amd64-rel:
   <<: *gcc_env
   <<: *rel_build
+  <<: *linux_artifacts
+test-gcc-amd64-rel:
+  <<: *test
+  dependencies:
+    - build-gcc-amd64-rel
 
-clang-debug:
+build-clang-amd64-debug:
   <<: *clang_env
   <<: *debug_build
+  <<: *linux_artifacts
+test-clang-amd64-debug:
+  <<: *test
+  dependencies:
+    - build-clang-amd64-debug
 
-clang-rel:
+build-clang-amd64-rel:
   <<: *clang_env
   <<: *rel_build
+  <<: *linux_artifacts
+test-clang-amd64-rel:
+  <<: *test
+  dependencies:
+    - build-clang-amd64-rel
