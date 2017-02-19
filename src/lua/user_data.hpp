@@ -90,6 +90,13 @@ void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
         lua_pushvalue(vm, -1); // +3
         lua_rawsetp(vm, -3, ptr); // +2
     }
+    else
+    {
+        NEPTOOLS_ASSERT_MSG(
+            lua_getmetatable(vm, -1) &&
+            lua_rawgetp(vm, -1, tag) == LUA_TNUMBER &&
+            (lua_pop(vm, 2), true), "Pointer aliasing?");
+    }
 
     lua_remove(vm, -2); // +1 remove reftbl
     NEPTOOLS_LUA_CHECKTOP(vm, top+1);

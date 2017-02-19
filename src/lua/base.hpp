@@ -71,6 +71,9 @@ public:
     template <typename Head, typename... Tail>
     typename std::enable_if<IsOverload<Head>::value>::type Push();
 
+    template <typename... Args> void PushAll(Args&&... args)
+    { (Push(std::forward<Args>(args)), ...); }
+
     void Push(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
 
     // pop table, set table[name] to val at idx; +0 -1
@@ -91,6 +94,9 @@ public:
     { return TypeTraits<T>::Get(*this, true, idx); }
     template <typename T> bool Is(int idx)
     { return TypeTraits<T>::Is(*this, idx); }
+
+
+    void DoString(const char* str);
 
     operator lua_State*() { return vm; }
 

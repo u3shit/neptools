@@ -148,6 +148,12 @@ void StateRef::SetRecTable(const char* name, int idx)
     NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
+void StateRef::DoString(const char* str)
+{
+    if (luaL_dostring(vm, str))
+        NEPTOOLS_THROW(std::runtime_error{lua_tostring(vm, -1)});
+}
+
 thread_local const char* StateRef::error_msg;
 thread_local size_t StateRef::error_len;
 

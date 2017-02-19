@@ -51,12 +51,6 @@ struct Baz : public DynamicObject
     NEPTOOLS_DYNAMIC_OBJECT;
 };
 
-static void Do(lua_State* vm, const char* str)
-{
-    if (luaL_dostring(vm, str))
-        FAIL(lua_tostring(vm, -1));
-}
-
 TEST_CASE("shared check memory", "[lua]")
 {
     {
@@ -68,7 +62,7 @@ TEST_CASE("shared check memory", "[lua]")
         SECTION("short-cut") str = "local x = foo()";
         SECTION("explicit call") str = "local x = foo():__gc()";
 
-        Do(vm, str);
+        vm.DoString(str);
     }
     CHECK(global == 13);
 }
@@ -83,12 +77,12 @@ TEST_CASE("resurrect shared object", "[lua]")
         vm.Push(ptr);
         lua_setglobal(vm, "fooobj");
 
-        Do(vm, "fooobj:__gc() assert(getmetatable(fooobj) == nil)");
+        vm.DoString("fooobj:__gc() assert(getmetatable(fooobj) == nil)");
         REQUIRE(global == 0);
 
         vm.Push(ptr);
         lua_setglobal(vm, "fooobj");
-        Do(vm, "fooobj:do_it(123)");
+        vm.DoString("fooobj:do_it(123)");
         CHECK(global == 0);
         CHECK(ptr->local_var == 123);
     }
@@ -114,7 +108,7 @@ TEST_CASE("member function with helpers", "[lua]")
     SECTION("sugar") { str = "baz().global = 43"; val = 43; }
     SECTION("read") { str = "local x = baz() x.global = x.random"; val = 4; }
 
-    Do(vm, str);
+    vm.DoString(str);
     CHECK(global == val);
 }
 
@@ -131,7 +125,7 @@ TEST_CASE("field access", "[lua]")
         const char* str;
         SECTION("plain") { str = "return foo:get_local_var()"; }
         SECTION("sugar") { str = "return foo.local_var"; }
-        Do(vm, str);
+        vm.DoString(str);
         CHECK(vm.Get<int>() == 13);
     }
 
@@ -140,7 +134,7 @@ TEST_CASE("field access", "[lua]")
         const char* str;
         SECTION("plain") { str = "foo:set_local_var(42)"; }
         SECTION("sugar") { str = "foo.local_var = 42"; }
-        Do(vm, str);
+        vm.DoString(str);
         CHECK(ptr->local_var == 42);
     }
 }
@@ -148,20 +142,20 @@ TEST_CASE("field access", "[lua]")
 TEST_CASE("invalid field access yields nil", "[lua]")
 {
     State vm;
-    Do(vm, "return foo().bar");
+    vm.DoString("return foo().bar");
     CHECK(lua_isnil(vm, -1));
 }
 
 TEST_CASE("dotted type name", "[lua]")
 {
     State vm;
-    Do(vm, "local x = bar.baz.asdfgh()");
+    vm.DoString("local x = bar.baz.asdfgh()");
 }
 
 TEST_CASE("aliased objects", "[lua]")
 {
     State vm;
-    Do(vm,
+    vm.DoString(
        "local f = foo()\n"
        "assert(f ~= f.smart and f.smart == f.smart)\n"
        "f.smart.x = 7\n"

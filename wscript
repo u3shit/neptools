@@ -390,6 +390,7 @@ def test(bld):
         'test/container/parent_list.cpp',
         'test/lua/base.cpp',
         'test/lua/function_call.cpp',
+        'test/lua/function_ref.cpp',
         'test/lua/user_type.cpp',
     ]
     bld.program(source   = src,
