@@ -67,6 +67,25 @@ struct FunctionWrap<Ret(Args...), Value> : public FunctionWrapBase<Ret, Value>
     { return this->template Call<Ret>(this->vm, args...); }
 };
 
+template <typename T> struct IsFunctionWrap : std::false_type {};
+template <typename Ret, typename Value>
+struct IsFunctionWrap<FunctionWrapGen<Ret, Value>> : std::true_type {};
+template <typename Fun, typename Value>
+struct IsFunctionWrap<FunctionWrap<Fun, Value>> : std::true_type {};
+
+// todo: this only works with StackValue
+template <typename T>
+struct TypeTraits<T, std::enable_if_t<IsFunctionWrap<T>::value>>
+{
+    static T Get(StateRef vm, bool arg, int idx)
+    {
+        if (BOOST_LIKELY(lua_isfunction(vm, idx))) return {vm, idx};
+        vm.TypeError(arg, "function", idx);
+    }
+    static T UnsafeGet(StateRef vm, int idx) { return {vm, idx}; };
+    static bool Is(StateRef vm, int idx) { return lua_isfunction(vm, idx); }
+};
+
 }
 
 #endif

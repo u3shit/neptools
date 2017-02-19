@@ -1,7 +1,9 @@
 #include "lua/function_ref.hpp"
 #include "lua/type_traits.hpp"
+#include "lua/dynamic_object.hpp"
 #include <catch.hpp>
 
+using namespace Neptools;
 using namespace Neptools::Lua;
 
 TEST_CASE("Lua FunctionRefs", "[Lua::FunctionRef]")
@@ -65,3 +67,35 @@ TEST_CASE("Lua::FunctionWrap for stl algorithm", "[Lua::FunctionRef]")
     std::vector<int> exp{-2, 3, 7, 9, -11, 13, -99};
     CHECK(v == exp);
 }
+
+struct FunctionRefTest : public SmartObject
+{
+    template <typename Fun>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<int>"})
+    void Cb(Fun f) { x = f(23, "hello"); }
+
+    template <typename Fun>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrap<double(double)>"})
+    void Cb2(Fun f) { y = f(3.1415); }
+
+    int x = 0;
+    double y = 0;
+
+    NEPTOOLS_LUA_CLASS;
+};
+
+TEST_CASE("Lua::FunctionWrap parameters")
+{
+    State vm;
+    auto x = MakeSmart<FunctionRefTest>();
+    vm.Push(x);
+    lua_setglobal(vm, "foo");
+
+    vm.DoString("foo:cb(function(n, str) return n + #str end)");
+    CHECK(x->x == 23+5);
+
+    vm.DoString("foo:cb2(function(d) return d*2 end)");
+    CHECK(x->y == Approx(2*3.1415));
+}
+
+#include "function_ref.binding.hpp"

@@ -71,10 +71,8 @@ local collect_template_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if template_types[kind] then
     inst.collect_template_tbl[#inst.collect_template_tbl+1] = cl.Cursor(c)
-  else
-    if kind ~= "ParmDecl" and kind ~= "TypeRef" then
-      utils.print_warning("Unhandled arg type "..c:kind(), c)
-    end
+  elseif kind ~= "ParmDecl" and kind ~= "TypeRef" and kind ~= "AnnotateAttr" then
+    utils.print_warning("Unhandled arg type "..c:kind(), c)
   end
   return vr.Continue
 end)
@@ -138,6 +136,12 @@ local function method_tmpl(c, info, tbl)
       return false
     end
     tbl.template_params = "Check::Throw"
+  elseif type(tbl.template_params) == "table" then
+    local args = collect_template_args(c)
+    for i,s in ipairs(tbl.template_params) do
+      utils.add_alias(inst.aliases, args[i], s)
+    end
+    tbl.template_params = table.concat(tbl.template_params, ", ")
   end
   return true
 end
