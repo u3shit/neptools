@@ -5,12 +5,7 @@
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
 
-#include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/adapted/std_tuple.hpp>
-
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 namespace Detail
@@ -104,20 +99,20 @@ template <typename T> struct ResultPush
 template<> struct ResultPush<RetNum>
 { static int Push(StateRef, RetNum r) { return r.n; } };
 
-template<typename... Args> struct ResultPush<std::tuple<Args...>>
+template <typename Tuple, typename Index> struct TuplePush;
+template <typename... Types, size_t... I>
+struct TuplePush<std::tuple<Types...>, std::index_sequence<I...>>
 {
-    static int Push(StateRef vm, const std::tuple<Args...>& ret)
+    static int Push(StateRef vm, const std::tuple<Types...>& ret)
     {
-        boost::fusion::for_each(
-            ret, [=](auto&& p)
-            {
-                // well, it was reported only 9 years ago...
-                // http://boost.2283326.n4.nabble.com/fusion-Stateful-unary-functor-for-for-each-loop-tp2565987p2565990.html
-                const_cast<StateRef&>(vm).Push(std::forward<decltype(p)>(p));
-            });
-        return sizeof...(Args);
+        (vm.Push(std::get<I>(ret)), ...);
+        return sizeof...(Types);
     }
 };
+
+template<typename... Args> struct ResultPush<std::tuple<Args...>>
+    : TuplePush<std::tuple<Args...>,
+                std::make_index_sequence<sizeof...(Args)>> {};
 
 // workaround gcc can't mangle noexcept template arguments...
 template <typename... Args>
@@ -190,27 +185,21 @@ struct WrapFunc : WrapFunGen2<T, Fun, Unsafe, typename FunctionTraits<T>::Argume
 {};
 
 // allow plain old lua functions
-template <int (*Fun)(lua_State*)>
-struct WrapFunc<int (*)(lua_State*), Fun, false>
+template <int (*Fun)(lua_State*), bool Unsafe>
+struct WrapFunc<int (*)(lua_State*), Fun, Unsafe>
 { static constexpr const auto Func = Fun; };
 
 
 // overload
 template <typename Args, typename Seq> struct OverloadCheck2;
-template <typename HArgs, typename... TArgs, int HSeq, int... TSeq>
-struct OverloadCheck2<List<HArgs, TArgs...>,
-                      std::integer_sequence<int, HSeq, TSeq...>>
+template <typename... Args, int... Seq>
+struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static bool Is(StateRef vm)
     {
-        return GetArg<HArgs, HSeq, true>::Is(vm) &&
-            OverloadCheck2<List<TArgs...>,
-                           std::integer_sequence<int, TSeq...>>::Is(vm);
+        return (GetArg<Args, Seq, true>::Is(vm) && ...);
     }
 };
-
-template <> struct OverloadCheck2<List<>, std::integer_sequence<int>>
-{ static bool Is(StateRef) { return true; } };
 
 template <typename Args> struct OverloadCheck;
 template <typename... Args>
@@ -252,7 +241,6 @@ template <typename Head, typename... Tail>
 inline typename std::enable_if<IsOverload<Head>::value>::type StateRef::Push()
 { lua_pushcfunction(vm, (Detail::OverloadWrap<Head, Tail...>::Func)); }
 
-}
 }
 
 #endif
