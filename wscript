@@ -31,14 +31,18 @@ except IOError:
 
 def options(opt):
     opt.load('compiler_c compiler_cxx')
-    opt.add_option('--clang-hack', action='store_true', default=False,
+    grp = opt.get_option_group('configure options')
+    grp.add_option('--clang-hack', action='store_true', default=False,
                    help='Read COMPILE.md...')
-    opt.add_option('--optimize', action='store_true', default=False,
+    grp.add_option('--optimize', action='store_true', default=False,
                    help='Enable some default optimizations')
-    opt.add_option('--optimize-ext', action='store_true', default=False,
+    grp.add_option('--optimize-ext', action='store_true', default=False,
                    help='Optimize ext libs even if Neptools is in debug mode')
-    opt.add_option('--release', action='store_true', default=False,
+    grp.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
+    grp.add_option('--overload-check', action='store_true', default=False,
+                   help='Check for uncallable lua overloads (compile-time)')
+
 
     opt.add_option('--skip-run-tests', action='store_true', default=False,
                    help="Skip actually running tests with `test'")
@@ -193,6 +197,9 @@ int main() { return 0; }
         cfg.check_cxx(lib='kernel32')
         cfg.check_cxx(lib='shell32')
         cfg.check_cxx(lib='user32')
+
+    if cfg.options.overload_check:
+        cfg.define('NEPTOOLS_LUA_OVERLOAD_CHECK', 1)
 
     Logs.pprint('NORMAL', 'Configuring ext '+variant)
     cfg.recurse('ext', name='configure', once=False)

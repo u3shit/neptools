@@ -24,6 +24,8 @@ constexpr bool IS_VALUE_OBJECT = IsValueObject<T>::value;
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
+    using RawType = T;
+
     static T& Get(StateRef vm, bool arg, int idx)
     {
         if (!Is(vm, idx))

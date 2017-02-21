@@ -114,8 +114,8 @@ void TypeRegister::DoRegister<::Neptools::DumpableSource>(TypeBuilder& bld)
     bld.Inherit<::Neptools::DumpableSource, ::Neptools::Dumpable>();
 
     bld.Add<
-        Overload<decltype(&::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>), &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>>,
-        Overload<decltype(&::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>), &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>>
+        Overload<decltype(&::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>), &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>>,
+        Overload<decltype(&::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>), &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>>
     >("new");
     bld.Add<
         ::Neptools::Source (::Neptools::DumpableSource::*)() const, &::Neptools::DumpableSource::GetSource

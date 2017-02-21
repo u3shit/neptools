@@ -228,11 +228,11 @@ class DumpableSource final : public Dumpable
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    DumpableSource(const Source& s) noexcept : src{s} {}
     NEPTOOLS_NOLUA
     DumpableSource(Source&& s) noexcept : src{std::move(s)} {}
     DumpableSource(const Source& s, FilePosition offset, FilePosition size) noexcept
         : src{s, offset, size} {}
+    DumpableSource(const Source& s) noexcept : src{s} {}
 
     void Fixup() override {}
 

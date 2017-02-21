@@ -5,19 +5,46 @@
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
 
+#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
+#include <boost/hana/cartesian_product.hpp>
+#include <boost/hana/filter.hpp>
+#include <boost/hana/maximum.hpp>
+#include <boost/hana/minus.hpp>
+#include <boost/hana/not_equal.hpp>
+#include <boost/hana/replicate.hpp>
+#include <boost/hana/remove.hpp>
+#include <boost/hana/set.hpp>
+#include <boost/hana/size.hpp>
+#include <boost/hana/tuple.hpp>
+#endif
+
 namespace Neptools::Lua
 {
 
 namespace Detail
 {
 
-template <typename... Args> struct List;
+template <typename... Args> struct List
+{
+#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
+    static constexpr const auto ToHana = boost::hana::tuple_t<Args...>;
+#endif
+};
+
+template <size_t I, typename Args> struct Get;
+template <typename H, typename... Tail> struct Get<0, List<H, Tail...>>
+{ using Type = H; };
+template <size_t I, typename H, typename... Tail> struct Get<I, List<H, Tail...>>
+{ using Type = typename Get<I-1, List<Tail...>>::Type; };
+
+template <typename T, int Idx, bool Unsafe> struct GetArg;
 
 template <typename T> struct FunctionTraits;
 template <typename Ret, typename... Args> struct FunctionTraits<Ret(Args...)>
 {
     using Return = Ret;
     using Arguments = List<Args...>;
+    using ArgumentTypes = List<typename GetArg<Args, 0, false>::Type...>;
 };
 
 template <typename Ret, typename... Args>
@@ -43,6 +70,9 @@ template <typename T, int Idx, bool Unsafe> struct GetArg
     static decltype(auto) Get(StateRef vm)
     { return Unsafe ? vm.UnsafeGet<Type>(Idx) : vm.Check<Type>(Idx); }
     static bool Is(StateRef vm) { return vm.Is<Type>(Idx); }
+
+    template <typename Val>
+    static constexpr const bool IS = COMPATIBLE_WITH<Type, Val>;
 };
 
 template <int Idx, bool Unsafe> struct GetArg<Skip, Idx, Unsafe>
@@ -50,6 +80,10 @@ template <int Idx, bool Unsafe> struct GetArg<Skip, Idx, Unsafe>
     static constexpr size_t NEXT_IDX = Idx+1;
     static Skip Get(StateRef) { return {}; }
     static bool Is(StateRef) { return true; }
+
+    using Type = Skip;
+    template <typename Val>
+    static constexpr const bool IS = true;
 };
 
 template <int Idx, bool Unsafe> struct GetArg<StateRef, Idx, Unsafe>
@@ -57,18 +91,26 @@ template <int Idx, bool Unsafe> struct GetArg<StateRef, Idx, Unsafe>
     static constexpr size_t NEXT_IDX = Idx;
     static StateRef Get(StateRef vm) { return vm; }
     static bool Is(StateRef) { return true; }
+
+    using Type = void;
+    template <typename Val>
+    static constexpr const bool IS = true;
 };
 
-template <int Type, int Idx, bool Unsafe> struct GetArg<Raw<Type>, Idx, Unsafe>
+template <int LType, int Idx, bool Unsafe> struct GetArg<Raw<LType>, Idx, Unsafe>
 {
     static constexpr size_t NEXT_IDX = Idx+1;
-    static Raw<Type> Get(StateRef vm)
+    static Raw<LType> Get(StateRef vm)
     {
         if (!Unsafe && !Is(vm))
-            vm.TypeError(true, lua_typename(vm, Type), Idx);
+            vm.TypeError(true, lua_typename(vm, LType), Idx);
         return {};
     }
-    static bool Is(StateRef vm) noexcept { return lua_type(vm, Idx) == Type; }
+    static bool Is(StateRef vm) noexcept { return lua_type(vm, Idx) == LType; }
+
+    using Type = Raw<LType>;
+    template <typename Val>
+    static constexpr const bool IS = std::is_same_v<Type, Val>;
 };
 
 template <bool Unsafe, int N, typename Seq, typename... Args>
@@ -199,6 +241,11 @@ struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
     {
         return (GetArg<Args, Seq, true>::Is(vm) && ...);
     }
+
+    template <typename ValsList>
+    static constexpr bool IS = (
+        GetArg<Args, Seq, true>::template IS<
+            typename Get<Seq-1, ValsList>::Type> && ...);
 };
 
 template <typename Args> struct OverloadCheck;
@@ -231,6 +278,89 @@ template<> struct OverloadWrap<>
     }
 };
 
+#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
+namespace h = boost::hana;
+struct GetArgs
+{
+    template <typename T, T Fun>
+    inline constexpr auto operator()(h::basic_type<Overload<T, Fun>>)
+    {
+        return h::remove(
+            FunctionTraits<T>::ArgumentTypes::ToHana, h::type_c<void>);
+    }
+};
+
+template <typename T> struct ToList;
+template <typename... Args> struct ToList<h::tuple<Args...>>
+{ using Type = List<typename Args::type...>; };
+
+// http://stackoverflow.com/a/33987589
+template <typename Iterable, typename Pred>
+constexpr auto index_of(const Iterable& iterable, Pred p)
+{
+    auto size = decltype(h::size(iterable)){};
+    auto dropped = decltype(h::size(
+        h::drop_while(iterable, p)
+    )){};
+    return size - dropped;
+}
+
+template <typename Test>
+struct Check
+{
+    template <typename Overload>
+    constexpr auto operator()(const Overload&) const
+    {
+        // warning: negated return
+        return boost::hana::bool_c<
+            !OverloadCheck<typename ToList<Overload>::Type>::
+                template IS<typename ToList<Test>::Type>>;
+    }
+};
+
+template <typename Overloads> struct Called
+{
+    Overloads& overloads;
+
+    template <typename Test>
+    constexpr auto operator()(const Test&) const
+    {
+        return index_of(overloads, Check<Test>{});
+    }
+};
+
+// used to report overload problems in a user-friendly.. khgrrr.. way
+template <typename CalculatedSize, typename ExpectedSize,
+          typename CalledOverloads, typename Overloads>
+constexpr inline void InvalidOverload(CalculatedSize, ExpectedSize,
+                                      CalledOverloads, Overloads) = delete;
+
+template <typename... Overloads>
+inline constexpr void CheckUnique()
+{
+    constexpr auto overloads = h::transform(h::tuple_t<Overloads...>, GetArgs{});
+    // get possible argument types. add nil to simulate less arguments
+    constexpr auto argset = h::insert(
+        h::to_set(h::flatten(overloads)), h::type_c<Raw<LUA_TNIL>>);
+    // longest argument count
+    constexpr auto max_count = h::maximum(h::transform(overloads, h::length));
+    // all possible calls with argset
+    constexpr auto all_test = h::cartesian_product(
+        h::replicate<h::tuple_tag>(h::to_tuple(argset), max_count));
+
+    // actually called function for each test
+    constexpr auto called = h::transform(all_test, Called<decltype(overloads)>{overloads});
+    // called index == sizeof...(Overloads) => failed to call (ignore)
+    constexpr auto called_set = h::to_set(h::remove(called, h::size_c<sizeof...(Overloads)>));
+
+    if constexpr (h::size(called_set) != sizeof...(Overloads))
+    {
+        InvalidOverload(h::size(called_set), h::size_c<sizeof...(Overloads)>,
+                        called, overloads);
+    }
+}
+#endif
+
 }
 
 template <typename T, T Fun>
@@ -239,7 +369,12 @@ inline void StateRef::Push()
 
 template <typename Head, typename... Tail>
 inline typename std::enable_if<IsOverload<Head>::value>::type StateRef::Push()
-{ lua_pushcfunction(vm, (Detail::OverloadWrap<Head, Tail...>::Func)); }
+{
+#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
+    Detail::CheckUnique<Head, Tail...>();
+#endif
+    lua_pushcfunction(vm, (Detail::OverloadWrap<Head, Tail...>::Func));
+}
 
 }
 

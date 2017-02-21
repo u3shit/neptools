@@ -116,6 +116,8 @@ struct UserDataTraits
     using BaseType = typename Base::Type;
     using Ret = typename Base::Ret;
 
+    using RawType = BaseType;
+
     inline static Ret Get(StateRef vm, bool arg, int idx)
     {
         return Base::UBGet(UserDataDetail::GetBase(

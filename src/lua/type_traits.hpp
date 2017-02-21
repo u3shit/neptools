@@ -3,6 +3,7 @@
 #pragma once
 
 #include "base.hpp"
+#include "function_call_types.hpp"
 #include "../nonowning_string.hpp"
 
 namespace boost { namespace filesystem { class path; } }
@@ -80,6 +81,8 @@ struct TypeTraits<T, std::enable_if_t<
 
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, val); }
+
+    static constexpr int LUA_TYPE = LUA_TNUMBER;
 };
 
 template <typename T>
@@ -101,6 +104,8 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
 
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, val); }
+
+    static constexpr int LUA_TYPE = LUA_TNUMBER;
 };
 
 template <>
@@ -121,6 +126,8 @@ struct TypeTraits<bool>
 
     static void Push(StateRef vm, bool val)
     { lua_pushboolean(vm, val); }
+
+    static constexpr int LUA_TYPE = LUA_TBOOLEAN;
 };
 
 template<>
@@ -141,6 +148,8 @@ struct TypeTraits<const char*>
 
     static void Push(StateRef vm, const char* val)
     { lua_pushstring(vm, val); }
+
+    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
 template <typename T>
@@ -169,6 +178,8 @@ struct TypeTraits<T, std::enable_if_t<
 
     static void Push(StateRef vm, const T& val)
     { lua_pushlstring(vm, val.data(), val.length()); }
+
+    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
 template<>
@@ -210,10 +221,39 @@ struct NullableTypeTraits
         if (obj) TypeTraits<NotNull<T>>::Push(vm, NotNull<T>{obj});
         else lua_pushnil(vm);
     }
+
+    using RawType = typename TypeTraits<NotNull<T>>::RawType;
 };
 
 // used by UserType
 template <typename T, typename Enable = void> struct UserTypeTraits;
+
+template <typename T, typename Enable = void>
+struct HasLuaType : std::false_type {};
+template <typename T>
+struct HasLuaType<T, std::void_t<decltype(TypeTraits<T>::LUA_TYPE)>>
+    : std::true_type {};
+
+template <typename T, typename Enable = void> struct RawType
+{ using Type = typename TypeTraits<T>::RawType; };
+template <typename T>
+struct RawType<T, std::void_t<decltype(TypeTraits<T>::LUA_TYPE)>>
+{ using Type = Raw<TypeTraits<T>::LUA_TYPE>; };
+
+template <int T> struct RawType<Raw<T>> { using Type = Raw<T>; };
+template <> struct RawType<Skip> { using Type = Skip; };
+
+template <typename T>
+using RawTypeT = typename RawType<T>::Type;
+
+
+// todo: nullable/optional Bs
+template <typename A, typename B>
+constexpr const bool COMPATIBLE_WITH =
+    std::is_same_v<A, Skip> || std::is_base_of_v<RawTypeT<A>, RawTypeT<B>>;
+
+static_assert(!COMPATIBLE_WITH<Raw<LUA_TTABLE>, Raw<LUA_TSTRING>>);
+static_assert(COMPATIBLE_WITH<int, double>);
 
 }
 }

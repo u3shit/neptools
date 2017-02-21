@@ -45,6 +45,21 @@ index 13db2085ba..212eca05dc 100644
   * \brief Determine if a C++ member function or member function template is
   * declared 'const'.
   */
+diff --git a/lib/Sema/SemaDecl.cpp b/lib/Sema/SemaDecl.cpp
+index ea276a995d..b37a065f50 100644
+--- a/lib/Sema/SemaDecl.cpp
++++ b/lib/Sema/SemaDecl.cpp
+@@ -6132,8 +6132,8 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
+       // C++1z [dcl.spec.constexpr]p1:
+       //   A static data member declared with the constexpr specifier is
+       //   implicitly an inline variable.
+-      if (NewVD->isStaticDataMember() && getLangOpts().CPlusPlus1z)
+-        NewVD->setImplicitlyInline();
++      //if (NewVD->isStaticDataMember() && getLangOpts().CPlusPlus1z)
++      //  NewVD->setImplicitlyInline();
+     }
+ 
+     if (D.getDeclSpec().isConceptSpecified()) {
 diff --git a/tools/libclang/CIndex.cpp b/tools/libclang/CIndex.cpp
 index 027bf95b66..5730a1c733 100644
 --- a/tools/libclang/CIndex.cpp

@@ -2,7 +2,8 @@
 
 def options(ctx):
     ctx.load('boost')
-    ctx.add_option('--system-boost', action='store_true', default=False,
+    grp = ctx.get_option_group('configure options')
+    grp.add_option('--system-boost', action='store_true', default=False,
                    help='Use system boost')
 
 def configure(ctx):

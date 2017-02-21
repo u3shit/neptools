@@ -132,6 +132,7 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
                   std::enable_if_t<IsSmartObject<T>::value>>
 {
     using Type = WeakPtrBase<T, Storage>;
+    using RawType = T;
 
     static Type Get(StateRef vm, bool arg, int idx)
     { return lua_isnil(vm, idx) ? nullptr : Type{&UserDataTraits<T>::Get(vm, arg, idx)}; }

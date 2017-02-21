@@ -1,7 +1,8 @@
 # -*- mode: python -*-
 
 def options(ctx):
-    ctx.add_option('--host-lua', action='store', default=None,
+    grp = ctx.get_option_group('configure options')
+    grp.add_option('--host-lua', action='store', default=None,
                    help='System lua 5.1/5.2 + bitop or luajit or ljx')
     ctx.load('gas')
 
