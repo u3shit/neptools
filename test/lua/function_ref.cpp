@@ -21,7 +21,7 @@ TEST_CASE("Lua FunctionRefs", "[Lua::FunctionRef]")
         CHECK(fr.Call<int>(vm) == 3);
         CHECK(fr.Call<int>(vm, "10") == 10); // lua converts string to int
 
-        CHECK_THROWS(fr.Call<int>(vm, "xx"));
+        CHECK_THROWS(vm.Catch([&]() { fr.Call<int>(vm, "xx"); }));
     }
 
     SECTION("FunctionWrapGen")
@@ -31,7 +31,7 @@ TEST_CASE("Lua FunctionRefs", "[Lua::FunctionRef]")
         CHECK(fr() == 1);
         CHECK(fr(77) == 77);
 
-        CHECK_THROWS(fr("Hello"));
+        CHECK_THROWS(vm.Catch([&]() { fr("Hello"); }));
     }
 
     SECTION("FunctionWrap")

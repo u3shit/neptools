@@ -90,6 +90,11 @@ stages:
   script:
     - wine build/run-tests.exe
 
+.win7-test: &win7_test
+  stage: test
+  script:
+    - tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe
+
 .test: &test
   stage: test
   script:
@@ -103,6 +108,10 @@ test-wine-clang-msvc-debug:
   <<: *wine_test
   dependencies:
     - build-clang-msvc-debug
+test-win7-clang-msvc-debug:
+  <<: *win7_test
+  dependencies:
+    - build-clang-msvc-debug
 
 build-clang-msvc-rel:
   <<: *clang_msvc_env
@@ -112,6 +121,10 @@ test-wine-clang-msvc-rel:
   <<: *wine_test
   dependencies:
     - build-clang-msvc-rel
+test-win7-clang-msvc-rel:
+  <<: *win7_test
+  dependencies:
+    - build-clang-msvc-rel
 
 build-clang-msvc64-rel:
   <<: *clang_msvc64_env
@@ -119,6 +132,10 @@ build-clang-msvc64-rel:
   <<: *win_artifacts
 test-wine-clang-msvc64-rel:
   <<: *wine_test
+  dependencies:
+    - build-clang-msvc64-rel
+test-win7-clang-msvc64-rel:
+  <<: *win7_test
   dependencies:
     - build-clang-msvc64-rel
 
