@@ -24,9 +24,13 @@ function ret.print_warning(str, c)
   print_fancy("\27[33m", str, c)
 end
 
+function ret.print(str, c)
+  print_fancy("", str, c)
+end
+
 function ret.default_name_class(c)
   return c:name():gsub("<.*", ""): -- eat template arguments
-    gsub("(%l)(%u)", "%1_%2"):gsub("::", "."):lower()
+    gsub("(%u)(%u%l)", "%1_%2"):gsub("(%l)(%u)", "%1_%2"):gsub("::", "."):lower()
 end
 
 function ret.default_name_fun(c)
@@ -246,6 +250,13 @@ function ret.parse_path(base, path)
     end
   end
   return ret
+end
+
+function ret.path_isbase(base, o)
+  for i=1,#base do
+    if base[i] ~= o[i] then return false end
+  end
+  return true
 end
 
 return ret

@@ -1,30 +1,41 @@
 #include "container/ordered_map.hpp"
+#include "lua/base.hpp"
 #include <catch.hpp>
 
 using namespace Neptools;
+using namespace Neptools::Lua;
 
-namespace
+namespace Neptools::Test
 {
-struct X : public OrderedMapItem
+struct OMItemTest final : public OrderedMapItem, public Lua::DynamicObject
 {
-    X(int k, int v) : k{k}, v{v} { ++count; }
-    ~X() { --count; }
-    X(const X&) = delete;
-    void operator=(const X&) = delete;
+    NEPTOOLS_DYNAMIC_OBJECT;
+public:
+    OMItemTest(std::string k, int v) : k{std::move(k)}, v{v} { ++count; }
+    ~OMItemTest() { --count; }
+    OMItemTest(const OMItemTest&) = delete;
+    void operator=(const OMItemTest&) = delete;
 
-    int k, v;
+    std::string k;
+    int v;
     static size_t count;
-};
-size_t X::count;
 
-struct XTraits
+    bool operator==(const OMItemTest& o) const noexcept
+    { return k == o.k && v == o.v; }
+};
+std::ostream& operator<<(std::ostream& os, const OMItemTest& i)
+{ return os << "OMItemTest{" << i.k << ", " << i.v << '}'; }
+size_t OMItemTest::count;
+
+struct OMItemTestTraits
 {
-    using type = int;
-    const int& operator()(const X& x) { return x.k; }
+    using type = std::string;
+    const std::string& operator()(const OMItemTest& x) { return x.k; }
 };
-
-using OM = OrderedMap<X, XTraits>;
 }
+
+using X = Neptools::Test::OMItemTest;
+using OM = OrderedMap<Neptools::Test::OMItemTest, Neptools::Test::OMItemTestTraits>;
 
 TEST_CASE("OrderedMap::basic", "[ordered_map]")
 {
@@ -33,38 +44,38 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
         OM om;
         CHECK(om.empty());
         CHECK(om.size() == 0);
-        om.emplace_back(2,2);
-        om.emplace_back(1,7);
+        om.emplace_back("foo",2);
+        om.emplace_back("bar",7);
         CHECK(!om.empty());
         CHECK(om.size() == 2);
 
         SECTION("at")
         {
-            CHECK(om.at(0).v == 2);
-            CHECK(om.at(1).k == 1);
+            CHECK(om.at(0) == X("foo", 2));
+            CHECK(om.at(1) == X("bar", 7));
             CHECK_THROWS(om.at(2));
         }
 
         SECTION("operator[]")
         {
-            CHECK(om[0].k == 2);
-            CHECK(om[1].v == 7);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("bar", 7));
         }
 
         SECTION("front/back")
         {
-            CHECK(om.front().v == 2);
-            CHECK(om.back().v == 7);
+            CHECK(om.front() == X("foo", 2));
+            CHECK(om.back() == X("bar", 7));
         }
 
         SECTION("iterator")
         {
             auto it = om.begin();
             REQUIRE(it != om.end());
-            CHECK(it->k == 2);
+            CHECK(it->k == "foo");
             ++it;
             REQUIRE(it != om.end());
-            CHECK(it->k == 1);
+            CHECK(*it == X("bar", 7));
             ++it;
             CHECK(it == om.end());
         }
@@ -76,7 +87,7 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
             REQUIRE(om.size() == 2);
             CHECK(om.capacity() >= 10);
 
-            CHECK(om[1].v == 7);
+            CHECK(om[1] == X("bar", 7));
         }
 
         SECTION("clear")
@@ -87,50 +98,50 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
 
         SECTION("insert")
         {
-            om.insert(om.begin()+1, MakeSmart<X>(9, 9));
+            om.insert(om.begin()+1, MakeSmart<X>("def", 9));
             REQUIRE(om.size() == 3);
-            CHECK(om[0].k == 2);
-            CHECK(om[1].k == 9);
-            CHECK(om[2].k == 1);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("def", 9));
+            CHECK(om[2] == X("bar", 7));
         }
 
         SECTION("insert existing")
         {
-            om.insert(om.begin(), MakeSmart<X>(1, -1));
+            om.insert(om.begin(), MakeSmart<X>("bar", -1));
             REQUIRE(om.size() == 2);
-            CHECK(om[0].v == 2);
-            CHECK(om[1].v == 7);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("bar", 7));
         }
 
         SECTION("emplace")
         {
-            om.emplace(om.begin(), 5, 5);
+            om.emplace(om.begin(), "aa", 5);
             REQUIRE(om.size() == 3);
-            CHECK(om[0].k == 5);
-            CHECK(om[1].k == 2);
-            CHECK(om[2].k == 1);
+            CHECK(om[0] == X("aa", 5));
+            CHECK(om[1] == X("foo", 2));
+            CHECK(om[2] == X("bar", 7));
         }
 
         SECTION("emplace existing")
         {
-            om.emplace(om.begin(), 1, -1);
+            om.emplace(om.begin(), "foo", -1);
             REQUIRE(om.size() == 2);
-            CHECK(om[0].v == 2);
-            CHECK(om[1].v == 7);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("bar", 7));
         }
 
         SECTION("erase one")
         {
             om.erase(om.begin());
             REQUIRE(om.size() == 1);
-            CHECK(om[0].k == 1);
+            CHECK(om[0] == X("bar", 7));
         }
 
         SECTION("erase range")
         {
             om.erase(om.begin(), om.begin()+1);
             REQUIRE(om.size() == 1);
-            CHECK(om[0].k == 1);
+            CHECK(om[0] == X("bar", 7));
         }
 
         SECTION("erase everything")
@@ -141,26 +152,26 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
 
         SECTION("push_back")
         {
-            om.push_back(MakeSmart<X>(3,3));
+            om.push_back(MakeSmart<X>("zed",3));
             REQUIRE(om.size() == 3);
-            CHECK(om[0].k == 2);
-            CHECK(om[1].k == 1);
-            CHECK(om[2].k == 3);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("bar", 7));
+            CHECK(om[2] == X("zed", 3));
         }
 
         SECTION("push_back existing")
         {
-            om.push_back(MakeSmart<X>(1,77));
+            om.push_back(MakeSmart<X>("bar",77));
             REQUIRE(om.size() == 2);
-            CHECK(om[0].v == 2);
-            CHECK(om[1].v == 7);
+            CHECK(om[0] == X("foo", 2));
+            CHECK(om[1] == X("bar", 7));
         }
 
         SECTION("pop_back")
         {
             om.pop_back();
             REQUIRE(om.size() == 1);
-            CHECK(om[0].v == 2);
+            CHECK(om[0] == X("foo", 2));
             om.pop_back();
             REQUIRE(om.empty());
         }
@@ -168,18 +179,18 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
         SECTION("nth")
         {
             CHECK(om.nth(0) == om.begin());
-            CHECK(om.nth(0)->k == 2);
-            CHECK(om.nth(1)->k == 1);
+            CHECK(om.nth(0)->k == "foo");
+            CHECK(*om.nth(1) == X("bar", 7));
             CHECK(om.nth(2) == om.end());
             CHECK(om.index_of(om.nth(1)) == 1);
         }
 
         SECTION("map find")
         {
-            CHECK(om.count(1) == 1);
-            CHECK(om.count(3) == 0);
-            CHECK(om.find(1)->k == 1);
-            CHECK(om.find(3) == om.end());
+            CHECK(om.count("foo") == 1);
+            CHECK(om.count("baz") == 0);
+            CHECK(*om.find("foo") == X("foo", 2));
+            CHECK(om.find("baz") == om.end());
         }
 
         SECTION("iterator_to")
@@ -190,11 +201,152 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
 
         SECTION("key_change")
         {
-            om[0].k = 0;
-            CHECK(om.count(0) == 0); // wrong rb-tree
+            om[0].k = "abc";
+            CHECK(om.count("abc") == 0); // wrong rb-tree
             om.key_change(om.begin());
-            CHECK(om.count(1) == 1); // fixed
+            CHECK(om.count("abc") == 1); // fixed
         }
     }
     CHECK(X::count == 0);
 }
+
+TEST_CASE("OrderedMap::lua", "[ordered_map]")
+{
+    State vm;
+    auto om = MakeSmart<OM>();
+    vm.Push(om);
+    lua_setglobal(vm, "om");
+    vm.DoString("it = neptools.test.om_item_test");
+
+    SECTION("lua push_back")
+    {
+        vm.DoString("om:push_back(it('xy',2))");
+        CHECK(om->size() == 1);
+        CHECK(om->at(0) == X("xy", 2));
+    }
+
+    SECTION("lua insert")
+    {
+        vm.DoString("return om:insert(0, it('bar', 7))");
+        REQUIRE(lua_gettop(vm) == 2);
+        CHECK(vm.Get<bool>(-2));
+        CHECK(vm.Get<int>(-1) == 0);
+        lua_pop(vm, 2);
+
+        vm.DoString("return om:insert(0, it('foo', 2))");
+        REQUIRE(lua_gettop(vm) == 2);
+        CHECK(vm.Get<bool>(-2));
+        CHECK(vm.Get<int>(-1) == 0);
+        lua_pop(vm, 2);
+
+        vm.DoString("return om:insert(0, it('bar', 13))");
+        REQUIRE(lua_gettop(vm) == 2);
+        CHECK(!vm.Get<bool>(-2));
+        CHECK(vm.Get<int>(-1) == 1);
+        lua_pop(vm, 2);
+
+        CHECK(om->size() == 2);
+        CHECK(om->at(0) == X("foo", 2));
+        CHECK(om->at(1) == X("bar", 7));
+    }
+
+    SECTION("populate")
+    {
+        om->emplace_back("abc", 7);
+        om->emplace_back("xyz", -2);
+        om->emplace_back("foo", 5);
+
+        SECTION("get")
+        {
+            vm.DoString("return om[0]");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(vm.Get<X>(-1) == X("abc", 7));
+            lua_pop(vm, 1);
+
+            vm.DoString("return om[3]");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(lua_isnil(vm, -1));
+            lua_pop(vm, 1);
+
+            vm.DoString("return om.xyz");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(vm.Get<X>(-1) == X("xyz", -2));
+            lua_pop(vm, 1);
+
+            vm.DoString("return om.blahblah");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(lua_isnil(vm, -1));
+            lua_pop(vm, 1);
+
+            vm.DoString("return om[{}]");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(lua_isnil(vm, -1));
+            lua_pop(vm, 1);
+        }
+
+        SECTION("erase")
+        {
+            vm.DoString("return om:erase(1)");
+            REQUIRE(lua_gettop(vm) == 1);
+
+            CHECK(vm.Get<size_t>(-1) == 1);
+            CHECK(om->size() == 2);
+            CHECK(om->at(0) == X("abc", 7));
+            CHECK(om->at(1) == X("foo", 5));
+            lua_pop(vm, 1);
+        }
+
+        SECTION("erase range")
+        {
+            vm.DoString("return om:erase(1, 3)");
+            REQUIRE(lua_gettop(vm) == 1);
+
+            CHECK(vm.Get<size_t>(-1) == 1);
+            CHECK(om->size() == 1);
+            CHECK(om->at(0) == X("abc", 7));
+            lua_pop(vm, 1);
+        }
+
+        SECTION("remove")
+        {
+            vm.DoString("return om:remove(1)");
+            REQUIRE(lua_gettop(vm) == 1);
+
+            CHECK(vm.Get<X>(-1) == X("xyz", -2));
+            CHECK(om->size() == 2);
+            CHECK(om->at(0) == X("abc", 7));
+            CHECK(om->at(1) == X("foo", 5));
+            lua_pop(vm, 1);
+        }
+
+        SECTION("find")
+        {
+            vm.DoString("return om:find('xyz')");
+            REQUIRE(lua_gettop(vm) == 2);
+            CHECK(vm.Get<size_t>(-2) == 1);
+            CHECK(vm.Get<X>(-1) == X("xyz", -2));
+            lua_pop(vm, 2);
+
+            vm.DoString("return om:find('not')");
+            REQUIRE(lua_gettop(vm) == 1);
+            CHECK(lua_isnil(vm, -1));
+            lua_pop(vm, 1);
+        }
+
+        SECTION("to_table")
+        {
+            vm.DoString("                \n\
+local t = om:to_table()                  \n\
+assert(type(t) == 'table')               \n\
+assert(t[0].k == 'abc' and t[0].v == 7)  \n\
+assert(t[1].k == 'xyz' and t[1].v == -2) \n\
+assert(t[2].k == 'foo' and t[2].v == 5)  \n\
+assert(t[3] == nil)");
+        }
+    }
+}
+
+#include "container/ordered_map.lua.hpp"
+NEPTOOLS_ORDERED_MAP_LUAGEN(om_item_test, Neptools::Test::OMItemTest,
+                            Neptools::Test::OMItemTestTraits);
+#include "ordered_map.binding.hpp"

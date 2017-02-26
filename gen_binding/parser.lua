@@ -394,10 +394,10 @@ end)
 local function parse_templates(c)
   local cwd = utils.getcwd()
   local base = utils.parse_path(cwd, "src")
+  local basetest = utils.parse_path(cwd, "test")
   inst.parse_filter = function(c)
     local this = utils.parse_path(cwd, c:location())
-    for i=1,#base do if base[i] ~= this[i] then return false end end
-    return true
+    return utils.path_isbase(base, this) or utils.path_isbase(basetest, this)
   end
 
   c:children(parse_templates_v)

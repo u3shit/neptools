@@ -9,6 +9,7 @@ export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
 
 src=(src/dumpable src/sink src/source src/txt_serializable
      src/format/cl3 src/format/gbnl
+     test/container/ordered_map
      test/lua/function_ref test/lua/user_type)
 
 req=()
