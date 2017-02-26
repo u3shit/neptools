@@ -118,6 +118,8 @@ local function func_common(c, info, tbl)
     return utils.type_list(info.args, inst.aliases, wrap, pre)
   end
   info.result_type = tbl.result_type or utils.type_name(c:resultType(), inst.aliases, c)
+
+  if not tbl.order then tbl.order = -100 * #info.args end
   return true
 end
 
@@ -403,6 +405,21 @@ local function parse_templates(c)
   c:children(parse_templates_v)
 end
 
+-- basic bubble sort because lua's table.sort is unstable and I'm too lazy to
+-- implement something better. plus we will rarely have more than 5 items...
+local function sort(tbl, cmp)
+  local n = #tbl
+  for i=0,n-1 do
+    for j=0,n-2-i do
+      if cmp(tbl[j+2], tbl[j+1]) then
+        local x = tbl[j+1]
+        tbl[j+1] = tbl[j+2]
+        tbl[j+2] = x
+      end
+    end
+  end
+end
+
 local function parse(c, filter)
   if not filter then filter = function() return true end end
   inst = { lua_classes = {}, ret_lua_classes = {}, parse_filter = filter,
@@ -413,6 +430,12 @@ local function parse(c, filter)
   if next(inst.templates) then parse_templates(c) end
 
   local ret = inst.ret_lua_classes
+  for _,c in ipairs(ret) do
+    for _,m in pairs(c.methods) do
+      sort(m, function(a,b) return a.order < b.order end)
+    end
+  end
+
   inst = nil
   return ret
 end
