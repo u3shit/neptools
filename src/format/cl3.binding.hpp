@@ -112,6 +112,12 @@ void TypeRegister::DoRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::N
         ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::size_t), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::at
     >("at");
     bld.Add<
+        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::front<Check::Throw>
+    >("front");
+    bld.Add<
+        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::back<Check::Throw>
+    >("back");
+    bld.Add<
         bool (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::empty
     >("empty");
     bld.Add<
@@ -142,6 +148,9 @@ void TypeRegister::DoRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::N
         void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::swap
     >("swap");
     bld.Add<
+        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(const ::Neptools::Cl3::Entry &) const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::index_of<Check::Throw>
+    >("index_of");
+    bld.Add<
         ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(const ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::key_type &) const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::count
     >("count");
     bld.Add<
@@ -153,7 +162,7 @@ void TypeRegister::DoRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::N
         std::tuple<bool, size_t> (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert
     >("insert");
     bld.Add<
-        Overload<::size_t (*)(::Neptools::Lua::StateRef, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>,
+        Overload<::size_t (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>,
         Overload<::size_t (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>
     >("erase");
     bld.Add<

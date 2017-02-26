@@ -39,21 +39,19 @@ struct OrderedMapLua
         OrderedMap<T, Traits, Compare>& om, size_t i,
         NotNull<SmartPtr<T>>&& t)
     {
-        auto r = om.insert(om.checked_nth_end(i), std::move(t));
+        auto r = om.template insert<Check::Throw>(om.nth(i), std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 
-    static size_t erase(
-        Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om, size_t i, size_t e)
+    static size_t erase(OrderedMap<T, Traits, Compare>& om, size_t i, size_t e)
     {
-        if (i > e) luaL_error(vm, "Invalid range");
-        return om.index_of(om.erase(om.checked_nth_end(i), om.checked_nth_end(e)));
+        return om.index_of(om.template erase<Check::Throw>(om.nth(i), om.nth(e)));
     }
 
     static size_t erase(
         OrderedMap<T, Traits, Compare>& om, size_t i)
     {
-        return om.index_of(om.erase(om.checked_nth(i)));
+        return om.index_of(om.template erase<Check::Throw>(om.nth(i)));
     }
 
     // lua-compat: returns the erased value
@@ -62,7 +60,7 @@ struct OrderedMapLua
     {
         auto it = om.checked_nth(i);
         NotNull<SmartPtr<T>> ret{&*it};
-        om.erase(it);
+        om.template erase<Check::Throw>(it);
         return ret;
     }
 
@@ -71,7 +69,7 @@ struct OrderedMapLua
         OrderedMap<T, Traits, Compare>& om,
         NotNull<SmartPtr<T>>&& t)
     {
-        auto r = om.push_back(std::move(t));
+        auto r = om.template push_back<Check::Throw>(std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 
