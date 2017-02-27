@@ -40,6 +40,7 @@ for i in $(seq 0 4); do
 done
 
 scp -o StrictHostKeyChecking=no -P $port "$2" "$username@localhost:$tmp_dir/"
-ssh -o StrictHostKeyChecking=no -p $port $username@localhost "cd $tmp_dir && run-tests"
+sleep 1 | ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
+              "cd $tmp_dir && run-tests"
 
 "$dir/qmp" --path=qemu.sock quit
