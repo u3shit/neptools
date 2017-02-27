@@ -1,31 +1,43 @@
 #include "container/parent_list.hpp"
+#include "lua/base.hpp"
 #include <catch.hpp>
 
 using namespace Neptools;
+using namespace Neptools::Lua;
 
-namespace
+static int count;
+
+namespace Neptools::Test
 {
 
-using List = ParentList<struct X, struct XTraits>;
+using XList = ParentList<struct ParentListItem, struct ParentListItemTraits>;
 
-struct X : ParentListBaseHook<> { int i; int data; };
+struct ParentListItem : RefCounted, ParentListBaseHook<>, Lua::DynamicObject
+{
+    NEPTOOLS_DYNAMIC_OBJECT;
+public:
+    ParentListItem() = default;
+    ParentListItem(int data) : data{data} {}
 
-inline bool XCmp(const X& a, const X& b) noexcept
+    int i, data;
+};
+
+inline bool XCmp(const ParentListItem& a, const ParentListItem& b) noexcept
 { return &a == &b; }
 
-inline bool operator<(const X& a, const X& b) noexcept
+inline bool operator<(const ParentListItem& a, const ParentListItem& b) noexcept
 { return a.data < b.data; }
 
-inline bool operator==(const X& a, const X& b) noexcept
+inline bool operator==(const ParentListItem& a, const ParentListItem& b) noexcept
 { return a.data == b.data; }
 
-inline bool operator==(int a, const X& b) noexcept
+inline bool operator==(int a, const ParentListItem& b) noexcept
 { return a == b.data; }
 
-inline std::ostream& operator<<(std::ostream& os, const X& x)
-{ return os << "X{" << x.i << ", " << x.data << "}"; }
+inline std::ostream& operator<<(std::ostream& os, const ParentListItem& x)
+{ return os << "ParentListItem{" << x.i << ", " << x.data << "}"; }
 
-inline std::ostream& operator<<(std::ostream& os, const List& lst)
+inline std::ostream& operator<<(std::ostream& os, const XList& lst)
 {
     os << "List{";
     bool delim = false;
@@ -38,14 +50,16 @@ inline std::ostream& operator<<(std::ostream& os, const List& lst)
     return os << "}";
 }
 
-static int count;
-struct XTraits
+struct ParentListItemTraits
 {
-    static void add(List&, X& x) noexcept { x.i = count++; }
-    static void remove(List&, X&) noexcept { --count; }
+    static void add(XList&, ParentListItem& x) noexcept { x.i = count++; }
+    static void remove(XList&, ParentListItem&) noexcept { --count; }
 };
 
 }
+
+using X = Neptools::Test::ParentListItem;
+using List = Neptools::Test::XList;
 
 TEST_CASE("ParentListHook", "[parent_list]")
 {
@@ -87,9 +101,9 @@ TEST_CASE("ParentList::default_ctor", "[parent_list]")
 
 
 static bool Equal(std::initializer_list<std::reference_wrapper<X>> il, const List& lst)
-{ return std::equal(il.begin(), il.end(), lst.begin(), lst.end(), XCmp); }
+{ return std::equal(il.begin(), il.end(), lst.begin(), lst.end(), Neptools::Test::XCmp); }
 static bool Equal(const X* b, const X* e, const List& lst)
-{ return std::equal(b, e, lst.begin(), lst.end(), XCmp); }
+{ return std::equal(b, e, lst.begin(), lst.end(), Neptools::Test::XCmp); }
 
 TEST_CASE("ParentList::basic", "[parent_list]")
 {
@@ -548,9 +562,8 @@ TEST_CASE("ParentList::merge", "[parent_list]")
                       xs[4], xs[9] }, lst0));
     }
 }
-// todo: sort, merge, remove, remove_if, unique, unique_if
 
-#define CHK(fun, call, ops, body, pre, scope, end)                               \
+#define CHK(fun, call, ops, body, pre, scope, end)                              \
     TEST_CASE("ParentedList::" #fun " strong guarantee", "[parented_list]")     \
     {                                                                           \
         int counter; bool except = true;                                        \
@@ -594,3 +607,52 @@ CHK(merge, lst0.merge OPENPAREN lst1 COMMA, (auto& a, auto& b), a.data < b.data,
     for (int j = 0; j < 10; ++j) xs[j].data = (2*j+1) % 11;,
     List lst0(xs, xs+5) COMMA lst1(xs+5, xs+10);,
     CHECK(lst0.size() + lst1.size() == 10);)
+
+TEST_CASE("ParentList lua", "[parent_list]")
+{
+    SmartPtr<X> xs[5];
+
+    State vm;
+    auto lst = MakeSmart<List>();
+    vm.Push(lst);
+    lua_setglobal(vm, "lst");
+
+    for (size_t i = 0; i < 5; ++i)
+    {
+        xs[i] = MakeSmart<X>(i+3);
+        lst->push_back(*xs[i]);
+    }
+
+    SECTION("sort")
+    {
+        vm.DoString("lst:sort(function(a,b) return a.data > b.data end)");
+        CHECK(Equal({ *xs[4], *xs[3], *xs[2], *xs[1], *xs[0] }, *lst));
+    }
+
+    SECTION("unique")
+    {
+        vm.DoString("lst:unique(function(a,b) return a.data//2 == b.data//2 end)");
+        CHECK(Equal({ *xs[0], *xs[1], *xs[3] }, *lst));
+    }
+
+    SECTION("erase")
+    {
+        vm.DoString("lst:erase(lst:next(lst:front()))");
+        CHECK(Equal({ *xs[0], *xs[2], *xs[3], *xs[4] }, *lst));
+    }
+
+    SECTION("to_table")
+    {
+        vm.DoString("\
+local tbl = lst:to_table()                     \n\
+for i=0,4 do                                   \n\
+  assert(tbl[i].i == i and tbl[i].data == i+3) \n\
+end                                            \n\
+assert(tbl[5] == nil)");
+    }
+}
+
+#include "container/parent_list.lua.hpp"
+NEPTOOLS_PARENT_LIST_LUAGEN(parent_list_item, Neptools::Test::ParentListItem,
+                            Neptools::Test::ParentListItemTraits);
+#include "parent_list.binding.hpp"

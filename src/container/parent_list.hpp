@@ -5,6 +5,7 @@
 #include "../assert.hpp"
 #include "../check.hpp"
 #include "intrusive.hpp"
+#include "../lua/dynamic_object.hpp"
 
 #include <boost/intrusive/circular_list_algorithms.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
@@ -96,14 +97,17 @@ class ParentListIterator
     using NodePtr = typename Traits::node_ptr;
     using ConstNodePtr = typename Traits::const_node_ptr;
     using NodeTraits = typename Traits::node_traits;
-    using RawT = typename Traits::value_type;
-    using T = std::conditional_t<IsConst, const RawT, RawT>;
 
     ParentListIterator(ConstNodePtr ptr) : ptr{const_cast<NodePtr>(ptr)} {}
 public:
+    using RawT = typename Traits::value_type;
+    using T = std::conditional_t<IsConst, const RawT, RawT>;
+
     ParentListIterator() = default;
     ParentListIterator(const ParentListIterator<Traits, false>& o)
         : ptr{o.ptr} {}
+    ParentListIterator(T& val)
+        : ptr{const_cast<NodePtr>(Traits::to_node_ptr(val))} {}
 
     ParentListIterator& operator=(const ParentListIterator<Traits, false>& o)
     {
@@ -145,8 +149,9 @@ struct NullTraits {};
 
 template <typename T, typename LifetimeTraits = NullTraits,
           typename Traits = ParentListBaseHookTraits<T>>
-class ParentList : private Traits::node_traits::node
+class ParentList : public Lua::SmartObject, private Traits::node_traits::node
 {
+    NEPTOOLS_LUA_CLASS;
 public:
     using value_traits = Traits;
     using pointer = typename value_traits::pointer;
@@ -171,14 +176,14 @@ public:
     // O(1)
     ParentList() noexcept { Init(); }
     template <typename Iterator>
-    ParentList(Iterator b, Iterator e)
+    NEPTOOLS_NOLUA ParentList(Iterator b, Iterator e)
     {
         Init();
         insert(end(), b, e);
     }
 
     // warning! O(n.size())
-    ParentList(ParentList&& o) noexcept
+    NEPTOOLS_NOLUA ParentList(ParentList&& o) noexcept
     {
         for (auto n = node_traits::get_next(o.GetRoot()); n != o.GetRoot();
              n = node_traits::get_next(n))
@@ -242,13 +247,13 @@ public:
         return *Traits::to_value_ptr(node_traits::fun(GetRoot()));          \
     }
     NEPTOOLS_GEN(reference, front, , get_next)
-    NEPTOOLS_GEN(const_reference, front, const, get_next)
+    NEPTOOLS_GEN(NEPTOOLS_NOLUA const_reference, front, const, get_next)
     NEPTOOLS_GEN(reference, back, , get_previous)
-    NEPTOOLS_GEN(const_reference, back, const, get_previous)
+    NEPTOOLS_GEN(NEPTOOLS_NOLUA const_reference, back, const, get_previous)
 #undef NEPTOOLS_GEN
 
 #define NEPTOOLS_GEN(ret, name, opt_const, node)        \
-    ret name() opt_const noexcept { return ret{node}; }
+    NEPTOOLS_NOLUA ret name() opt_const noexcept { return ret{node}; }
 #define NEPTOOLS_GEN2(ret, const_ret, name, node)   \
     NEPTOOLS_GEN(ret, name, , node)                 \
     NEPTOOLS_GEN(const_ret, name, const, node)      \
@@ -328,7 +333,8 @@ public:
 
     // O(distance(b, e))
     template <typename Checker = Check::Assert, typename Iterator>
-    void insert(const_iterator p, Iterator b, Iterator e) noexcept(Checker::IS_NOEXCEPT)
+    NEPTOOLS_NOLUA void insert(const_iterator p, Iterator b, Iterator e)
+        noexcept(Checker::IS_NOEXCEPT)
     {
         CheckNodePtrEnd<Checker>(p.ptr);
         if constexpr (!Checker::IS_NOP)
@@ -345,7 +351,8 @@ public:
 
     // O(distance(b, e))
     template <typename Checker = Check::Assert, typename Iterator>
-    void assign(Iterator b, Iterator e) noexcept(Checker::IS_NOEXCEPT)
+    NEPTOOLS_NOLUA void assign(Iterator b, Iterator e)
+        noexcept(Checker::IS_NOEXCEPT)
     {
         auto old_last = --end();
         insert<Checker>(end(), b, e); // may throw
@@ -392,6 +399,7 @@ public:
     // O(n log n), n=size(); exception->basic guarantee
     void sort() { sort(std::less<value_type>{}); }
     template <typename Predicate>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<bool>"})
     void sort(Predicate cmp)
     {
         // based on
@@ -463,6 +471,8 @@ public:
     template <typename Checker = Check::Assert>
     void merge(ParentList& o) { merge<Checker>(o, std::less<value_type>{}); }
     template <typename Checker = Check::Assert, typename Predicate>
+    NEPTOOLS_LUAGEN(template_params={
+        "::Neptools::Check::Throw","::Neptools::Lua::FunctionWrapGen<bool>"})
     void merge(ParentList& o, Predicate cmp)
     {
         NEPTOOLS_CHECK(ContainerConsistency, &o != this,
@@ -484,6 +494,7 @@ public:
     void remove(const_reference val)
     { remove_if([&val](auto& x) { return x == val; }); }
     template <typename Predicate>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<bool>"})
     void remove_if(Predicate p)
     {
         for (auto it = begin(); it != end();)
@@ -494,6 +505,7 @@ public:
     // O(size()); exception->basic guarantee
     void unique() { unique(std::equal_to<value_type>{}); }
     template <typename Predicate>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<bool>"})
     void unique(Predicate p)
     {
         auto it = begin();
@@ -507,7 +519,8 @@ public:
 
     // O(1)
     template <typename Checker = Check::Assert>
-    iterator iterator_to(reference ref) noexcept(Checker::IS_NOEXCEPT)
+    NEPTOOLS_NOLUA iterator iterator_to(reference ref)
+        noexcept(Checker::IS_NOEXCEPT)
     {
         node_ptr node = Traits::to_node_ptr(ref);
         CheckLinkedThis<Checker>(node);
@@ -515,7 +528,7 @@ public:
     }
 
     template <typename Checker = Check::Assert>
-    const_iterator iterator_to(const_reference ref) const
+    NEPTOOLS_NOLUA const_iterator iterator_to(const_reference ref) const
         noexcept(Checker::IS_NOEXCEPT)
     {
         const_node_ptr node = Traits::to_node_ptr(ref);
@@ -525,7 +538,7 @@ public:
 
     // static funs
     template <typename Checker = Check::Assert>
-    static ParentList& container_from_iterator(iterator it)
+    NEPTOOLS_NOLUA static ParentList& container_from_iterator(iterator it)
         noexcept(Checker::IS_NOEXCEPT)
     {
         CheckLinkedAny<Checker>(it.ptr);
@@ -533,7 +546,7 @@ public:
     }
 
     template <typename Checker = Check::Assert>
-    static const ParentList& container_from_iterator(const_iterator it)
+    NEPTOOLS_NOLUA static const ParentList& container_from_iterator(const_iterator it)
         noexcept(Checker::IS_NOEXCEPT)
     {
         CheckLinkedAny<Checker>(it.ptr);
@@ -542,7 +555,8 @@ public:
 
 
     template <typename Checker = Check::Assert>
-    static iterator s_iterator_to(reference ref) noexcept(Checker::IS_NOEXCEPT)
+    NEPTOOLS_NOLUA static iterator s_iterator_to(reference ref)
+        noexcept(Checker::IS_NOEXCEPT)
     {
         node_ptr node = Traits::to_node_ptr(ref);
         CheckLinkedAny<Checker>(node);
@@ -550,7 +564,7 @@ public:
     }
 
     template <typename Checker = Check::Assert>
-    static const_iterator s_iterator_to(const_reference ref)
+    NEPTOOLS_NOLUA static const_iterator s_iterator_to(const_reference ref)
         noexcept(Checker::IS_NOEXCEPT)
     {
         const_node_ptr node = Traits::to_node_ptr(ref);
@@ -559,7 +573,8 @@ public:
     }
 
     template <typename Checker = Check::Assert>
-    static ParentList& get_parent(reference ref) noexcept(Checker::IS_NOEXCEPT)
+    NEPTOOLS_NOLUA static ParentList& get_parent(reference ref)
+        noexcept(Checker::IS_NOEXCEPT)
     {
         node_ptr node = Traits::to_node_ptr(ref);
         CheckLinkedAny<Checker>(node);
@@ -567,7 +582,7 @@ public:
     }
 
     template <typename Checker = Check::Assert>
-    static const ParentList& get_parent(const_reference ref)
+    NEPTOOLS_NOLUA static const ParentList& get_parent(const_reference ref)
         noexcept(Checker::IS_NOEXCEPT)
     {
         const_node_ptr node = Traits::to_node_ptr(ref);
@@ -575,9 +590,9 @@ public:
         return *static_cast<const ParentList*>(node_traits::get_parent(node));
     }
 
-    static ParentList* opt_get_parent(reference ref) noexcept
+    NEPTOOLS_NOLUA static ParentList* opt_get_parent(reference ref) noexcept
     { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
-    static const ParentList* opt_get_parent(const_reference ref) noexcept
+    NEPTOOLS_NOLUA static const ParentList* opt_get_parent(const_reference ref) noexcept
     { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
 private:
     void Init() noexcept

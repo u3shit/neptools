@@ -87,10 +87,10 @@ local function collect_ns(tbl, t)
   if cur:kind() == "NoDeclFound" then return end
 
   for k,v in ipairs(t:templateArguments()) do collect_ns(tbl, v) end
-  collect_ns_cur(tbl, cur)
+  collect_ns_cur(tbl, cur, 0)
 end
 
-collect_ns_cur = function(tbl, cur)
+collect_ns_cur = function(tbl, cur, prio)
   local path = {cur:name()}
   local repl = {cur:name()}
   local i = 0
@@ -104,23 +104,29 @@ collect_ns_cur = function(tbl, cur)
   end
 
   path.start = i+1
+  path.prio = prio
   tbl["::"..table.concat(repl, "::", i+1, 1)] = path
 end
 
 -- generate gsub patterns for collected paths
 local function gen_gsub(tbl)
   local pats = {}
+  local prios = {}
   --print() print("===============================start==========================")
 
   for k,v in pairs(tbl) do
     local repl = "%1"..k.."%2"
-    --print(k, v, repl)
+    --print(k, table.concat(v, "::", v.start, 1))
 
     for i=v.start,1 do
-      local pat = "([^a-zA-Z:])"..table.concat(v, "::", i, 1).."([^a-zA-Z0-9_])"
-      --print(pat)
-      assert(not pats[pat] or pats[pat] == repl, "Ambiguous name?")
-      pats[pat] = repl
+      local pat = "([^a-zA-Z:_])"..table.concat(v, "::", i, 1).."([^a-zA-Z0-9_])"
+      if pats[pat] and pats[pat] ~= repl and prios[pat] == v.prio then
+        ret.print_error("Ambiguous name?\nPattern: "..pat.."\nOld repl: "..
+                        pats[pat].."\nNew repl: "..repl)
+      elseif not prios[pat] or prios[pat] < v.prio then
+        pats[pat] = repl
+        prios[pat] = v.prio
+      end
     end
     --print()
   end
@@ -132,7 +138,7 @@ local find_typedefs_tbl
 local find_typedefs_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if kind == "TypeAliasDecl" then
-    collect_ns_cur(find_typedefs_tbl, c)
+    collect_ns_cur(find_typedefs_tbl, c, 10)
   --else print("Unhandled", kind, c:name())
   end
   return vr.Continue

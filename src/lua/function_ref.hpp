@@ -84,6 +84,8 @@ struct TypeTraits<T, std::enable_if_t<IsFunctionWrap<T>::value>>
     }
     static T UnsafeGet(StateRef vm, int idx) { return {vm, idx}; };
     static bool Is(StateRef vm, int idx) { return lua_isfunction(vm, idx); }
+
+    static constexpr int LUA_TYPE = LUA_TFUNCTION;
 };
 
 }
