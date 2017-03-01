@@ -4,6 +4,7 @@
 
 #include "base.hpp"
 #include "function_call_types.hpp"
+#include "../nullable.hpp"
 #include "../nonowning_string.hpp"
 
 namespace boost { namespace filesystem { class path; } }
@@ -201,29 +202,36 @@ struct TypeTraits<boost::filesystem::path> : public TypeTraits<const char*>
 template <typename T, typename Ret = T>
 struct NullableTypeTraits
 {
+    using NotNullable = std::remove_reference_t<typename ToNotNullable<T>::Type>;
+
     static Ret Get(StateRef vm, bool arg, int idx)
     {
         if (lua_isnil(vm, idx)) return nullptr;
-        return TypeTraits<NotNull<T>>::Get(vm, arg, idx);
+        return ToNullable<NotNullable>::Conv(
+            TypeTraits<NotNullable>::Get(vm, arg, idx));
     }
 
     static Ret UnsafeGet(StateRef vm, int idx)
     {
         if (lua_isnil(vm, idx)) return nullptr;
-        return TypeTraits<NotNull<T>>::UnsafeGet(vm, idx);
+        return ToNullable<NotNullable>::Conv(
+            TypeTraits<NotNullable>::UnsafeGet(vm, idx));
     }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isnil(vm, idx) || TypeTraits<NotNull<T>>::Is(vm, idx); }
+    { return lua_isnil(vm, idx) || TypeTraits<NotNullable>::Is(vm, idx); }
 
     static void Push(StateRef vm, const T& obj)
     {
-        if (obj) TypeTraits<NotNull<T>>::Push(vm, NotNull<T>{obj});
+        if (obj) TypeTraits<NotNullable>::Push(vm, ToNotNullable<T>::Conv(obj));
         else lua_pushnil(vm);
     }
 
-    using RawType = typename TypeTraits<NotNull<T>>::RawType;
+    using RawType = typename TypeTraits<NotNullable>::RawType;
 };
+
+template <typename T>
+struct TypeTraits<T*> : NullableTypeTraits<T*> {};
 
 // used by UserType
 template <typename T, typename Enable = void> struct UserTypeTraits;

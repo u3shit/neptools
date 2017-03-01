@@ -5,6 +5,7 @@
 #include "../assert.hpp"
 #include "../utils.hpp"
 #include "../container/intrusive.hpp"
+#include "../lua/type_traits.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -79,6 +80,12 @@ struct Label : LabelNameHook, LabelOffsetHook
     // prevent accidental copying with auto x = ...;
     Label(const Label&) = delete;
     void operator=(const Label&) = delete;
+};
+
+// push as native table
+template<> struct Lua::TypeTraits<Label>
+{
+    static void Push(StateRef vm, const Label& l);
 };
 
 // to be used by boost::intrusive::set

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "item_base.hpp"
+#include "../check.hpp"
 #include "../dumpable.hpp"
 #include "../shared_ptr.hpp"
 #include "../container/parent_list.hpp"
@@ -18,8 +19,11 @@ namespace Neptools
 class ItemWithChildren;
 struct ItemListTraits;
 
+NEPTOOLS_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
+
 class Item : public RefCounted, public Dumpable, public ParentListBaseHook<>
 {
+    NEPTOOLS_LUA_CLASS;
 protected:
     struct Key {};
 public:
@@ -27,7 +31,8 @@ public:
     // otherwise Context's constructor will try to construct a WeakPtr before
     // RefCounted's constructor is finished, making an off-by-one error and
     // freeing the context twice
-    explicit Item(Key, Context* ctx, FilePosition position = 0) noexcept
+    NEPTOOLS_NOLUA explicit Item(
+        Key, Context* ctx, FilePosition position = 0) noexcept
         : position{position}, context{ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
@@ -35,21 +40,35 @@ public:
 
     RefCountedPtr<Context> GetContext() noexcept
     { return context.lock(); }
-    Context& GetUnsafeContext() noexcept { return *context.unsafe_get(); }
+    NEPTOOLS_NOLUA Context& GetUnsafeContext() noexcept
+    { return *context.unsafe_get(); }
     ItemWithChildren* GetParent() noexcept;
 
-    RefCountedPtr<const Context> GetContext() const noexcept
+    NEPTOOLS_NOLUA RefCountedPtr<const Context> GetContext() const noexcept
     { return context.lock(); }
-    const Context& GetUnsafeContext() const noexcept
+    NEPTOOLS_NOLUA const Context& GetUnsafeContext() const noexcept
     { return *context.unsafe_get(); }
-    const ItemWithChildren* GetParent() const noexcept;
-    auto Iterator() const noexcept;
-    auto Iterator() noexcept;
+    NEPTOOLS_NOLUA const ItemWithChildren* GetParent() const noexcept;
+    NEPTOOLS_NOLUA auto Iterator() const noexcept;
+    NEPTOOLS_NOLUA auto Iterator() noexcept;
 
     FilePosition GetPosition() const noexcept { return position; }
 
-    // requires: has valid parent
-    void Replace(NotNull<RefCountedPtr<Item>> nitem) noexcept;
+    template <typename Checker = Check::Assert>
+    void Replace(const NotNull<RefCountedPtr<Item>>& nitem) noexcept
+    {
+        NEPTOOLS_CHECK(InvalidItemState, GetParent(), "no parent");
+        if constexpr (!Checker::IS_NOP)
+        {
+            auto nsize = nitem->GetSize();
+            for (auto& l : labels)
+                NEPTOOLS_CHECK(InvalidItemState, l.ptr.offset <= nsize,
+                               "would invalidate labels");
+        }
+        NEPTOOLS_CHECK(InvalidItemState, nitem->labels.empty(),
+                       "new item has labels");
+        Replace_(nitem);
+    }
 
     // properties needed: none (might help if ordered)
     // update Slice if no longer ordered
@@ -58,6 +77,7 @@ public:
         boost::intrusive::base_hook<LabelOffsetHook>,
         boost::intrusive::constant_time_size<false>,
         boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
+    NEPTOOLS_NOLUA
     const LabelsContainer& GetLabels() const { return labels; }
 
     void Dispose() noexcept override;
@@ -77,6 +97,8 @@ private:
     WeakRefCountedPtr<Context> context;
 
     LabelsContainer labels;
+
+    void Replace_(const NotNull<RefCountedPtr<Item>>& nitem) noexcept;
 
     friend class Context;
     friend struct ItemListTraits;
@@ -105,16 +127,17 @@ inline auto Item::Iterator() noexcept
 
 class ItemWithChildren : public Item, private ItemList
 {
+    NEPTOOLS_LUA_CLASS;
 public:
     using Item::Item;
 
-    ItemList& GetChildren() noexcept { return *this; }
-    const ItemList& GetChildren() const noexcept { return *this; }
+    NEPTOOLS_NOLUA ItemList& GetChildren() noexcept { return *this; }
+    NEPTOOLS_NOLUA const ItemList& GetChildren() const noexcept { return *this; }
 
     FilePosition GetSize() const override;
     void Fixup() override { Fixup_(0); }
 
-    void MoveNextToChild(size_t size) noexcept;
+    NEPTOOLS_NOLUA void MoveNextToChild(size_t size) noexcept;
 
     void Dispose() noexcept override;
 

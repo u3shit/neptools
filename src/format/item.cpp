@@ -11,9 +11,21 @@
 namespace Neptools
 {
 
+void Lua::TypeTraits<Label>::Push(StateRef vm, const Label& l)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    lua_createtable(vm, 0, 3); // +1
+    vm.Push(l.name); // +2
+    lua_setfield(vm, -2, "name"); // +1
+    vm.Push(l.ptr.item); // +2
+    lua_setfield(vm, -2, "item"); // +1
+    vm.Push(l.ptr.offset); // +2
+    lua_setfield(vm, -2, "offset"); // +1
+    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+}
+
 Item::~Item()
 {
-    NEPTOOLS_ASSERT(labels.empty() && !GetParent());
     Item::Dispose();
 }
 
@@ -34,15 +46,8 @@ void Item::UpdatePosition(FilePosition npos)
     Fixup();
 }
 
-void Item::Replace(NotNull<SmartPtr<Item>> nitem) noexcept
+void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem) noexcept
 {
-#ifndef NDEBUG
-    auto nsize = nitem->GetSize();
-    for (auto& l : labels)
-        NEPTOOLS_ASSERT_MSG(l.ptr.offset <= nsize, "would invalidate labels");
-    NEPTOOLS_ASSERT_MSG(nitem->labels.empty(), "new item has labels");
-#endif
-
     // move labels
     nitem->labels.swap(labels); // intrusive move op= does this... (but undocumented)
     for (auto& l : nitem->labels)
@@ -117,13 +122,13 @@ void Item::Slice(SliceSeq seq)
 
 void Item::Dispose() noexcept
 {
-    NEPTOOLS_ASSERT(GetParent() == nullptr);
+    NEPTOOLS_ASSERT(labels.empty() && !GetParent());
     if (auto ctx = GetContext())
     {
         auto it = ctx->pmap.find(position);
         if (it != ctx->pmap.end() && it->second == this)
         {
-            WARN << "Item " << this << " unlinked from pmap in dtor" << std::endl;
+            WARN << "Item " << this << " unlinked from pmap in Dispose" << std::endl;
             ctx->pmap.erase(it);
         }
     }
@@ -187,4 +192,28 @@ void ItemWithChildren::Dispose() noexcept
     Item::Dispose();
 }
 
+NEPTOOLS_LUAGEN()
+static Lua::RetNum GetLabels(Lua::StateRef vm, const Item& item)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+
+    auto size = item.GetLabels().size();
+    lua_createtable(vm, size ? size-1 : 0, 0); // +1
+    size_t i = 0;
+    for (auto& it : item.GetLabels())
+    {
+        vm.Push(it); // +2
+        lua_rawseti(vm, -2, i++); // +1
+    }
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    return 1;
 }
+
+NEPTOOLS_LUAGEN()
+static NotNull<SmartPtr<ItemList>> GetChildren(ItemWithChildren& it) noexcept
+{ return NotNull<SmartPtr<ItemList>>{&it, &it.GetChildren(), true}; }
+
+}
+
+#include "item.binding.hpp"
