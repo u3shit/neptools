@@ -21,7 +21,11 @@ while (( "$#" )); do
 done
 shift
 
+ret=0
 for i in "${src[@]}"; do
     echo "$i.cpp" >&2
     ${LUAJIT:-luajit} gen_binding.lua $i.cpp $i.binding.hpp "$@"
+    tret=$?
+    [[ $tret != 0 ]] && ret=$tret
 done
+exit $ret

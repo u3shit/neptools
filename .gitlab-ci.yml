@@ -2,12 +2,14 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   TERM: xterm
 
-cache:
-  paths:
-    - build/
+.cached: &cached
+  cache:
+    key: "$CI_BUILD_REF_NAME/$CI_BUILD_NAME$CI_PROJECT_DIR"
+    paths:
+      - build/
 
 before_script:
-  - ln -sf /opt/boost ext/boost
+  - ln -nsf /opt/boost ext/boost || true
 
 stages:
   - build
@@ -54,6 +56,7 @@ stages:
 
 
 .debug-build: &debug_build
+  <<: *cached
   stage: build
   script:
     - echo $CONFIG_OPTS
@@ -61,6 +64,7 @@ stages:
     - ./waf --color=yes build test -j2 --skip-run-tests
 
 .rel-build: &rel_build
+  <<: *cached
   stage: build
   script:
     - echo $CONFIG_OPTS
@@ -85,18 +89,25 @@ stages:
       - build/stcm-editor
       - build/run-tests
 
-.wine-test: &wine_test
+
+.test-common: &test_common
   stage: test
+  variables:
+    GIT_SUBMODULE_STRATEGY: none
+  before_script: []
+
+.wine-test: &wine_test
+  <<: *test_common
   script:
     - wine build/run-tests.exe
 
 .win7-test: &win7_test
-  stage: test
+  <<: *test_common
   script:
     - tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe
 
 .test: &test
-  stage: test
+  <<: *test_common
   script:
     - build/run-tests
 
@@ -176,3 +187,13 @@ test-clang-amd64-rel:
   <<: *test
   dependencies:
     - build-clang-amd64-rel
+
+binding-gen-test:
+  stage: build
+  cache:
+    paths: [ ext/ljclang/*.so ]
+  script:
+    - make -C ext/ljclang
+    - ./gen_binding.sh
+    - git diff --exit-code
+  allow_failure: true
