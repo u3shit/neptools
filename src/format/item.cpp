@@ -48,16 +48,16 @@ void Item::UpdatePosition(FilePosition npos)
 
 void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem) noexcept
 {
+    auto ctx = GetContext();
     // move labels
     nitem->labels.swap(labels); // intrusive move op= does this... (but undocumented)
     for (auto& l : nitem->labels)
         l.ptr.item = nitem.get();
 
     // update pointermap
-    auto& pmap = GetUnsafeContext().pmap;
     nitem->position = position;
-    auto it = pmap.find(position);
-    if (it != pmap.end() && it->second == this)
+    auto it = ctx->pmap.find(position);
+    if (it != ctx->pmap.end() && it->second == this)
         it->second = nitem.get();
 
     auto& list = GetParent()->GetChildren();
@@ -123,7 +123,7 @@ void Item::Slice(SliceSeq seq)
 void Item::Dispose() noexcept
 {
     NEPTOOLS_ASSERT(labels.empty() && !GetParent());
-    if (auto ctx = GetContext())
+    if (auto ctx = GetContextMaybe())
     {
         auto it = ctx->pmap.find(position);
         if (it != ctx->pmap.end() && it->second == this)

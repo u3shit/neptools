@@ -38,14 +38,19 @@ public:
     void operator=(const Item&) = delete;
     virtual ~Item();
 
-    RefCountedPtr<Context> GetContext() noexcept
+    RefCountedPtr<Context> GetContextMaybe() noexcept
     { return context.lock(); }
+    NotNull<RefCountedPtr<Context>> GetContext() noexcept
+    { return NotNull<RefCountedPtr<Context>>{context}; }
     NEPTOOLS_NOLUA Context& GetUnsafeContext() noexcept
     { return *context.unsafe_get(); }
     ItemWithChildren* GetParent() noexcept;
 
-    NEPTOOLS_NOLUA RefCountedPtr<const Context> GetContext() const noexcept
+    NEPTOOLS_NOLUA RefCountedPtr<const Context> GetContextMaybe() const noexcept
     { return context.lock(); }
+    NEPTOOLS_NOLUA NotNull<RefCountedPtr<const Context>>
+    GetContext() const noexcept
+    { return NotNull<RefCountedPtr<const Context>>{context}; }
     NEPTOOLS_NOLUA const Context& GetUnsafeContext() const noexcept
     { return *context.unsafe_get(); }
     NEPTOOLS_NOLUA const ItemWithChildren* GetParent() const noexcept;

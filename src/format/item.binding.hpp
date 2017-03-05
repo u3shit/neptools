@@ -13,7 +13,10 @@ void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
     bld.Inherit<::Neptools::Item, ::Neptools::Dumpable>();
 
     bld.Add<
-        RefCountedPtr<::Neptools::Context> (::Neptools::Item::*)(), &::Neptools::Item::GetContext
+        RefCountedPtr<::Neptools::Context> (::Neptools::Item::*)(), &::Neptools::Item::GetContextMaybe
+    >("get_context_maybe");
+    bld.Add<
+        ::Neptools::NotNull<RefCountedPtr<::Neptools::Context> > (::Neptools::Item::*)(), &::Neptools::Item::GetContext
     >("get_context");
     bld.Add<
         ::Neptools::ItemWithChildren * (::Neptools::Item::*)(), &::Neptools::Item::GetParent
