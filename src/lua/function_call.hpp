@@ -294,6 +294,7 @@ struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static bool Is(StateRef vm)
     {
+        (void) vm;
         return (GetArg<Args>::Is(vm, Seq) && ...);
     }
 

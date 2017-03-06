@@ -125,7 +125,7 @@ def configure(cfg):
         '-Werror=ignored-optimization-argument',
         '-Werror=unknown-argument',
 
-        '-fcolor-diagnostics', '-fdiagnostics-show-option',
+        '-fdiagnostics-color', '-fdiagnostics-show-option',
     ])
     cfg.filter_flags(['CFLAGS_NEPTOOLS', 'CXXFLAGS_NEPTOOLS'], [
         '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
