@@ -21,6 +21,17 @@
 namespace Neptools::Lua
 {
 
+template <typename... Args> struct TupleLike<std::tuple<Args...>>
+{
+    using Tuple = std::tuple<Args...>;
+    template <size_t I> static decltype(auto) Get(const Tuple& t)
+    { return std::get<I>(t); }
+    static constexpr size_t SIZE = sizeof...(Args);
+};
+
+template <typename T>
+using EnableIfTupleLike = std::void_t<decltype(TupleLike<T>::SIZE)>;
+
 namespace Detail
 {
 
@@ -37,14 +48,23 @@ template <typename H, typename... Tail> struct Get<0, List<H, Tail...>>
 template <size_t I, typename H, typename... Tail> struct Get<I, List<H, Tail...>>
 { using Type = typename Get<I-1, List<Tail...>>::Type; };
 
-template <typename T, int Idx, bool Unsafe> struct GetArg;
+template <typename T, typename Enable = void> struct GetArg;
+
+template <typename List, typename... Res> struct Flatten1;
+template <typename... First, typename... Second, typename... Res>
+struct Flatten1<List<List<First...>, Second...>, Res...>
+{ using Type = typename Flatten1<List<Second...>, Res..., First...>::Type; };
+
+template <typename... Res> struct Flatten1<List<>, Res...>
+{ using Type = List<Res...>; };
+
 
 template <typename T> struct FunctionTraits;
 template <typename Ret, typename... Args> struct FunctionTraits<Ret(Args...)>
 {
     using Return = Ret;
     using Arguments = List<Args...>;
-    using ArgumentTypes = List<typename GetArg<Args, 0, false>::Type...>;
+    using ArgumentTypes = typename Flatten1<List<typename GetArg<Args>::Type...>>::Type;
 };
 
 template <typename Ret, typename... Args>
@@ -63,55 +83,91 @@ template <typename Ret, typename C, typename... Args>
 struct FunctionTraits<Ret(C::*)(Args...) const noexcept> : FunctionTraits<Ret(C&, Args...)> {};
 #endif
 
-template <typename T, int Idx, bool Unsafe> struct GetArg
+template <typename T, typename> struct GetArg
 {
-    using Type = typename std::decay<T>::type;
-    static constexpr size_t NEXT_IDX = Idx+1;
-    static decltype(auto) Get(StateRef vm)
-    { return Unsafe ? vm.UnsafeGet<Type>(Idx) : vm.Check<Type>(Idx); }
-    static bool Is(StateRef vm) { return vm.Is<Type>(Idx); }
+    using RawType = typename std::decay<T>::type;
+    using Type = List<RawType>;
+
+    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+
+    template <bool Unsafe> static decltype(auto) Get(StateRef vm, int idx)
+    { return Unsafe ? vm.UnsafeGet<RawType>(idx) : vm.Check<RawType>(idx); }
+    static bool Is(StateRef vm, int idx) { return vm.Is<RawType>(idx); }
 
     template <typename Val>
-    static constexpr const bool IS = COMPATIBLE_WITH<Type, Val>;
+    static constexpr const bool IS = COMPATIBLE_WITH<RawType, Val>;
 };
 
-template <int Idx, bool Unsafe> struct GetArg<Skip, Idx, Unsafe>
+template <> struct GetArg<Skip>
 {
-    static constexpr size_t NEXT_IDX = Idx+1;
-    static Skip Get(StateRef) { return {}; }
-    static bool Is(StateRef) { return true; }
+    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <bool>
+    static constexpr Skip Get(StateRef, int) noexcept { return {}; }
+    static constexpr bool Is(StateRef, int) noexcept { return true; }
 
-    using Type = Skip;
-    template <typename Val>
-    static constexpr const bool IS = true;
-};
-
-template <int Idx, bool Unsafe> struct GetArg<StateRef, Idx, Unsafe>
-{
-    static constexpr size_t NEXT_IDX = Idx;
-    static StateRef Get(StateRef vm) { return vm; }
-    static bool Is(StateRef) { return true; }
-
-    using Type = void;
+    using Type = List<>;
     template <typename Val>
     static constexpr const bool IS = true;
 };
 
-template <int LType, int Idx, bool Unsafe> struct GetArg<Raw<LType>, Idx, Unsafe>
+template <> struct GetArg<StateRef>
 {
-    static constexpr size_t NEXT_IDX = Idx+1;
-    static Raw<LType> Get(StateRef vm)
+    template <int Idx> static constexpr size_t NEXT_IDX = Idx;
+    template <bool>
+    static constexpr StateRef Get(StateRef vm, int) noexcept { return vm; }
+    static constexpr bool Is(StateRef, int) noexcept { return true; }
+
+    using Type = List<>;
+    template <typename Val>
+    static constexpr const bool IS = true;
+};
+
+template <int LType> struct GetArg<Raw<LType>>
+{
+    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <bool Unsafe>
+    static Raw<LType> Get(StateRef vm, int idx)
     {
-        if (!Unsafe && !Is(vm))
-            vm.TypeError(true, lua_typename(vm, LType), Idx);
+        if (!Unsafe && !Is(vm, idx))
+            vm.TypeError(true, lua_typename(vm, LType), idx);
         return {};
     }
-    static bool Is(StateRef vm) noexcept { return lua_type(vm, Idx) == LType; }
+    static bool Is(StateRef vm, int idx) noexcept
+    { return lua_type(vm, idx) == LType; }
 
-    using Type = Raw<LType>;
+    using Type = List<Raw<LType>>;
     template <typename Val>
-    static constexpr const bool IS = std::is_same_v<Type, Val>;
+    static constexpr const bool IS = std::is_same_v<Raw<LType>, Val>;
 };
+
+template <typename Tuple, size_t I>
+using TupleElement = std::decay_t<decltype(
+    TupleLike<Tuple>::template Get<I>(std::declval<Tuple>()))>;
+
+template <typename Tuple, typename Index> struct TupleGet;
+template <typename Tuple, size_t... Index>
+struct TupleGet<Tuple, std::index_sequence<Index...>>
+{
+    template <int Idx> static constexpr size_t NEXT_IDX = Idx + sizeof...(Index);
+
+    template <bool Unsafe>
+    static Tuple Get(StateRef vm, int idx)
+    {
+        if constexpr (Unsafe)
+            return {vm.UnsafeGet<TupleElement<Tuple, Index>>(idx+Index)...};
+        else
+            return {vm.Get<TupleElement<Tuple, Index>>(idx+Index)...};
+    }
+    static bool Is(StateRef vm, int idx)
+    { return (vm.Is<TupleElement<Tuple, Index>>(idx+Index) && ...); }
+
+    using Type = List<TupleElement<Tuple, Index>...>;
+    // IS: should be called on underlying types
+};
+
+template <typename T>
+struct GetArg<T, EnableIfTupleLike<T>>
+    : TupleGet<T, std::make_index_sequence<TupleLike<T>::SIZE>> {};
 
 template <bool Unsafe, int N, typename Seq, typename... Args>
 struct GenArgSequence;
@@ -120,7 +176,7 @@ struct GenArgSequence<Unsafe, N, std::integer_sequence<int, Seq...>, Head, Args.
 {
     using Type = typename GenArgSequence<
         Unsafe,
-        GetArg<Head, N, Unsafe>::NEXT_IDX,
+        GetArg<Head>::template NEXT_IDX<N>,
         std::integer_sequence<int, Seq..., N>,
         Args...>::Type;
 };
@@ -128,7 +184,7 @@ template <bool Unsafe, int N, typename Seq> struct GenArgSequence<Unsafe, N, Seq
 { using Type = Seq; };
 
 
-template <typename T> struct ResultPush
+template <typename T, typename Enable = void> struct ResultPush
 {
     template <typename U>
     static int Push(StateRef vm, U&& t)
@@ -142,19 +198,18 @@ template<> struct ResultPush<RetNum>
 { static int Push(StateRef, RetNum r) { return r.n; } };
 
 template <typename Tuple, typename Index> struct TuplePush;
-template <typename... Types, size_t... I>
-struct TuplePush<std::tuple<Types...>, std::index_sequence<I...>>
+template <typename Tuple, size_t... I>
+struct TuplePush<Tuple, std::index_sequence<I...>>
 {
-    static int Push(StateRef vm, const std::tuple<Types...>& ret)
+    static int Push(StateRef vm, const Tuple& ret)
     {
-        (vm.Push(std::get<I>(ret)), ...);
-        return sizeof...(Types);
+        (vm.Push(TupleLike<Tuple>::template Get<I>(ret)), ...);
+        return sizeof...(I);
     }
 };
 
-template<typename... Args> struct ResultPush<std::tuple<Args...>>
-    : TuplePush<std::tuple<Args...>,
-                std::make_index_sequence<sizeof...(Args)>> {};
+template<typename T> struct ResultPush<T, EnableIfTupleLike<T>>
+    : TuplePush<T, std::make_index_sequence<TupleLike<T>::SIZE>> {};
 
 // workaround gcc can't mangle noexcept template arguments...
 template <typename... Args>
@@ -198,7 +253,7 @@ struct WrapFunGen<T, Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int,
     {
         StateRef vm{l};
         return ResultPush<Ret>::Push(
-            vm, CatchInvoke(vm, Fun, GetArg<Args, Seq, Unsafe>::Get(vm)...));
+            vm, CatchInvoke(vm, Fun, GetArg<Args>::template Get<Unsafe>(vm, Seq)...));
     }
 };
 
@@ -208,7 +263,7 @@ struct WrapFunGen<T, Fun, Unsafe, void, List<Args...>, std::integer_sequence<int
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        CatchInvoke(vm, Fun, GetArg<Args, Seq, Unsafe>::Get(vm)...);
+        CatchInvoke(vm, Fun, GetArg<Args>::template Get<Unsafe>(vm, Seq)...);
         return 0;
     }
 };
@@ -239,13 +294,12 @@ struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static bool Is(StateRef vm)
     {
-        return (GetArg<Args, Seq, true>::Is(vm) && ...);
+        return (GetArg<Args>::Is(vm, Seq) && ...);
     }
 
     template <typename ValsList>
     static constexpr bool IS = (
-        GetArg<Args, Seq, true>::template IS<
-            typename Get<Seq-1, ValsList>::Type> && ...);
+        GetArg<Args>::template IS<typename Get<Seq-1, ValsList>::Type> && ...);
 };
 
 template <typename Args> struct OverloadCheck;
@@ -285,8 +339,7 @@ struct GetArgs
     template <typename T, T Fun>
     inline constexpr auto operator()(h::basic_type<Overload<T, Fun>>)
     {
-        return h::remove(
-            FunctionTraits<T>::ArgumentTypes::ToHana, h::type_c<void>);
+        return FunctionTraits<T>::ArgumentTypes::ToHana;
     }
 };
 

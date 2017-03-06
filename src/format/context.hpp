@@ -15,6 +15,7 @@ namespace Neptools
 
 class Context : public ItemWithChildren
 {
+    NEPTOOLS_LUA_CLASS;
 public:
     Context();
     ~Context();
@@ -22,7 +23,7 @@ public:
     void Fixup() override;
 
     template <typename T, typename... Args>
-    NotNull<SmartPtr<T>> Create(Args&&... args)
+    NEPTOOLS_NOLUA NotNull<SmartPtr<T>> Create(Args&&... args)
     { return MakeSmart<T>(Item::Key{}, this, std::forward<Args>(args)...); }
 
     const Label& GetLabel(const std::string& name) const;

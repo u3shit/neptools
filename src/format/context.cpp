@@ -143,3 +143,5 @@ void Context::Dispose() noexcept
 }
 
 }
+
+#include "context.binding.hpp"

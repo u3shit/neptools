@@ -29,6 +29,8 @@ struct Raw
     static constexpr int TYPE = Type;
 };
 
+template <typename T, typename Enable = void> struct TupleLike;
+
 }
 
 #endif

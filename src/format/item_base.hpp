@@ -24,6 +24,8 @@ struct ItemPointer
 
     ItemPointer(Item* item, FilePosition offset = 0)
         : item{item}, offset{offset} {}
+    ItemPointer(Item& item, FilePosition offset = 0)
+        : item{&item}, offset{offset} {}
 
     bool operator==(const ItemPointer& o) const
     { return item == o.item && offset == o.offset; }
@@ -61,6 +63,16 @@ struct ItemPointer
         NEPTOOLS_ASSERT(offset == 0);
         return dynamic_cast<T*>(item);
     }
+};
+
+template<> struct Lua::TupleLike<ItemPointer>
+{
+    template <size_t I> static auto& Get(const ItemPointer& ptr) noexcept
+    {
+        if constexpr (I == 0) return *ptr.item;
+        else if constexpr (I == 1) return ptr.offset;
+    }
+    static constexpr size_t SIZE = 2;
 };
 
 using LabelNameHook = boost::intrusive::set_base_hook<

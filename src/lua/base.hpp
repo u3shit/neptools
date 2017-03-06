@@ -42,7 +42,7 @@ struct IsOverload<Overload<T, Fun>> : public std::true_type {};
 class StateRef
 {
 public:
-    StateRef(lua_State* vm) : vm{vm} {}
+    constexpr StateRef(lua_State* vm) noexcept : vm{vm} {}
 
     template <typename Fun, typename... Args>
     auto Catch(Fun f, Args&&... args)
@@ -98,7 +98,7 @@ public:
 
     void DoString(const char* str);
 
-    operator lua_State*() { return vm; }
+    constexpr operator lua_State*() noexcept { return vm; }
 
     BOOST_NORETURN
     void TypeError(bool arg, const char* expected, int idx);
