@@ -239,6 +239,7 @@ def build_common(bld):
         'src/txt_serializable.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
+        'src/format/eof_item.cpp',
         'src/format/gbnl.cpp',
         'src/format/item.cpp',
         'src/format/raw_item.cpp',
