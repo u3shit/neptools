@@ -32,14 +32,6 @@ struct IsUserDataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
     : std::true_type {};
 
 
-template <typename T>
-constexpr bool is_ref_counted_smart_object_v =
-    IS_SMART_OBJECT<T> && std::is_base_of_v<RefCounted, T>;
-
-template <typename T>
-constexpr bool is_normal_smart_object_v =
-    IS_SMART_OBJECT<T> && !std::is_base_of_v<RefCounted, T>;
-
 class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
     : public SmartObject
 {
@@ -100,14 +92,17 @@ struct SmartPush<T, std::enable_if_t<std::is_base_of<DynamicObject, T>::value>>
 };
 }
 
+template <typename T, typename Enable = void>
+struct SmartObjectMaker : MakeSharedHelper<T, SmartPtr<T>> {};
+
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<
         IS_SMART_OBJECT<T> && !IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
-    : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>> {};
+    : UserDataTraits<T>, SmartObjectMaker<T> {};
 
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
-    : UserDataTraits<T>, MakeSharedHelper<T, SmartPtr<T>>
+    : UserDataTraits<T>, SmartObjectMaker<T>
 {
     static void Push(StateRef vm, T& obj)
     { GetDynamicObject(obj).PushLua(vm, obj); }

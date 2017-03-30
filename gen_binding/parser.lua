@@ -232,7 +232,7 @@ local func_type_handlers = {
   FunctionDecl = { func_common, freestanding_func, class_info },
   Constructor = { func_common, class_info, ctor },
   CXXMethod = { func_common, class_info, general_method },
-  FunctionTemplate = { func_common, class_info, method_tmpl, general_method },
+  FunctionTemplate = { method_tmpl, func_common, class_info, general_method },
   FieldDecl = { class_info, field },
 }
 

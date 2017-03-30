@@ -20,6 +20,7 @@ public:
     FilePosition GetSize() const noexcept override { return src.GetSize(); }
 
     template <typename T>
+    NEPTOOLS_LUAGEN(template_params={"::Neptools::Item"})
     T& Split(FilePosition pos, NotNull<RefCountedPtr<T>> nitem)
     {
         T& ret = *nitem.get();
@@ -28,7 +29,7 @@ public:
     }
 
     template <typename T, typename... Args>
-    T& SplitCreate(FilePosition pos, Args&&... args)
+    NEPTOOLS_NOLUA T& SplitCreate(FilePosition pos, Args&&... args)
     {
         auto ctx = GetContext();
         return Split(pos, ctx->Create<T>(std::forward<Args>(args)...));
@@ -37,7 +38,7 @@ public:
     RawItem& Split(FilePosition offset, FilePosition size);
 
     template <typename T>
-    static auto Get(ItemPointer ptr)
+    NEPTOOLS_NOLUA static auto Get(ItemPointer ptr)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
         NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
@@ -50,7 +51,8 @@ public:
             ritem.src.PreadGen<T>(ptr.offset)};
     }
 
-    static auto GetSource(ItemPointer ptr, FilePosition len)
+    struct GetSourceRet { RawItem& ritem; Source src; };
+    static GetSourceRet GetSource(ItemPointer ptr, FilePosition len)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
         NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
@@ -58,20 +60,29 @@ public:
 
         if (ptr.offset + len > ritem.GetSize())
             NEPTOOLS_THROW(DecodeError{"Premature end of data"});
-        struct Ret { RawItem& ritem; Source src; };
-        return Ret{std::ref(ritem), {ritem.src, ptr.offset, len}};
+        return {std::ref(ritem), {ritem.src, ptr.offset, len}};
     }
 
-protected:
+private:
     NotNull<RefCountedPtr<RawItem>> InternalSlice(
         FilePosition offset, FilePosition size);
     void Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem);
 
-private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
 
     Source src;
+};
+
+template<> struct Lua::TupleLike<RawItem::GetSourceRet>
+{
+    template <size_t I>
+    static auto& Get(const RawItem::GetSourceRet& ret) noexcept
+    {
+        if constexpr (I == 0) return ret.ritem;
+        else if constexpr (I == 1) return ret.src;
+    }
+    static constexpr size_t SIZE = 2;
 };
 
 template <typename T>

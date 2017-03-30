@@ -111,3 +111,5 @@ RawItem& RawItem::Split(FilePosition offset, FilePosition size)
 }
 
 }
+
+#include "raw_item.binding.hpp"

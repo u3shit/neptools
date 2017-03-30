@@ -16,6 +16,8 @@
 namespace Neptools
 {
 
+namespace Lua { class TypeRegister; }
+
 class ItemWithChildren;
 struct ItemListTraits;
 
@@ -108,6 +110,7 @@ private:
     friend class Context;
     friend struct ItemListTraits;
     friend class ItemWithChildren;
+    friend class Lua::TypeRegister;
 };
 NEPTOOLS_STATIC_ASSERT(
     std::is_same<SmartPtr<Item>, RefCountedPtr<Item>>::value);
@@ -159,6 +162,22 @@ inline ItemWithChildren* Item::GetParent() noexcept
 { return static_cast<ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
 inline const ItemWithChildren* Item::GetParent() const noexcept
 { return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
+
+template <typename T>
+struct Lua::SmartObjectMaker<T, std::enable_if_t<std::is_base_of_v<Item, T>>>
+{
+    template <typename Key, typename Ctx, typename... Args>
+    static decltype(auto) Make(std::remove_pointer_t<Ctx>& ctx, Args&&... args)
+    { return ctx.template Create<T>(std::forward<Args>(args)...); }
+};
+
+template<> struct Lua::TypeTraits<Item::Key>
+{
+    // HACK
+    // Dummy function, needed by LuaGetRef to get above maker to work when
+    // using binding generator. It's undefined on purpose.
+    static void Get(Lua::StateRef, bool, int);
+};
 
 }
 #endif
