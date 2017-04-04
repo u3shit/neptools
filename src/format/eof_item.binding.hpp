@@ -12,6 +12,9 @@ void TypeRegister::DoRegister<::Neptools::EofItem>(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::EofItem, ::Neptools::Item>();
 
+    bld.Add<
+        decltype(&::Neptools::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<::Neptools::FilePosition>>), &::Neptools::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<::Neptools::FilePosition>>
+    >("new");
 
 }
 static TypeRegister::StateRegister<::Neptools::EofItem> reg_neptools_eof_item;

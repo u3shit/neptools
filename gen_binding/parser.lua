@@ -98,12 +98,12 @@ local function collect_args(c, app_to)
 end
 
 -- process lua methods inside classes
-local function default_hidden(c, tbl)
+local function default_hidden(c, tbl, parent)
   if not tbl.implicit then return false end
   -- special cases
   local kind = c:kind()
   if kind == "FunctionDecl" then return false end
-  if kind == "Constructor" and c:parent():type():isAbstract() then return true end
+  if kind == "Constructor" and parent:type():isAbstract() then return true end
 
   return c:access() ~= "public" or c:isDeleted() or c:isOverride() or
     c:name():sub(1,8) == "operator"
@@ -236,8 +236,8 @@ local func_type_handlers = {
   FieldDecl = { class_info, field },
 }
 
-local function lua_function(c, tbl)
-  utils.default_arg(tbl, "hidden", default_hidden, c, tbl)
+local function lua_function(c, tbl, parent)
+  utils.default_arg(tbl, "hidden", default_hidden, c, tbl, parent)
   if tbl.hidden then return end
 
   local info = {
@@ -272,23 +272,7 @@ local function lua_function(c, tbl)
   end
 end
 
--- inside class
-local parse_class_v = cl.regCursorVisitor(function (c, par)
-  local kind = c:kind()
-  if kind == "CXXBaseSpecifier" then
-    local lc = is_lua_class(c:type())
-    if lc then
-      local parents = inst.parse_class_class.parents
-      parents[#parents+1] = lc
-    end
-  end
-
-  if kind ~= "CXXMethod" and kind ~= "FunctionTemplate" and
-     kind ~= "Constructor" and kind ~= "FieldDecl" then
-    return vr.Continue
-  end
-  if c:name() == "PushLua" then inst.parse_class_class.has_push_lua = true end
-
+local function parse_method(c, kind, parent)
   local ann = utils.get_annotations(c)
   if #ann == 0 then
     if kind == "FieldDecl" then
@@ -300,8 +284,34 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
   end
   for _,a in ipairs(ann) do
     a.class = inst.parse_class_class
-    lua_function(c, a)
+    lua_function(c, a, parent)
   end
+end
+
+-- inside class
+local parse_class_v = cl.regCursorVisitor(function (c, par)
+  local kind = c:kind()
+  if kind == "CXXBaseSpecifier" then
+    local lc = is_lua_class(c:type())
+    if lc then
+      local parents = inst.parse_class_class.parents
+      parents[#parents+1] = lc
+    end
+  end
+
+  if kind == "UsingDeclaration" then
+    for k,v in pairs(c:referenced():overloadedDecls()) do
+      parse_method(v, v:kind(), c:parent())
+    end
+  end
+
+  if kind ~= "CXXMethod" and kind ~= "FunctionTemplate" and
+     kind ~= "Constructor" and kind ~= "FieldDecl" then
+    return vr.Continue
+  end
+  if c:name() == "PushLua" then inst.parse_class_class.has_push_lua = true end
+
+  parse_method(c, kind, c:parent())
   return vr.Continue
 end)
 

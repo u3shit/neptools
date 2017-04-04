@@ -33,7 +33,7 @@ public:
     // otherwise Context's constructor will try to construct a WeakPtr before
     // RefCounted's constructor is finished, making an off-by-one error and
     // freeing the context twice
-    NEPTOOLS_NOLUA explicit Item(
+    explicit Item(
         Key, Context* ctx, FilePosition position = 0) noexcept
         : position{position}, context{ctx} {}
     Item(const Item&) = delete;
