@@ -8,6 +8,7 @@ fi
 dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 temp_img=img.img
+fifo=fifo
 # should set:
 # username: ssh login user
 # tmp_dir: temp dir inside vm
@@ -23,7 +24,7 @@ function cleanup() {
     "$dir/qmp" --path=qemu.sock quit
     exit 1
 }
-trap cleanup ERR
+trap cleanup ERR SIGTERM SIGINT
 
 cp --reflink=always "$src_img" "$temp_img"
 
@@ -40,7 +41,11 @@ for i in $(seq 0 4); do
 done
 
 scp -o StrictHostKeyChecking=no -P $port "$2" "$username@localhost:$tmp_dir/"
-sleep 1 | ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
-              "cd $tmp_dir && run-tests"
+
+# the braindead windows server closes connection on EOF, so fake something
+rm -f "$fifo" && mkfifo "$fifo"
+sleep 60 > "$fifo" &
+ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
+              "cd $tmp_dir && run-tests" < "$fifo"
 
 "$dir/qmp" --path=qemu.sock quit
