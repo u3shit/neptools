@@ -56,8 +56,25 @@ function ret.default_arg(tbl, arg, def_fun, ...)
   end
 end
 
+local function escape_gsub_key(str)
+  return str:gsub("[.%[%]*+%-?%%^$]", "%%%0")
+end
+
+local function escape_gsub_repl(str)
+  return str:gsub("%%", "%%%%")
+end
+
+local function escape_alias_key(str)
+  return "([^a-zA-Z:_])" .. escape_gsub_key(str) .. "([^a-zA-Z0-9_])"
+end
+
+local function escape_alias_value(str)
+  return "%1" .. escape_gsub_repl(str) .. "%2"
+end
+
 function ret.add_alias(aliases, type, alias)
-  aliases[type:name():gsub("[.%[%]*+%-?%%^$]", "%%%0")] = alias:gsub("%%", "%%%%")
+  --print("addalias", type:name(), alias)
+  aliases[type:name()] = escape_alias_value(alias)
 end
 
 -- extremely hacky way to get fully qualified-ish names
@@ -115,11 +132,11 @@ local function gen_gsub(tbl)
   --print() print("===============================start==========================")
 
   for k,v in pairs(tbl) do
-    local repl = "%1"..k.."%2"
+    local repl = escape_alias_value(k)
     --print(k, table.concat(v, "::", v.start, 1))
 
     for i=v.start,1 do
-      local pat = "([^a-zA-Z:_])"..table.concat(v, "::", i, 1).."([^a-zA-Z0-9_])"
+      local pat = escape_alias_key(table.concat(v, "::", i, 1))
       if pats[pat] and pats[pat] ~= repl and prios[pat] == v.prio then
         ret.print_error("Ambiguous name?\nPattern: "..pat.."\nOld repl: "..
                         pats[pat].."\nNew repl: "..repl)
@@ -150,7 +167,25 @@ local function find_typedefs(tbl, cur)
   return find_typedefs(tbl, cur:parent())
 end
 
-local function get_type_intname(x, cur)
+local function apply_rules(str, pats, verbose)
+  local ret = "#"..str.."#"
+  local chg = true
+  while chg do
+    chg = false
+    for k,v in pairs(pats) do
+      if verbose then print(k,"----",v) end
+      local n = ret:gsub(k, v)
+      if n ~= ret then
+        if verbose then print("chg to", n) end
+        ret = n
+        chg = true
+      end
+    end
+  end
+  return ret:sub(2, -2)
+end
+
+local function type_name(x, aliases, cur)
   local t
   if type(x) == "string" then return x
   elseif ffi.istype(cl.Cursor_t, x) then
@@ -165,32 +200,18 @@ local function get_type_intname(x, cur)
   if cur then find_typedefs(tbl, cur, t:name()) end
   local pats = gen_gsub(tbl)
 
-  local ret = "#"..t:name().."#"
-  --print("\n\nstart", ret)
-  local chg = true
-  while chg do
-    chg = false
-    for k,v in pairs(pats) do
-      --print(k,"----",v)
-      local n = ret:gsub(k, v)
-      if n ~= ret then
-        ret = n
-        chg = true
-      end
-    end
+  local tmppats = {}
+  for k,v in pairs(aliases) do
+    tmppats[escape_alias_key(k)] = v
+    tmppats[escape_alias_key(apply_rules(k, pats))] = v
   end
+  for k,v in pairs(tmppats) do pats[k] = v end
+
+  --print("\n\nstart", t:name())
+  local ret = apply_rules(t:name(), pats, false)
 
   --print("return", ret)
-  return ret:sub(2, -2)
-end
-
-local function type_name(typ, aliases, cur)
-  local n = get_type_intname(typ, cur)
-  for k,v in pairs(aliases) do
-    n = n:gsub(k, v)
-    --print(n, k, v)
-  end
-  return n:gsub("std::__cxx11::", "std::"):gsub("std::__1::", "std::")
+  return ret:gsub("std::__cxx11::", "std::"):gsub("std::__1::", "std::")
 end
 ret.type_name = type_name
 

@@ -26,7 +26,7 @@ void TypeRegister::DoRegister<::Neptools::Cl3>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>), &::Neptools::Lua::GetRefCountedOwnedMember<::Neptools::Cl3, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>, &::Neptools::Cl3::entries>
     >("get_entries");
     bld.Add<
-        ::uint32_t (::Neptools::Cl3::*)(const WeakSmartPtr<::Neptools::Cl3::Entry> &) const, &::Neptools::Cl3::IndexOf
+        ::uint32_t (::Neptools::Cl3::*)(const WeakSmartPtr<::Neptools::Cl3::Entry> &) const noexcept, &::Neptools::Cl3::IndexOf
     >("index_of");
     bld.Add<
         ::Neptools::Cl3::Entry & (::Neptools::Cl3::*)(::Neptools::StringView), &::Neptools::Cl3::GetOrCreateFile
@@ -102,88 +102,88 @@ namespace Lua
 
 // class neptools.ordered_map_cl3_entry
 template<>
-void TypeRegister::DoRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >>(TypeBuilder& bld)
+void TypeRegister::DoRegister<::cl3_entry>(TypeBuilder& bld)
 {
 
     bld.Add<
-        decltype(&::Neptools::Lua::TypeTraits<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >>::Make<>), &::Neptools::Lua::TypeTraits<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >>::Make<>
+        decltype(&::Neptools::Lua::TypeTraits<::cl3_entry>::Make<>), &::Neptools::Lua::TypeTraits<::cl3_entry>::Make<>
     >("new");
     bld.Add<
-        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::size_t), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::at
+        ::Neptools::Cl3::Entry & (::cl3_entry::*)(::size_t), &::cl3_entry::at
     >("at");
     bld.Add<
-        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::front<Check::Throw>
+        ::Neptools::Cl3::Entry & (::cl3_entry::*)(), &::cl3_entry::front<Check::Throw>
     >("front");
     bld.Add<
-        ::Neptools::Cl3::Entry & (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::back<Check::Throw>
+        ::Neptools::Cl3::Entry & (::cl3_entry::*)(), &::cl3_entry::back<Check::Throw>
     >("back");
     bld.Add<
-        bool (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::empty
+        bool (::cl3_entry::*)() const noexcept, &::cl3_entry::empty
     >("empty");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::size
+        ::size_t (::cl3_entry::*)() const noexcept, &::cl3_entry::size
     >("__len");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::size
+        ::size_t (::cl3_entry::*)() const noexcept, &::cl3_entry::size
     >("size");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::max_size
+        ::size_t (::cl3_entry::*)() const noexcept, &::cl3_entry::max_size
     >("max_size");
     bld.Add<
-        void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::size_t), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::reserve
+        void (::cl3_entry::*)(::size_t), &::cl3_entry::reserve
     >("reserve");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)() const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::capacity
+        ::size_t (::cl3_entry::*)() const noexcept, &::cl3_entry::capacity
     >("capacity");
     bld.Add<
-        void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::shrink_to_fit
+        void (::cl3_entry::*)(), &::cl3_entry::shrink_to_fit
     >("shrink_to_fit");
     bld.Add<
-        void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::clear
+        void (::cl3_entry::*)() noexcept, &::cl3_entry::clear
     >("clear");
     bld.Add<
-        void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::pop_back<Check::Throw>
+        void (::cl3_entry::*)() noexcept, &::cl3_entry::pop_back<Check::Throw>
     >("pop_back");
     bld.Add<
-        void (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &), &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::swap
+        void (::cl3_entry::*)(::cl3_entry &), &::cl3_entry::swap
     >("swap");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(const ::Neptools::Cl3::Entry &) const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::index_of<Check::Throw>
+        ::size_t (::cl3_entry::*)(const ::Neptools::Cl3::Entry &) const, &::cl3_entry::index_of<Check::Throw>
     >("index_of");
     bld.Add<
-        ::size_t (::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::*)(const ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::key_type &) const, &::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::count
+        ::size_t (::cl3_entry::*)(const ::cl3_entry::key_type &) const, &::cl3_entry::count
     >("count");
     bld.Add<
-        Overload<SmartPtr<::Neptools::Cl3::Entry> (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>,
-        Overload<SmartPtr<::Neptools::Cl3::Entry> (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, const typename ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::key_type &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>,
-        Overload<void (*)(), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>
+        Overload<SmartPtr<::Neptools::Cl3::Entry> (*)(::cl3_entry &, ::size_t) noexcept, &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>,
+        Overload<SmartPtr<::Neptools::Cl3::Entry> (*)(::cl3_entry &, const typename ::cl3_entry::key_type &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>,
+        Overload<void (*)() noexcept, &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get>
     >("get");
     bld.Add<
-        std::tuple<bool, size_t> (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert
+        std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert
     >("insert");
     bld.Add<
-        Overload<::size_t (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>,
-        Overload<::size_t (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>
+        Overload<::size_t (*)(::cl3_entry &, ::size_t, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>,
+        Overload<::size_t (*)(::cl3_entry &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase>
     >("erase");
     bld.Add<
-        ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::remove
+        ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > (*)(::cl3_entry &, ::size_t), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::remove
     >("remove");
     bld.Add<
-        std::tuple<bool, size_t> (*)(::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::push_back
+        std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::push_back
     >("push_back");
     bld.Add<
-        ::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &, const typename ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::key_type &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::find
+        ::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::cl3_entry &, const typename ::cl3_entry::key_type &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::find
     >("find");
     bld.Add<
-        ::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > > &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::to_table
+        ::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::cl3_entry &), &::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::to_table
     >("to_table");
   luaL_getmetatable(bld, "neptools_ipairs");  bld.SetField("__ipairs");
 }
-static TypeRegister::StateRegister<::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >> reg_neptools_ordered_map_cl3_entry;
+static TypeRegister::StateRegister<::cl3_entry> reg_neptools_ordered_map_cl3_entry;
 
 }
 }
 
 template <>
-const char ::Neptools::OrderedMap<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::TYPE_NAME[] = "neptools.ordered_map_cl3_entry";
+const char ::cl3_entry::TYPE_NAME[] = "neptools.ordered_map_cl3_entry";
 

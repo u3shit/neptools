@@ -18,31 +18,31 @@ void TypeRegister::DoRegister<::Neptools::Source>(TypeBuilder& bld)
         ::Neptools::Source (*)(::boost::filesystem::path), &::Neptools::Source::FromFile
     >("from_file");
     bld.Add<
-        void (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::FilePosition), &::Neptools::Source::Slice<Check::Throw>
+        void (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::FilePosition) noexcept, &::Neptools::Source::Slice<Check::Throw>
     >("slice");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Source::*)() const, &::Neptools::Source::GetOffset
+        ::Neptools::FilePosition (::Neptools::Source::*)() const noexcept, &::Neptools::Source::GetOffset
     >("get_offset");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Source::*)() const, &::Neptools::Source::GetOrigSize
+        ::Neptools::FilePosition (::Neptools::Source::*)() const noexcept, &::Neptools::Source::GetOrigSize
     >("get_orig_size");
     bld.Add<
-        const ::boost::filesystem::path & (::Neptools::Source::*)() const, &::Neptools::Source::GetFileName
+        const ::boost::filesystem::path & (::Neptools::Source::*)() const noexcept, &::Neptools::Source::GetFileName
     >("get_file_name");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Source::*)() const, &::Neptools::Source::GetSize
+        ::Neptools::FilePosition (::Neptools::Source::*)() const noexcept, &::Neptools::Source::GetSize
     >("get_size");
     bld.Add<
-        void (::Neptools::Source::*)(::Neptools::FilePosition), &::Neptools::Source::Seek<Check::Throw>
+        void (::Neptools::Source::*)(::Neptools::FilePosition) noexcept, &::Neptools::Source::Seek<Check::Throw>
     >("seek");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Source::*)() const, &::Neptools::Source::Tell
+        ::Neptools::FilePosition (::Neptools::Source::*)() const noexcept, &::Neptools::Source::Tell
     >("tell");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Source::*)() const, &::Neptools::Source::GetRemainingSize
+        ::Neptools::FilePosition (::Neptools::Source::*)() const noexcept, &::Neptools::Source::GetRemainingSize
     >("get_remaining_size");
     bld.Add<
-        bool (::Neptools::Source::*)() const, &::Neptools::Source::Eof
+        bool (::Neptools::Source::*)() const noexcept, &::Neptools::Source::Eof
     >("eof");
     bld.Add<
         void (::Neptools::Source::*)(::Neptools::FilePosition) const, &::Neptools::Source::CheckSize
@@ -118,7 +118,7 @@ void TypeRegister::DoRegister<::Neptools::DumpableSource>(TypeBuilder& bld)
         Overload<decltype(&::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>), &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>>
     >("new");
     bld.Add<
-        ::Neptools::Source (::Neptools::DumpableSource::*)() const, &::Neptools::DumpableSource::GetSource
+        ::Neptools::Source (::Neptools::DumpableSource::*)() const noexcept, &::Neptools::DumpableSource::GetSource
     >("get_source");
 
 }

@@ -25,17 +25,17 @@ local args = {
   "-stdlib=libc++", -- probably better c++1* support than random gcc headers
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies
   "-Wno-gnu-string-literal-operator-template", "-Wno-vla-extension", "-Wno-vla",
-  "-Wno-assume",
+  "-Wno-assume"
 }
 
 -- hack: -isystem /usr/lib/clang/<version>/include automatically
 local clang_ver = cl.clangVersion():match("%d+%.%d+%.%d+")
 if clang_ver then
-  local path = (os.getenv("PREFIX") or "/usr").."/lib/clang/"..clang_ver.."/include"
-  local f = io.open(path.."/stddef.h")
+  local path = (os.getenv("PREFIX") or "/usr").."/lib/clang/"..clang_ver
+  local f = io.open(path.."/include/stddef.h")
   if f then
     f:close()
-    args[#args+1] = "-isystem"
+    args[#args+1] = "-resource-dir"
     args[#args+1] = path
   end
 end

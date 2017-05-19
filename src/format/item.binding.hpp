@@ -13,19 +13,19 @@ void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
     bld.Inherit<::Neptools::Item, ::Neptools::Dumpable>();
 
     bld.Add<
-        RefCountedPtr<::Neptools::Context> (::Neptools::Item::*)(), &::Neptools::Item::GetContextMaybe
+        RefCountedPtr<::Neptools::Context> (::Neptools::Item::*)() noexcept, &::Neptools::Item::GetContextMaybe
     >("get_context_maybe");
     bld.Add<
-        ::Neptools::NotNull<RefCountedPtr<::Neptools::Context> > (::Neptools::Item::*)(), &::Neptools::Item::GetContext
+        ::Neptools::NotNull<RefCountedPtr<::Neptools::Context> > (::Neptools::Item::*)() noexcept, &::Neptools::Item::GetContext
     >("get_context");
     bld.Add<
-        ::Neptools::ItemWithChildren * (::Neptools::Item::*)(), &::Neptools::Item::GetParent
+        ::Neptools::ItemWithChildren * (::Neptools::Item::*)() noexcept, &::Neptools::Item::GetParent
     >("get_parent");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Item::*)() const, &::Neptools::Item::GetPosition
+        ::Neptools::FilePosition (::Neptools::Item::*)() const noexcept, &::Neptools::Item::GetPosition
     >("get_position");
     bld.Add<
-        void (::Neptools::Item::*)(const ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> > &), &::Neptools::Item::Replace<Check::Throw>
+        void (::Neptools::Item::*)(const ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> > &) noexcept, &::Neptools::Item::Replace<Check::Throw>
     >("replace");
     bld.Add<
         ::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::Item &), &Neptools::GetLabels
@@ -52,7 +52,7 @@ void TypeRegister::DoRegister<::Neptools::ItemWithChildren>(TypeBuilder& bld)
     bld.Inherit<::Neptools::ItemWithChildren, ::Neptools::Item>();
 
     bld.Add<
-        ::Neptools::NotNull<SmartPtr<ItemList> > (*)(::Neptools::ItemWithChildren &), &Neptools::GetChildren
+        ::Neptools::NotNull<SmartPtr<::Neptools::ItemList> > (*)(::Neptools::ItemWithChildren &) noexcept, &Neptools::GetChildren
     >("get_children");
 
 }

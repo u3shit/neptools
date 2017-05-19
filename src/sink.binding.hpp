@@ -18,7 +18,7 @@ void TypeRegister::DoRegister<::Neptools::Sink>(TypeBuilder& bld)
         ::Neptools::NotNull<RefCountedPtr<::Neptools::Sink> > (*)(), &::Neptools::Sink::ToStdOut
     >("to_std_out");
     bld.Add<
-        ::Neptools::FilePosition (::Neptools::Sink::*)() const, &::Neptools::Sink::Tell
+        ::Neptools::FilePosition (::Neptools::Sink::*)() const noexcept, &::Neptools::Sink::Tell
     >("tell");
     bld.Add<
         void (::Neptools::Sink::*)(::Neptools::StringView), &::Neptools::Sink::Write<Check::Throw>
@@ -70,7 +70,7 @@ void TypeRegister::DoRegister<::Neptools::MemorySink>(TypeBuilder& bld)
         Overload<::Neptools::NotNull<SmartPtr<::Neptools::MemorySink> > (*)(::Neptools::StringView), &Neptools::MemorySinkFromLua>
     >("new");
     bld.Add<
-        ::Neptools::StringView (::Neptools::MemorySink::*)() const, &::Neptools::MemorySink::GetStringView
+        ::Neptools::StringView (::Neptools::MemorySink::*)() const noexcept, &::Neptools::MemorySink::GetStringView
     >("to_string");
 
 }

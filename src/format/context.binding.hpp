@@ -28,7 +28,7 @@ void TypeRegister::DoRegister<::Neptools::Context>(TypeBuilder& bld)
         Overload<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::FilePosition), &::Neptools::Context::GetLabelTo>
     >("get_label_to");
     bld.Add<
-        ::Neptools::ItemPointer (::Neptools::Context::*)(::Neptools::FilePosition) const, &::Neptools::Context::GetPointer
+        ::Neptools::ItemPointer (::Neptools::Context::*)(::Neptools::FilePosition) const noexcept, &::Neptools::Context::GetPointer
     >("get_pointer");
 
 }

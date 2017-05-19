@@ -1,8 +1,8 @@
 diff --git a/include/clang-c/Index.h b/include/clang-c/Index.h
-index 13db2085ba..212eca05dc 100644
+index 15fde19eb9..1203ecba2f 100644
 --- a/include/clang-c/Index.h
 +++ b/include/clang-c/Index.h
-@@ -3346,6 +3346,16 @@ CINDEX_LINKAGE CXType clang_getCursorResultType(CXCursor C);
+@@ -3399,6 +3399,22 @@ CINDEX_LINKAGE CXType clang_getCursorResultType(CXCursor C);
  CINDEX_LINKAGE unsigned clang_isPODType(CXType T);
  
  /**
@@ -16,10 +16,16 @@ index 13db2085ba..212eca05dc 100644
 +CINDEX_LINKAGE unsigned clang_isAbstractType(CXType T);
 +
 +/**
++ * \brief Return 1 if the CXType is a noexcept C++ function or method pointer,
++ * and 0 otherwise.
++ */
++CINDEX_LINKAGE unsigned clang_isNoexcept(CXType C);
++
++/**
   * \brief Return the element type of an array, complex, or vector type.
   *
   * If a type is passed in that is not an array, complex, or vector type,
-@@ -4118,6 +4128,12 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
+@@ -4168,6 +4184,12 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit,
   */
  
  /**
@@ -32,7 +38,7 @@ index 13db2085ba..212eca05dc 100644
   * \brief Determine if a C++ constructor is a converting constructor.
   */
  CINDEX_LINKAGE unsigned clang_CXXConstructor_isConvertingConstructor(CXCursor C);
-@@ -4167,6 +4183,12 @@ CINDEX_LINKAGE unsigned clang_CXXMethod_isStatic(CXCursor C);
+@@ -4217,6 +4239,12 @@ CINDEX_LINKAGE unsigned clang_CXXMethod_isStatic(CXCursor C);
  CINDEX_LINKAGE unsigned clang_CXXMethod_isVirtual(CXCursor C);
  
  /**
@@ -46,10 +52,10 @@ index 13db2085ba..212eca05dc 100644
   * declared 'const'.
   */
 diff --git a/lib/Sema/SemaDecl.cpp b/lib/Sema/SemaDecl.cpp
-index ea276a995d..b37a065f50 100644
+index adcf2ee00e..ec832336b1 100644
 --- a/lib/Sema/SemaDecl.cpp
 +++ b/lib/Sema/SemaDecl.cpp
-@@ -6132,8 +6132,8 @@ Sema::ActOnVariableDeclarator(Scope *S, Declarator &D, DeclContext *DC,
+@@ -6188,8 +6188,8 @@ NamedDecl *Sema::ActOnVariableDeclarator(
        // C++1z [dcl.spec.constexpr]p1:
        //   A static data member declared with the constexpr specifier is
        //   implicitly an inline variable.
@@ -61,10 +67,10 @@ index ea276a995d..b37a065f50 100644
  
      if (D.getDeclSpec().isConceptSpecified()) {
 diff --git a/tools/libclang/CIndex.cpp b/tools/libclang/CIndex.cpp
-index 027bf95b66..5730a1c733 100644
+index 67fa2aea1d..545f8df7ff 100644
 --- a/tools/libclang/CIndex.cpp
 +++ b/tools/libclang/CIndex.cpp
-@@ -703,12 +703,12 @@ bool CursorVisitor::VisitClassTemplateSpecializationDecl(
+@@ -704,12 +704,12 @@ bool CursorVisitor::VisitClassTemplateSpecializationDecl(
    case TSK_Undeclared:
    case TSK_ImplicitInstantiation:
      // Nothing to visit
@@ -81,7 +87,7 @@ index 027bf95b66..5730a1c733 100644
    case TSK_ExplicitSpecialization:
      ShouldVisitBody = true;
      break;
-@@ -904,8 +904,8 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
+@@ -905,8 +905,8 @@ bool CursorVisitor::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
    // before visiting these template parameters.
    if (VisitTemplateParameters(D->getTemplateParameters()))
      return true;
@@ -92,7 +98,7 @@ index 027bf95b66..5730a1c733 100644
  }
  
  bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
-@@ -913,8 +913,18 @@ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
+@@ -914,8 +914,18 @@ bool CursorVisitor::VisitClassTemplateDecl(ClassTemplateDecl *D) {
    // before visiting these template parameters.
    if (VisitTemplateParameters(D->getTemplateParameters()))
      return true;
@@ -113,9 +119,9 @@ index 027bf95b66..5730a1c733 100644
  }
  
  bool CursorVisitor::VisitTemplateTemplateParmDecl(TemplateTemplateParmDecl *D) {
-@@ -7436,6 +7446,15 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit TU,
- 
- extern "C" {
+@@ -7561,6 +7571,15 @@ CXFile clang_Module_getTopLevelHeader(CXTranslationUnit TU,
+ // C++ AST instrospection.
+ //===----------------------------------------------------------------------===//
  
 +unsigned clang_CXX_isDeleted(CXCursor C) {
 +  if (!clang_isDeclaration(C.kind))
@@ -129,11 +135,10 @@ index 027bf95b66..5730a1c733 100644
  unsigned clang_CXXConstructor_isDefaultConstructor(CXCursor C) {
    if (!clang_isDeclaration(C.kind))
      return 0;
-@@ -7536,6 +7555,16 @@ unsigned clang_CXXMethod_isVirtual(CXCursor C) {
-       D ? dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()) : nullptr;
+@@ -7662,6 +7681,16 @@ unsigned clang_CXXMethod_isVirtual(CXCursor C) {
    return (Method && Method->isVirtual()) ? 1 : 0;
  }
-+
+ 
 +unsigned clang_CXXMethod_isOverride(CXCursor C) {
 +  if (!clang_isDeclaration(C.kind))
 +    return 0;
@@ -143,14 +148,15 @@ index 027bf95b66..5730a1c733 100644
 +      D ? dyn_cast_or_null<CXXMethodDecl>(D->getAsFunction()) : nullptr;
 +  return (Method && Method->size_overridden_methods()) ? 1 : 0;
 +}
- } // end: extern "C"
- 
++
+ //===----------------------------------------------------------------------===//
+ // Attribute introspection.
  //===----------------------------------------------------------------------===//
 diff --git a/tools/libclang/CXType.cpp b/tools/libclang/CXType.cpp
-index 4fcd8864cd..25f4220b5a 100644
+index 66caf340d1..ba30494cc3 100644
 --- a/tools/libclang/CXType.cpp
 +++ b/tools/libclang/CXType.cpp
-@@ -615,6 +615,30 @@ unsigned clang_isPODType(CXType X) {
+@@ -653,6 +653,42 @@ unsigned clang_isPODType(CXType X) {
    return T.isPODType(cxtu::getASTUnit(TU)->getASTContext()) ? 1 : 0;
  }
  
@@ -178,11 +184,23 @@ index 4fcd8864cd..25f4220b5a 100644
 +  return RecordDecl->isAbstract() ? 1 : 0;
 +}
 +
++unsigned clang_isNoexcept(CXType X) {
++  QualType T = GetQualType(X);
++  if (T.isNull())
++    return 0;
++
++  const FunctionProtoType *Proto = T->getAs<FunctionProtoType>();
++  if (!Proto)
++    return 0;
++
++  return Proto->hasNoexceptExceptionSpec() ? 1 : 0;
++}
++
  CXType clang_getElementType(CXType CT) {
    QualType ET = QualType();
    QualType T = GetQualType(CT);
 diff --git a/tools/libclang/libclang.exports b/tools/libclang/libclang.exports
-index c8fe0a21d0..aab85b74ea 100644
+index 222cb67839..340013a276 100644
 --- a/tools/libclang/libclang.exports
 +++ b/tools/libclang/libclang.exports
 @@ -2,6 +2,7 @@ clang_CXCursorSet_contains
@@ -201,12 +219,13 @@ index c8fe0a21d0..aab85b74ea 100644
  clang_Cursor_getArgument
  clang_Cursor_getNumTemplateArguments
  clang_Cursor_getTemplateArgumentKind
-@@ -279,6 +281,8 @@ clang_isFileMultipleIncludeGuarded
+@@ -280,6 +282,9 @@ clang_isFileMultipleIncludeGuarded
  clang_isFunctionTypeVariadic
  clang_isInvalid
  clang_isPODType
 +clang_isFinalType
 +clang_isAbstractType
++clang_isNoexcept
  clang_isPreprocessing
  clang_isReference
  clang_isRestrictQualifiedType

@@ -17,10 +17,10 @@ void TypeRegister::DoRegister<::Neptools::RawItem>(TypeBuilder& bld)
     >("new");
     bld.Add<
         Overload<::Neptools::RawItem::GetSourceRet (*)(::Neptools::ItemPointer, ::Neptools::FilePosition), &::Neptools::RawItem::GetSource>,
-        Overload<const ::Neptools::Source & (::Neptools::RawItem::*)() const, &::Neptools::RawItem::GetSource>
+        Overload<const ::Neptools::Source & (::Neptools::RawItem::*)() const noexcept, &::Neptools::RawItem::GetSource>
     >("get_source");
     bld.Add<
-        Overload<::Neptools::Item & (::Neptools::RawItem::*)(::Neptools::FilePosition, ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> >), &::Neptools::RawItem::Split<::Neptools::Item>>,
+        Overload<::Neptools::Item & (::Neptools::RawItem::*)(::Neptools::FilePosition, ::Neptools::NotNull<::Neptools::RefCountedPtr<::Neptools::Item> >), &::Neptools::RawItem::Split<::Neptools::Item>>,
         Overload<::Neptools::RawItem & (::Neptools::RawItem::*)(::Neptools::FilePosition, ::Neptools::FilePosition), &::Neptools::RawItem::Split>
     >("split");
 

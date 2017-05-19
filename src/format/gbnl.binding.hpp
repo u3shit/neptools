@@ -75,17 +75,17 @@ void TypeRegister::DoRegister<::DynStructBindgbnl>(TypeBuilder& bld)
         ::boost::intrusive_ptr<::Neptools::DynamicStruct<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>> (*)(const ::DynStructBindgbnl::TypePtr), &::DynStructBindgbnl::New
     >("new");
     bld.Add<
-        ::size_t (::DynStructBindgbnl::*)() const, &::DynStructBindgbnl::GetSize
+        ::size_t (::DynStructBindgbnl::*)() const noexcept, &::DynStructBindgbnl::GetSize
     >("__len");
     bld.Add<
-        ::size_t (::DynStructBindgbnl::*)() const, &::DynStructBindgbnl::GetSize
+        ::size_t (::DynStructBindgbnl::*)() const noexcept, &::DynStructBindgbnl::GetSize
     >("get_size");
     bld.Add<
-        ::DynStructBindgbnl::TypePtr (::DynStructBindgbnl::*)() const, &::DynStructBindgbnl::GetType
+        ::DynStructBindgbnl::TypePtr (::DynStructBindgbnl::*)() const noexcept, &::DynStructBindgbnl::GetType
     >("get_type");
     bld.Add<
-        Overload<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t), &::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>,
-        Overload<void (*)(), &::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>
+        Overload<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept, &::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>,
+        Overload<void (*)() noexcept, &::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>
     >("get");
     bld.Add<
         void (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t), &::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Set
@@ -123,8 +123,8 @@ void TypeRegister::DoRegister<::DynStructBindgbnl::Type>(TypeBuilder& bld)
         decltype(&::Neptools::Lua::GetMember<::DynStructBindgbnl::Type, ::size_t, &::DynStructBindgbnl::Type::byte_size>), &::Neptools::Lua::GetMember<::DynStructBindgbnl::Type, ::size_t, &::DynStructBindgbnl::Type::byte_size>
     >("get_byte_size");
     bld.Add<
-        Overload<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t), &::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>,
-        Overload<void (*)(), &::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>
+        Overload<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept, &::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>,
+        Overload<void (*)() noexcept, &::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get>
     >("get");
 
 }
@@ -143,14 +143,14 @@ namespace Lua
 
 // class neptools.dynamic_struct_gbnl.builder
 template<>
-void TypeRegister::DoRegister<::DynStructBindgbnl::TypeBuilder>(TypeBuilder& bld)
+void TypeRegister::DoRegister<::DynStructBldBindgbnl>(TypeBuilder& bld)
 {
 
     bld.Add<
-        decltype(&::Neptools::Lua::TypeTraits<::DynStructBindgbnl::TypeBuilder>::Make<>), &::Neptools::Lua::TypeTraits<::DynStructBindgbnl::TypeBuilder>::Make<>
+        decltype(&::Neptools::Lua::TypeTraits<::DynStructBldBindgbnl>::Make<>), &::Neptools::Lua::TypeTraits<::DynStructBldBindgbnl>::Make<>
     >("new");
     bld.Add<
-        ::DynStructBindgbnl::TypePtr (::DynStructBindgbnl::TypeBuilder::*)() const, &::DynStructBindgbnl::TypeBuilder::Build
+        ::DynStructBindgbnl::TypePtr (::DynStructBldBindgbnl::*)() const, &::DynStructBldBindgbnl::Build
     >("build");
     bld.Add<
         Overload<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::Raw<4>, ::size_t), &::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Add>,
@@ -158,11 +158,11 @@ void TypeRegister::DoRegister<::DynStructBindgbnl::TypeBuilder>(TypeBuilder& bld
     >("add");
 
 }
-static TypeRegister::StateRegister<::DynStructBindgbnl::TypeBuilder> reg_neptools_dynamic_struct_gbnl_builder;
+static TypeRegister::StateRegister<::DynStructBldBindgbnl> reg_neptools_dynamic_struct_gbnl_builder;
 
 }
 }
 
 template <>
-const char ::DynStructBindgbnl::TypeBuilder::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
+const char ::DynStructBldBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
 

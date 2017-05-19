@@ -168,6 +168,7 @@ local function freestanding_func(c, info, tbl)
   end
 
   info.ptr_type = info.result_type.." (*)("..info.argsf()..")"
+  if c:type():isNoexcept() then info.ptr_type = info.ptr_type .. " noexcept" end
 
   if not tbl.value_tmpl then
     tbl.type_tmpl = "/*$= ptr_type */"
@@ -188,6 +189,7 @@ end
 local function general_method(c, info, tbl)
   info.ptr_prefix = c:isStatic() and "" or info.class.."::"
   info.ptr_suffix = c:isConst() and " const" or ""
+  if c:type():isNoexcept() then info.ptr_suffix = info.ptr_suffix .. " noexcept" end
 
   info.template_suffix = tbl.template_params and "<"..tbl.template_params..">" or ""
 

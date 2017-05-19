@@ -17,10 +17,13 @@ stages:
 
 .gcc-env: &gcc_env
   variables:
-    CC: gcc-7.0.0-pre9999
-    CXX: g++-7.0.0-pre9999
     AR: gcc-ar
     LINKFLAGS: -static-libstdc++
+  before_script:
+    # HACK: automatically find latest gcc installed
+    - ln -nsf /opt/boost ext/boost || true
+    - export CC="$(cd /usr/bin; ls gcc-*.*.* | tail -n1)"
+    - export CXX="$(cd /usr/bin; ls g++-*.*.* | tail -n1)"
 
 .clang-env: &clang_env
   variables:
