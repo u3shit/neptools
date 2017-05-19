@@ -116,7 +116,6 @@ sizeof(Parameter) == 0x0c
 
 uint32_t TypeTag(uint32_t x) { return x >> 30; }
 uint32_t Value(uint32_t x) { return x & 0x3fffffff; }
-
 ```
 
 The meaning of the members depend on the value of `TypeTag(param_0)` (i.e. the
@@ -131,7 +130,8 @@ enum Type
     IMMEDIATE = 1,
     INDIRECT = 2,
     SPECIAL = 3,
-};```
+};
+```
 
 If `TypeTag(param_0) == MEM_OFFSET`, `Value(param_0)` (the lower 30 bits of
 `param_0`) contains an offset to a `Data` structure, `param_4` and `param_8`
@@ -141,6 +141,7 @@ If `TypeTag(param_0) == INDIRECT`, `Value() < 256` (and not a file offset).
 `param_4` must be `0x40000000`. `param_8` parsed normally.
 
 If `TypeTag(param_0) == SPECIAL`, then there are other subcases:
+
 ```c++
 enum TypeSpecial
 {
@@ -153,6 +154,7 @@ enum TypeSpecial
     COLL_LINK      = 0xffffff42,
 };
 ```
+
 If `(param_0 >= READ_STACK_MIN && param_0 <= READ_STACK_MAX) || (param_0 >=
 READ_4AC_MIN && param_0 <= READ_4AC_MAX)`, then `param_4` and `param_8` must be
 `0x40000000`.
