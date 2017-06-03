@@ -243,11 +243,11 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
     }
 }
 
-template <typename T, T Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
+template <auto Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
 struct WrapFunGen;
 
-template <typename T, T Fun, bool Unsafe, typename Ret, typename... Args, int... Seq>
-struct WrapFunGen<T, Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int, Seq...>>
+template <auto Fun, bool Unsafe, typename Ret, typename... Args, int... Seq>
+struct WrapFunGen<Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -257,8 +257,8 @@ struct WrapFunGen<T, Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int,
     }
 };
 
-template <typename T, T Fun, bool Unsafe, typename... Args, int... Seq>
-struct WrapFunGen<T, Fun, Unsafe, void, List<Args...>, std::integer_sequence<int, Seq...>>
+template <auto Fun, bool Unsafe, typename... Args, int... Seq>
+struct WrapFunGen<Fun, Unsafe, void, List<Args...>, std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -268,22 +268,23 @@ struct WrapFunGen<T, Fun, Unsafe, void, List<Args...>, std::integer_sequence<int
     }
 };
 
-template <typename T, T Fun, bool Unsafe, typename Args> struct WrapFunGen2;
-template <typename T, T Fun, bool Unsafe, typename... Args>
-struct WrapFunGen2<T, Fun, Unsafe, List<Args...>>
+template <auto Fun, bool Unsafe, typename Args> struct WrapFunGen2;
+template <auto Fun, bool Unsafe, typename... Args>
+struct WrapFunGen2<Fun, Unsafe, List<Args...>>
     : public WrapFunGen<
-        T, Fun, Unsafe,
-        typename FunctionTraits<T>::Return, List<Args...>,
+        Fun, Unsafe,
+        typename FunctionTraits<decltype(Fun)>::Return, List<Args...>,
         typename GenArgSequence<Unsafe, 1, std::integer_sequence<int>, Args...>::Type>
 {};
 
-template <typename T, T Fun, bool Unsafe>
-struct WrapFunc : WrapFunGen2<T, Fun, Unsafe, typename FunctionTraits<T>::Arguments>
+template <auto Fun, bool Unsafe>
+struct WrapFunc : WrapFunGen2<
+    Fun, Unsafe, typename FunctionTraits<decltype(Fun)>::Arguments>
 {};
 
 // allow plain old lua functions
 template <int (*Fun)(lua_State*), bool Unsafe>
-struct WrapFunc<int (*)(lua_State*), Fun, Unsafe>
+struct WrapFunc<Fun, Unsafe>
 { static constexpr const auto Func = Fun; };
 
 
@@ -311,15 +312,15 @@ struct OverloadCheck<List<Args...>>
         typename GenArgSequence<true, 1, std::integer_sequence<int>, Args...>::Type>
 {};
 
-template <typename... Args> struct OverloadWrap;
-template <typename T, T Fun, typename... Rest>
-struct OverloadWrap<Overload<T, Fun>, Rest...>
+template <auto... Args> struct OverloadWrap;
+template <auto Fun, auto... Rest>
+struct OverloadWrap<Fun, Rest...>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        if (OverloadCheck<typename FunctionTraits<T>::Arguments>::Is(vm))
-            return WrapFunc<T, Fun, true>::Func(vm);
+        if (OverloadCheck<typename FunctionTraits<decltype(Fun)>::Arguments>::Is(vm))
+            return WrapFunc<Fun, true>::Func(vm);
         else
             return OverloadWrap<Rest...>::Func(vm);
     }
@@ -337,8 +338,8 @@ template<> struct OverloadWrap<>
 namespace h = boost::hana;
 struct GetArgs
 {
-    template <typename T, T Fun>
-    inline constexpr auto operator()(h::basic_type<Overload<T, Fun>>)
+    template <typename T>
+    inline constexpr auto operator()(h::basic_type<T>)
     {
         return FunctionTraits<T>::ArgumentTypes::ToHana;
     }
@@ -389,10 +390,10 @@ template <typename CalculatedSize, typename ExpectedSize,
 constexpr inline void InvalidOverload(CalculatedSize, ExpectedSize,
                                       CalledOverloads, Overloads) = delete;
 
-template <typename... Overloads>
+template <auto... Overloads>
 inline constexpr void CheckUnique()
 {
-    constexpr auto overloads = h::transform(h::tuple_t<Overloads...>, GetArgs{});
+    constexpr auto overloads = h::transform(h::tuple_t<decltype(Overloads)...>, GetArgs{});
     // get possible argument types. add nil to simulate less arguments
     constexpr auto argset = h::insert(
         h::to_set(h::flatten(overloads)), h::type_c<Raw<LUA_TNIL>>);
@@ -417,17 +418,18 @@ inline constexpr void CheckUnique()
 
 }
 
-template <typename T, T Fun>
-inline void StateRef::Push()
-{ lua_pushcfunction(vm, (Detail::WrapFunc<T, Fun, false>::Func)); }
-
-template <typename Head, typename... Tail>
-inline typename std::enable_if<IsOverload<Head>::value>::type StateRef::Push()
+template <auto... Funs>
+inline void StateRef::PushFunction()
 {
+    if constexpr (sizeof...(Funs) == 1)
+        lua_pushcfunction(vm, (Detail::WrapFunc<Funs..., false>::Func));
+    else
+    {
 #ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-    Detail::CheckUnique<Head, Tail...>();
+        Detail::CheckUnique<Funs...>();
 #endif
-    lua_pushcfunction(vm, (Detail::OverloadWrap<Head, Tail...>::Func));
+        lua_pushcfunction(vm, (Detail::OverloadWrap<Funs...>::Func));
+    }
 }
 
 }

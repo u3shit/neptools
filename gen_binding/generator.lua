@@ -49,9 +49,7 @@ local template_str = [=[
 #include "lua/user_type.hpp"
 
 //$ for i,cls in ipairs(classes) do
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 // class /*$= cls.name */
@@ -68,21 +66,16 @@ void TypeRegister::DoRegister</*$= cls.cpp_name */>(TypeBuilder& bld)
 
 //$ for _,k in ipairs(cls.methods_ord) do
 //$   local v = cls.methods[k]
-    bld.Add<
-//$       if v[2] then --overloaded
-//$         for i,m in ipairs(v) do
-        Overload</*$= m.type_str */, /*$= m.value_str */>/*$= i == #v and '' or ',' */
-//$         end
-//$       else
-        /*$= v[1].type_str */, /*$= v[1].value_str */
-//$       end
+    bld.AddFunction<
+//$   for i,m in ipairs(v) do
+        /*$= m.value_str *//*$= i == #v and '' or ',' */
+//$   end
     >("/*$= k */");
 //$ end
 /*$= cls.post_register or "", cls */
 }
 static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
 
-}
 }
 
 /*$ if cls.template then */template <>/*$ end */

@@ -171,8 +171,7 @@ local function freestanding_func(c, info, tbl)
   if c:type():isNoexcept() then info.ptr_type = info.ptr_type .. " noexcept" end
 
   if not tbl.value_tmpl then
-    tbl.type_tmpl = "/*$= ptr_type */"
-    tbl.value_tmpl = "&/*$= name */"
+    tbl.value_tmpl = "static_cast</*$= ptr_type */>(&/*$= name */)"
   end
   return true
 end
@@ -181,23 +180,26 @@ local function ctor(c, info, tbl)
   if not tbl.value_tmpl then
     tbl.value_tmpl = [[
 &::Neptools::Lua::TypeTraits</*$= class */>::Make</*$= argsf('LuaGetRef') */>]]
-    tbl.type_tmpl = nil
   end
   return true
 end
 
 local function general_method(c, info, tbl)
   info.ptr_prefix = c:isStatic() and "" or info.class.."::"
+  -- retarded compiler error with gcc in some cases if a non overloaded
+  -- static member function is casted, if we manually take the address.
+  -- not writing & for non static member functions is a compile error...
+  info.address = c:isStatic() and "" or "&"
   info.ptr_suffix = c:isConst() and " const" or ""
   if c:type():isNoexcept() then info.ptr_suffix = info.ptr_suffix .. " noexcept" end
 
   info.template_suffix = tbl.template_params and "<"..tbl.template_params..">" or ""
 
-  if not tbl.type_tmpl then
-    tbl.type_tmpl = "/*$= result_type*/ (/*$= ptr_prefix */*)(/*$= argsf() */)/*$= ptr_suffix */"
-  end
+  info.ptr_type = "/*$= result_type*/ (/*$= ptr_prefix */*)(/*$= argsf() */)/*$= ptr_suffix */"
+  info.ptr_value = "/*$= address *//*$= use_class */::/*$= name *//*$= template_suffix */"
+
   if not tbl.value_tmpl then
-    tbl.value_tmpl = "&/*$= use_class */::/*$= name *//*$= template_suffix */"
+    tbl.value_tmpl = "static_cast</*$= ptr_type */>(/*$= ptr_value */)"
   end
   return true
 end
@@ -258,7 +260,6 @@ local function lua_function(c, tbl, parent)
   assert(tbl.class)
   assert(tbl.value_tmpl)
   tbl.value_str = template(tbl.value_tmpl, info, c)
-  tbl.type_str = template(tbl.type_tmpl or "decltype(/*$= tbl.value_str */)", info, c)
 
   -- store method
   local mets = tbl.class.methods

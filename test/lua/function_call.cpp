@@ -7,11 +7,10 @@ static int global;
 
 void voidfun() { global = 1; }
 
-#define FT(x) decltype(&x), &x
 TEST_CASE("void function", "[lua]")
 {
     State vm;
-    vm.Push<FT(voidfun)>();
+    vm.PushFunction<voidfun>();
 
     global = 0;
     lua_call(vm, 0, 0);
@@ -22,7 +21,7 @@ int intfun(int a, int b) { return a+b+3; }
 TEST_CASE("int function", "[lua]")
 {
     State vm;
-    vm.Push<FT(intfun)>();
+    vm.PushFunction<intfun>();
 
     vm.Push(5);
     vm.Push(7);
@@ -43,7 +42,7 @@ std::string strfun(size_t a, const std::string& b)
 TEST_CASE("string function", "[lua]")
 {
     State vm;
-    vm.Push<FT(strfun)>();
+    vm.PushFunction<strfun>();
 
     vm.Push(5);
     vm.Push("hello");
@@ -63,7 +62,7 @@ std::tuple<bool, int, std::string> tuplefun(bool a, int n)
 TEST_CASE("tuple function", "[lua]")
 {
     State vm;
-    vm.Push<FT(tuplefun)>();
+    vm.PushFunction<tuplefun>();
 
     vm.Push(false);
     vm.Push(5);
@@ -82,7 +81,7 @@ void overload_str(const std::string& str) { called = str.size(); }
 TEST_CASE("overload function", "[lua]")
 {
     State vm;
-    vm.Push<Overload<FT(overload_int)>, Overload<FT(overload_str)>>();
+    vm.PushFunction<overload_int, overload_str>();
 
     lua_pushvalue(vm, -1);
     vm.Push(42);

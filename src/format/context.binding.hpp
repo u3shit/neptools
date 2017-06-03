@@ -1,9 +1,7 @@
 // Auto generated code, do not edit. See gen_binding in project root.
 #include "lua/user_type.hpp"
 
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 // class neptools.context
@@ -12,29 +10,28 @@ void TypeRegister::DoRegister<::Neptools::Context>(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Context, ::Neptools::ItemWithChildren>();
 
-    bld.Add<
-        const ::Neptools::Label & (::Neptools::Context::*)(const std::string &) const, &::Neptools::Context::GetLabel
+    bld.AddFunction<
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(const std::string &) const>(&::Neptools::Context::GetLabel)
     >("get_label");
-    bld.Add<
-        const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer), &::Neptools::Context::CreateLabel
+    bld.AddFunction<
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateLabel)
     >("create_label");
-    bld.Add<
-        Overload<const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer), &::Neptools::Context::CreateLabelFallback>,
-        Overload<const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::FilePosition), &::Neptools::Context::CreateLabelFallback>
+    bld.AddFunction<
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateLabelFallback),
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(std::string, ::Neptools::FilePosition)>(&::Neptools::Context::CreateLabelFallback)
     >("create_label_fallback");
-    bld.Add<
-        Overload<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::FilePosition, std::string), &::Neptools::Context::GetLabelTo>,
-        Overload<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::ItemPointer), &::Neptools::Context::GetLabelTo>,
-        Overload<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::FilePosition), &::Neptools::Context::GetLabelTo>
+    bld.AddFunction<
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::FilePosition, std::string)>(&::Neptools::Context::GetLabelTo),
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::ItemPointer)>(&::Neptools::Context::GetLabelTo),
+        static_cast<const ::Neptools::Label & (::Neptools::Context::*)(::Neptools::FilePosition)>(&::Neptools::Context::GetLabelTo)
     >("get_label_to");
-    bld.Add<
-        ::Neptools::ItemPointer (::Neptools::Context::*)(::Neptools::FilePosition) const noexcept, &::Neptools::Context::GetPointer
+    bld.AddFunction<
+        static_cast<::Neptools::ItemPointer (::Neptools::Context::*)(::Neptools::FilePosition) const noexcept>(&::Neptools::Context::GetPointer)
     >("get_pointer");
 
 }
 static TypeRegister::StateRegister<::Neptools::Context> reg_neptools_context;
 
-}
 }
 
 

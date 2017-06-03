@@ -65,7 +65,7 @@ public:
     {
         using UT = UserTypeTraits<T>;
         UT::MetatableCreate(vm);
-        Add<decltype(&UT::GcFun), &UT::GcFun>("__gc");
+        AddFunction<&UT::GcFun>("__gc");
 
         static_assert(TypeTraits<T>::TYPE_TAGGED);
         lua_pushlightuserdata(vm, &TYPE_TAG<T>);
@@ -78,17 +78,10 @@ public:
     template <typename Deriv, typename... Base>
     void Inherit() { InheritHelp<Deriv, Base...>::Do(*this); }
 
-    template <typename T, T fun>
-    void Add(const char* name)
+    template <auto... Funs>
+    void AddFunction(const char* name)
     {
-        vm.Push<T, fun>();
-        SetField(name);
-    }
-
-    template <typename... Args>
-    void Add(const char* name)
-    {
-        vm.Push<Args...>();
+        vm.PushFunction<Funs...>();
         SetField(name);
     }
 

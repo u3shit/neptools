@@ -34,11 +34,6 @@ extern char reftbl;
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
 
-template <typename T, T Fun> struct Overload;
-template <typename T> struct IsOverload : public std::false_type {};
-template <typename T, T Fun>
-struct IsOverload<Overload<T, Fun>> : public std::true_type {};
-
 class StateRef
 {
 public:
@@ -67,14 +62,12 @@ public:
         NEPTOOLS_LUA_CHECKTOP(vm, top+1);
     }
 
-    template <typename T, T Fun> void Push();
-    template <typename Head, typename... Tail>
-    typename std::enable_if<IsOverload<Head>::value>::type Push();
+    template <auto... Funs> void PushFunction();
 
     template <typename... Args> void PushAll(Args&&... args)
     { (Push(std::forward<Args>(args)), ...); }
 
-    void Push(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
+    void PushFunction(lua_CFunction fun) { lua_pushcfunction(vm, fun); }
 
     // pop table, set table[name] to val at idx; +0 -1
     void SetRecTable(const char* name, int idx = -1);

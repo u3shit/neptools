@@ -317,10 +317,10 @@ static Lua::State::Register reg{[](Lua::StateRef vm)
     {
         lua_createtable(vm, 0, 2); // +1
 
-        vm.Push<decltype(&CheckLog), &CheckLog>(); // +2
+        vm.PushFunction<&CheckLog>(); // +2
         lua_setfield(vm, -2, "check_log"); // +1
 
-        vm.Push<decltype(&LuaLog), &LuaLog>(); // +2
+        vm.PushFunction<&LuaLog>(); // +2
         lua_setfield(vm, -2, "raw_log"); // +1
 
         vm.Push(Level::ERROR); // +2

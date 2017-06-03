@@ -114,56 +114,64 @@ struct VectorBinding
 
     static void Register(TypeBuilder& bld)
     {
-#define AP(...) decltype(__VA_ARGS__), __VA_ARGS__
         if constexpr (std::is_default_constructible_v<T>)
-            bld.Add<
-                Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
-                Overload<AP(&MakeShared<Vect, size_type>)>,
-                Overload<AP(&MakeShared<Vect, const Vect&>)>,
-                Overload<AP(&MakeShared<Vect>)>
+            bld.AddFunction<
+                &MakeShared<Vect, size_type, const T&>,
+                &MakeShared<Vect, size_type>,
+                &MakeShared<Vect, const Vect&>,
+                &MakeShared<Vect>
             >("new");
         else
-            bld.Add<
-                Overload<AP(&MakeShared<Vect, size_type, const T&>)>,
-                Overload<AP(&MakeShared<Vect, const Vect&>)>,
-                Overload<AP(&MakeShared<Vect>)>
+            bld.AddFunction<
+                &MakeShared<Vect, size_type, const T&>,
+                &MakeShared<Vect, const Vect&>,
+                &MakeShared<Vect>
             >("new");
 
-        bld.Add<
-            Overload<void (Vect::*)(size_type, const T&), &Vect::assign>,
-            Overload<AP(&Assign)>
+        bld.AddFunction<
+            static_cast<void (Vect::*)(size_type, const T&)>(&Vect::assign),
+            &Assign
         >("assign");
 
-#define S(name) bld.Add<AP(&Vect::name)>(#name)
+#define S(name) bld.AddFunction<&Vect::name>(#name)
         S(empty); S(size); S(max_size); S(reserve); S(capacity);
         S(shrink_to_fit); S(clear); S(swap);
 #undef S
-        bld.Add<Overload<AP(&Get0)>, Overload<AP(&Get1)>>("get");
-        bld.Add<AP(&Set)>("set");
-        bld.Add<T& (Vect::*)(size_t), &Vect::at>("at");
-        bld.Add<AP(&Vect::size)>("__len");
-        bld.Add<Overload<AP(&Insert0)>, Overload<AP(&Insert1)>>("insert");
-        bld.Add<Overload<AP(&Erase0)>, Overload<AP(&Erase1)>>("erase");
-        bld.Add<AP(&Remove)>("remove");
-        bld.Add<void (Vect::*)(const T&), &Vect::push_back>("push_back");
-        bld.Add<AP(&PopBack)>("pop_back");
+        bld.AddFunction<&Get0, &Get1>("get");
+        bld.AddFunction<&Set>("set");
+        bld.AddFunction<
+            static_cast<T& (Vect::*)(size_t)>(&Vect::at)>("at");
+        bld.AddFunction<&Vect::size>("__len");
+        bld.AddFunction<&Insert0, &Insert1>("insert");
+        bld.AddFunction<&Erase0, &Erase1>("erase");
+        bld.AddFunction<&Remove>("remove");
+        bld.AddFunction<
+            static_cast<void (Vect::*)(const T&)>(&Vect::push_back)>("push_back");
+        bld.AddFunction<&PopBack>("pop_back");
         if constexpr (std::is_default_constructible_v<T>)
-            bld.Add<
-                Overload<void (Vect::*)(size_type, const T&), &Vect::resize>,
-                Overload<void (Vect::*)(size_type), &Vect::resize>
+            bld.AddFunction<
+                static_cast<void (Vect::*)(size_type, const T&)>(&Vect::resize),
+                static_cast<void (Vect::*)(size_type)>(&Vect::resize)
             >("resize");
         else
-            bld.Add<void (Vect::*)(size_type, const T&), &Vect::resize>("resize");
-        bld.Add<AP(&ToTable)>("to_table");
+            bld.AddFunction<
+                static_cast<void (Vect::*)(size_type, const T&)>(&Vect::resize)
+            >("resize");
+        bld.AddFunction<&ToTable>("to_table");
 
         if constexpr (Detail::IS_EQ_COMP<T>)
-            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator==>("__eq");
+            bld.AddFunction<
+                static_cast<bool (*)(const Vect&, const Vect&)>(&std::operator==)
+            >("__eq");
         if constexpr (Detail::IS_LT_COMP<T>)
         {
-            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<>("__lt");
-            bld.Add<bool (*)(const Vect&, const Vect&), &std::operator<=>("__le");
+            bld.AddFunction<
+                static_cast<bool (*)(const Vect&, const Vect&)>(&std::operator<)
+            >("__lt");
+            bld.AddFunction<
+                static_cast<bool (*)(const Vect&, const Vect&)>(&std::operator<=)
+            >("__le");
         }
-#undef AP
 
         luaL_getmetatable(bld, "neptools_ipairs");
         bld.SetField("__ipairs");
