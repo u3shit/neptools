@@ -200,6 +200,9 @@ local function general_method(c, info, tbl)
 
   if not tbl.value_tmpl then
     tbl.value_tmpl = "static_cast</*$= ptr_type */>(/*$= ptr_value */)"
+    if tbl.wrap then
+      tbl.value_tmpl = "/*$= tbl.wrap */<" .. tbl.value_tmpl .. ">::Wrap"
+    end
   end
   return true
 end

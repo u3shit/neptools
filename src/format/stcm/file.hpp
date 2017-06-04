@@ -17,7 +17,9 @@ class File : public Context, public TxtSerializable
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
     File(Source src);
+    NEPTOOLS_NOLUA
     std::vector<NotNull<SmartPtr<const GbnlItem>>> FindGbnl() const;
+    NEPTOOLS_LUAGEN(wrap="TableRetWrap")
     std::vector<NotNull<SmartPtr<GbnlItem>>> FindGbnl();
 
 private:

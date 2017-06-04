@@ -192,28 +192,8 @@ void ItemWithChildren::Dispose() noexcept
     Item::Dispose();
 }
 
-NEPTOOLS_LUAGEN()
-static Lua::RetNum GetLabels(Lua::StateRef vm, const Item& item)
-{
-    NEPTOOLS_LUA_GETTOP(vm, top);
-
-    auto size = item.GetLabels().size();
-    lua_createtable(vm, size ? size-1 : 0, 0); // +1
-    size_t i = 0;
-    for (auto& it : item.GetLabels())
-    {
-        vm.Push(it); // +2
-        lua_rawseti(vm, -2, i++); // +1
-    }
-
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
-    return 1;
 }
 
-NEPTOOLS_LUAGEN()
-static NotNull<SmartPtr<ItemList>> GetChildren(ItemWithChildren& it) noexcept
-{ return NotNull<SmartPtr<ItemList>>{&it, &it.GetChildren(), true}; }
-
-}
-
+#include "../lua/table_ret_wrap.hpp"
+#include "../lua/owned_shared_ptr_wrap.hpp"
 #include "item.binding.hpp"

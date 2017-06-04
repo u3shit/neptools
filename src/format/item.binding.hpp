@@ -26,7 +26,7 @@ void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
         static_cast<void (::Neptools::Item::*)(const ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> > &) noexcept>(&::Neptools::Item::Replace<Check::Throw>)
     >("replace");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::Item &)>(&Neptools::GetLabels)
+        TableRetWrap<static_cast<const ::Neptools::Item::LabelsContainer & (::Neptools::Item::*)() const>(&::Neptools::Item::GetLabels)>::Wrap
     >("get_labels");
 
 }
@@ -47,7 +47,7 @@ void TypeRegister::DoRegister<::Neptools::ItemWithChildren>(TypeBuilder& bld)
     bld.Inherit<::Neptools::ItemWithChildren, ::Neptools::Item>();
 
     bld.AddFunction<
-        static_cast<::Neptools::NotNull<SmartPtr<::Neptools::ItemList> > (*)(::Neptools::ItemWithChildren &) noexcept>(&Neptools::GetChildren)
+        OwnedSharedPtrWrap<static_cast<::Neptools::ItemList & (::Neptools::ItemWithChildren::*)() noexcept>(&::Neptools::ItemWithChildren::GetChildren)>::Wrap
     >("get_children");
 
 }

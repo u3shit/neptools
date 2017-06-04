@@ -81,3 +81,6 @@ void File::ReadTxt_(std::istream& is)
 
 }
 }
+
+#include "../../lua/table_ret_wrap.hpp"
+#include "file.binding.hpp"

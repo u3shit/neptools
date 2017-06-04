@@ -84,7 +84,7 @@ public:
         boost::intrusive::base_hook<LabelOffsetHook>,
         boost::intrusive::constant_time_size<false>,
         boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
-    NEPTOOLS_NOLUA
+    NEPTOOLS_LUAGEN(wrap="TableRetWrap")
     const LabelsContainer& GetLabels() const { return labels; }
 
     void Dispose() noexcept override;
@@ -139,7 +139,8 @@ class ItemWithChildren : public Item, private ItemList
 public:
     using Item::Item;
 
-    NEPTOOLS_NOLUA ItemList& GetChildren() noexcept { return *this; }
+    NEPTOOLS_LUAGEN(wrap="OwnedSharedPtrWrap")
+    ItemList& GetChildren() noexcept { return *this; }
     NEPTOOLS_NOLUA const ItemList& GetChildren() const noexcept { return *this; }
 
     FilePosition GetSize() const override;
@@ -164,7 +165,8 @@ inline const ItemWithChildren* Item::GetParent() const noexcept
 { return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
 
 template <typename T>
-struct Lua::SmartObjectMaker<T, std::enable_if_t<std::is_base_of_v<Item, T>>>
+struct Lua::SmartObjectMaker<T, std::enable_if_t<
+    std::is_base_of_v<Item, T> && !std::is_base_of_v<Context, T>>>
 {
     template <typename Key, typename Ctx, typename... Args>
     static decltype(auto) Make(std::remove_pointer_t<Ctx>& ctx, Args&&... args)
