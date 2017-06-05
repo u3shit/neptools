@@ -128,8 +128,7 @@ def configure(cfg):
         '-fdiagnostics-color', '-fdiagnostics-show-option',
     ])
     cfg.filter_flags(['CFLAGS_NEPTOOLS', 'CXXFLAGS_NEPTOOLS'], [
-        '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses',
-        '-Wno-gnu-string-literal-operator-template', '-Wno-assume',
+        '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses', '-Wno-assume',
         '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
     ])
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [
@@ -265,14 +264,14 @@ def build_common(bld):
     bld.stlib(source   = src,
               uselib   = 'NEPTOOLS',
               use      = 'BOOST boost_system boost_filesystem ljx',
-              includes = 'src',
+              includes = 'src ext/ljx/src ext/brigand/include',
               target   = 'common')
 
 def build(bld):
     build_common(bld)
 
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
-                includes = 'src ext/ljx/src', # for version.hpp
+                includes = 'src ext/ljx/src ext/brigand/include', # for version.hpp
                 uselib = 'NEPTOOLS',
                 use = 'common',
                 target = 'stcm-editor')
@@ -307,7 +306,7 @@ def build(bld):
             'src/programs/server.rc',
         ]
         bld.shlib(source = src_inject,
-                  includes = 'src', # for version.hpp
+                  includes = 'src ext/brigand/include', # for version.hpp
                   target = 'neptools-server',
                   use    = 'common',
                   uselib = 'SHELL32 USER32 NEPTOOLS',
@@ -380,13 +379,13 @@ def test(bld):
         source='test/pattern_fail.cpp',
         uselib='BOOST NEPTOOLS',
         use='boost_system boost_filesystem',
-        includes='src',
+        includes='src ext/brigand/include',
         defines=['TEST_PATTERN="b2 ff"_pattern'])
     bld(features='cxx fail_cxx',
         source='test/pattern_fail.cpp',
         uselib='BOOST NEPTOOLS',
         use='boost_system boost_filesystem',
-        includes='src',
+        includes='src ext/brigand/include',
         defines=['TEST_PATTERN="bz ff"_pattern'])
 
     src = [
@@ -402,7 +401,7 @@ def test(bld):
         'test/lua/user_type.cpp',
     ]
     bld.program(source   = src,
-                includes = 'src ext/catch/include',
+                includes = 'src ext/catch/include ext/brigand/include',
                 uselib   = 'NEPTOOLS',
                 use      = 'common',
                 target   = 'run-tests')
