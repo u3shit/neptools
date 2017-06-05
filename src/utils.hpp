@@ -46,9 +46,6 @@ template <typename T>
 inline T implicit_const_cast(typename AddConst<T>::Type x)
 { return const_cast<T>(x); }
 
-template <typename T>
-constexpr size_t EmptySizeof = std::is_empty<T>::value ? 0 : sizeof(T);
-
 std::ofstream OpenOut(const boost::filesystem::path& pth);
 std::ifstream OpenIn(const boost::filesystem::path& pth);
 

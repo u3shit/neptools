@@ -380,13 +380,13 @@ def test(bld):
         uselib='BOOST NEPTOOLS',
         use='boost_system boost_filesystem',
         includes='src ext/brigand/include',
-        defines=['TEST_PATTERN="b2 ff"_pattern'])
+        defines=['TEST_PATTERN="b2 ff"'])
     bld(features='cxx fail_cxx',
         source='test/pattern_fail.cpp',
         uselib='BOOST NEPTOOLS',
         use='boost_system boost_filesystem',
         includes='src ext/brigand/include',
-        defines=['TEST_PATTERN="bz ff"_pattern'])
+        defines=['TEST_PATTERN="bz ff"'])
 
     src = [
         'test/main.cpp',

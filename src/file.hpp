@@ -10,7 +10,7 @@
 #include <brigand/sequences/back.hpp>
 #include <brigand/sequences/list.hpp>
 
-#include <utility>
+#include "meta_utils.hpp"
 
 namespace Neptools
 {
@@ -87,26 +87,13 @@ using FileName =
                   brigand::split<CL<Args...>, C<'/'>>, CL<>,
                   Fold<brigand::_element, brigand::_state>>, CL<'/'>>>;
 
-
-template <typename X, size_t... Idx>
-FileName<X::Get(Idx)...> ToFileName(std::index_sequence<Idx...>) { return {}; }
-
 }
 }
 
-#define NEPTOOLS_GETFILE(memb) ([]{                                         \
-        struct X                                                            \
-        {                                                                   \
-            static constexpr char Get(size_t i) { return __FILE__[i]; }     \
-        };                                                                  \
-        /* without decltype gcc generates more warnings than the water */   \
-        /* flows through mississippi in a year */                           \
-        return decltype(::Neptools::FileTools::ToFileName<X>(               \
-            std::make_index_sequence<sizeof(__FILE__)-1>{}))::memb;         \
-    }())
-
-#define NEPTOOLS_FILE NEPTOOLS_GETFILE(str)
-#define NEPTOOLS_WFILE NEPTOOLS_GETFILE(wstr)
+#define NEPTOOLS_FILE \
+    NEPTOOLS_LITERAL_CHARPACK(::Neptools::FileTools::FileName, __FILE__).str
+#define NEPTOOLS_WFILE \
+    NEPTOOLS_LITERAL_CHARPACK(::Neptools::FileTools::FileName, __FILE__).wstr
 
 // boost doesn't check __clang__, and falls back to some simpler implementation
 #if defined(__GNUC__) || defined(__clang__)

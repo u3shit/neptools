@@ -3,6 +3,7 @@
 #pragma once
 
 #include "pattern.hpp"
+#include "meta_utils.hpp"
 
 namespace Neptools
 {
@@ -111,14 +112,18 @@ struct PatternParse<Pat>
     using value = Pat;
 };
 
-template <Byte... Bytes>
+template <char... Bytes>
 using DoPatternParse = typename PatternParse<
     Pattern<ByteSequence<>, ByteSequence<>>, Bytes..., ' '>::value;
 
+template <typename X, size_t... Idx>
+DoPatternParse<X::Get(Idx)...> ToPattern(std::index_sequence<Idx...>)
+{ return {}; }
+
 }
 
-template <typename CharT, CharT... Chars>
-inline auto operator""_pattern() { return PatternParse::DoPatternParse<Chars...>{}; }
+#define NEPTOOLS_PATTERN(str) \
+    NEPTOOLS_LITERAL_CHARPACK(::Neptools::PatternParse::DoPatternParse, str)
 
 }
 #endif

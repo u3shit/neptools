@@ -3,6 +3,7 @@
 #pragma once
 
 #include "check.hpp"
+#include "meta_utils.hpp"
 #include "nonowning_string.hpp"
 #include "shared_ptr.hpp"
 #include "utils.hpp"

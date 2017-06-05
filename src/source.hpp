@@ -7,9 +7,11 @@
 #include <boost/exception/info.hpp>
 #include <boost/exception/get_error_info.hpp>
 #include <boost/filesystem/path.hpp>
+
 #include "check.hpp"
 #include "dumpable.hpp"
 #include "low_io.hpp"
+#include "meta_utils.hpp"
 #include "not_null.hpp"
 #include "shared_ptr.hpp"
 #include "lua/value_object.hpp"

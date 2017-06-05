@@ -4,40 +4,46 @@
 using namespace Neptools;
 
 // static test...
+auto fuck_you_cpp_committee = NEPTOOLS_PATTERN("01 02 03 04");
 static_assert(std::is_same<
-    decltype("01 02 03 04"_pattern),
+    decltype(fuck_you_cpp_committee),
     PatternParse::Pattern<
         PatternParse::ByteSequence<1,2,3,4>,
         PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
     "simple pattern");
 
+auto why_cant_I_use_fucking_lambdas = NEPTOOLS_PATTERN("11 05 f3 14");
 static_assert(std::is_same<
-    decltype("11 05 f3 14"_pattern),
+    decltype(why_cant_I_use_fucking_lambdas),
     PatternParse::Pattern<
         PatternParse::ByteSequence<0x11,0x05,0xf3,0x14>,
         PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
     "multi digit");
 
+auto in_an_unevaluated_context_like_decltype = NEPTOOLS_PATTERN("11 5 f3 4");
 static_assert(std::is_same<
-    decltype("11 5 f3 4"_pattern),
+    decltype(in_an_unevaluated_context_like_decltype),
     PatternParse::Pattern<
         PatternParse::ByteSequence<0x11,0x05,0xf3,0x04>,
         PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
     "shortcuts");
 
+auto or_why_cant_you_add_a_sane_way_to_use = NEPTOOLS_PATTERN("11 ?? f3 04");
 static_assert(std::is_same<
-    decltype("11 ?? f3 04"_pattern),
+    decltype(or_why_cant_you_add_a_sane_way_to_use),
     PatternParse::Pattern<
         PatternParse::ByteSequence<0x11,0x00,0xf3,0x04>,
         PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>::value,
     "placeholder");
 
+auto fucking_strings_as_template_arguments = NEPTOOLS_PATTERN("11 ? f3 04");
 static_assert(std::is_same<
-    decltype("11 ? f3 04"_pattern),
+    decltype(fucking_strings_as_template_arguments),
     PatternParse::Pattern<
         PatternParse::ByteSequence<0x11,0x00,0xf3,0x04>,
         PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>::value,
     "short placeholder");
+// PS. you should add ctr instead of shit like a wrapper around cairo
 
 Byte data[] = {
     /* 00 */ 0xff, 0xf0, 0x64, 0x22, 0x50, 0xca, 0x9f, 0x23,
@@ -51,83 +57,83 @@ Byte data[] = {
 };
 TEST_CASE("simple patterns", "[pattern]")
 {
-    Pattern p = "a8 fe 0 1c"_pattern; //middle
+    Pattern p = NEPTOOLS_PATTERN("a8 fe 0 1c"); //middle
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1b);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x1b);
 
-    p = "ff f0 64"_pattern; //beginning
+    p = NEPTOOLS_PATTERN("ff f0 64"); //beginning
     CHECK(p.MaybeFind({data, sizeof(data)}) == data);
     CHECK(p.Find({data, sizeof(data)}) == data);
 
-    p = "18 e 2e b9 fc ce"_pattern; //end
+    p = NEPTOOLS_PATTERN("18 e 2e b9 fc ce"); //end
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3a);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x3a);
 }
 TEST_CASE("simple not match", "[pattern]")
 {
-    auto p = "12 34 56 76"_pattern;
+    auto p = NEPTOOLS_PATTERN("12 34 56 76");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 TEST_CASE("multiple match", "[pattern]")
 {
-    auto p = "58 ec 21"_pattern;
+    auto p = NEPTOOLS_PATTERN("58 ec 21");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 
 TEST_CASE("wildcards", "[pattern]")
 {
-    Pattern p = "48 ? c5 ? ? be"_pattern; // mid
+    Pattern p = NEPTOOLS_PATTERN("48 ? c5 ? ? be"); // mid
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x22);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x22);
 
-    p = "ff ? ? 22 50"_pattern; // begin
+    p = NEPTOOLS_PATTERN("ff ? ? 22 50"); // begin
     CHECK(p.MaybeFind({data, sizeof(data)}) == data);
     CHECK(p.Find({data, sizeof(data)}) == data);
 
 
-    p = "e ? b9 ? ce"_pattern; // end
+    p = NEPTOOLS_PATTERN("e ? b9 ? ce"); // end
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
 
-    p = "? ? fe 00 ?"_pattern; // mid
+    p = NEPTOOLS_PATTERN("? ? fe 00 ?"); // mid
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1a);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x1a);
 
-    p = "? ? 64 22 ?"_pattern; // begin
+    p = NEPTOOLS_PATTERN("? ? 64 22 ?"); // begin
     CHECK(p.MaybeFind({data, sizeof(data)}) == data);
     CHECK(p.Find({data, sizeof(data)}) == data);
 
-    p = "? 2e b9 ? ?"_pattern; // end
+    p = NEPTOOLS_PATTERN("? 2e b9 ? ?"); // end
     CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
     CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
 }
 TEST_CASE("wildcards not match", "[pattern]")
 {
-    Pattern p = "12 34 ?? 56 ?? 78"_pattern;
+    Pattern p = NEPTOOLS_PATTERN("12 34 ?? 56 ?? 78");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
-    p = "? ? 12 34 56"_pattern;
+    p = NEPTOOLS_PATTERN("? ? 12 34 56");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
-    p = "12 34 ? 56 ? ? ?"_pattern;
+    p = NEPTOOLS_PATTERN("12 34 ? 56 ? ? ?");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
 TEST_CASE("wildcards multiple match", "[pattern]")
 {
-    Pattern p = "58 ? 21"_pattern;
+    Pattern p = NEPTOOLS_PATTERN("58 ? 21");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
-    p = "? 58 ? ?"_pattern;
+    p = NEPTOOLS_PATTERN("? 58 ? ?");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 
-    p = "? ? ? ?"_pattern;
+    p = NEPTOOLS_PATTERN("? ? ? ?");
     CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
     CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
 }
