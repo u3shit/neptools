@@ -4,18 +4,17 @@
 
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
+#include "../meta_utils.hpp"
+
+#include <brigand/sequences/at.hpp>
 
 #ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-#include <boost/hana/cartesian_product.hpp>
-#include <boost/hana/filter.hpp>
-#include <boost/hana/maximum.hpp>
-#include <boost/hana/minus.hpp>
-#include <boost/hana/not_equal.hpp>
-#include <boost/hana/replicate.hpp>
-#include <boost/hana/remove.hpp>
-#include <boost/hana/set.hpp>
-#include <boost/hana/size.hpp>
-#include <boost/hana/tuple.hpp>
+#include <brigand/algorithms/index_of.hpp>
+#include <brigand/algorithms/flatten.hpp>
+#include <brigand/algorithms/fold.hpp>
+#include <brigand/algorithms/transform.hpp>
+#include <brigand/functions/arithmetic/max.hpp>
+#include <brigand/sequences/set.hpp>
 #endif
 
 namespace Neptools::Lua
@@ -35,58 +34,11 @@ using EnableIfTupleLike = std::void_t<decltype(TupleLike<T>::SIZE)>;
 namespace Detail
 {
 
-template <typename... Args> struct List
-{
-#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-    static constexpr const auto ToHana = boost::hana::tuple_t<Args...>;
-#endif
-};
-
-template <size_t I, typename Args> struct Get;
-template <typename H, typename... Tail> struct Get<0, List<H, Tail...>>
-{ using Type = H; };
-template <size_t I, typename H, typename... Tail> struct Get<I, List<H, Tail...>>
-{ using Type = typename Get<I-1, List<Tail...>>::Type; };
-
 template <typename T, typename Enable = void> struct GetArg;
-
-template <typename List, typename... Res> struct Flatten1;
-template <typename... First, typename... Second, typename... Res>
-struct Flatten1<List<List<First...>, Second...>, Res...>
-{ using Type = typename Flatten1<List<Second...>, Res..., First...>::Type; };
-
-template <typename... Res> struct Flatten1<List<>, Res...>
-{ using Type = List<Res...>; };
-
-
-template <typename T> struct FunctionTraits;
-template <typename Ret, typename... Args> struct FunctionTraits<Ret(Args...)>
-{
-    using Return = Ret;
-    using Arguments = List<Args...>;
-    using ArgumentTypes = typename Flatten1<List<typename GetArg<Args>::Type...>>::Type;
-};
-
-template <typename Ret, typename... Args>
-struct FunctionTraits<Ret(*)(Args...)> : FunctionTraits<Ret(Args...)> {};
-template <typename Ret, typename C, typename... Args>
-struct FunctionTraits<Ret(C::*)(Args...)> : FunctionTraits<Ret(C&, Args...)> {};
-template <typename Ret, typename C, typename... Args>
-struct FunctionTraits<Ret(C::*)(Args...) const> : FunctionTraits<Ret(C&, Args...)> {};
-
-#if __cpp_noexcept_function_type >= 201510
-template <typename Ret, typename... Args>
-struct FunctionTraits<Ret(*)(Args...) noexcept> : FunctionTraits<Ret(Args...)> {};
-template <typename Ret, typename C, typename... Args>
-struct FunctionTraits<Ret(C::*)(Args...) noexcept> : FunctionTraits<Ret(C&, Args...)> {};
-template <typename Ret, typename C, typename... Args>
-struct FunctionTraits<Ret(C::*)(Args...) const noexcept> : FunctionTraits<Ret(C&, Args...)> {};
-#endif
-
 template <typename T, typename> struct GetArg
 {
     using RawType = typename std::decay<T>::type;
-    using Type = List<RawType>;
+    using type = brigand::list<RawType>;
 
     template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
@@ -105,7 +57,7 @@ template <> struct GetArg<Skip>
     static constexpr Skip Get(StateRef, int) noexcept { return {}; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
 
-    using Type = List<>;
+    using type = brigand::list<>;
     template <typename Val>
     static constexpr const bool IS = true;
 };
@@ -117,7 +69,7 @@ template <> struct GetArg<StateRef>
     static constexpr StateRef Get(StateRef vm, int) noexcept { return vm; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
 
-    using Type = List<>;
+    using type = brigand::list<>;
     template <typename Val>
     static constexpr const bool IS = true;
 };
@@ -135,7 +87,7 @@ template <int LType> struct GetArg<Raw<LType>>
     static bool Is(StateRef vm, int idx) noexcept
     { return lua_type(vm, idx) == LType; }
 
-    using Type = List<Raw<LType>>;
+    using type = brigand::list<Raw<LType>>;
     template <typename Val>
     static constexpr const bool IS = std::is_same_v<Raw<LType>, Val>;
 };
@@ -161,7 +113,7 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
     static bool Is(StateRef vm, int idx)
     { return (vm.Is<TupleElement<Tuple, Index>>(idx+Index) && ...); }
 
-    using Type = List<TupleElement<Tuple, Index>...>;
+    using type = brigand::list<TupleElement<Tuple, Index>...>;
     // IS: should be called on underlying types
 };
 
@@ -247,7 +199,8 @@ template <auto Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
 struct WrapFunGen;
 
 template <auto Fun, bool Unsafe, typename Ret, typename... Args, int... Seq>
-struct WrapFunGen<Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int, Seq...>>
+struct WrapFunGen<Fun, Unsafe, Ret, brigand::list<Args...>,
+                  std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -258,7 +211,8 @@ struct WrapFunGen<Fun, Unsafe, Ret, List<Args...>, std::integer_sequence<int, Se
 };
 
 template <auto Fun, bool Unsafe, typename... Args, int... Seq>
-struct WrapFunGen<Fun, Unsafe, void, List<Args...>, std::integer_sequence<int, Seq...>>
+struct WrapFunGen<Fun, Unsafe, void, brigand::list<Args...>,
+                  std::integer_sequence<int, Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -270,16 +224,15 @@ struct WrapFunGen<Fun, Unsafe, void, List<Args...>, std::integer_sequence<int, S
 
 template <auto Fun, bool Unsafe, typename Args> struct WrapFunGen2;
 template <auto Fun, bool Unsafe, typename... Args>
-struct WrapFunGen2<Fun, Unsafe, List<Args...>>
+struct WrapFunGen2<Fun, Unsafe, brigand::list<Args...>>
     : public WrapFunGen<
         Fun, Unsafe,
-        typename FunctionTraits<decltype(Fun)>::Return, List<Args...>,
+        FunctionReturn<decltype(Fun)>, brigand::list<Args...>,
         typename GenArgSequence<Unsafe, 1, std::integer_sequence<int>, Args...>::Type>
 {};
 
 template <auto Fun, bool Unsafe>
-struct WrapFunc : WrapFunGen2<
-    Fun, Unsafe, typename FunctionTraits<decltype(Fun)>::Arguments>
+struct WrapFunc : WrapFunGen2<Fun, Unsafe, FunctionArguments<decltype(Fun)>>
 {};
 
 // allow plain old lua functions
@@ -291,7 +244,7 @@ struct WrapFunc<Fun, Unsafe>
 // overload
 template <typename Args, typename Seq> struct OverloadCheck2;
 template <typename... Args, int... Seq>
-struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
+struct OverloadCheck2<brigand::list<Args...>, std::integer_sequence<int, Seq...>>
 {
     static bool Is(StateRef vm)
     {
@@ -301,14 +254,14 @@ struct OverloadCheck2<List<Args...>, std::integer_sequence<int, Seq...>>
 
     template <typename ValsList>
     static constexpr bool IS = (
-        GetArg<Args>::template IS<typename Get<Seq-1, ValsList>::Type> && ...);
+        GetArg<Args>::template IS<brigand::at_c<ValsList, Seq-1>> && ...);
 };
 
 template <typename Args> struct OverloadCheck;
 template <typename... Args>
-struct OverloadCheck<List<Args...>>
+struct OverloadCheck<brigand::list<Args...>>
     : public OverloadCheck2<
-        List<Args...>,
+        brigand::list<Args...>,
         typename GenArgSequence<true, 1, std::integer_sequence<int>, Args...>::Type>
 {};
 
@@ -319,7 +272,7 @@ struct OverloadWrap<Fun, Rest...>
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        if (OverloadCheck<typename FunctionTraits<decltype(Fun)>::Arguments>::Is(vm))
+        if (OverloadCheck<FunctionArguments<decltype(Fun)>>::Is(vm))
             return WrapFunc<Fun, true>::Func(vm);
         else
             return OverloadWrap<Rest...>::Func(vm);
@@ -335,84 +288,67 @@ template<> struct OverloadWrap<>
 };
 
 #ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-namespace h = boost::hana;
-struct GetArgs
+namespace b = brigand;
+
+template <typename List> struct LCartesian;
+template <typename List>
+using Cartesian = typename LCartesian<List>::type;
+
+template <typename Head, typename... Tail>
+struct LCartesian<b::list<Head, Tail...>>
 {
-    template <typename T>
-    inline constexpr auto operator()(h::basic_type<T>)
-    {
-        return FunctionTraits<T>::ArgumentTypes::ToHana;
-    }
+    using Rest = Cartesian<b::list<Tail...>>;
+    using type = b::join<b::transform<
+        Head,
+        b::bind<b::transform,
+                b::pin<Rest>,
+                b::defer<b::bind<b::push_front, b::_1, b::parent<b::_1>>>>>>;
 };
+template <typename... T> struct LCartesian<b::list<b::list<T...>>>
+{ using type = b::list<b::list<T>...>; };
+template <> struct LCartesian<b::list<>> { using type = b::list<>; };
 
-template <typename T> struct ToList;
-template <typename... Args> struct ToList<h::tuple<Args...>>
-{ using Type = List<typename Args::type...>; };
+template <typename A, typename B>
+using IsOverload = b::integral_constant<bool, OverloadCheck<A>::template IS<B>>;
 
-// http://stackoverflow.com/a/33987589
-template <typename Iterable, typename Pred>
-constexpr auto index_of(const Iterable& iterable, Pred p)
-{
-    auto size = decltype(h::size(iterable)){};
-    auto dropped = decltype(h::size(
-        h::drop_while(iterable, p)
-    )){};
-    return size - dropped;
-}
-
-template <typename Test>
-struct Check
-{
-    template <typename Overload>
-    constexpr auto operator()(const Overload&) const
-    {
-        // warning: negated return
-        return boost::hana::bool_c<
-            !OverloadCheck<typename ToList<Overload>::Type>::
-                template IS<typename ToList<Test>::Type>>;
-    }
-};
-
-template <typename Overloads> struct Called
-{
-    Overloads& overloads;
-
-    template <typename Test>
-    constexpr auto operator()(const Test&) const
-    {
-        return index_of(overloads, Check<Test>{});
-    }
-};
+// brigand as_set fails on duplicate elements
+template <typename T>
+using ToSet = b::fold<T, b::set<>, b::bind<b::insert, b::_state, b::_element>>;
 
 // used to report overload problems in a user-friendly.. khgrrr.. way
 template <typename CalculatedSize, typename ExpectedSize,
           typename CalledOverloads, typename Overloads>
-constexpr inline void InvalidOverload(CalculatedSize, ExpectedSize,
-                                      CalledOverloads, Overloads) = delete;
+constexpr inline void InvalidOverload() = delete;
 
 template <auto... Overloads>
 inline constexpr void CheckUnique()
 {
-    constexpr auto overloads = h::transform(h::tuple_t<decltype(Overloads)...>, GetArgs{});
+    using Args = b::transform<
+        b::list<decltype(Overloads)...>,
+        b::bind<b::join,
+                b::bind<b::transform,
+                        b::bind<FunctionArguments, b::_1>,
+                        b::defer<GetArg<b::_1>>>>>;
+
     // get possible argument types. add nil to simulate less arguments
-    constexpr auto argset = h::insert(
-        h::to_set(h::flatten(overloads)), h::type_c<Raw<LUA_TNIL>>);
+    using ArgSet = ToSet<b::push_back<b::flatten<Args>, Raw<LUA_TNIL>>>;
+
     // longest argument count
-    constexpr auto max_count = h::maximum(h::transform(overloads, h::length));
+    using MaxCount = b::fold<b::transform<Args, b::bind<b::size, b::_1>>,
+                             b::size_t<0>, b::max<b::_1, b::_2>>;
     // all possible calls with argset
-    constexpr auto all_test = h::cartesian_product(
-        h::replicate<h::tuple_tag>(h::to_tuple(argset), max_count));
+    using AllTests = Cartesian<
+        b::filled_list<b::wrap<ArgSet, b::list>, MaxCount::value>>;
 
     // actually called function for each test
-    constexpr auto called = h::transform(all_test, Called<decltype(overloads)>{overloads});
-    // called index == sizeof...(Overloads) => failed to call (ignore)
-    constexpr auto called_set = h::to_set(h::remove(called, h::size_c<sizeof...(Overloads)>));
+    using Check = b::defer<b::bind<IsOverload, b::_1, b::parent<b::_1>>>;
+    using Called = b::transform<AllTests, b::bind<b::index_if, b::pin<Args>, Check>>;
+    // set of called overloads
+    using CalledSet = b::erase<ToSet<Called>, b::no_such_type_>;
 
-    if constexpr (h::size(called_set) != sizeof...(Overloads))
-    {
-        InvalidOverload(h::size(called_set), h::size_c<sizeof...(Overloads)>,
-                        called, overloads);
-    }
+    if constexpr (b::size<CalledSet>::value != sizeof...(Overloads))
+        InvalidOverload<b::size<CalledSet>, b::size_t<sizeof...(Overloads)>,
+                        Called, Args>();
 }
 #endif
 

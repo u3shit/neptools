@@ -2,17 +2,18 @@
 #define UUID_2BA17F45_80C0_4F6E_A84A_1BEAC95A48DC
 #pragma once
 
-#include "function_call.hpp"
+#include "base.hpp"
+#include "function_call_types.hpp"
+#include "../meta_utils.hpp"
 
 namespace Neptools::Lua
 {
 
-template <auto Fun,
-          typename Args = typename Detail::FunctionTraits<decltype(Fun)>::Arguments>
+template <auto Fun, typename Args = FunctionArguments<decltype(Fun)>>
 struct TableRetWrap;
 
 template <auto Fun, typename... Args>
-struct TableRetWrap<Fun, Detail::List<Args...>>
+struct TableRetWrap<Fun, brigand::list<Args...>>
 {
     static RetNum Wrap(StateRef vm, Args&&... args)
     {
