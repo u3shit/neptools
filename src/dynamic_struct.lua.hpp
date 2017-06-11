@@ -2,13 +2,11 @@
 #define UUID_8BEC2FCA_66B2_48E5_A689_E29590320829
 #pragma once
 
+#include "dynamic_struct.hpp"
 #include "lua/user_type.hpp"
 
-#include "dynamic_struct.hpp"
 #include <type_traits>
 #include <boost/integer.hpp>
-#include <boost/hana/maximum.hpp>
-#include <boost/hana/tuple.hpp>
 
 namespace Neptools
 {
@@ -75,9 +73,7 @@ struct DynamicStructTypeInfo
     const char* name;
 
     typename boost::uint_value_t<sizeof...(Args)-1>::least index;
-    typename boost::uint_value_t<
-        boost::hana::maximum(boost::hana::tuple_c<size_t, sizeof(Args)...>).value
-    >::least size;
+    typename boost::uint_value_t<std::max({sizeof(Args)...})>::least size;
     bool sizable;
 };
 

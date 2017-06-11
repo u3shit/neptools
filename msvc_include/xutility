@@ -1,0 +1,16 @@
+// -*- c++ -*-
+#pragma once
+
+#include <climits>
+#include <cstdlib>
+#include <utility>
+
+#pragma push_macro("inline")
+#define inline constexpr inline
+#pragma push_macro("inline")
+#define inline inline _Pragma("pop_macro(\"inline\")")
+#pragma push_macro("inline")
+#define inline inline _Pragma("pop_macro(\"inline\")")
+
+#include_next<xutility>
+#pragma pop_macro("inline")

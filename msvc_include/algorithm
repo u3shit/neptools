@@ -1,8 +1,34 @@
 // -*- c++ -*-
 #pragma once
 
-#include <functional>
+#include <xmemory>
+
+#pragma push_macro("_Ty")
+#define _Ty(x) constexpr _Ty(x)
+#pragma push_macro("_Ty")
+#define _Ty(x) _Ty(x) _Pragma("pop_macro(\"_Ty\")")
+
+
+#pragma push_macro("max_element")
+#define max_element constexpr max_element _Pragma("pop_macro(\"max_element\")")
+#pragma push_macro("max_element")
+#define max_element constexpr max_element _Pragma("pop_macro(\"max_element\")")
+
+#pragma push_macro("min_element")
+#define min_element constexpr min_element _Pragma("pop_macro(\"min_element\")")
+#pragma push_macro("min_element")
+#define min_element constexpr min_element _Pragma("pop_macro(\"min_element\")")
+
+
+#pragma push_macro("_Max_element")
+#define _Max_element constexpr _Max_element _Pragma("pop_macro(\"_Max_element\")")
+#pragma push_macro("_Min_element")
+#define _Min_element constexpr _Min_element _Pragma("pop_macro(\"_Min_element\")")
+
+
 #include_next <algorithm>
+
+#pragma pop_macro("_Ty")
 
 namespace std
 {
