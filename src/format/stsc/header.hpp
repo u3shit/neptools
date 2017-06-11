@@ -43,7 +43,7 @@ public:
 
     FilePosition GetSize() const noexcept override;
 
-    const Label* entry_point;
+    NotNull<LabelPtr> entry_point;
     uint32_t flags = 0;
 
     uint8_t extra_headers_1[32];

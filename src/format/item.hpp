@@ -69,7 +69,7 @@ public:
         {
             auto nsize = nitem->GetSize();
             for (auto& l : labels)
-                NEPTOOLS_CHECK(InvalidItemState, l.ptr.offset <= nsize,
+                NEPTOOLS_CHECK(InvalidItemState, l.GetPtr().offset <= nsize,
                                "would invalidate labels");
         }
         NEPTOOLS_CHECK(InvalidItemState, nitem->labels.empty(),

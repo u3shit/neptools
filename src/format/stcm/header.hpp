@@ -44,8 +44,8 @@ public:
     FilePosition GetSize() const noexcept override { return sizeof(Header); }
 
     FixedString<0x20> msg;
-    const Label* export_sec;
-    const Label* collection_link;
+    NotNull<LabelPtr> export_sec;
+    NotNull<LabelPtr> collection_link;
     uint32_t field_28;
 
 private:

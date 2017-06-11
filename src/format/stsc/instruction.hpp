@@ -33,9 +33,9 @@ using Tagged = uint32_t;
 struct Code;
 
 template <typename T> struct TupleTypeMap { using Type = T; };
-template<> struct TupleTypeMap<std::string> { using Type = const Label*; };
-template<> struct TupleTypeMap<void*> { using Type = const Label*; };
-template<> struct TupleTypeMap<Code*> { using Type = const Label*; };
+template<> struct TupleTypeMap<std::string> { using Type = LabelPtr; };
+template<> struct TupleTypeMap<void*> { using Type = LabelPtr; };
+template<> struct TupleTypeMap<Code*> { using Type = LabelPtr; };
 
 template <bool NoReturn, typename... Args>
 class SimpleInstruction final : public InstructionBase
@@ -63,7 +63,7 @@ public:
     Instruction0dItem(Key k, Context* ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
 
-    std::vector<const Label*> tgts;
+    std::vector<NotNull<LabelPtr>> tgts;
 
 private:
     void Parse_(Source& src);
@@ -115,7 +115,7 @@ public:
     FilePosition GetSize() const noexcept override
     { return 1 + sizeof(FixParams) + tree.size() * sizeof(NodeParams); }
 
-    const Label* tgt;
+    NotNull<LabelPtr> tgt;
     struct Node
     {
         uint8_t operation;
@@ -163,7 +163,7 @@ public:
     uint32_t field_0;
     bool flag;
 
-    std::vector<std::pair<uint32_t, const Label*>> expressions;
+    std::vector<std::pair<uint32_t, NotNull<LabelPtr>>> expressions;
 
     void Dispose() noexcept override;
 

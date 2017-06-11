@@ -9,6 +9,12 @@
 namespace Neptools::Lua
 {
 
+// fuck you, std::remove_const
+template <typename T> struct RemoveConst { using Type = T; };
+template <typename T> struct RemoveConst<const T> { using Type = T; };
+template <typename T> struct RemoveConst<const T&> { using Type = T&; };
+template <typename T> using RemoveConstT = typename RemoveConst<T>::Type;
+
 template <auto Fun, typename Args = FunctionArguments<decltype(Fun)>>
 struct TableRetWrap;
 
@@ -25,7 +31,8 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
         size_t i = 0;
         for (const auto& it : ret)
         {
-            vm.Push(it); //+2
+            // HACK
+            vm.Push(const_cast<RemoveConstT<decltype(it)>>(it)); //+2
             lua_rawseti(vm, -2, i++); // +1
         }
 

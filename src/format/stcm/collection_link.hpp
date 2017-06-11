@@ -44,7 +44,7 @@ public:
     FilePosition GetSize() const noexcept override
     { return sizeof(Header); }
 
-    const Label* data;
+    NotNull<LabelPtr> data;
 
 private:
     void Dump_(Sink& sink) const override;
@@ -78,8 +78,8 @@ public:
 
     struct LinkEntry
     {
-        const Label* name_0;
-        const Label* name_1;
+        NotNull<LabelPtr> name_0;
+        NotNull<LabelPtr> name_1;
     };
     std::vector<LinkEntry> entries;
 

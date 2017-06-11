@@ -24,7 +24,8 @@ void HeaderItem::Header::Validate(FilePosition size) const
 #undef VALIDATE
 }
 
-HeaderItem::HeaderItem(Key k, Context* ctx, Source src) : Item{k, ctx}
+HeaderItem::HeaderItem(Key k, Context* ctx, Source src)
+    : Item{k, ctx}, entry_point{EmptyNotNull{}}
 {
     AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, src);
 }
@@ -43,7 +44,7 @@ HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
     auto x = RawItem::GetSource(ptr, -1);
     auto& ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.src);
 
-    InstructionBase::CreateAndInsert(ret.entry_point->ptr);
+    InstructionBase::CreateAndInsert(ret.entry_point->GetPtr());
     return ret;
 }
 
@@ -54,7 +55,7 @@ void HeaderItem::Parse_(Source& src)
     hdr.Validate(src.GetSize());
 
     entry_point =
-        &GetUnsafeContext().CreateLabelFallback("entry_point", hdr.entry_point);
+        GetUnsafeContext().CreateLabelFallback("entry_point", hdr.entry_point);
     flags = hdr.flags;
 
     if (flags & 1)
@@ -78,7 +79,7 @@ void HeaderItem::Dump_(Sink& sink) const
 {
     Header hdr;
     memcpy(hdr.magic, "STSC", 4);
-    hdr.entry_point = ToFilePos(entry_point->ptr);
+    hdr.entry_point = ToFilePos(entry_point->GetPtr());
     hdr.flags = flags;
     sink.WriteGen(hdr);
 
@@ -103,7 +104,7 @@ void HeaderItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
 
-    os << "stsc_header(@" << entry_point->name << ", " << flags;
+    os << "stsc_header(@" << entry_point->GetName() << ", " << flags;
     if (flags & 1) { os << ", "; DumpBytes(os, {extra_headers_1, 32}); }
     if (flags & 2)
         os << ", " << extra_headers_2_0

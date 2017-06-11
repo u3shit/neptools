@@ -26,16 +26,17 @@ public:
     NEPTOOLS_NOLUA NotNull<SmartPtr<T>> Create(Args&&... args)
     { return MakeSmart<T>(Item::Key{}, this, std::forward<Args>(args)...); }
 
-    const Label& GetLabel(const std::string& name) const;
-    const Label& CreateLabel(std::string name, ItemPointer ptr);
-    const Label& CreateLabelFallback(std::string name, ItemPointer ptr);
-    const Label& CreateLabelFallback(std::string name, FilePosition pos)
+    NotNull<LabelPtr> GetLabel(const std::string& name) const;
+    NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
+    NotNull<LabelPtr> CreateLabelFallback(std::string name, ItemPointer ptr);
+    NotNull<LabelPtr> CreateLabelFallback(std::string name, FilePosition pos)
     { return CreateLabelFallback(name, GetPointer(pos)); }
 
-    const Label& GetLabelTo(ItemPointer ptr);
-    const Label& GetLabelTo(FilePosition pos) { return GetLabelTo(GetPointer(pos)); }
+    NotNull<LabelPtr> GetLabelTo(ItemPointer ptr);
+    NotNull<LabelPtr> GetLabelTo(FilePosition pos)
+    { return GetLabelTo(GetPointer(pos)); }
 
-    const Label& GetLabelTo(FilePosition pos, std::string name);
+    NotNull<LabelPtr> GetLabelTo(FilePosition pos, std::string name);
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 

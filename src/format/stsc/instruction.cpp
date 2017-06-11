@@ -151,40 +151,40 @@ template<> struct Traits<void*>
     static void Validate(uint32_t r, FilePosition size)
     { NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction", r <= size); }
 
-    static const Label* Parse(uint32_t r, Context& ctx)
-    { return &ctx.GetLabelTo(r); }
+    static NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
+    { return ctx.GetLabelTo(r); }
 
-    static RawType Dump(const Label* l)
-    { return ToFilePos(l->ptr); }
+    static RawType Dump(const LabelPtr& l)
+    { return ToFilePos(l->GetPtr()); }
 
-    static void Inspect(std::ostream& os, const Label* l)
-    { os << '@' << l->name; }
+    static void Inspect(std::ostream& os, const LabelPtr& l)
+    { os << '@' << l->GetName(); }
 
-    static void PostInsert(const Label*) {}
+    static void PostInsert(const LabelPtr&) {}
 };
 
 template<> struct Traits<std::string> : public Traits<void*>
 {
-    static const Label* Parse(uint32_t r, Context& ctx)
+    static NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
     {
         auto ptr = ctx.GetPointer(r);
         if (ptr.Maybe<RawItem>())
         {
             auto x = RawItem::GetSource(ptr, -1);
-            return &ctx.GetLabelTo(r, "str_"+x.src.PreadCString(0).substr(0, 16));
+            return ctx.GetLabelTo(r, "str_"+x.src.PreadCString(0).substr(0, 16));
         }
         else
-            return &ctx.GetLabelTo(r);
+            return ctx.GetLabelTo(r);
     }
 
-    static void PostInsert(const Label* lbl)
-    { MaybeCreate<StringItem>(lbl->ptr); }
+    static void PostInsert(const LabelPtr& lbl)
+    { MaybeCreate<StringItem>(lbl->GetPtr()); }
 };
 
 template<> struct Traits<Code*> : public Traits<void*>
 {
-    static void PostInsert(const Label* lbl)
-    { MaybeCreateUnchecked<InstructionBase>(lbl->ptr); }
+    static void PostInsert(const LabelPtr& lbl)
+    { MaybeCreateUnchecked<InstructionBase>(lbl->GetPtr()); }
 };
 
 template <typename T, typename... Args> struct OperationsImpl;
@@ -312,7 +312,7 @@ void Instruction0dItem::Parse_(Source& src)
         uint32_t t = src.ReadLittleUint32();
         NEPTOOLS_VALIDATE_FIELD(
             "Stsc::Instruction0dItem", t < GetUnsafeContext().GetSize());
-        tgts.push_back(&GetUnsafeContext().GetLabelTo(t));
+        tgts.push_back(GetUnsafeContext().GetLabelTo(t));
     }
 }
 
@@ -321,7 +321,7 @@ void Instruction0dItem::Dump_(Sink& sink) const
     InstrDump(sink);
     sink.WriteLittleUint8(tgts.size());
     for (auto l : tgts)
-        sink.WriteLittleUint32(ToFilePos(l->ptr));
+        sink.WriteLittleUint32(ToFilePos(l->GetPtr()));
 }
 
 void Instruction0dItem::Inspect_(std::ostream& os) const
@@ -332,7 +332,7 @@ void Instruction0dItem::Inspect_(std::ostream& os) const
     {
         if (!first) os << ", ";
         first = false;
-        os << '@' << l->name;
+        os << '@' << l->GetName();
     }
     os << ')';
 }
@@ -340,7 +340,7 @@ void Instruction0dItem::Inspect_(std::ostream& os) const
 void Instruction0dItem::PostInsert()
 {
     for (auto l : tgts)
-        MaybeCreateUnchecked<InstructionBase>(l->ptr);
+        MaybeCreateUnchecked<InstructionBase>(l->GetPtr());
 }
 
 // ------------------------------------------------------------------------
@@ -364,7 +364,7 @@ void Instruction1dItem::NodeParams::Validate(uint16_t size)
 
 Instruction1dItem::Instruction1dItem(
     Key k, Context* ctx, uint8_t opcode, Source src)
-    : InstructionBase{k, ctx, opcode}
+    : InstructionBase{k, ctx, opcode}, tgt{EmptyNotNull{}}
 {
     AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, src);
 }
@@ -380,7 +380,7 @@ void Instruction1dItem::Parse_(Source& src)
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
     fp.Validate(src.GetRemainingSize(), GetUnsafeContext().GetSize());
-    tgt = &GetUnsafeContext().GetLabelTo(fp.tgt);
+    tgt = GetUnsafeContext().GetLabelTo(fp.tgt);
 
     uint16_t n = fp.size;
     src.CheckRemainingSize(n * sizeof(NodeParams));
@@ -396,14 +396,14 @@ void Instruction1dItem::Parse_(Source& src)
 void Instruction1dItem::Dump_(Sink& sink) const
 {
     InstrDump(sink);
-    sink.WriteGen(FixParams{tree.size(), ToFilePos(tgt->ptr)});
+    sink.WriteGen(FixParams{tree.size(), ToFilePos(tgt->GetPtr())});
     for (auto& n : tree)
         sink.WriteGen(NodeParams{n.operation, n.value, n.left, n.right});
 }
 
 void Instruction1dItem::Inspect_(std::ostream& os) const
 {
-    InstrInspect(os) << ", @" << tgt->name << ", ";
+    InstrInspect(os) << ", @" << tgt->GetName() << ", ";
     InspectNode(os, 0);
     os << ')';
 }
@@ -426,7 +426,7 @@ void Instruction1dItem::InspectNode(std::ostream& os, size_t i) const
 
 void Instruction1dItem::PostInsert()
 {
-    MaybeCreateUnchecked<InstructionBase>(tgt->ptr);
+    MaybeCreateUnchecked<InstructionBase>(tgt->GetPtr());
     MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
 }
 
@@ -473,7 +473,7 @@ void Instruction1eItem::Parse_(Source& src)
         auto exp = src.ReadGen<ExpressionParams>();
         exp.Validate(GetUnsafeContext().GetSize());
         expressions.push_back({
-                exp.expression, &GetUnsafeContext().GetLabelTo(exp.tgt)});
+                exp.expression, GetUnsafeContext().GetLabelTo(exp.tgt)});
     }
 }
 
@@ -482,7 +482,7 @@ void Instruction1eItem::Dump_(Sink& sink) const
     InstrDump(sink);
     sink.WriteGen(FixParams{field_0, (flag << 15) | expressions.size()});
     for (auto& e : expressions)
-        sink.WriteGen(ExpressionParams{e.first, ToFilePos(e.second->ptr)});
+        sink.WriteGen(ExpressionParams{e.first, ToFilePos(e.second->GetPtr())});
 
 }
 
@@ -494,7 +494,7 @@ void Instruction1eItem::Inspect_(std::ostream& os) const
     {
         if (!first) os << ", ";
         first = false;
-        os << '{' << e.first << ", @" << e.second->name << '}';
+        os << '{' << e.first << ", @" << e.second->GetName() << '}';
     }
     os << "})";
 }
@@ -502,7 +502,7 @@ void Instruction1eItem::Inspect_(std::ostream& os) const
 void Instruction1eItem::PostInsert()
 {
     for (const auto& e : expressions)
-        MaybeCreate<InstructionBase>(e.second->ptr);
+        MaybeCreate<InstructionBase>(e.second->GetPtr());
     MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
 }
 

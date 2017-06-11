@@ -37,7 +37,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
         entries.push_back({
             static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
-            &GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)});
+            GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)});
     }
 }
 
@@ -52,10 +52,10 @@ ExportsItem& ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
         switch (e.type)
         {
         case Type::CODE:
-            MaybeCreate<InstructionItem>(e.lbl->ptr);
+            MaybeCreate<InstructionItem>(e.lbl->GetPtr());
             break;
         case Type::DATA:
-            MaybeCreate<DataItem>(e.lbl->ptr);
+            MaybeCreate<DataItem>(e.lbl->GetPtr());
             break;
         }
     return ret;
@@ -75,7 +75,7 @@ void ExportsItem::Dump_(Sink& sink) const
     {
         ee.type = e.type;
         ee.name = e.name;
-        ee.offset = ToFilePos(e.lbl->ptr);
+        ee.offset = ToFilePos(e.lbl->GetPtr());
         sink.WriteGen(ee);
     }
 }
@@ -88,7 +88,7 @@ void ExportsItem::Inspect_(std::ostream& os) const
     {
         os << '{' << e.type << ", ";
         DumpBytes(os, e.name.c_str());
-        os << ", @" << e.lbl->name << ")\n";
+        os << ", @" << e.lbl->GetName() << ")\n";
     }
 }
 

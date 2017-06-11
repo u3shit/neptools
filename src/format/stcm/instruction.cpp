@@ -107,9 +107,8 @@ void InstructionItem::Parse_(Source& src)
     auto& ctx = GetUnsafeContext();
     instr.Validate(ctx.GetSize());
 
-    is_call = instr.is_call;
     if (instr.is_call)
-        SetTarget(&ctx.GetLabelTo(instr.opcode));
+        SetTarget(ctx.GetLabelTo(instr.opcode));
     else
         SetOpcode(instr.opcode);
 
@@ -121,43 +120,45 @@ void InstructionItem::Parse_(Source& src)
     }
 }
 
-InstructionItem::Param::Param(Context& ctx, const Parameter& in)
+auto InstructionItem::Param::GetVariant(Context& ctx, const Parameter& in)
+    -> Variant
 {
     in.Validate(ctx.GetSize());
 
     switch (Parameter::TypeTag(in.param_0))
     {
     case Parameter::Type0::MEM_OFFSET:
-        SetMemOffset(ctx.GetLabelTo(Parameter::Value(in.param_0)));
-        param_4 = Param48{ctx, in.param_4};
-        param_8 = Param48{ctx, in.param_8};
-        return;
+        return MemOffset{
+            ctx.GetLabelTo(Parameter::Value(in.param_0)),
+            Param48{ctx, in.param_4},
+            Param48{ctx, in.param_8}};
 
     case Parameter::Type0::INDIRECT:
-        SetIndirect(Parameter::Value(in.param_0));
-        param_8 = Param48{ctx, in.param_8};
-        return;
+        return Indirect{
+            Parameter::Value(in.param_0),
+            Param48{ctx, in.param_8}};
 
+#define RETVAR(type, val) return Variant{                               \
+            std::in_place_index<static_cast<size_t>(Type::type)>, val}
     case Parameter::Type0::SPECIAL:
         if (in.param_0 >= Parameter::Type0Special::READ_STACK_MIN &&
             in.param_0 <= Parameter::Type0Special::READ_STACK_MAX)
         {
-            SetReadStack(in.param_0 - Parameter::Type0Special::READ_STACK_MIN);
+            RETVAR(READ_STACK, in.param_0 - Parameter::Type0Special::READ_STACK_MIN);
         }
         else if (in.param_0 >= Parameter::Type0Special::READ_4AC_MIN &&
             in.param_0 <= Parameter::Type0Special::READ_4AC_MAX)
         {
-            SetRead4ac(in.param_0 - Parameter::Type0Special::READ_4AC_MIN);
+            RETVAR(READ_4AC, in.param_0 - Parameter::Type0Special::READ_4AC_MIN);
         }
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR0)
-            SetInstrPtr0(ctx.GetLabelTo(in.param_4));
+            RETVAR(INSTR_PTR0, ctx.GetLabelTo(in.param_4));
         else if (in.param_0 == Parameter::Type0Special::INSTR_PTR1)
-            SetInstrPtr1(ctx.GetLabelTo(in.param_4));
+            RETVAR(INSTR_PTR1, ctx.GetLabelTo(in.param_4));
         else if (in.param_0 == Parameter::Type0Special::COLL_LINK)
-            SetCollLink(ctx.GetLabelTo(in.param_4));
+            RETVAR(COLL_LINK, ctx.GetLabelTo(in.param_4));
         else
             NEPTOOLS_UNREACHABLE("Invalid special parameter type");
-        return;
     }
 
     NEPTOOLS_UNREACHABLE("Invalid parameter type");
@@ -169,45 +170,53 @@ void InstructionItem::Param::Dump(Sink& sink) const
     switch (GetType())
     {
     case Type::MEM_OFFSET:
-        pp.param_0 =
-            Parameter::Tag(Parameter::Type0::MEM_OFFSET, ToFilePos(label->ptr));
-        pp.param_4 = param_4.Dump();
-        pp.param_8 = param_8.Dump();
+    {
+        const auto& o = Get<Type::MEM_OFFSET>();
+        pp.param_0 = Parameter::Tag(
+            Parameter::Type0::MEM_OFFSET, ToFilePos(o.target->GetPtr()));
+        pp.param_4 = o.param_4.Dump();
+        pp.param_8 = o.param_8.Dump();
         break;
+    }
 
     case Type::INDIRECT:
-        pp.param_0 = Parameter::Tag(Parameter::Type0::INDIRECT, num);
+    {
+        const auto& i = Get<Type::INDIRECT>();
+        pp.param_0 = Parameter::Tag(Parameter::Type0::INDIRECT, i.param_0);
         pp.param_4 = 0x40000000;
-        pp.param_8 = param_8.Dump();
+        pp.param_8 = i.param_8.Dump();
         break;
+    }
 
     case Type::READ_STACK:
-        pp.param_0 = Parameter::Type0Special::READ_STACK_MIN + num;
+        pp.param_0 = Parameter::Type0Special::READ_STACK_MIN +
+            Get<Type::READ_STACK>();
         pp.param_4 = 0x40000000;
         pp.param_8 = 0x40000000;
         break;
 
     case Type::READ_4AC:
-        pp.param_0 = Parameter::Type0Special::READ_4AC_MIN + num;
+        pp.param_0 = Parameter::Type0Special::READ_4AC_MIN +
+            Get<Type::READ_4AC>();
         pp.param_4 = 0x40000000;
         pp.param_8 = 0x40000000;
         break;
 
     case Type::INSTR_PTR0:
         pp.param_0 = Parameter::Type0Special::INSTR_PTR0;
-        pp.param_4 = ToFilePos(label->ptr);
+        pp.param_4 = ToFilePos(Get<Type::INSTR_PTR0>()->GetPtr());
         pp.param_8 = 0x40000000;
         break;
 
     case Type::INSTR_PTR1:
         pp.param_0 = Parameter::Type0Special::INSTR_PTR1;
-        pp.param_4 = ToFilePos(label->ptr);
+        pp.param_4 = ToFilePos(Get<Type::INSTR_PTR1>()->GetPtr());
         pp.param_8 = 0x40000000;
         break;
 
     case Type::COLL_LINK:
         pp.param_0 = Parameter::Type0Special::COLL_LINK;
-        pp.param_4 = ToFilePos(label->ptr);
+        pp.param_4 = ToFilePos(Get<Type::COLL_LINK>()->GetPtr());
         pp.param_8 = 0;
         break;
     }
@@ -216,77 +225,82 @@ void InstructionItem::Param::Dump(Sink& sink) const
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
 {
+    using T = InstructionItem::Param::Type;
     switch (p.GetType())
     {
-    case InstructionItem::Param::Type::MEM_OFFSET:
-        return os << "mem_offset(@" << p.GetMemOffset().name << ", "
-                  << p.GetParam4() << ", " << p.GetParam8() << ')';
-    case InstructionItem::Param::Type::INDIRECT:
-        return os << "indirect(" << p.GetIndirect() << ", " << p.GetParam8() << ')';
-    case InstructionItem::Param::Type::READ_STACK:
-        return os << "stack(" << p.GetReadStack() << ")";
-    case InstructionItem::Param::Type::READ_4AC:
-        return os << "4ac(" << p.GetRead4ac() << ")";
-    case InstructionItem::Param::Type::INSTR_PTR0:
-        return os << "instr_ptr0(@" << p.GetInstrPtr0().name << ')';
-    case InstructionItem::Param::Type::INSTR_PTR1:
-        return os << "instr_ptr1(@" << p.GetInstrPtr1().name << ')';
-    case InstructionItem::Param::Type::COLL_LINK:
-        return os << "coll_link(@" << p.GetCollLink().name << ')';
+    case T::MEM_OFFSET:
+    {
+        const auto& o = p.Get<T::MEM_OFFSET>();
+        return os << "mem_offset(@" << o.target->GetName() << ", "
+                  << o.param_4 << ", " << o.param_8 << ')';
+    }
+    case T::INDIRECT:
+    {
+        const auto& i = p.Get<T::INDIRECT>();
+        return os << "indirect(" << i.param_0 << ", " << i.param_8 << ')';
+    }
+    case T::READ_STACK:
+        return os << "stack(" << p.Get<T::READ_STACK>() << ")";
+    case T::READ_4AC:
+        return os << "4ac(" << p.Get<T::READ_4AC>() << ")";
+    case T::INSTR_PTR0:
+        return os << "instr_ptr0(@" << p.Get<T::INSTR_PTR0>()->GetName() << ')';
+    case T::INSTR_PTR1:
+        return os << "instr_ptr1(@" << p.Get<T::INSTR_PTR1>()->GetName() << ')';
+    case T::COLL_LINK:
+        return os << "coll_link(@" << p.Get<T::COLL_LINK>()->GetName() << ')';
     }
     NEPTOOLS_UNREACHABLE("Invalid type");
 }
 
 
-InstructionItem::Param48::Param48(Context& ctx, uint32_t in)
+auto InstructionItem::Param48::GetVariant(Context& ctx, uint32_t in) -> Variant
 {
     switch (Parameter::TypeTag(in))
     {
     case Parameter::Type48::MEM_OFFSET:
-        SetMemOffset(ctx.GetLabelTo(Parameter::Value(in)));
-        return;
+        RETVAR(MEM_OFFSET, ctx.GetLabelTo(Parameter::Value(in)));
 
     case Parameter::Type48::IMMEDIATE:
-        SetImmediate(Parameter::Value(in));
-        return;
+        RETVAR(IMMEDIATE, Parameter::Value(in));
 
     case Parameter::Type48::INDIRECT:
-        SetIndirect(Parameter::Value(in));
-        return;
+        RETVAR(INDIRECT, Parameter::Value(in));
 
     case Parameter::Type48::SPECIAL:
         if (in >= Parameter::Type48Special::READ_STACK_MIN &&
             in <= Parameter::Type48Special::READ_STACK_MAX)
         {
-            SetReadStack(in - Parameter::Type48Special::READ_STACK_MIN);
+            RETVAR(READ_STACK, in - Parameter::Type48Special::READ_STACK_MIN);
         }
         else if (in >= Parameter::Type48Special::READ_4AC_MIN &&
                  in <= Parameter::Type48Special::READ_4AC_MAX)
         {
-            SetRead4ac(in - Parameter::Type48Special::READ_4AC_MIN);
+            RETVAR(READ_4AC, in - Parameter::Type48Special::READ_4AC_MIN);
         }
         else
             NEPTOOLS_UNREACHABLE("Invalid 48Special param");
-        return;
     }
+#undef RETVAR
 
     NEPTOOLS_UNREACHABLE("Invalid 48 param");
 }
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
 {
+    using T = InstructionItem::Param48::Type;
     switch (p.GetType())
     {
-    case InstructionItem::Param48::Type::MEM_OFFSET:
-        return os << "mem_offset(@" << p.GetMemOffset().name << ')';
-    case InstructionItem::Param48::Type::IMMEDIATE:
-        return os << "immediate(" << p.GetImmediate() << ')';
-    case InstructionItem::Param48::Type::INDIRECT:
-        return os << "indirect(" << p.GetIndirect() << ')';
-    case InstructionItem::Param48::Type::READ_STACK:
-        return os << "read_stack(" << p.GetReadStack() << ')';
-    case InstructionItem::Param48::Type::READ_4AC:
-        return os << "read_4ac(" << p.GetRead4ac() << ')';
+    case T::MEM_OFFSET:
+        return os << "mem_offset(@" << p.Get<T::MEM_OFFSET>()->GetName() << ')';
+    case T::IMMEDIATE:
+        return os << "immediate(" << p.Get<T::IMMEDIATE>() << ')';
+    case T::INDIRECT:
+        return os << "indirect(" << p.Get<T::INDIRECT>() << ')';
+    case T::READ_STACK:
+        return os << "read_stack(" << p.Get<T::READ_STACK>() << ')';
+    case T::READ_4AC:
+        return os << "read_4ac(" << p.Get<T::READ_4AC>() << ')';
     }
 
     NEPTOOLS_UNREACHABLE("Invalid 48 param");
@@ -312,17 +326,26 @@ InstructionItem& InstructionItem::CreateAndInsert(ItemPointer ptr)
     NEPTOOLS_ASSERT(ret.GetSize() == inst.size);
 
     // recursive parse
-    if (ret.is_call)
-        MaybeCreate<InstructionItem>(ret.target->ptr);
-    if (ret.is_call || !no_returns.count(ret.opcode))
+    if (ret.IsCall())
+        MaybeCreate<InstructionItem>(ret.GetTarget()->GetPtr());
+    if (ret.IsCall() || !no_returns.count(ret.GetOpcode()))
         MaybeCreate<InstructionItem>({&*++ret.Iterator(), 0});
     for (const auto& p : ret.params)
     {
-        if (p.GetType() == Param::Type::MEM_OFFSET)
-            MaybeCreate<DataItem>(p.GetMemOffset().ptr);
-        else if (p.GetType() == Param::Type::INSTR_PTR0 ||
-                 p.GetType() == Param::Type::INSTR_PTR1)
-            MaybeCreate<InstructionItem>(p.GetLabel().ptr);
+        using T = Param::Type;
+        switch (p.GetType())
+        {
+        case T::MEM_OFFSET:
+            MaybeCreate<DataItem>(p.Get<T::MEM_OFFSET>().target->GetPtr());
+            break;
+        case T::INSTR_PTR0:
+            MaybeCreate<InstructionItem>(p.Get<T::INSTR_PTR0>()->GetPtr());
+            break;
+        case T::INSTR_PTR1:
+            MaybeCreate<InstructionItem>(p.Get<T::INSTR_PTR1>()->GetPtr());
+            break;
+        default:;
+        }
     }
 
     return ret;
@@ -340,16 +363,16 @@ uint32_t InstructionItem::Param48::Dump() const noexcept
     switch (GetType())
     {
     case Type::MEM_OFFSET:
-        return Parameter::Tag(
-            Parameter::Type48::MEM_OFFSET, ToFilePos(label->ptr));
+        return Parameter::Tag(Parameter::Type48::MEM_OFFSET,
+                              ToFilePos(Get<Type::MEM_OFFSET>()->GetPtr()));
     case Type::IMMEDIATE:
-        return Parameter::Tag(Parameter::Type48::IMMEDIATE, num);
+        return Parameter::Tag(Parameter::Type48::IMMEDIATE, Get<Type::IMMEDIATE>());
     case Type::INDIRECT:
-        return Parameter::Tag(Parameter::Type48::INDIRECT, num);
+        return Parameter::Tag(Parameter::Type48::INDIRECT, Get<Type::INDIRECT>());
     case Type::READ_STACK:
-        return Parameter::Type48Special::READ_STACK_MIN + num;
+        return Parameter::Type48Special::READ_STACK_MIN + Get<Type::READ_STACK>();
     case Type::READ_4AC:
-        return Parameter::Type48Special::READ_4AC_MIN + num;
+        return Parameter::Type48Special::READ_4AC_MIN + Get<Type::READ_4AC>();
     }
     NEPTOOLS_UNREACHABLE("Invalid Param48 Type stored");
 }
@@ -368,12 +391,12 @@ void InstructionItem::Dispose() noexcept
 void InstructionItem::Dump_(Sink& sink) const
 {
     Header hdr;
-    hdr.is_call = is_call;
+    hdr.is_call = IsCall();
 
-    if (is_call)
-        hdr.opcode = ToFilePos(target->ptr);
+    if (IsCall())
+        hdr.opcode = ToFilePos(GetTarget()->GetPtr());
     else
-        hdr.opcode = opcode;
+        hdr.opcode = GetOpcode();
     hdr.param_count = params.size();
     hdr.size = GetSize();
     sink.WriteGen(hdr);
@@ -388,10 +411,10 @@ void InstructionItem::Inspect_(std::ostream &os) const
 {
     Item::Inspect_(os);
 
-    if (is_call)
-        os << "call @" << target->name;
+    if (IsCall())
+        os << "call @" << GetTarget()->GetName();
     else
-        os << "instr " << opcode;
+        os << "instr " << GetOpcode();
     os << '(';
     bool sep = false;
     for (const auto& p : params)

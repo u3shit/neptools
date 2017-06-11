@@ -4,7 +4,9 @@
 
 #include "../assert.hpp"
 #include "../utils.hpp"
+#include "../shared_ptr.hpp"
 #include "../container/intrusive.hpp"
+#include "../lua/dynamic_object.hpp"
 #include "../lua/type_traits.hpp"
 
 #include <cstdint>
@@ -32,7 +34,8 @@ struct ItemPointer
     bool operator!=(const ItemPointer& o) const
     { return item != o.item || offset != o.offset; }
 
-    Item* operator->() const { return item; }
+    Item& operator*() const { return *item; }
+    Item* operator->() const { return &*item; }
 
     template <typename T>
     T& As() const { return *asserted_cast<T*>(item); }
@@ -82,35 +85,39 @@ using LabelOffsetHook = boost::intrusive::set_base_hook<
     boost::intrusive::tag<struct OffsetTag>,
     boost::intrusive::optimize_size<true>, LinkMode>;
 
-struct Label : LabelNameHook, LabelOffsetHook
+class Label : public RefCounted, public Lua::DynamicObject,
+              public LabelNameHook, public LabelOffsetHook
 {
-    std::string name;
-    ItemPointer ptr;
+    NEPTOOLS_DYNAMIC_OBJECT;
+public:
 
     Label(std::string name, ItemPointer ptr)
         : name{std::move(name)}, ptr{ptr} {}
-    // prevent accidental copying with auto x = ...;
-    Label(const Label&) = delete;
-    void operator=(const Label&) = delete;
+
+    const std::string& GetName() const { return name; }
+    const ItemPointer& GetPtr() const { return ptr; }
+
+    friend class Context;
+    friend class Item;
+private:
+    std::string name;
+    ItemPointer ptr;
 };
 
-// push as native table
-template<> struct Lua::TypeTraits<Label>
-{
-    static void Push(StateRef vm, const Label& l);
-};
+using LabelPtr = RefCountedPtr<Label>;
+using WeakLabelPtr = WeakRefCountedPtr<Label>;
 
 // to be used by boost::intrusive::set
 struct LabelKeyOfValue
 {
     using type = std::string;
-    const type& operator()(const Label& l) { return l.name; }
+    const type& operator()(const Label& l) { return l.GetName(); }
 };
 
 struct LabelOffsetKeyOfValue
 {
     using type = FilePosition;
-    const type& operator()(const Label& l) { return l.ptr.offset; }
+    const type& operator()(const Label& l) { return l.GetPtr().offset; }
 };
 
 }

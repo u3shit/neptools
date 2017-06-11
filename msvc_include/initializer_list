@@ -1,0 +1,39 @@
+// -*- c++ -*-
+#pragma once
+
+#include <cstddef>
+
+
+// orig msvc header stores begin/end ptrs
+// https://timsong-cpp.github.io/cppwp/n4659/support.initlist
+namespace std
+{
+
+template <typename E>
+class initializer_list
+{
+public:
+    using value_type      = E;
+    using reference       = const E&;
+    using const_reference = const E&;
+    using size_type       = size_t;
+
+    using iterator        = const E*;
+    using const_iterator  = const E*;
+
+    constexpr initializer_list() noexcept = default;
+
+    constexpr size_t size() const noexcept { return last-first; }// number of elements
+    constexpr const E* begin() const noexcept { return first; }  // first element
+    constexpr const E* end()   const noexcept { return last; }   // one past the last element
+
+private:
+    const iterator first = nullptr, last = nullptr;
+};
+
+// [support.initlist.range], initializer list range access
+template <typename E>
+constexpr const E* begin(initializer_list<E> il) noexcept { return il.begin(); }
+template <typename E>
+constexpr const E* end(initializer_list<E> il) noexcept { return il.end(); }
+}

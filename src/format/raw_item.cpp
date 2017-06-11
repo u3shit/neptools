@@ -28,11 +28,11 @@ void RawItem::Inspect_(std::ostream& os) const
     size_t i = 0;
     while (true)
     {
-        for (; it != GetLabels().end() && it->ptr.offset == i; ++it)
-            os << '@' << it->name << ":\n";
+        for (; it != GetLabels().end() && it->GetPtr().offset == i; ++it)
+            os << '@' << it->GetName() << ":\n";
         auto max = GetSize();
-        if (it != GetLabels().end() && it->ptr.offset < max)
-            max = it->ptr.offset;
+        if (it != GetLabels().end() && it->GetPtr().offset < max)
+            max = it->GetPtr().offset;
 
         os << std::setw(8) << std::setfill('0') << GetPosition() + i
            << ' ';

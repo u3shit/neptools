@@ -11,19 +11,6 @@
 namespace Neptools
 {
 
-void Lua::TypeTraits<Label>::Push(StateRef vm, const Label& l)
-{
-    NEPTOOLS_LUA_GETTOP(vm, top);
-    lua_createtable(vm, 0, 3); // +1
-    vm.Push(l.name); // +2
-    lua_setfield(vm, -2, "name"); // +1
-    vm.Push(l.ptr.item); // +2
-    lua_setfield(vm, -2, "item"); // +1
-    vm.Push(l.ptr.offset); // +2
-    lua_setfield(vm, -2, "offset"); // +1
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
-}
-
 Item::~Item()
 {
     Item::Dispose();
@@ -33,9 +20,9 @@ void Item::Inspect_(std::ostream& os) const
 {
     for (const auto& it : GetLabels())
     {
-        os << '@' << it.name;
-        if (it.ptr.offset != 0)
-            os << '+' << it.ptr.offset;
+        os << '@' << it.GetName();
+        if (it.GetPtr().offset != 0)
+            os << '+' << it.GetPtr().offset;
         os << ":\n";
     }
 }

@@ -43,7 +43,7 @@ public:
     {
         Type type;
         FixedString<0x20> name;
-        const Label* lbl;
+        NotNull<LabelPtr> lbl;
     };
     std::vector<EntryType> entries;
 

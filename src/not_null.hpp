@@ -8,6 +8,9 @@
 namespace Neptools
 {
 
+// construct a null notnull...
+struct EmptyNotNull {};
+
 template <typename T>
 class NotNull
 {
@@ -17,6 +20,7 @@ public:
     NotNull(NotNull&) = default;
     NotNull(const NotNull&) = default;
     NotNull(NotNull&&) = default; // a moved out NotNull might be null...
+    NotNull(EmptyNotNull) {}
 
     template <typename... Args>
     constexpr explicit NotNull(Args&&... args) : t{std::forward<Args>(args)...}

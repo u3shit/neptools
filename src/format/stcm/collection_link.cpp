@@ -37,12 +37,10 @@ void CollectionLinkItem::Entry::Validate(FilePosition file_size) const
 
 CollectionLinkHeaderItem::CollectionLinkHeaderItem(
     Key k, Context* ctx, const Header& s)
-    : Item{k, ctx}
-{
-    s.Validate(GetUnsafeContext().GetSize());
-
-    data = &GetUnsafeContext().CreateLabelFallback("collection_link", s.offset);
-}
+    : Item{k, ctx},
+      data{(s.Validate(GetUnsafeContext().GetSize()),
+            GetUnsafeContext().CreateLabelFallback("collection_link", s.offset))}
+{}
 
 CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
     ItemPointer ptr)
@@ -50,7 +48,7 @@ CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
     auto x = RawItem::Get<Header>(ptr);
     auto& ret = x.ritem.SplitCreate<CollectionLinkHeaderItem>(ptr.offset, x.t);
 
-    auto ptr2 = ret.data->ptr;
+    auto ptr2 = ret.data->GetPtr();
     auto* ritem2 = ptr2.Maybe<RawItem>();
     if (!ritem2)
     {
@@ -73,15 +71,15 @@ CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
 void CollectionLinkHeaderItem::Dump_(Sink& sink) const
 {
     Header hdr{};
-    hdr.offset = ToFilePos(data->ptr);
-    hdr.count = data->ptr.As0<CollectionLinkItem>().entries.size();
+    hdr.offset = ToFilePos(data->GetPtr());
+    hdr.count = data->GetPtr().As0<CollectionLinkItem>().entries.size();
     sink.WriteGen(hdr);
 }
 
 void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
-    os << "collection_link_header(@" << data->name << ")";
+    os << "collection_link_header(@" << data->GetName() << ")";
 }
 
 CollectionLinkItem::CollectionLinkItem(
@@ -106,8 +104,8 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
         auto e = src.ReadGen<Entry>();
         e.Validate(ctx.GetSize());
         entries.push_back({
-            &ctx.GetLabelTo(e.name_0),
-            &ctx.GetLabelTo(e.name_1)});
+            ctx.GetLabelTo(e.name_0),
+            ctx.GetLabelTo(e.name_1)});
     }
 }
 
@@ -116,8 +114,8 @@ void CollectionLinkItem::Dump_(Sink& sink) const
     Entry ee{};
     for (const auto& e : entries)
     {
-        ee.name_0 = ToFilePos(e.name_0->ptr);
-        ee.name_1 = ToFilePos(e.name_1->ptr);
+        ee.name_0 = ToFilePos(e.name_0->GetPtr());
+        ee.name_1 = ToFilePos(e.name_1->GetPtr());
         sink.WriteGen(ee);
     }
 }
@@ -126,8 +124,8 @@ void CollectionLinkItem::Inspect_(std::ostream& os) const
 {
     bool good_labels = true;
     for (auto& lbl : GetLabels())
-        if (lbl.ptr.offset % sizeof(Entry) != 0 ||
-            lbl.ptr.offset / sizeof(Entry) >= entries.size())
+        if (lbl.GetPtr().offset % sizeof(Entry) != 0 ||
+            lbl.GetPtr().offset / sizeof(Entry) >= entries.size())
         {
             good_labels = false;
             break;
@@ -142,13 +140,13 @@ void CollectionLinkItem::Inspect_(std::ostream& os) const
         {
             auto x = GetLabels().equal_range(i);
             for (auto it = x.first; it != x.second; ++it)
-                os << '@' << it->name << ":\n";
+                os << '@' << it->GetName() << ":\n";
             i += sizeof(Entry);
         }
 
 
-        os << "collection_link(@" << e.name_0->name << ", @" << e.name_1->name
-           << ")\n";
+        os << "collection_link(@" << e.name_0->GetName() << ", @"
+           << e.name_1->GetName() << ")\n";
     }
 }
 

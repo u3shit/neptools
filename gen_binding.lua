@@ -19,6 +19,7 @@ local args = {
   "-Iext/boost",
   "-Iext/ljx/src",
   "-Iext/catch/include",
+  "-Iext/brigand/include",
   "-Isrc",
   "-Ibuild/clang-debug/src", "-Ibuild/src",
   "-std=c++1z",
