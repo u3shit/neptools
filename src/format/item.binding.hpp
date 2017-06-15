@@ -4,6 +4,32 @@
 namespace Neptools::Lua
 {
 
+// class neptools.label
+template<>
+void TypeRegister::DoRegister<::Neptools::Label>(TypeBuilder& bld)
+{
+
+    bld.AddFunction<
+        &::Neptools::Lua::TypeTraits<::Neptools::Label>::Make<LuaGetRef<std::string>, LuaGetRef<::Neptools::ItemPointer>>
+    >("new");
+    bld.AddFunction<
+        static_cast<const std::string & (::Neptools::Label::*)() const>(&::Neptools::Label::GetName)
+    >("get_name");
+    bld.AddFunction<
+        static_cast<const ::Neptools::ItemPointer & (::Neptools::Label::*)() const>(&::Neptools::Label::GetPtr)
+    >("get_ptr");
+
+}
+static TypeRegister::StateRegister<::Neptools::Label> reg_neptools_label;
+
+}
+
+
+const char ::Neptools::Label::TYPE_NAME[] = "neptools.label";
+
+namespace Neptools::Lua
+{
+
 // class neptools.item
 template<>
 void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)

@@ -13,7 +13,7 @@
 #include <functional>
 #include <boost/intrusive/set_hook.hpp>
 
-namespace Neptools
+namespace Neptools NEPTOOLS_META(alias_file src/format/item.hpp)
 {
 
 class Item;

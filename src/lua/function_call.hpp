@@ -118,8 +118,9 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
 };
 
 template <typename T>
-struct GetArg<T, EnableIfTupleLike<T>>
-    : TupleGet<T, std::make_index_sequence<TupleLike<T>::SIZE>> {};
+struct GetArg<T, EnableIfTupleLike<std::decay_t<T>>>
+    : TupleGet<std::decay_t<T>,
+               std::make_index_sequence<TupleLike<std::decay_t<T>>::SIZE>> {};
 
 template <bool Unsafe, int N, typename Seq, typename... Args>
 struct GenArgSequence;
@@ -160,8 +161,9 @@ struct TuplePush<Tuple, std::index_sequence<I...>>
     }
 };
 
-template<typename T> struct ResultPush<T, EnableIfTupleLike<T>>
-    : TuplePush<T, std::make_index_sequence<TupleLike<T>::SIZE>> {};
+template<typename T> struct ResultPush<T, EnableIfTupleLike<std::decay_t<T>>>
+    : TuplePush<std::decay_t<T>,
+                std::make_index_sequence<TupleLike<std::decay_t<T>>::SIZE>> {};
 
 // workaround gcc can't mangle noexcept template arguments...
 template <typename... Args>

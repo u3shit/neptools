@@ -22,13 +22,7 @@ namespace Lua
 
 namespace Detail
 {
-template <typename T, typename = void> struct LuaGetRefHlp;
-template <typename T>
-struct LuaGetRefHlp<T, std::enable_if_t<std::is_reference<T>::value>>
-{ using Type = T; };
-
-template <typename T>
-struct LuaGetRefHlp<T, std::enable_if_t<!std::is_reference<T>::value>>
+template <typename T, typename = void> struct LuaGetRefHlp
 {
     using Type = std::conditional_t<
         !std::is_reference<
@@ -37,6 +31,13 @@ struct LuaGetRefHlp<T, std::enable_if_t<!std::is_reference<T>::value>>
             decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value,
         T, T&>;
 };
+
+template <typename T>
+struct LuaGetRefHlp<T, std::enable_if_t<std::is_reference<T>::value>>
+{ using Type = T; };
+
+template <typename T>
+struct LuaGetRefHlp<T, EnableIfTupleLike<T>> { using Type = T; };
 }
 
 template <typename T>

@@ -25,7 +25,7 @@ local args = {
   "-std=c++1z",
   "-stdlib=libc++", -- probably better c++1* support than random gcc headers
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies
-  "-Wno-gnu-string-literal-operator-template", "-Wno-vla-extension", "-Wno-vla",
+  "-Wno-vla-extension", "-Wno-vla",
   "-Wno-assume"
 }
 
@@ -65,10 +65,25 @@ end
 local function remove_ext(name)
   return name and name:gsub("%.[^.]*$", "")
 end
-local match_fname = remove_ext(fname)
 
-local classes = parser.parse(
-  tu:cursor(), function(c) return remove_ext(c:location()) == match_fname end)
+local match_fname = remove_ext(fname)
+local fname_map = {}
+
+local check_alias_v = cl.regCursorVisitor(function(c)
+  if c:kind() == "AnnotateAttr" and c:name():sub(1, 11) == "alias_file " then
+    fname_map[c:location()] = c:name():sub(12)
+  end
+  return vr.Break
+end)
+
+local function parse_filter(c, par)
+  c:children(check_alias_v)
+  local loc = c:location()
+  if fname_map[loc] then loc = fname_map[loc] end
+  return remove_ext(loc) == match_fname
+end
+
+local classes = parser.parse(tu:cursor(), parse_filter)
 
 local gen = generator.generate(classes)
 if fname_out == "-" then
