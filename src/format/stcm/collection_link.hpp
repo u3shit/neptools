@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../lua/value_object.hpp"
 #include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
 
@@ -38,6 +39,10 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
+    CollectionLinkHeaderItem(Key k, Context* ctx, NotNull<LabelPtr> data)
+        : Item{k, ctx}, data{std::move(data)} {}
+
+    NEPTOOLS_NOLUA
     CollectionLinkHeaderItem(Key k, Context* ctx, const Header& s);
     static CollectionLinkHeaderItem& CreateAndInsert(ItemPointer ptr);
 
@@ -76,11 +81,17 @@ public:
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }
 
-    struct LinkEntry
+    struct LinkEntry : public Lua::ValueObject
     {
-        NotNull<LabelPtr> name_0;
-        NotNull<LabelPtr> name_1;
+        // immutable in lua
+        NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> name_0;
+        NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> name_1;
+
+        LinkEntry(NotNull<LabelPtr> name_0, NotNull<LabelPtr> name_1)
+            : name_0{std::move(name_0)}, name_1{std::move(name_1)} {}
+        NEPTOOLS_LUA_CLASS;
     };
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<LinkEntry> entries;
 
     void Dispose() noexcept override;
