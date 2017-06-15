@@ -86,3 +86,5 @@ void DataItem::Fixup()
 
 }
 }
+
+#include "data.binding.hpp"

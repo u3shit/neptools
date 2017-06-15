@@ -25,7 +25,11 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x10);
 
-
+    DataItem(Key k, Context* ctx, uint32_t type, uint32_t offset_unit,
+             uint32_t field_8)
+        : ItemWithChildren{k, ctx}, type{type}, offset_unit{offset_unit},
+          field_8{field_8} {}
+    NEPTOOLS_NOLUA
     DataItem(Key k, Context* ctx, const Header& hdr, size_t chunk_size);
     static DataItem& CreateAndInsert(ItemPointer ptr);
 
