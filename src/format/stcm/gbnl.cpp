@@ -20,3 +20,5 @@ GbnlItem& GbnlItem::CreateAndInsert(ItemPointer ptr)
 
 }
 }
+
+#include "gbnl.binding.hpp"
