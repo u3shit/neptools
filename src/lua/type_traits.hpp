@@ -21,8 +21,7 @@ template <typename T, typename Enable = void> struct TypeName
 { static constexpr const char* TYPE_NAME = T::TYPE_NAME; };
 
 template <typename T>
-struct TypeName<T, std::enable_if_t<
-    std::is_integral<T>::value || std::is_enum<T>::value>>
+struct TypeName<T, std::enable_if_t<std::is_integral<T>::value>>
 { static constexpr const char* TYPE_NAME = "integer"; };
 
 template <typename T>
@@ -44,9 +43,13 @@ constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
     public:                        \
     static const char TYPE_NAME[]
 
+#define NEPTOOLS_ENUM(name)                         \
+    template<> struct Neptools::Lua::TypeName<name> \
+    { static const char TYPE_NAME[]; }
+
 // type tag
 template <typename T>
-std::enable_if_t<!std::is_const_v<T> && !std::is_volatile_v<T>, char>
+std::enable_if_t<TypeTraits<T>::TYPE_TAGGED, char>
 TYPE_TAG = {};
 
 // lauxlib operations:
@@ -74,7 +77,7 @@ struct TypeTraits<T, std::enable_if_t<
         vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
-    static T UnsafeGet(StateRef vm, int idx)
+    static T UnsafeGet(StateRef vm, bool, int idx)
     { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
@@ -84,6 +87,7 @@ struct TypeTraits<T, std::enable_if_t<
     { lua_pushnumber(vm, val); }
 
     static constexpr int LUA_TYPE = LUA_TNUMBER;
+    static constexpr bool TYPE_TAGGED = false; // needed for enums
 };
 
 template <typename T>
@@ -97,7 +101,7 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
         vm.TypeError(arg, TYPE_NAME<T>, idx);
     }
 
-    static T UnsafeGet(StateRef vm, int idx)
+    static T UnsafeGet(StateRef vm, bool, int idx)
     { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
@@ -119,7 +123,7 @@ struct TypeTraits<bool>
         vm.TypeError(arg, TYPE_NAME<bool>, idx);
     }
 
-    static bool UnsafeGet(StateRef vm, int idx)
+    static bool UnsafeGet(StateRef vm, bool, int idx)
     { return lua_toboolean(vm, idx); }
 
     static bool Is(StateRef vm, int idx)
@@ -141,7 +145,7 @@ struct TypeTraits<const char*>
         vm.TypeError(arg, TYPE_NAME<const char*>, idx);
     };
 
-    static const char* UnsafeGet(StateRef vm, int idx)
+    static const char* UnsafeGet(StateRef vm, bool, int idx)
     { return lua_tostring(vm, idx); }
 
     static bool Is(StateRef vm, int idx)
@@ -167,7 +171,7 @@ struct TypeTraits<T, std::enable_if_t<
         vm.TypeError(arg, TYPE_NAME<std::string>, idx);
     };
 
-    static T UnsafeGet(StateRef vm, int idx)
+    static T UnsafeGet(StateRef vm, bool, int idx)
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
@@ -211,11 +215,11 @@ struct NullableTypeTraits
             TypeTraits<NotNullable>::Get(vm, arg, idx));
     }
 
-    static Ret UnsafeGet(StateRef vm, int idx)
+    static Ret UnsafeGet(StateRef vm, bool arg, int idx)
     {
         if (lua_isnil(vm, idx)) return nullptr;
         return ToNullable<NotNullable>::Conv(
-            TypeTraits<NotNullable>::UnsafeGet(vm, idx));
+            TypeTraits<NotNullable>::UnsafeGet(vm, arg, idx));
     }
 
     static bool Is(StateRef vm, int idx)
@@ -235,6 +239,13 @@ struct TypeTraits<T*> : NullableTypeTraits<T*> {};
 
 // used by UserType
 template <typename T, typename Enable = void> struct UserTypeTraits;
+
+template <typename T>
+struct UserTypeTraits<T, std::enable_if_t<std::is_enum_v<T>>>
+{
+    inline static void MetatableCreate(StateRef) {}
+    static constexpr bool NEEDS_GC = false;
+};
 
 template <typename T, typename Enable = void>
 struct HasLuaType : std::false_type {};

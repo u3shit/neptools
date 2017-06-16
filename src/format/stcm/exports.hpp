@@ -17,7 +17,7 @@ class ExportsItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    enum Type : uint32_t
+    enum NEPTOOLS_LUAGEN() Type : uint32_t
     {
         CODE = 0,
         DATA = 1,
@@ -33,19 +33,27 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x28);
 
+    ExportsItem(Key k, Context* ctx) : Item{k, ctx} {}
     ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
     static ExportsItem& CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
     FilePosition GetSize() const noexcept override
     { return sizeof(Entry) * entries.size(); }
 
-    struct EntryType
+    struct EntryType : public RefCounted, public Lua::DynamicObject
     {
         Type type;
         FixedString<0x20> name;
         NotNull<LabelPtr> lbl;
+
+        EntryType(Type type, const FixedString<0x20>& name,
+                  NotNull<LabelPtr> lbl)
+            : type{type}, name{std::move(name)}, lbl{std::move(lbl)} {}
+
+        NEPTOOLS_DYNAMIC_OBJECT;
     };
-    std::vector<EntryType> entries;
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    std::vector<NotNull<RefCountedPtr<EntryType>>> entries;
 
     void Dispose() noexcept override;
 
@@ -57,4 +65,6 @@ private:
 
 }
 }
+
+NEPTOOLS_ENUM(Neptools::Stcm::ExportsItem::ExportsItem::Type);
 #endif

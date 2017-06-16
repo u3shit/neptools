@@ -34,10 +34,10 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
     {
         auto e = src.ReadGen<Entry>();
         e.Validate(size);
-        entries.push_back({
+        entries.push_back(MakeSmart<EntryType>(
             static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
-            GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)});
+            GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)));
     }
 }
 
@@ -49,13 +49,13 @@ ExportsItem& ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count
         ptr.offset, x.src, export_count);
 
     for (const auto& e : ret.entries)
-        switch (e.type)
+        switch (e->type)
         {
         case Type::CODE:
-            MaybeCreate<InstructionItem>(e.lbl->GetPtr());
+            MaybeCreate<InstructionItem>(e->lbl->GetPtr());
             break;
         case Type::DATA:
-            MaybeCreate<DataItem>(e.lbl->GetPtr());
+            MaybeCreate<DataItem>(e->lbl->GetPtr());
             break;
         }
     return ret;
@@ -73,9 +73,9 @@ void ExportsItem::Dump_(Sink& sink) const
 
     for (auto& e : entries)
     {
-        ee.type = e.type;
-        ee.name = e.name;
-        ee.offset = ToFilePos(e.lbl->GetPtr());
+        ee.type = e->type;
+        ee.name = e->name;
+        ee.offset = ToFilePos(e->lbl->GetPtr());
         sink.WriteGen(ee);
     }
 }
@@ -86,11 +86,17 @@ void ExportsItem::Inspect_(std::ostream& os) const
 
     for (auto& e : entries)
     {
-        os << '{' << e.type << ", ";
-        DumpBytes(os, e.name.c_str());
-        os << ", @" << e.lbl->GetName() << ")\n";
+        os << '{' << e->type << ", ";
+        DumpBytes(os, e->name.c_str());
+        os << ", @" << e->lbl->GetName() << ")\n";
     }
 }
 
 }
 }
+
+#include "../../container/vector.lua.hpp"
+NEPTOOLS_STD_VECTOR_LUAGEN(
+    exports_item_entry, Neptools::NotNull<Neptools::RefCountedPtr<
+        Neptools::Stcm::ExportsItem::EntryType>>);
+#include "exports.binding.hpp"

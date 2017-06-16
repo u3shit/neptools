@@ -7,37 +7,50 @@ namespace Lua
 {
 
 TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
-    : vm{vm}
+    : vm{vm}, type_tag{type_tag}
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
     // type table
     lua_createtable(vm, 0, 0); // +1
-    lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // +2
-    NEPTOOLS_ASSERT(lua_istable(vm, -1));
-    lua_setmetatable(vm, -2); // +1
+    if (type_tag) // has actual type
+    {
+        lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // +2
+        NEPTOOLS_ASSERT(lua_istable(vm, -1));
+        lua_setmetatable(vm, -2); // +1
 
-    // metatable
-    lua_createtable(vm, 0, 5);
-    lua_pushliteral(vm, "private");
-    lua_setfield(vm, -2, "__metatable");
+        // metatable
+        lua_createtable(vm, 0, 5); // +2
+        lua_pushliteral(vm, "private"); // +3
+        lua_setfield(vm, -2, "__metatable"); // +2
 
-    lua_pushvalue(vm, -1);
-    lua_setfield(vm, -2, "__index");
+        lua_pushvalue(vm, -1); // +3
+        lua_setfield(vm, -2, "__index"); // +2
 
-    lua_pushinteger(vm, 0);
-    lua_rawsetp(vm, -2, type_tag);
+        lua_pushinteger(vm, 0); // +3
+        lua_rawsetp(vm, -2, type_tag); // +2
 
-    lua_pushvalue(vm, -1);
-    lua_rawsetp(vm, LUA_REGISTRYINDEX, type_tag);
+        lua_pushvalue(vm, -1); // +3
+        lua_rawsetp(vm, LUA_REGISTRYINDEX, type_tag); //+2
 
-    // type_table.__name = name
-    lua_pushstring(vm, name); // +1
-    lua_setfield(vm, -2, "__name"); // 0
+        // metatable.__name = name
+        lua_pushstring(vm, name); // +3
+        lua_setfield(vm, -2, "__name"); // +2
+
+        // is function
+        lua_pushlightuserdata(vm, type_tag); // +3
+        lua_pushcclosure(vm, &IsFunc, 1); // +3
+        SetField("is"); // +2
+    }
+    else
+    {
+        // "metatable"
+        lua_pushnil(vm); //+2
+    }
 
     // set global name
-    lua_pushglobaltable(vm); // +1
-    vm.SetRecTable(name, -3); // 0
+    lua_pushglobaltable(vm); // +3
+    vm.SetRecTable(name, -3); // +2
 
     NEPTOOLS_LUA_CHECKTOP(vm, top+2);
 }
@@ -55,17 +68,20 @@ void TypeBuilder::Done()
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
-    if (has_get_ || has_get)
-        SetMt(
-            vm, "__index",
-            has_get_ ? "neptools_mt_index" : "neptools_mt_index_light");
-
-    if (has_set_) SetMt(vm, "__newindex", "neptools_mt_newindex");
-    else if (has_set)
+    if (type_tag)
     {
-        lua_getfield(vm, -1, "set"); // +1
-        NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
-        lua_setfield(vm, -2, "__newindex"); // +0
+        if (has_get_ || has_get)
+            SetMt(
+                vm, "__index",
+                has_get_ ? "neptools_mt_index" : "neptools_mt_index_light");
+
+        if (has_set_) SetMt(vm, "__newindex", "neptools_mt_newindex");
+        else if (has_set)
+        {
+            lua_getfield(vm, -1, "set"); // +1
+            NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
+            lua_setfield(vm, -2, "__newindex"); // +0
+        }
     }
 
     lua_remove(vm, -2);
@@ -80,6 +96,8 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
     // -2: this meta
 
     NEPTOOLS_ASSERT(lua_type(vm, -1) == LUA_TTABLE);
+    NEPTOOLS_ASSERT_MSG(lua_type(vm, -2) == LUA_TTABLE,
+                        "DoInherit from type_tag == nullptr type");
 
     // for k,v in pairs(base_mt) do
     lua_pushnil(vm); // +1

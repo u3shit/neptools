@@ -18,8 +18,8 @@ struct Lua::TypeTraits<ParentListIterator<Traits, IsConst>>
     static Iterator Get(StateRef vm, bool arg, int idx)
     { return TypeTraits<RawType>::Get(vm, arg, idx); }
 
-    static Iterator UnsafeGet(StateRef vm, int idx)
-    { return TypeTraits<RawType>::UnsafeGet(vm, idx); }
+    static Iterator UnsafeGet(StateRef vm, bool arg, int idx)
+    { return TypeTraits<RawType>::UnsafeGet(vm, arg, idx); }
 
     static bool Is(StateRef vm, int idx)
     { return TypeTraits<RawType>::Is(vm, idx); }

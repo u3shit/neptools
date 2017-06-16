@@ -82,9 +82,11 @@ public:
     template <typename T> decltype(auto) Get(int idx = -1)
     { return TypeTraits<T>::Get(*this, false, idx); }
     template <typename T> decltype(auto) UnsafeGet(int idx = -1)
-    { return TypeTraits<T>::UnsafeGet(*this, idx); }
+    { return TypeTraits<T>::UnsafeGet(*this, false, idx); }
     template <typename T> decltype(auto) Check(int idx)
     { return TypeTraits<T>::Get(*this, true, idx); }
+    template <typename T> decltype(auto) UnsafeArgGet(int idx)
+    { return TypeTraits<T>::UnsafeGet(*this, true, idx); }
     template <typename T> bool Is(int idx)
     { return TypeTraits<T>::Is(*this, idx); }
 

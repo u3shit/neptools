@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 
+#include "lua/type_traits.hpp"
+
 namespace Neptools
 {
 
@@ -77,6 +79,46 @@ template <size_t N>
 inline std::istream& operator>>(std::istream& is, FixedString<N>& str)
 { is.width(N-1); return is >> &str[0]; }
 */
+
+template <size_t N>
+struct Lua::TypeTraits<FixedString<N>>
+{
+    static void Check(StateRef vm, bool arg, int idx, size_t len)
+    {
+        if (BOOST_UNLIKELY(len >= N))
+        {
+            std::stringstream ss;
+            ss << "string too long (" << len << " vs " << (N-1) << " max)";
+            if (arg) luaL_argerror(vm, idx, ss.str().c_str());
+            else luaL_error(vm, ss.str().c_str());
+        }
+    }
+
+    static FixedString<N> Get(StateRef vm, bool arg, int idx)
+    {
+        size_t len;
+        auto str = lua_tolstring(vm, idx, &len);
+        if (BOOST_UNLIKELY(!str)) vm.TypeError(arg, TYPE_NAME<const char*>, idx);
+        Check(vm, arg, idx, len);
+        return FixedString<N>{str};
+    }
+
+    static FixedString<N> UnsafeGet(StateRef vm, bool arg, int idx)
+    {
+        size_t len;
+        auto str = lua_tolstring(vm, idx, &len);
+        Check(vm, arg, idx, len);
+        return FixedString<N>{str};
+    }
+
+    static bool Is(StateRef vm, int idx)
+    { return lua_isstring(vm, idx); }
+
+    static void Push(StateRef vm, const FixedString<N>& str)
+    { lua_pushstring(vm, str.c_str()); }
+
+    static constexpr int LUA_TYPE = LUA_TSTRING;
+};
 
 }
 #endif

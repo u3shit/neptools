@@ -64,22 +64,31 @@ void TypeRegister::DoRegister</*$= cls.cpp_name */>(TypeBuilder& bld)
     bld.Inherit</*$= table.concat(x, ", ") */>();
 //$   end
 
-//$ for _,k in ipairs(cls.methods_ord) do
-//$   local v = cls.methods[k]
+//$   for _,k in ipairs(cls.entries_ord) do
+//$     local v = cls.entries[k]
+//$     if v.type == "constant" then
+    bld.Add("/*$= k */", /*$= v.value_str */);
+//$     else
     bld.AddFunction<
-//$   for i,m in ipairs(v) do
+//$       for i,m in ipairs(v) do
         /*$= m.value_str *//*$= i == #v and '' or ',' */
-//$   end
+//$       end
     >("/*$= k */");
-//$ end
+//$     end
+//$   end
 /*$= cls.post_register or "", cls */
 }
 static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
 
 }
 
+//$   if cls.is_enum then
+const char ::Neptools::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
+    "/*$= cls.name */";
+//$   else
 /*$ if cls.template then */template <>/*$ end */
 const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
+//$   end
 
 //$ end
 ]=]

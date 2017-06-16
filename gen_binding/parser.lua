@@ -16,8 +16,8 @@ local function lua_class(c, tbl)
   utils.default_arg(tbl, "name", utils.default_name_class, c:type())
   tbl.type = c:type()
   tbl.cpp_name = utils.type_name(c, inst.aliases)
-  tbl.methods = {}
-  tbl.methods_ord = {}
+  tbl.entries = {}
+  tbl.entries_ord = {}
   return tbl
 end
 
@@ -112,6 +112,7 @@ end
 -- function handlers begin
 local function func_common(c, info, tbl)
   utils.default_arg(tbl, "name", utils.default_name_fun, c)
+  tbl.type = "function"
 
   info.args = tbl.args or collect_args(c)
   info.argsf = function(wrap, pre)
@@ -219,6 +220,7 @@ local function field(c, info, tbl)
 
   utils.default_arg(tbl, "name", default_name_field,
                     c, tbl.get and "get_" or "set_")
+  tbl.type = "function"
 
   info.type = utils.type_name(c, inst.aliases)
   info.ptr_type = info.type.." "..info.class.."::*"
@@ -235,12 +237,20 @@ local function field(c, info, tbl)
   return true
 end
 
+local function constant(c, info, tbl)
+  if tbl.name == nil then tbl.name = info.name end
+  tbl.type = "constant"
+  tbl.value_tmpl = "/*$= class */::/*$= name */"
+  return true
+end
+
 local func_type_handlers = {
   FunctionDecl = { func_common, freestanding_func, class_info },
   Constructor = { func_common, class_info, ctor },
   CXXMethod = { func_common, class_info, general_method },
   FunctionTemplate = { method_tmpl, func_common, class_info, general_method },
   FieldDecl = { class_info, field },
+  EnumConstantDecl = { class_info, constant },
 }
 
 local function lua_function(c, tbl, parent)
@@ -262,19 +272,32 @@ local function lua_function(c, tbl, parent)
 
   assert(tbl.class)
   assert(tbl.value_tmpl)
+  assert(tbl.type)
   tbl.value_str = template(tbl.value_tmpl, info, c)
 
-  -- store method
-  local mets = tbl.class.methods
+  -- store entry
+  local ents = tbl.class.entries
   local name = tbl.name
-  if not mets[name] then
-    mets[name] = {}
-    tbl.class.methods_ord[#tbl.class.methods_ord+1] = name
-  end
-  if tbl.index then
-    table.insert(mets[name], tbl.index, tbl)
+
+  if tbl.type == "constant" then
+    assert(ents[name] == nil, "duplicate constant")
+
+    ents[name] = tbl
+    tbl.class.entries_ord[#tbl.class.entries_ord+1] = name
+  elseif tbl.type == "function" then
+    if not ents[name] then
+      ents[name] = { type="function" }
+      tbl.class.entries_ord[#tbl.class.entries_ord+1] = name
+    end
+    assert(ents[name].type == "function", "function&constant with same name?")
+
+    if tbl.index then
+      table.insert(ents[name], tbl.index, tbl)
+    else
+      ents[name][#ents[name]+1] = tbl
+    end
   else
-    mets[name][#mets[name]+1] = tbl
+    error("unknown tbl.type "..tbl.type)
   end
 end
 
@@ -312,7 +335,8 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
   end
 
   if kind ~= "CXXMethod" and kind ~= "FunctionTemplate" and
-     kind ~= "Constructor" and kind ~= "FieldDecl" then
+     kind ~= "Constructor" and kind ~= "FieldDecl" and
+     kind ~= "EnumConstantDecl" then
     return vr.Continue
   end
   if c:name() == "PushLua" then inst.parse_class_class.has_push_lua = true end
@@ -321,7 +345,12 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
   return vr.Continue
 end)
 
+local function is_enum(type)
+  return type:haskind("Enum")
+end
+
 local function parse_class(type, class)
+  utils.default_arg(class, "is_enum", is_enum, type)
   inst.parse_class_class = class
   class.parents = {}
   type:declaration():children(parse_class_v)
@@ -337,7 +366,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if kind == "Namespace" then return vr.Recurse end
 
-  if (kind == "ClassDecl" or kind == "StructDecl") and c:isDefinition() then -- ignore fwd decls
+  if (kind == "ClassDecl" or kind == "StructDecl" or kind == "EnumDecl") and c:isDefinition() then -- ignore fwd decls
     local x = is_lua_class(c:type())
     --print(c:type(), x, x.name)
     if x then
@@ -447,7 +476,7 @@ local function parse(c, filter)
 
   local ret = inst.ret_lua_classes
   for _,c in ipairs(ret) do
-    for _,m in pairs(c.methods) do
+    for _,m in pairs(c.entries) do
       sort(m, function(a,b) return a.order < b.order end)
     end
   end

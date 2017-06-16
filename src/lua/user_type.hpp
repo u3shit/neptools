@@ -66,12 +66,8 @@ public:
     {
         using UT = UserTypeTraits<T>;
         UT::MetatableCreate(vm);
-        AddFunction<&UT::GcFun>("__gc");
-
-        static_assert(TypeTraits<T>::TYPE_TAGGED);
-        lua_pushlightuserdata(vm, &TYPE_TAG<T>);
-        lua_pushcclosure(vm, &IsFunc, 1);
-        SetField("is");
+        if constexpr (UT::NEEDS_GC)
+            AddFunction<&UT::GcFun>("__gc");
     }
 
     void Done();
@@ -100,14 +96,19 @@ public:
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        if (strcmp(name, "get") == 0)      has_get  = true;
-        if (strncmp(name, "get_", 4) == 0) has_get_ = true;
-        if (strcmp(name, "set") == 0)      has_set  = true;
-        if (strncmp(name, "set_", 4) == 0) has_set_ = true;
+        if (type_tag)
+        {
+            if (strcmp(name, "get") == 0)      has_get  = true;
+            if (strncmp(name, "get_", 4) == 0) has_get_ = true;
+            if (strcmp(name, "set") == 0)      has_set  = true;
+            if (strncmp(name, "set_", 4) == 0) has_set_ = true;
 
-        lua_pushvalue(vm, -1);
-        lua_setfield(vm, -4, name);
-        lua_setfield(vm, -2, name);
+            lua_pushvalue(vm, -1);
+            lua_setfield(vm, -4, name);
+            lua_setfield(vm, -2, name);
+        }
+        else
+            lua_setfield(vm, -3, name);
 
         NEPTOOLS_LUA_CHECKTOP(vm, top-1);
     }
@@ -123,6 +124,7 @@ private:
 
     StateRef vm;
     bool has_get_ = false, has_get = false, has_set_ = false, has_set = false;
+    void* type_tag;
 };
 
 class TypeRegister
@@ -133,11 +135,17 @@ public:
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        void* type_tag = &TYPE_TAG<Class>;
-        lua_rawgetp(vm, LUA_REGISTRYINDEX, type_tag);
-        if (lua_isnil(vm, -1))
+        void* type_tag = nullptr;
+        bool doit = true;
+        if constexpr (TypeTraits<Class>::TYPE_TAGGED)
         {
-            lua_pop(vm, 1);
+            type_tag = &TYPE_TAG<Class>;
+            lua_rawgetp(vm, LUA_REGISTRYINDEX, type_tag); // +1
+            doit = lua_isnil(vm, -1);
+            if (doit) lua_pop(vm, 1);
+        }
+        if (doit)
+        {
             TypeBuilder bld{vm, type_tag, TYPE_NAME<Class>};
             bld.Init<Class>();
             DoRegister<Class>(bld);

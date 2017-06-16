@@ -43,7 +43,10 @@ template <typename T, typename> struct GetArg
     template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
     template <bool Unsafe> static decltype(auto) Get(StateRef vm, int idx)
-    { return Unsafe ? vm.UnsafeGet<RawType>(idx) : vm.Check<RawType>(idx); }
+    {
+        if constexpr (Unsafe) return vm.UnsafeArgGet<RawType>(idx);
+        else return vm.Check<RawType>(idx);
+    }
     static bool Is(StateRef vm, int idx) { return vm.Is<RawType>(idx); }
 
     template <typename Val>

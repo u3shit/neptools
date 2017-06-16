@@ -30,10 +30,10 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     {
         if (!Is(vm, idx))
             vm.TypeError(arg, TYPE_NAME<T>, idx);
-        return UnsafeGet(vm, idx);
+        return UnsafeGet(vm, arg, idx);
     }
 
-    static T& UnsafeGet(StateRef vm, int idx)
+    static T& UnsafeGet(StateRef vm, bool, int idx)
     { return *reinterpret_cast<T*>(lua_touserdata(vm, idx)); }
 
     static bool Is(StateRef vm, int idx)
@@ -71,10 +71,12 @@ template <typename T>
 struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
     inline static void MetatableCreate(StateRef) {}
+    static constexpr bool NEEDS_GC = !std::is_trivially_destructible_v<T>;
 
     BOOST_FORCEINLINE
     static void GcFun(StateRef vm, T& t)
     {
+        static_assert(NEEDS_GC);
         t.~T();
         lua_pushnil(vm);
         lua_setmetatable(vm, 1);

@@ -43,6 +43,7 @@ struct TypeTraits
         lua_rawsetp(vm, -2, &TAG);
     }
 
+    static constexpr bool NEEDS_GC = true;
     static int GcFun(lua_State* vm);
 };
 }
@@ -124,7 +125,7 @@ struct UserDataTraits
             vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
     }
 
-    inline static Ret UnsafeGet(StateRef vm, int idx)
+    inline static Ret UnsafeGet(StateRef vm, bool, int idx)
     {
         return Base::UBGet(UserDataDetail::UnsafeGetBase(
             vm, idx, &TYPE_TAG<BaseType>));
