@@ -15,7 +15,8 @@ namespace Stcm
 void HeaderItem::Header::Validate(FilePosition file_size) const
 {
 #define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
-    VALIDATE(memcmp(msg.data(), "STCM2L", 6) == 0);
+    VALIDATE(memcmp(magic, "STCM2", 5) == 0);
+    VALIDATE(endian == 'L');
     VALIDATE(msg.is_valid());
     VALIDATE(export_offset < file_size - 0x28*export_count);
     VALIDATE(collection_link_offset < file_size);
@@ -47,6 +48,8 @@ HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
 void HeaderItem::Dump_(Sink& sink) const
 {
     Header hdr;
+    memcpy(hdr.magic, "STCM2", 5);
+    hdr.endian = 'L';
     hdr.msg = msg;
     hdr.export_offset = ToFilePos(export_sec->GetPtr());
     hdr.export_count = export_sec->GetPtr().As0<ExportsItem>().entries.size();
@@ -68,3 +71,5 @@ void HeaderItem::Inspect_(std::ostream& os) const
 
 }
 }
+
+#include "header.binding.hpp"

@@ -15,19 +15,13 @@ class HeaderItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    using MsgType = FixedString<0x20-5-1>;
     struct Header
     {
-        struct MsgParts
-        {
-            char magic[5];
-            char endian;
-            char rest[0x20-5-1];
-        };
-        union
-        {
-            FixedString<0x20> msg;
-            MsgParts parts;
-        };
+        char magic[5];
+        char endian;
+        MsgType msg;
+
         boost::endian::little_uint32_t export_offset;
         boost::endian::little_uint32_t export_count;
         boost::endian::little_uint32_t field_28;
@@ -37,13 +31,18 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x30);
 
-
+    HeaderItem(
+        Key k, Context* ctx, const MsgType& msg, NotNull<LabelPtr> export_sec,
+        NotNull<LabelPtr> collection_link, uint32_t field_28)
+        : Item{k, ctx}, msg{msg}, export_sec{std::move(export_sec)},
+          collection_link{std::move(collection_link)}, field_28{field_28} {}
+    NEPTOOLS_NOLUA
     HeaderItem(Key k, Context* ctx, const Header& hdr);
     static HeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override { return sizeof(Header); }
 
-    FixedString<0x20> msg;
+    MsgType msg;
     NotNull<LabelPtr> export_sec;
     NotNull<LabelPtr> collection_link;
     uint32_t field_28;
