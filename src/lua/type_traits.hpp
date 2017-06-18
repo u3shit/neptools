@@ -84,7 +84,7 @@ struct TypeTraits<T, std::enable_if_t<
     { return lua_isnumber(vm, idx); }
 
     static void Push(StateRef vm, T val)
-    { lua_pushnumber(vm, val); }
+    { lua_pushnumber(vm, lua_Number(val)); }
 
     static constexpr int LUA_TYPE = LUA_TNUMBER;
     static constexpr bool TYPE_TAGGED = false; // needed for enums

@@ -11,7 +11,7 @@ src=(src/dumpable src/sink src/source src/txt_serializable
      src/format/cl3 src/format/context src/format/eof_item src/format/gbnl
      src/format/item src/format/raw_item
      src/format/stcm/collection_link src/format/stcm/data src/format/stcm/file
-     src/format/stcm/gbnl src/format/stcm/header
+     src/format/stcm/gbnl src/format/stcm/header src/format/stcm/instruction
      test/container/ordered_map test/container/parent_list
      test/lua/function_ref test/lua/user_type)
 

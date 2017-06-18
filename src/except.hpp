@@ -23,21 +23,35 @@ namespace Neptools
 BOOST_NORETURN void RethrowBoostException();
 std::string ExceptionToString();
 
+#if defined(__GNUC__) && !defined(__clang__)
+// gcc mangling is buggy as hell, if two overloads only differ by noexcept, gcc
+// will mangle them to the same name, causing assembler (!) errors due to
+// duplicate identifiers (I don't want to imagine what happens if the two
+// overloads end up in different compilation units...)
+#define NEPTOOLS_INVOKE_ALWAYS_INLINE __attribute__((always_inline))
+#else
+#define NEPTOOLS_INVOKE_ALWAYS_INLINE
+#endif
+
 template <typename Base, typename T, typename Derived, typename... Args>
+NEPTOOLS_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(T Base::*fun, Derived* thiz, Args&&... args)
     noexcept(noexcept((*thiz.*fun)(std::forward<Args>(args)...)))
 { return (*thiz.*fun)(std::forward<Args>(args)...); }
 
 template <typename Base, typename T, typename Derived, typename... Args>
+NEPTOOLS_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(T Base::*fun, Derived& thiz, Args&&... args)
     noexcept(noexcept((thiz.*fun)(std::forward<Args>(args)...)))
 { return (thiz.*fun)(std::forward<Args>(args)...); }
 
 template <typename Fun, typename... Args>
+NEPTOOLS_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(Fun&& f, Args&&... args)
     noexcept(noexcept(std::forward<Fun>(f)(std::forward<Args>(args)...)))
 { return std::forward<Fun>(f)(std::forward<Args>(args)...); }
 
+#undef NEPTOOLS_INOKE_ALWAYS_INLINE
 
 template <typename Fun, typename Info, typename... Args>
 inline auto AddInfo(Fun fun, Info info_adder, Args&&... args)

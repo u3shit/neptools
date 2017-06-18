@@ -102,42 +102,50 @@ public:
     NotNull<LabelPtr> GetTarget() const { return std::get<1>(opcode_target); }
     void SetTarget(NotNull<LabelPtr> label) noexcept { opcode_target = label; }
 
-    class Param48
+    class Param48 : public Lua::ValueObject
     {
+        NEPTOOLS_LUA_CLASS;
     public:
-        enum class Type
+        enum class NEPTOOLS_LUAGEN() Type
         {
-            MEM_OFFSET,
-            IMMEDIATE,
-            INDIRECT,
-            READ_STACK,
-            READ_4AC,
+#define NEPTOOLS_GEN_TYPES(x, ...)         \
+            x(MEM_OFFSET, __VA_ARGS__)     \
+            x(IMMEDIATE, __VA_ARGS__)      \
+            x(INDIRECT, __VA_ARGS__)       \
+            x(READ_STACK, __VA_ARGS__)     \
+            x(READ_4AC, __VA_ARGS__)
+#define NEPTOOLS_GEN_ENUM(x,y) x,
+            NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
         };
         using Variant = std::variant<
             NotNull<LabelPtr>, uint32_t, uint32_t, uint32_t, uint32_t>;
 
-        //Param48() : val{std::in_place_index<Type::IMMEDIATE>, 0} {}
         Param48(Context& ctx, uint32_t val) : val{GetVariant(ctx, val)} {}
-        template <size_t type, typename T>
+        template <size_t type, typename T> NEPTOOLS_NOLUA
         Param48(std::in_place_index_t<type> x, T val) : val{x, std::move(val)} {}
 
         uint32_t Dump() const noexcept;
 
         Type GetType() const noexcept { return static_cast<Type>(val.index()); }
 
-        template <typename Visitor>
+        template <typename Visitor> NEPTOOLS_NOLUA
         auto Visit(Visitor&& v) const
         { return std::visit(std::forward<Visitor>(v), val); }
 
-        template <Type type>
+#define NEPTOOLS_GEN_TMPL(x,xname) NEPTOOLS_LUAGEN(                     \
+            name=xname..string.lower(#x), template_params={             \
+                "Neptools::Stcm::InstructionItem::Param48::Type::"..#x})
+        template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "get_")
         auto Get() const { return std::get<static_cast<size_t>(type)>(val); }
-        template <Type type>
+        template <Type type> NEPTOOLS_NOLUA
         void Set(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
         { val.emplace(std::in_place_index<type>(std::move(nval))); }
 
-        template <Type type>
+        template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "new_")
         static Param48 New(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
-        { return {std::in_place_index<type>, std::move(nval)}; }
+        { return {std::in_place_index<static_cast<size_t>(type)>, std::move(nval)}; }
+#undef NEPTOOLS_GEN_TMPL
+#undef NEPTOOLS_GEN_TYPES
 
 
         // NEPTOOLS_GEN_INT(Immediate, IMMEDIATE,  Param48, Parameter::TypeTag(val) == 0)
@@ -150,57 +158,75 @@ public:
         static Variant GetVariant(Context& ctx, uint32_t val);
     };
 
-    class Param
+    class Param : public Lua::ValueObject
     {
+        NEPTOOLS_LUA_CLASS;
     public:
-        struct MemOffset
+        struct MemOffset : Lua::ValueObject
         {
-            NotNull<LabelPtr> target;
-            Param48 param_4;
-            Param48 param_8;
+            NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> target;
+            NEPTOOLS_LUAGEN(get=true) Param48 param_4;
+            NEPTOOLS_LUAGEN(get=true) Param48 param_8;
+
+            MemOffset(NotNull<LabelPtr> target, Param48 param_4, Param48 param_8)
+                : target{std::move(target)}, param_4{std::move(param_4)},
+                  param_8{std::move(param_8)} {}
+            NEPTOOLS_LUA_CLASS;
         };
-        struct Indirect
+        struct Indirect : Lua::ValueObject
         {
-            uint32_t param_0;
-            Param48 param_8;
+            NEPTOOLS_LUAGEN(get=true) uint32_t param_0;
+            NEPTOOLS_LUAGEN(get=true) Param48 param_8;
+
+            Indirect(uint32_t param_0, Param48 param_8)
+                : param_0{param_0}, param_8{std::move(param_8)} {}
+            NEPTOOLS_LUA_CLASS;
         };
-        enum class Type
+        enum class NEPTOOLS_LUAGEN() Type
         {
-            MEM_OFFSET,
-            INDIRECT,
-            READ_STACK,
-            READ_4AC,
-            INSTR_PTR0,
-            INSTR_PTR1,
-            COLL_LINK,
+#define NEPTOOLS_GEN_TYPES(x, ...)         \
+            x(MEM_OFFSET, __VA_ARGS__)     \
+            x(INDIRECT, __VA_ARGS__)       \
+            x(READ_STACK, __VA_ARGS__)     \
+            x(READ_4AC, __VA_ARGS__)       \
+            x(INSTR_PTR0, __VA_ARGS__)     \
+            x(INSTR_PTR1, __VA_ARGS__)     \
+            x(COLL_LINK, __VA_ARGS__)
+            NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
         };
         using Variant = std::variant<
             MemOffset, Indirect, uint32_t, uint32_t, NotNull<LabelPtr>,
             NotNull<LabelPtr>, NotNull<LabelPtr>>;
 
+        NEPTOOLS_NOLUA
         Param(Context& ctx, const Parameter& p) : val{GetVariant(ctx, p)} {}
-        template <size_t type, typename T>
+        template <size_t type, typename T> NEPTOOLS_NOLUA
         Param(std::in_place_index_t<type> x, T val) : val{x, std::move(val)} {}
 
         void Dump(Sink& sink) const;
-        void Dump(Sink&& sink) const { Dump(sink); }
+        NEPTOOLS_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
 
         Type GetType() const noexcept { return static_cast<Type>(val.index()); }
 
-        template <typename Visitor>
+        template <typename Visitor> NEPTOOLS_NOLUA
         auto Visit(Visitor&& v) const
         { return std::visit(std::forward<Visitor>(v), val); }
 
-        template <Type type>
+#define NEPTOOLS_GEN_TMPL(x,xname) NEPTOOLS_LUAGEN(                     \
+            name=xname..string.lower(#x), template_params={             \
+                "Neptools::Stcm::InstructionItem::Param::Type::"..#x})
+        template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "get_")
         auto Get() const { return std::get<static_cast<size_t>(type)>(val); }
-        template <Type type>
+        template <Type type> NEPTOOLS_NOLUA
         void Set(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
         { val.emplace(std::in_place_index<type>(std::move(nval))); }
 
-        template <Type type>
+        template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "new_")
         static Param New(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
-        { return {std::in_place_index<type>, std::move(nval)}; }
-
+        { return {std::in_place_index<static_cast<size_t>(type)>, std::move(nval)}; }
+#undef NEPTOOLS_GEN_TYPES
+#undef NEPTOOL_GEN_ENUM
+#undef NEPTOOLS_GEN_TMPL
 
         // NEPTOOLS_GEN_LABEL(MemOffset, MEM_OFFSET, Param)
         // NEPTOOLS_GEN_INT  (Indirect,  INDIRECT,   Param, Parameter::TypeTag(val) == 0)
@@ -214,6 +240,8 @@ public:
         Variant val;
         static Variant GetVariant(Context& ctx, const Parameter& in);
     };
+
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<Param> params;
 
 private:
@@ -229,4 +257,8 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p);
 
 }
 }
+
+NEPTOOLS_ENUM(Neptools::Stcm::InstructionItem::Param48::Type);
+NEPTOOLS_ENUM(Neptools::Stcm::InstructionItem::Param::Type);
+
 #endif

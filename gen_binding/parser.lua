@@ -179,8 +179,8 @@ end
 
 local function ctor(c, info, tbl)
   if not tbl.value_tmpl then
-    tbl.value_tmpl = [[
-&::Neptools::Lua::TypeTraits</*$= class */>::Make</*$= argsf('LuaGetRef') */>]]
+    tbl.value_tmpl = "&::Neptools::Lua::TypeTraits</*$= class */>::\z
+      Make</*$= argsf('LuaGetRef') */>"
   end
   return true
 end
@@ -196,6 +196,13 @@ local function general_method(c, info, tbl)
 
   info.template_suffix = tbl.template_params and "<"..tbl.template_params..">" or ""
 
+  -- fake return type with decltype if it's auto, because you can't cast to
+  -- function pointer returning auto...
+  if info.result_type == "auto" then
+    info.decltype_args = info.argsf(function(x) return "std::declval<"..x..">()" end)
+    info.result_type = "decltype(std::declval</*$= class */>()./*$= name */\z
+      /*$= template_suffix */(/*$= decltype_args */))"
+  end
   info.ptr_type = "/*$= result_type*/ (/*$= ptr_prefix */*)(/*$= argsf() */)/*$= ptr_suffix */"
   info.ptr_value = "/*$= address *//*$= use_class */::/*$= name *//*$= template_suffix */"
 

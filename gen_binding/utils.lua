@@ -216,15 +216,16 @@ end
 ret.type_name = type_name
 
 function ret.type_list(args, aliases, wrap, pre)
-  if wrap then
-    for i,v in ipairs(args) do
-      args[i] = wrap.."<"..type_name(args[i], aliases)..">"
-    end
-  else
-    for i,v in ipairs(args) do
-      args[i] = type_name(args[i], aliases)
-    end
+  if type(wrap) == "string" then
+    local pre = wrap.."<"
+    wrap = function(x) return pre..x..">" end
   end
+  if not wrap then wrap = function(x) return x end end
+
+  for i,v in ipairs(args) do
+    args[i] = wrap(type_name(args[i], aliases))
+  end
+
   local cat = table.concat(args, ", ")
   if pre and cat ~= "" then return ", "..cat end
   return cat

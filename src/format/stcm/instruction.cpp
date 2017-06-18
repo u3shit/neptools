@@ -430,3 +430,8 @@ void InstructionItem::Inspect_(std::ostream &os) const
 
 }
 }
+
+#include "../../container/vector.lua.hpp"
+NEPTOOLS_STD_VECTOR_LUAGEN(
+    instruction_params, Neptools::Stcm::InstructionItem::Param);
+#include "instruction.binding.hpp"
