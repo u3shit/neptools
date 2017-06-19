@@ -103,9 +103,9 @@ void CollectionLinkItem::Parse_(Source& src, uint32_t count)
     {
         auto e = src.ReadGen<Entry>();
         e.Validate(ctx.GetSize());
-        entries.push_back({
+        entries.emplace_back(
             ctx.GetLabelTo(e.name_0),
-            ctx.GetLabelTo(e.name_1)});
+            ctx.GetLabelTo(e.name_1));
     }
 }
 

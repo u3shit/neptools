@@ -84,13 +84,13 @@ void RawItem::Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem)
     }
 
     SliceSeq seq;
-    if (pos != 0) seq.push_back({MakeNotNull(this), pos});
-    seq.push_back({std::move(nitem), pos+len});
+    if (pos != 0) seq.emplace_back(MakeNotNull(this), pos);
+    seq.emplace_back(std::move(nitem), pos+len);
     if (rem_len > 0)
         if (pos == 0)
-            seq.push_back({MakeNotNull(this), GetSize()});
+            seq.emplace_back(MakeNotNull(this), GetSize());
         else
-            seq.push_back({InternalSlice(pos+len, rem_len), GetSize()});
+            seq.emplace_back(InternalSlice(pos+len, rem_len), GetSize());
 
     Item::Slice(std::move(seq));
     if (pos == 0)
@@ -105,7 +105,7 @@ void RawItem::Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem)
 RawItem& RawItem::Split(FilePosition offset, FilePosition size)
 {
     auto it = InternalSlice(offset, size);
-    auto& ret = *it.get();
+    auto& ret = *it;
     Split2(offset, std::move(it));
     return ret;
 }

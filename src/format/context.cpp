@@ -68,7 +68,7 @@ NotNull<LabelPtr> Context::CreateLabelFallback(std::string name, ItemPointer ptr
 {
     FilterLabelName(name);
     LabelsMap::insert_commit_data commit;
-    std::string str = std::move(name);
+    std::string str = name;
 
     auto pair = labels.insert_check(str, commit);
     for (int i = 1; !pair.second; ++i)

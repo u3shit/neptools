@@ -7,7 +7,7 @@ namespace Neptools
 namespace Stsc
 {
 
-StringItem::StringItem(Key k, Context* ctx, Source src)
+StringItem::StringItem(Key k, Context* ctx, const Source& src)
     : Item{k, ctx}, str{src.PreadCString(0)}
 {}
 

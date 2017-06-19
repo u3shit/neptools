@@ -2,9 +2,10 @@
 #define UUID_1472EFCC_6110_4A95_BDB7_2EE28E2207E4
 #pragma once
 
-#include <atomic>
 #include "not_null.hpp"
 #include "utils.hpp"
+
+#include <atomic>
 
 namespace Neptools
 {

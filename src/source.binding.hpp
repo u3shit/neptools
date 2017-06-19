@@ -10,10 +10,10 @@ void TypeRegister::DoRegister<::Neptools::Source>(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Source>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Source>::Make<LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>
     >("new");
     bld.AddFunction<
-        static_cast<::Neptools::Source (*)(::boost::filesystem::path)>(::Neptools::Source::FromFile)
+        static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &)>(::Neptools::Source::FromFile)
     >("from_file");
     bld.AddFunction<
         static_cast<void (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::FilePosition) noexcept>(&::Neptools::Source::Slice<Check::Throw>)

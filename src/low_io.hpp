@@ -28,11 +28,11 @@ struct LowIo final
     LowIo() : fd{NEPTOOLS_INVALID_FD} {}
     explicit LowIo(FdType fd) : fd{fd} {}
     LowIo(FileName fname, bool write);
-    ~LowIo();
+    ~LowIo() noexcept;
 
     static LowIo OpenStdOut();
 
-    LowIo(LowIo&& o)
+    LowIo(LowIo&& o) noexcept
         : fd{o.fd}
 #ifdef WINDOWS
         , mmap_fd{o.mmap_fd}
@@ -43,7 +43,7 @@ struct LowIo final
         o.mmap_fd = NEPTOOLS_INVALID_FD;
 #endif
     }
-    LowIo& operator=(LowIo&& o)
+    LowIo& operator=(LowIo&& o) noexcept
     {
         this->~LowIo();
         new (this) LowIo{std::move(o)};

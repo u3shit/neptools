@@ -14,7 +14,7 @@ class StringItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    StringItem(Key k, Context* ctx, Source src);
+    StringItem(Key k, Context* ctx, const Source& src);
     static StringItem& CreateAndInsert(ItemPointer ptr);
     FilePosition GetSize() const noexcept override { return str.size() + 1; }
 

@@ -12,9 +12,9 @@ static std::string WriteTxt(TxtSerializable& ser)
 }
 
 NEPTOOLS_LUAGEN()
-static void ReadTxt(TxtSerializable& ser, std::string str)
+static void ReadTxt(TxtSerializable& ser, const std::string& str)
 {
-    std::stringstream ss{std::move(str)};
+    std::stringstream ss{str};
     ser.ReadTxt(ss);
 }
 

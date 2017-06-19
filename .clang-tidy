@@ -1,0 +1,24 @@
+# -*- yaml -*-
+# -cert-err*-cpp,-misc-throw-by-value-catch-by-reference: fails with boost exceptions
+# -misc-definitions-in-headers: doesn't work with templates
+# -misc-macro-parentheses: this is not lisp
+# -modernize-use-override: I won't type override next to each dtor retards
+# -modernize-raw-string-literal "\\r" is better than R"(\r)" IMHO
+# -readability-braces-around-statements,-readability-named-parameter,
+#  -readability-else-after-return,-readability-implicit-bool-cast: bullshit
+# -readability-redundant-declaration: only false positives
+# -readability-inconsistent-declaration-parameter-name: it's the main reason c++
+#  doesn't have named arguments like python
+# -modernize-avoid-bind: no idea why it even exists
+# -misc-suspicious-semicolon: warn on every constexpr if
+# -misc-move-const-arg: defeats future-proofing code
+Checks: 'clang-diagnostic-*,clang-analyzer-*,boost*,cert*,clang-analyzer*,misc*,modernize*,performance*,readability*,-cert-err09-cpp,-cert-err58-cpp,-cert-err60-cpp,-cert-err61-cpp,-misc-definitions-in-headers,-misc-macro-parentheses,-misc-throw-by-value-catch-by-reference,-modernize-use-override,-modernize-raw-string-literal,-readability-braces-around-statements,-readability-named-parameter,-readability-else-after-return,-readability-implicit-bool-cast,-readability-redundant-declaration,-readability-inconsistent-declaration-parameter-name,-modernize-avoid-bind,-misc-suspicious-semicolon,-misc-move-const-arg'
+HeaderFilterRegex: '(^|[^x]|[^j]x|[^l]jx|[^/]ljx)/src/'
+
+CheckOptions:
+  - key:   misc-assert-side-effect.AssertMacros
+    value: NEPTOOLS_ASSERT
+  - key:   misc-dangling-handle.HandleClasses
+    value: 'std::basic_string_view;std::experimental::basic_string_view;Neptools::BasicNonowningString'
+  - key:   misc-suspicious-string-compare.WarnOnImplicitComparison
+    value: 0

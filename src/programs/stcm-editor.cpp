@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 #undef GEN_HELP
         [](auto&& args)
         {
-            if (0);
+            if (false); // NOLINT
 #define GEN_IFS(c, str, _) else if (strcmp(args.front(), str) == 0) mode = Mode::c;
             MODE_PARS(GEN_IFS)
 #undef GEN_IFS
@@ -361,7 +361,8 @@ int main(int argc, char** argv)
             {
                 std::cout << i++ << '\t' << e.name << '\t' << e.src->GetSize()
                           << "\tlinks:";
-                for (auto l : e.links) std::cout << ' ' << st.cl3->IndexOf(l);
+                for (const auto& l : e.links)
+                    std::cout << ' ' << st.cl3->IndexOf(l);
                 std::cout << std::endl;
             }
         }};

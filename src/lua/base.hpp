@@ -2,6 +2,9 @@
 #define UUID_04CE9898_AACA_4B50_AC3F_FED6669C33C6
 #pragma once
 
+#include "../assert.hpp"
+#include "../except.hpp"
+
 #include <vector>
 #include <lua.hpp>
 
@@ -12,9 +15,6 @@ using std::is_assignable;
 #include <excpt.h>
 #endif
 #include <boost/optional.hpp>
-
-#include "../assert.hpp"
-#include "../except.hpp"
 
 #ifdef NDEBUG
 #define NEPTOOLS_LUA_GETTOP(vm, name) ((void) 0)
@@ -120,7 +120,7 @@ inline bool IsNoneOrNil(int v) { return v <= 0; }
             vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, "neptools"); \
         NEPTOOLS_ASSERT(runbc_ret == 0); (void) runbc_ret;              \
         lua_call(vm, 0, 0);                                             \
-    } while (0)
+    } while (false)
 
 
 class State final : public StateRef

@@ -40,7 +40,7 @@ template <typename T, typename> struct GetArg
     using RawType = typename std::decay<T>::type;
     using type = brigand::list<RawType>;
 
-    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
     template <bool Unsafe> static decltype(auto) Get(StateRef vm, int idx)
     {
@@ -55,7 +55,7 @@ template <typename T, typename> struct GetArg
 
 template <> struct GetArg<Skip>
 {
-    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
     template <bool>
     static constexpr Skip Get(StateRef, int) noexcept { return {}; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
@@ -67,7 +67,7 @@ template <> struct GetArg<Skip>
 
 template <> struct GetArg<StateRef>
 {
-    template <int Idx> static constexpr size_t NEXT_IDX = Idx;
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx;
     template <bool>
     static constexpr StateRef Get(StateRef vm, int) noexcept { return vm; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
@@ -79,7 +79,7 @@ template <> struct GetArg<StateRef>
 
 template <int LType> struct GetArg<Raw<LType>>
 {
-    template <int Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
     template <bool Unsafe>
     static Raw<LType> Get(StateRef vm, int idx)
     {
@@ -103,7 +103,7 @@ template <typename Tuple, typename Index> struct TupleGet;
 template <typename Tuple, size_t... Index>
 struct TupleGet<Tuple, std::index_sequence<Index...>>
 {
-    template <int Idx> static constexpr size_t NEXT_IDX = Idx + sizeof...(Index);
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx + sizeof...(Index);
 
     template <bool Unsafe>
     static Tuple Get(StateRef vm, int idx)
@@ -125,18 +125,19 @@ struct GetArg<T, EnableIfTupleLike<std::decay_t<T>>>
     : TupleGet<std::decay_t<T>,
                std::make_index_sequence<TupleLike<std::decay_t<T>>::SIZE>> {};
 
-template <bool Unsafe, int N, typename Seq, typename... Args>
+template <bool Unsafe, size_t N, typename Seq, typename... Args>
 struct GenArgSequence;
-template <bool Unsafe, int N, int... Seq, typename Head, typename... Args>
-struct GenArgSequence<Unsafe, N, std::integer_sequence<int, Seq...>, Head, Args...>
+template <bool Unsafe, size_t N, size_t... Seq, typename Head, typename... Args>
+struct GenArgSequence<Unsafe, N, std::index_sequence<Seq...>, Head, Args...>
 {
     using Type = typename GenArgSequence<
         Unsafe,
         GetArg<Head>::template NEXT_IDX<N>,
-        std::integer_sequence<int, Seq..., N>,
+        std::index_sequence<Seq..., N>,
         Args...>::Type;
 };
-template <bool Unsafe, int N, typename Seq> struct GenArgSequence<Unsafe, N, Seq>
+template <bool Unsafe, size_t N, typename Seq>
+struct GenArgSequence<Unsafe, N, Seq>
 { using Type = Seq; };
 
 
@@ -203,9 +204,9 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
 template <auto Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
 struct WrapFunGen;
 
-template <auto Fun, bool Unsafe, typename Ret, typename... Args, int... Seq>
+template <auto Fun, bool Unsafe, typename Ret, typename... Args, size_t... Seq>
 struct WrapFunGen<Fun, Unsafe, Ret, brigand::list<Args...>,
-                  std::integer_sequence<int, Seq...>>
+                  std::index_sequence<Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -215,9 +216,9 @@ struct WrapFunGen<Fun, Unsafe, Ret, brigand::list<Args...>,
     }
 };
 
-template <auto Fun, bool Unsafe, typename... Args, int... Seq>
+template <auto Fun, bool Unsafe, typename... Args, size_t... Seq>
 struct WrapFunGen<Fun, Unsafe, void, brigand::list<Args...>,
-                  std::integer_sequence<int, Seq...>>
+                  std::index_sequence<Seq...>>
 {
     static int Func(lua_State* l)
     {
@@ -233,7 +234,7 @@ struct WrapFunGen2<Fun, Unsafe, brigand::list<Args...>>
     : public WrapFunGen<
         Fun, Unsafe,
         FunctionReturn<decltype(Fun)>, brigand::list<Args...>,
-        typename GenArgSequence<Unsafe, 1, std::integer_sequence<int>, Args...>::Type>
+        typename GenArgSequence<Unsafe, 1, std::index_sequence<>, Args...>::Type>
 {};
 
 template <auto Fun, bool Unsafe>
@@ -248,8 +249,8 @@ struct WrapFunc<Fun, Unsafe>
 
 // overload
 template <typename Args, typename Seq> struct OverloadCheck2;
-template <typename... Args, int... Seq>
-struct OverloadCheck2<brigand::list<Args...>, std::integer_sequence<int, Seq...>>
+template <typename... Args, size_t... Seq>
+struct OverloadCheck2<brigand::list<Args...>, std::index_sequence<Seq...>>
 {
     static bool Is(StateRef vm)
     {
@@ -267,7 +268,7 @@ template <typename... Args>
 struct OverloadCheck<brigand::list<Args...>>
     : public OverloadCheck2<
         brigand::list<Args...>,
-        typename GenArgSequence<true, 1, std::integer_sequence<int>, Args...>::Type>
+        typename GenArgSequence<true, 1, std::index_sequence<>, Args...>::Type>
 {};
 
 template <auto... Args> struct OverloadWrap;

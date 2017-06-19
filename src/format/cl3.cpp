@@ -299,7 +299,7 @@ void Cl3::Dump_(Sink& sink) const
     for (auto& e : entries)
     {
         uint32_t i = 0;
-        for (auto l : e.links)
+        for (const auto& l : e.links)
         {
             le.linked_file_id = IndexOf(l);
             if (le.linked_file_id == uint32_t(-1))

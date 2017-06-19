@@ -43,7 +43,7 @@ struct UnixProvider final : public UnixLike<UnixProvider>
     //using UnixLike::UnixLike;
     // workaround clang bug...
     UnixProvider(LowIo&& io, boost::filesystem::path file_name, FilePosition size)
-        : UnixLike{std::move(io), file_name, size} {}
+        : UnixLike{std::move(io), std::move(file_name), size} {}
 
     static FileMemSize CHUNK_SIZE;
     void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -53,7 +53,7 @@ struct UnixProvider final : public UnixLike<UnixProvider>
 }
 
 
-Source Source::FromFile(boost::filesystem::path fname)
+Source Source::FromFile(const boost::filesystem::path& fname)
 {
     return AddInfo(
         &FromFile_,
@@ -61,19 +61,19 @@ Source Source::FromFile(boost::filesystem::path fname)
         fname);
 }
 
-Source Source::FromFile_(boost::filesystem::path fname)
+Source Source::FromFile_(const boost::filesystem::path& fname)
 {
     LowIo io{fname.c_str(), false};
 
     FilePosition size = io.GetSize();
 
     SmartPtr<Provider> p;
-    try { p = MakeSmart<MmapProvider>(std::move(io), fname.string(), size); }
+    try { p = MakeSmart<MmapProvider>(std::move(io), fname, size); }
     catch (const std::system_error& e)
     {
         WARN << "Mmap failed, falling back to normal reading: "
              << ExceptionToString() << std::endl;
-        p = MakeSmart<UnixProvider>(std::move(io), fname.string(), size);
+        p = MakeSmart<UnixProvider>(std::move(io), fname, size);
     }
     return {MakeNotNull(std::move(p)), size};
 }

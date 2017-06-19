@@ -2,10 +2,11 @@
 #define UUID_0863E64B_09C6_449B_A18D_EFD42D57C604
 #pragma once
 
-#include <type_traits>
+#include "ref_counted_user_data.hpp"
 #include "../meta.hpp"
 #include "../not_null.hpp"
-#include "ref_counted_user_data.hpp"
+
+#include <type_traits>
 
 // todo: move to external header or just wait for gcc 7
 #if defined(__GLIBCXX__) && __cpp_lib_type_trait_variable_templates < 201510

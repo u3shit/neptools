@@ -39,10 +39,10 @@ public:
         FileMemSize size = 0;
     };
 
-    Source(const Source& s, FilePosition offset, FilePosition size) noexcept
-        : Source{s} { Slice(offset, size); get = 0; }
+    Source(Source s, FilePosition offset, FilePosition size) noexcept
+        : Source{std::move(s)} { Slice(offset, size); get = 0; }
 
-    static Source FromFile(boost::filesystem::path fname);
+    static Source FromFile(const boost::filesystem::path& fname);
 
     template <typename Checker = Check::Assert>
     void Slice(FilePosition offset, FilePosition size) noexcept
@@ -219,7 +219,7 @@ private:
     BufEntry GetTemporaryEntry(FilePosition offs) const;
 
     void Pread_(FilePosition offs, Byte* buf, FileMemSize len) const;
-    static Source FromFile_(boost::filesystem::path fname);
+    static Source FromFile_(const boost::filesystem::path& fname);
 
     FilePosition offset = 0, size, get = 0;
 
@@ -234,7 +234,7 @@ public:
     DumpableSource(Source&& s) noexcept : src{std::move(s)} {}
     DumpableSource(const Source& s, FilePosition offset, FilePosition size) noexcept
         : src{s, offset, size} {}
-    DumpableSource(const Source& s) noexcept : src{s} {}
+    DumpableSource(const Source& s) noexcept : src{s} {} // NOLINT
 
     void Fixup() override {}
 

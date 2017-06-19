@@ -19,18 +19,19 @@ public:
     NotNull(std::nullptr_t) = delete;
     NotNull(NotNull&) = default;
     NotNull(const NotNull&) = default;
-    NotNull(NotNull&&) = default; // a moved out NotNull might be null...
-    NotNull(EmptyNotNull) {}
+    NotNull(NotNull&&) = default; // NOLINT a moved out NotNull might be null...
+    NotNull(EmptyNotNull) noexcept(noexcept(T{})) {}
 
     template <typename... Args>
     constexpr explicit NotNull(Args&&... args) : t{std::forward<Args>(args)...}
     { NEPTOOLS_ASSERT(t); }
 
     template <typename U>
-    NotNull(NotNull<U> o) : t{std::move(o.t)} {}
+    NotNull(NotNull<U> o) noexcept(noexcept(T{std::move(o.t)}))
+        : t{std::move(o.t)} {}
 
     NotNull& operator=(const NotNull&) = default;
-    NotNull& operator=(NotNull&&) = default;
+    NotNull& operator=(NotNull&&) = default; // NOLINT
 
     // recheck because moving still can break it
     operator T() const { NEPTOOLS_ASSERT(t); return t; }
@@ -53,7 +54,8 @@ private:
 };
 
 template <typename T>
-NotNull<T> MakeNotNull(T t) { return NotNull<T>(std::move(t)); }
+NotNull<T> MakeNotNull(T t) noexcept(noexcept(NotNull<T>(std::move(t))))
+{ return NotNull<T>(std::move(t)); }
 
 }
 

@@ -23,7 +23,7 @@ public:
     NEPTOOLS_LUAGEN(template_params={"::Neptools::Item"})
     T& Split(FilePosition pos, NotNull<RefCountedPtr<T>> nitem)
     {
-        T& ret = *nitem.get();
+        T& ret = *nitem;
         Split2(pos, std::move(nitem));
         return ret;
     }

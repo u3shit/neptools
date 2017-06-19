@@ -48,7 +48,7 @@ LowIo LowIo::OpenStdOut()
     return LowIo{ret};
 }
 
-LowIo::~LowIo()
+LowIo::~LowIo() noexcept
 {
     CloseHandle(mmap_fd);
     CloseHandle(fd);
@@ -147,7 +147,7 @@ LowIo LowIo::OpenStdOut()
     return LowIo{fd};
 }
 
-LowIo::~LowIo()
+LowIo::~LowIo() noexcept
 {
     if (fd != -1 && close(fd) != 0)
         perror("close");

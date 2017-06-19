@@ -2,15 +2,15 @@
 #define UUID_4C4561D8_78E4_438B_9804_61F42DB159F7
 #pragma once
 
+#include "meta_utils.hpp"
+
 #include <brigand/algorithms/fold.hpp>
 #include <brigand/algorithms/split.hpp>
-#include <brigand/functions/if.hpp>
 #include <brigand/functions/eval_if.hpp>
+#include <brigand/functions/if.hpp>
 #include <brigand/functions/misc/always.hpp>
 #include <brigand/sequences/back.hpp>
 #include <brigand/sequences/list.hpp>
-
-#include "meta_utils.hpp"
 
 namespace Neptools
 {

@@ -98,18 +98,19 @@ class ParentListIterator
     using ConstNodePtr = typename Traits::const_node_ptr;
     using NodeTraits = typename Traits::node_traits;
 
-    ParentListIterator(ConstNodePtr ptr) : ptr{const_cast<NodePtr>(ptr)} {}
+    ParentListIterator(ConstNodePtr ptr) noexcept
+        : ptr{const_cast<NodePtr>(ptr)} {}
 public:
     using RawT = typename Traits::value_type;
     using T = std::conditional_t<IsConst, const RawT, RawT>;
 
     ParentListIterator() = default;
-    ParentListIterator(const ParentListIterator<Traits, false>& o)
+    ParentListIterator(const ParentListIterator<Traits, false>& o) noexcept
         : ptr{o.ptr} {}
-    ParentListIterator(T& val)
+    ParentListIterator(T& val) noexcept
         : ptr{const_cast<NodePtr>(Traits::to_node_ptr(val))} {}
 
-    ParentListIterator& operator=(const ParentListIterator<Traits, false>& o)
+    ParentListIterator& operator=(const ParentListIterator<Traits, false>& o) noexcept
     {
         ptr = o.ptr;
         return *this;
@@ -192,7 +193,7 @@ public:
         ListAlgo::swap_nodes(GetRoot(), o.GetRoot());
     }
 
-    ParentList& operator=(ParentList&& o)
+    ParentList& operator=(ParentList&& o) noexcept
     {
         clear();
         swap(o);

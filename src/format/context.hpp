@@ -30,7 +30,7 @@ public:
     NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
     NotNull<LabelPtr> CreateLabelFallback(std::string name, ItemPointer ptr);
     NotNull<LabelPtr> CreateLabelFallback(std::string name, FilePosition pos)
-    { return CreateLabelFallback(name, GetPointer(pos)); }
+    { return CreateLabelFallback(std::move(name), GetPointer(pos)); }
 
     NotNull<LabelPtr> GetLabelTo(ItemPointer ptr);
     NotNull<LabelPtr> GetLabelTo(FilePosition pos)

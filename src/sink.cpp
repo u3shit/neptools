@@ -1,10 +1,11 @@
 #include "sink.hpp"
-#include "low_io.hpp"
+
 #include "except.hpp"
+#include "low_io.hpp"
 #include "lua/boost_endian_traits.hpp"
 
-#include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
+#include <boost/exception/errinfo_file_name.hpp>
 
 #define NEPTOOLS_LOG_NAME "sink"
 #include "logger_helper.hpp"
@@ -14,7 +15,7 @@ namespace Neptools
 namespace
 {
 
-struct NEPTOOLS_NOLUA MmapSink : public Sink
+struct NEPTOOLS_NOLUA MmapSink final : public Sink
 {
     MmapSink(LowIo&& io, FilePosition size);
     ~MmapSink();
@@ -26,7 +27,7 @@ struct NEPTOOLS_NOLUA MmapSink : public Sink
     LowIo io;
 };
 
-struct NEPTOOLS_NOLUA SimpleSink : public Sink
+struct NEPTOOLS_NOLUA SimpleSink final : public Sink
 {
     SimpleSink(LowIo io, FilePosition size) : Sink{size}, io{std::move(io)}
     {
@@ -79,7 +80,10 @@ void MmapSink::Write_(StringView data)
     }
 
     MapNext(data.length());
-    memcpy(buf, data.data(), data.length());
+    if (buf) // https://stackoverflow.com/a/5243068; C99 7.21.1/2
+        memcpy(buf, data.data(), data.length());
+    else
+        NEPTOOLS_ASSERT(data.length() == 0);
 }
 
 void MmapSink::Pad_(FileMemSize len)

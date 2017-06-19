@@ -45,7 +45,7 @@
         NEPTOOLS_ASSERT_FAILED("unreachable", x);   \
         /* click on ignore -> you're toasted */     \
         NEPTOOLS_BUILTIN_UNREACHABLE();             \
-    } while (0)
+    } while (false)
 #endif
 
 namespace Neptools

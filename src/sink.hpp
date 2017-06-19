@@ -9,9 +9,9 @@
 #include "utils.hpp"
 #include "lua/dynamic_object.hpp"
 
+#include <cstring>
 #include <boost/endian/arithmetic.hpp>
 #include <boost/filesystem/path.hpp>
-#include <cstring>
 
 namespace Neptools
 {

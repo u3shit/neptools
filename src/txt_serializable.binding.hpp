@@ -13,7 +13,7 @@ void TypeRegister::DoRegister<::Neptools::TxtSerializable>(TypeBuilder& bld)
         static_cast<std::string (*)(::Neptools::TxtSerializable &)>(&Neptools::WriteTxt)
     >("write_txt");
     bld.AddFunction<
-        static_cast<void (*)(::Neptools::TxtSerializable &, std::string)>(&Neptools::ReadTxt)
+        static_cast<void (*)(::Neptools::TxtSerializable &, const std::string &)>(&Neptools::ReadTxt)
     >("read_txt");
 
 }

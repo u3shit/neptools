@@ -5,6 +5,7 @@
 #include "function_call.hpp"
 #include "type_traits.hpp"
 #include "../shared_ptr.hpp"
+
 #include <type_traits>
 
 namespace Neptools

@@ -258,7 +258,7 @@ void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
     NEPTOOLS_STATIC_ASSERT(std::is_pod<Tuple>::value);
     NEPTOOLS_STATIC_ASSERT(EmptySizeof<Tuple> == Operations<Args...>::Size());
 
-    Tuple raw = src.ReadGen<Tuple>();
+    auto raw = src.ReadGen<Tuple>();
 
     Operations<Args...>::Validate(raw, GetUnsafeContext().GetSize());
     Operations<Args...>::Parse(args, raw, GetUnsafeContext());
@@ -320,7 +320,7 @@ void Instruction0dItem::Dump_(Sink& sink) const
 {
     InstrDump(sink);
     sink.WriteLittleUint8(tgts.size());
-    for (auto l : tgts)
+    for (const auto& l : tgts)
         sink.WriteLittleUint32(ToFilePos(l->GetPtr()));
 }
 
@@ -328,7 +328,7 @@ void Instruction0dItem::Inspect_(std::ostream& os) const
 {
     InstrInspect(os);
     bool first = true;
-    for (auto l : tgts)
+    for (const auto& l : tgts)
     {
         if (!first) os << ", ";
         first = false;
@@ -339,7 +339,7 @@ void Instruction0dItem::Inspect_(std::ostream& os) const
 
 void Instruction0dItem::PostInsert()
 {
-    for (auto l : tgts)
+    for (const auto& l : tgts)
         MaybeCreateUnchecked<InstructionBase>(l->GetPtr());
 }
 
@@ -472,8 +472,8 @@ void Instruction1eItem::Parse_(Source& src)
     {
         auto exp = src.ReadGen<ExpressionParams>();
         exp.Validate(GetUnsafeContext().GetSize());
-        expressions.push_back({
-                exp.expression, GetUnsafeContext().GetLabelTo(exp.tgt)});
+        expressions.emplace_back(
+                exp.expression, GetUnsafeContext().GetLabelTo(exp.tgt));
     }
 }
 

@@ -76,7 +76,8 @@ class UnimplementedInstructionItem final : public InstructionBase
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    UnimplementedInstructionItem(Key k, Context* ctx, uint8_t opcode, Source)
+    UnimplementedInstructionItem(
+        Key k, Context* ctx, uint8_t opcode, const Source&)
         : InstructionBase{k, ctx, opcode}
     { NEPTOOLS_THROW(DecodeError{"Unimplemented instruction"}); }
 

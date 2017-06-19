@@ -92,7 +92,7 @@ void Gbnl::Parse_(Source& src)
         switch (type.type)
         {
         case TypeDescriptor::UINT8:
-            NEPTOOLS_ASSERT(uint8_in_progress == false);
+            NEPTOOLS_ASSERT(!uint8_in_progress);
             uint8_in_progress = true;
             break;
         case TypeDescriptor::UINT16:

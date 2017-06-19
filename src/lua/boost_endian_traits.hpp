@@ -2,8 +2,9 @@
 #define UUID_4412E558_283B_48F5_9CC2_8CF95EDFC6E5
 #pragma once
 
-#include <boost/endian/arithmetic.hpp>
 #include "type_traits.hpp"
+
+#include <boost/endian/arithmetic.hpp>
 
 namespace Neptools
 {
