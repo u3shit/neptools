@@ -127,6 +127,10 @@ struct UserDataTraits
 
     inline static Ret UnsafeGet(StateRef vm, bool, int idx)
     {
+        if constexpr (std::is_final_v<T>)
+            return Base::UBGet({
+                static_cast<UserDataBase*>(lua_touserdata(vm, idx)), 0});
+
         return Base::UBGet(UserDataDetail::UnsafeGetBase(
             vm, idx, &TYPE_TAG<BaseType>));
     }
