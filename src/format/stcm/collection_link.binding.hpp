@@ -11,7 +11,7 @@ void TypeRegister::DoRegister<::Neptools::Stcm::CollectionLinkHeaderItem>(TypeBu
     bld.Inherit<::Neptools::Stcm::CollectionLinkHeaderItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::CollectionLinkHeaderItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::CollectionLinkHeaderItem::CreateAndInsert)
@@ -41,8 +41,8 @@ void TypeRegister::DoRegister<::Neptools::Stcm::CollectionLinkItem>(TypeBuilder&
     bld.Inherit<::Neptools::Stcm::CollectionLinkItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
     >("new");
     bld.AddFunction<
         &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Stcm::CollectionLinkItem, std::vector<::Neptools::Stcm::CollectionLinkItem::LinkEntry>, &::Neptools::Stcm::CollectionLinkItem::entries>

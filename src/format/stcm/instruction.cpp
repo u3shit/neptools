@@ -95,16 +95,15 @@ void InstructionItem::Header::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-InstructionItem::InstructionItem(Key k, Context* ctx, Source src)
+InstructionItem::InstructionItem(Key k, Context& ctx, Source src)
     : ItemWithChildren{k, ctx}
 {
-    AddInfo(&InstructionItem::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&InstructionItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
-void InstructionItem::Parse_(Source& src)
+void InstructionItem::Parse_(Context& ctx, Source& src)
 {
     auto instr = src.ReadGen<Header>();
-    auto& ctx = GetUnsafeContext();
     instr.Validate(ctx.GetSize());
 
     if (instr.is_call)

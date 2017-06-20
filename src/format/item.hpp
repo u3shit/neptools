@@ -29,20 +29,20 @@ class Item : public RefCounted, public Dumpable, public ParentListBaseHook<>
 protected:
     struct Key {};
 public:
-    // do not change Context* to Weak/Shared ptr
+    // do not change Context& to Weak/Shared ptr
     // otherwise Context's constructor will try to construct a WeakPtr before
     // RefCounted's constructor is finished, making an off-by-one error and
     // freeing the context twice
     explicit Item(
-        Key, Context* ctx, FilePosition position = 0) noexcept
-        : position{position}, context{ctx} {}
+        Key, Context& ctx, FilePosition position = 0) noexcept
+        : position{position}, context{&ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
     virtual ~Item();
 
     RefCountedPtr<Context> GetContextMaybe() noexcept
     { return context.lock(); }
-    NotNull<RefCountedPtr<Context>> GetContext() noexcept
+    NotNull<RefCountedPtr<Context>> GetContext()
     { return NotNull<RefCountedPtr<Context>>{context}; }
     NEPTOOLS_NOLUA Context& GetUnsafeContext() noexcept
     { return *context.unsafe_get(); }
@@ -50,8 +50,7 @@ public:
 
     NEPTOOLS_NOLUA RefCountedPtr<const Context> GetContextMaybe() const noexcept
     { return context.lock(); }
-    NEPTOOLS_NOLUA NotNull<RefCountedPtr<const Context>>
-    GetContext() const noexcept
+    NEPTOOLS_NOLUA NotNull<RefCountedPtr<const Context>> GetContext() const
     { return NotNull<RefCountedPtr<const Context>>{context}; }
     NEPTOOLS_NOLUA const Context& GetUnsafeContext() const noexcept
     { return *context.unsafe_get(); }
@@ -62,7 +61,7 @@ public:
     FilePosition GetPosition() const noexcept { return position; }
 
     template <typename Checker = Check::Assert>
-    void Replace(const NotNull<RefCountedPtr<Item>>& nitem) noexcept
+    void Replace(const NotNull<RefCountedPtr<Item>>& nitem)
     {
         NEPTOOLS_CHECK(InvalidItemState, GetParent(), "no parent");
         if constexpr (!Checker::IS_NOP)
@@ -105,7 +104,7 @@ private:
 
     LabelsContainer labels;
 
-    void Replace_(const NotNull<RefCountedPtr<Item>>& nitem) noexcept;
+    void Replace_(const NotNull<RefCountedPtr<Item>>& nitem);
 
     friend class Context;
     friend struct ItemListTraits;

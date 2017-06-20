@@ -7,7 +7,7 @@ namespace Neptools
 namespace Stcm
 {
 
-GbnlItem::GbnlItem(Key k, Context* ctx, Source src)
+GbnlItem::GbnlItem(Key k, Context& ctx, Source src)
     : Item{k, ctx}, Gbnl{std::move(src)}
 {
 }

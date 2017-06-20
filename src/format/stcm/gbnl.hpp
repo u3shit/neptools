@@ -16,7 +16,7 @@ class GbnlItem final : public Item, public Gbnl
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    GbnlItem(Key k, Context* ctx, Source src);
+    GbnlItem(Key k, Context& ctx, Source src);
     static GbnlItem& CreateAndInsert(ItemPointer ptr);
 
     void Fixup() override { Gbnl::Fixup(); }

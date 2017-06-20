@@ -23,14 +23,14 @@ void HeaderItem::Header::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-HeaderItem::HeaderItem(Key k, Context* ctx, const Header& hdr)
+HeaderItem::HeaderItem(Key k, Context& ctx, const Header& hdr)
     : Item{k, ctx}, export_sec{EmptyNotNull{}}, collection_link{EmptyNotNull{}}
 {
-    hdr.Validate(GetUnsafeContext().GetSize());
+    hdr.Validate(ctx.GetSize());
 
     msg = hdr.msg;
-    export_sec = ctx->CreateLabelFallback("exports", hdr.export_offset);
-    collection_link = ctx->CreateLabelFallback(
+    export_sec = ctx.CreateLabelFallback("exports", hdr.export_offset);
+    collection_link = ctx.CreateLabelFallback(
         "collection_link_hdr", hdr.collection_link_offset);;
     field_28 = hdr.field_28;
 }

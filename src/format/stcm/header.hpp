@@ -32,12 +32,12 @@ public:
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x30);
 
     HeaderItem(
-        Key k, Context* ctx, const MsgType& msg, NotNull<LabelPtr> export_sec,
+        Key k, Context& ctx, const MsgType& msg, NotNull<LabelPtr> export_sec,
         NotNull<LabelPtr> collection_link, uint32_t field_28)
         : Item{k, ctx}, msg{msg}, export_sec{std::move(export_sec)},
           collection_link{std::move(collection_link)}, field_28{field_28} {}
     NEPTOOLS_NOLUA
-    HeaderItem(Key k, Context* ctx, const Header& hdr);
+    HeaderItem(Key k, Context& ctx, const Header& hdr);
     static HeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override { return sizeof(Header); }

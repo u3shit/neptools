@@ -24,10 +24,10 @@ void HeaderItem::Header::Validate(FilePosition size) const
 #undef VALIDATE
 }
 
-HeaderItem::HeaderItem(Key k, Context* ctx, Source src)
+HeaderItem::HeaderItem(Key k, Context& ctx, Source src)
     : Item{k, ctx}, entry_point{EmptyNotNull{}}
 {
-    AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
 FilePosition HeaderItem::GetSize() const noexcept
@@ -48,14 +48,13 @@ HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
     return ret;
 }
 
-void HeaderItem::Parse_(Source& src)
+void HeaderItem::Parse_(Context& ctx, Source& src)
 {
     src.CheckRemainingSize(sizeof(Header));
     auto hdr = src.ReadGen<Header>();
     hdr.Validate(src.GetSize());
 
-    entry_point =
-        GetUnsafeContext().CreateLabelFallback("entry_point", hdr.entry_point);
+    entry_point = ctx.CreateLabelFallback("entry_point", hdr.entry_point);
     flags = hdr.flags;
 
     if (flags & 1)

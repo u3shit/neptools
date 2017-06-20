@@ -11,7 +11,7 @@ void TypeRegister::DoRegister<::Neptools::Stcm::DataItem>(TypeBuilder& bld)
     bld.Inherit<::Neptools::Stcm::DataItem, ::Neptools::ItemWithChildren>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::DataItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::DataItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::DataItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::DataItem::CreateAndInsert)

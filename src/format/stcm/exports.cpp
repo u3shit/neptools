@@ -20,16 +20,16 @@ void ExportsItem::Entry::Validate(FilePosition file_size) const
 #undef VALIDATE
 }
 
-ExportsItem::ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count)
+ExportsItem::ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count)
     : Item{k, ctx}
 {
-    AddInfo(&ExportsItem::Parse_, ADD_SOURCE(src), this, src, export_count);
+    AddInfo(&ExportsItem::Parse_, ADD_SOURCE(src), this, ctx, src, export_count);
 }
 
-void ExportsItem::Parse_(Source& src, uint32_t export_count)
+void ExportsItem::Parse_(Context& ctx, Source& src, uint32_t export_count)
 {
     entries.reserve(export_count);
-    auto size = GetUnsafeContext().GetSize();
+    auto size = ctx.GetSize();
     for (uint32_t i = 0; i < export_count; ++i)
     {
         auto e = src.ReadGen<Entry>();
@@ -37,7 +37,7 @@ void ExportsItem::Parse_(Source& src, uint32_t export_count)
         entries.push_back(MakeSmart<EntryType>(
             static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
-            GetUnsafeContext().CreateLabelFallback(e.name.c_str(), e.offset)));
+            ctx.CreateLabelFallback(e.name.c_str(), e.offset)));
     }
 }
 

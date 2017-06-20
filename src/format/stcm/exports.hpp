@@ -33,8 +33,8 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x28);
 
-    ExportsItem(Key k, Context* ctx) : Item{k, ctx} {}
-    ExportsItem(Key k, Context* ctx, Source src, uint32_t export_count);
+    ExportsItem(Key k, Context& ctx) : Item{k, ctx} {}
+    ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count);
     static ExportsItem& CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
     FilePosition GetSize() const noexcept override
@@ -60,7 +60,7 @@ public:
 private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
-    void Parse_(Source& src, uint32_t export_count);
+    void Parse_(Context& ctx, Source& src, uint32_t export_count);
 };
 
 }

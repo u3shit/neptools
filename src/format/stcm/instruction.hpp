@@ -87,8 +87,8 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Parameter) == 0xc);
 
-    InstructionItem(Key k, Context* ctx) : ItemWithChildren{k, ctx} {}
-    InstructionItem(Key k, Context* ctx, Source src);
+    InstructionItem(Key k, Context& ctx) : ItemWithChildren{k, ctx} {}
+    InstructionItem(Key k, Context& ctx, Source src);
     static InstructionItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
@@ -249,7 +249,7 @@ private:
 
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
 };
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p);

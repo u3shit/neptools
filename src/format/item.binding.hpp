@@ -40,7 +40,7 @@ void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
         static_cast<RefCountedPtr<::Neptools::Context> (::Neptools::Item::*)() noexcept>(&::Neptools::Item::GetContextMaybe)
     >("get_context_maybe");
     bld.AddFunction<
-        static_cast<::Neptools::NotNull<RefCountedPtr<::Neptools::Context> > (::Neptools::Item::*)() noexcept>(&::Neptools::Item::GetContext)
+        static_cast<::Neptools::NotNull<RefCountedPtr<::Neptools::Context> > (::Neptools::Item::*)()>(&::Neptools::Item::GetContext)
     >("get_context");
     bld.AddFunction<
         static_cast<::Neptools::ItemWithChildren * (::Neptools::Item::*)() noexcept>(&::Neptools::Item::GetParent)
@@ -49,7 +49,7 @@ void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
         static_cast<::Neptools::FilePosition (::Neptools::Item::*)() const noexcept>(&::Neptools::Item::GetPosition)
     >("get_position");
     bld.AddFunction<
-        static_cast<void (::Neptools::Item::*)(const ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> > &) noexcept>(&::Neptools::Item::Replace<Check::Throw>)
+        static_cast<void (::Neptools::Item::*)(const ::Neptools::NotNull<RefCountedPtr<::Neptools::Item> > &)>(&::Neptools::Item::Replace<Check::Throw>)
     >("replace");
     bld.AddFunction<
         TableRetWrap<static_cast<const ::Neptools::Item::LabelsContainer & (::Neptools::Item::*)() const>(&::Neptools::Item::GetLabels)>::Wrap

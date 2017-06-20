@@ -11,7 +11,7 @@ void TypeRegister::DoRegister<::Neptools::Stcm::HeaderItem>(TypeBuilder& bld)
     bld.Inherit<::Neptools::Stcm::HeaderItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context *>, LuaGetRef<const ::Neptools::Stcm::HeaderItem::MsgType &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::uint32_t>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Stcm::HeaderItem::MsgType &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::uint32_t>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::HeaderItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::HeaderItem::CreateAndInsert)

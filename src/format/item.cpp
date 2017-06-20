@@ -33,7 +33,7 @@ void Item::UpdatePosition(FilePosition npos)
     Fixup();
 }
 
-void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem) noexcept
+void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem)
 {
     auto ctx = GetContext();
     // move labels
@@ -66,7 +66,8 @@ void Item::Slice(SliceSeq seq)
     auto it = Iterator();
     it = list.erase(it);
 
-    auto& pmap = GetUnsafeContext().pmap;
+    auto ctx = GetContext();
+    auto& pmap = ctx->pmap;
     auto empty = pmap.empty();
     // remove this from pmap
     if (!empty)

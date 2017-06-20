@@ -14,7 +14,7 @@ namespace Stsc
 class InstructionBase : public Item
 {
 public:
-    InstructionBase(Key k, Context* ctx, uint8_t opcode)
+    InstructionBase(Key k, Context& ctx, uint8_t opcode)
         : Item{k, ctx}, opcode{opcode} {}
 
     static InstructionBase& CreateAndInsert(ItemPointer ptr);
@@ -42,7 +42,7 @@ class SimpleInstruction final : public InstructionBase
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    SimpleInstruction(Key k, Context* ctx, uint8_t opcode, Source src);
+    SimpleInstruction(Key k, Context& ctx, uint8_t opcode, Source src);
 
     static const FilePosition SIZE;
     FilePosition GetSize() const noexcept override { return SIZE; }
@@ -50,7 +50,7 @@ public:
     std::tuple<typename TupleTypeMap<Args>::Type...> args;
 
 private:
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
     void PostInsert() override;
@@ -60,13 +60,13 @@ class Instruction0dItem final : public InstructionBase
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    Instruction0dItem(Key k, Context* ctx, uint8_t opcode, Source src);
+    Instruction0dItem(Key k, Context& ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
 
     std::vector<NotNull<LabelPtr>> tgts;
 
 private:
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
     void PostInsert() override;
@@ -77,7 +77,7 @@ class UnimplementedInstructionItem final : public InstructionBase
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
     UnimplementedInstructionItem(
-        Key k, Context* ctx, uint8_t opcode, const Source&)
+        Key k, Context& ctx, uint8_t opcode, const Source&)
         : InstructionBase{k, ctx, opcode}
     { NEPTOOLS_THROW(DecodeError{"Unimplemented instruction"}); }
 
@@ -112,7 +112,7 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(NodeParams) == 9);
 
-    Instruction1dItem(Key k, Context* ctx, uint8_t opcode, Source src);
+    Instruction1dItem(Key k, Context& ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override
     { return 1 + sizeof(FixParams) + tree.size() * sizeof(NodeParams); }
 
@@ -128,7 +128,7 @@ public:
     void Dispose() noexcept override;
 
 private:
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
     void InspectNode(std::ostream& os, size_t i) const;
@@ -157,7 +157,7 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(ExpressionParams) == 8);
 
-    Instruction1eItem(Key k, Context* ctx, uint8_t opcode, Source src);
+    Instruction1eItem(Key k, Context& ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override
     { return 1 + sizeof(FixParams) + expressions.size() * sizeof(ExpressionParams); }
 
@@ -169,7 +169,7 @@ public:
     void Dispose() noexcept override;
 
 private:
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
     void PostInsert() override;

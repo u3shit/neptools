@@ -24,7 +24,7 @@ public:
 
     template <typename T, typename... Args>
     NEPTOOLS_NOLUA NotNull<SmartPtr<T>> Create(Args&&... args)
-    { return MakeSmart<T>(Item::Key{}, this, std::forward<Args>(args)...); }
+    { return MakeSmart<T>(Item::Key{}, *this, std::forward<Args>(args)...); }
 
     NotNull<LabelPtr> GetLabel(const std::string& name) const;
     NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);

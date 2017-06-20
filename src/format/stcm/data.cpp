@@ -18,7 +18,7 @@ void DataItem::Header::Validate(FilePosition chunk_size) const
 #undef VALIDATE
 }
 
-DataItem::DataItem(Key k, Context* ctx, const Header& raw, size_t chunk_size)
+DataItem::DataItem(Key k, Context& ctx, const Header& raw, size_t chunk_size)
     : ItemWithChildren{k, ctx}
 {
     raw.Validate(chunk_size);

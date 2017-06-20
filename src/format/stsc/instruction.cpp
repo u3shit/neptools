@@ -38,8 +38,8 @@ InstructionBase& InstructionBase::CreateAndInsert(ItemPointer ptr)
     auto x = RawItem::GetSource(ptr, -1);
     x.src.CheckSize(1);
     uint8_t opcode = x.src.ReadLittleUint8();
-    auto& ret = x.ritem.Split(
-        ptr.offset, CreateMap::MAP[opcode](x.ritem.GetUnsafeContext(), x.src));
+    auto ctx = x.ritem.GetContext();
+    auto& ret = x.ritem.Split(ptr.offset, CreateMap::MAP[opcode](*ctx, x.src));
 
     ret.PostInsert();
     return ret;
@@ -244,14 +244,14 @@ const FilePosition SimpleInstruction<NoReturn, Args...>::SIZE =
 
 template <bool NoReturn, typename... Args>
 SimpleInstruction<NoReturn, Args...>::SimpleInstruction(
-    Key k, Context* ctx, uint8_t opcode, Source src)
+    Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
 {
-    AddInfo(&SimpleInstruction::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&SimpleInstruction::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
 template <bool NoReturn, typename... Args>
-void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
+void SimpleInstruction<NoReturn, Args...>::Parse_(Context& ctx, Source& src)
 {
     src.CheckSize(SIZE);
     using Tuple = PODTuple<typename Traits<Args>::RawType...>;
@@ -260,8 +260,8 @@ void SimpleInstruction<NoReturn, Args...>::Parse_(Source& src)
 
     auto raw = src.ReadGen<Tuple>();
 
-    Operations<Args...>::Validate(raw, GetUnsafeContext().GetSize());
-    Operations<Args...>::Parse(args, raw, GetUnsafeContext());
+    Operations<Args...>::Validate(raw, ctx.GetSize());
+    Operations<Args...>::Parse(args, raw, ctx);
 }
 
 template <bool NoReturn, typename... Args>
@@ -293,13 +293,13 @@ void SimpleInstruction<NoReturn, Args...>::PostInsert()
 // ------------------------------------------------------------------------
 // specific instruction implementations
 Instruction0dItem::Instruction0dItem(
-    Key k, Context* ctx, uint8_t opcode, Source src)
+    Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
 {
-    AddInfo(&Instruction0dItem::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&Instruction0dItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
-void Instruction0dItem::Parse_(Source& src)
+void Instruction0dItem::Parse_(Context& ctx, Source& src)
 {
     src.CheckRemainingSize(1);
     uint8_t n = src.ReadLittleUint8();
@@ -311,8 +311,8 @@ void Instruction0dItem::Parse_(Source& src)
     {
         uint32_t t = src.ReadLittleUint32();
         NEPTOOLS_VALIDATE_FIELD(
-            "Stsc::Instruction0dItem", t < GetUnsafeContext().GetSize());
-        tgts.push_back(GetUnsafeContext().GetLabelTo(t));
+            "Stsc::Instruction0dItem", t < ctx.GetSize());
+        tgts.push_back(ctx.GetLabelTo(t));
     }
 }
 
@@ -363,10 +363,10 @@ void Instruction1dItem::NodeParams::Validate(uint16_t size)
 }
 
 Instruction1dItem::Instruction1dItem(
-    Key k, Context* ctx, uint8_t opcode, Source src)
+    Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}, tgt{EmptyNotNull{}}
 {
-    AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
 void Instruction1dItem::Dispose() noexcept
@@ -375,12 +375,12 @@ void Instruction1dItem::Dispose() noexcept
     InstructionBase::Dispose();
 }
 
-void Instruction1dItem::Parse_(Source& src)
+void Instruction1dItem::Parse_(Context& ctx, Source& src)
 {
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
-    fp.Validate(src.GetRemainingSize(), GetUnsafeContext().GetSize());
-    tgt = GetUnsafeContext().GetLabelTo(fp.tgt);
+    fp.Validate(src.GetRemainingSize(), ctx.GetSize());
+    tgt = ctx.GetLabelTo(fp.tgt);
 
     uint16_t n = fp.size;
     src.CheckRemainingSize(n * sizeof(NodeParams));
@@ -445,10 +445,10 @@ void Instruction1eItem::ExpressionParams::Validate(FilePosition size)
 }
 
 Instruction1eItem::Instruction1eItem(
-    Key k, Context* ctx, uint8_t opcode, Source src)
+    Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
 {
-    AddInfo(&Instruction1eItem::Parse_, ADD_SOURCE(src), this, src);
+    AddInfo(&Instruction1eItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
 
 void Instruction1eItem::Dispose() noexcept
@@ -457,7 +457,7 @@ void Instruction1eItem::Dispose() noexcept
     InstructionBase::Dispose();
 }
 
-void Instruction1eItem::Parse_(Source& src)
+void Instruction1eItem::Parse_(Context& ctx, Source& src)
 {
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
@@ -471,9 +471,9 @@ void Instruction1eItem::Parse_(Source& src)
     for (uint16_t i = 0; i < size; ++i)
     {
         auto exp = src.ReadGen<ExpressionParams>();
-        exp.Validate(GetUnsafeContext().GetSize());
+        exp.Validate(ctx.GetSize());
         expressions.emplace_back(
-                exp.expression, GetUnsafeContext().GetLabelTo(exp.tgt));
+                exp.expression, ctx.GetLabelTo(exp.tgt));
     }
 }
 

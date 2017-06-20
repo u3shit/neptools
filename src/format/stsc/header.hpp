@@ -38,7 +38,7 @@ public:
     NEPTOOLS_STATIC_ASSERT(sizeof(ExtraHeader2) == 14);
 
 
-    HeaderItem(Key k, Context* ctx, Source src);
+    HeaderItem(Key k, Context& ctx, Source src);
     static HeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
@@ -59,7 +59,7 @@ public:
     uint16_t extra_headers_4;
 
 private:
-    void Parse_(Source& src);
+    void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
 };

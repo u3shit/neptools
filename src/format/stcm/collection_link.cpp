@@ -36,10 +36,10 @@ void CollectionLinkItem::Entry::Validate(FilePosition file_size) const
 }
 
 CollectionLinkHeaderItem::CollectionLinkHeaderItem(
-    Key k, Context* ctx, const Header& s)
+    Key k, Context& ctx, const Header& s)
     : Item{k, ctx},
-      data{(s.Validate(GetUnsafeContext().GetSize()),
-            GetUnsafeContext().CreateLabelFallback("collection_link", s.offset))}
+      data{(s.Validate(ctx.GetSize()),
+            ctx.CreateLabelFallback("collection_link", s.offset))}
 {}
 
 CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
@@ -57,7 +57,8 @@ CollectionLinkHeaderItem& CollectionLinkHeaderItem::CreateAndInsert(
             "Stcm::CollectionLinkHeaderItem",
             ptr2.offset == 0 && x.t.count == 0);
         auto& eof = ptr2.AsChecked0<EofItem>();
-        eof.Replace(eof.GetUnsafeContext().Create<CollectionLinkItem>());
+        auto ctx = eof.GetContext();
+        eof.Replace(ctx->Create<CollectionLinkItem>());
         return ret;
     }
 
@@ -83,10 +84,10 @@ void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
 }
 
 CollectionLinkItem::CollectionLinkItem(
-    Key k, Context* ctx, Source src, uint32_t count)
+    Key k, Context& ctx, Source src, uint32_t count)
     : Item{k, ctx}
 {
-    AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, src, count);
+    AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, ctx, src, count);
 }
 
 void CollectionLinkItem::Dispose() noexcept
@@ -95,9 +96,8 @@ void CollectionLinkItem::Dispose() noexcept
     Item::Dispose();
 }
 
-void CollectionLinkItem::Parse_(Source& src, uint32_t count)
+void CollectionLinkItem::Parse_(Context& ctx, Source& src, uint32_t count)
 {
-    auto& ctx = GetUnsafeContext();
     entries.reserve(count);
     for (uint32_t i = 0; i < count; ++i)
     {

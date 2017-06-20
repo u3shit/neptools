@@ -39,11 +39,11 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
-    CollectionLinkHeaderItem(Key k, Context* ctx, NotNull<LabelPtr> data)
+    CollectionLinkHeaderItem(Key k, Context& ctx, NotNull<LabelPtr> data)
         : Item{k, ctx}, data{std::move(data)} {}
 
     NEPTOOLS_NOLUA
-    CollectionLinkHeaderItem(Key k, Context* ctx, const Header& s);
+    CollectionLinkHeaderItem(Key k, Context& ctx, const Header& s);
     static CollectionLinkHeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override
@@ -75,8 +75,8 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x20);
 
-    CollectionLinkItem(Key k, Context* ctx) : Item{k, ctx} {}
-    CollectionLinkItem(Key k, Context* ctx, Source src, uint32_t count);
+    CollectionLinkItem(Key k, Context& ctx) : Item{k, ctx} {}
+    CollectionLinkItem(Key k, Context& ctx, Source src, uint32_t count);
 
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }
@@ -99,7 +99,7 @@ public:
 private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os) const override;
-    void Parse_(Source& src, uint32_t count);
+    void Parse_(Context& ctx, Source& src, uint32_t count);
 };
 
 }

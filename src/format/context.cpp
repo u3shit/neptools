@@ -10,7 +10,7 @@ namespace Neptools
 {
 
 Context::Context()
-    : ItemWithChildren{Key{}, this}
+    : ItemWithChildren{Key{}, *this}
 {}
 
 Context::~Context()
