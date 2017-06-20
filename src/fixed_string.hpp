@@ -112,7 +112,7 @@ struct Lua::TypeTraits<FixedString<N>>
     }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isstring(vm, idx); }
+    { return lua_type(vm, idx) == LUA_TSTRING; }
 
     static void Push(StateRef vm, const FixedString<N>& str)
     { lua_pushstring(vm, str.c_str()); }

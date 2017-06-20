@@ -113,7 +113,7 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
             lua_pushvalue(vm, -2); //+3
 
             // if type(k) == "lightuserdata" and type(v) == "number"
-            if (lua_islightuserdata(vm, -3) && lua_isnumber(vm, -2))
+            if (lua_islightuserdata(vm, -3) && lua_type(vm, -2) == LUA_TNUMBER)
                 lua_pushinteger(vm, lua_tointeger(vm, -2)+offs); // +4
             else
                 lua_pushvalue(vm, -2); //+4

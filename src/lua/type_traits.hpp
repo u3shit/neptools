@@ -81,7 +81,7 @@ struct TypeTraits<T, std::enable_if_t<
     { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isnumber(vm, idx); }
+    { return lua_type(vm, idx) == LUA_TNUMBER; }
 
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, lua_Number(val)); }
@@ -105,7 +105,7 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
     { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isnumber(vm, idx); }
+    { return lua_type(vm, idx) == LUA_TNUMBER; }
 
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, val); }
@@ -149,7 +149,7 @@ struct TypeTraits<const char*>
     { return lua_tostring(vm, idx); }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isstring(vm, idx); }
+    { return lua_type(vm, idx) == LUA_TSTRING; }
 
     static void Push(StateRef vm, const char* val)
     { lua_pushstring(vm, val); }
@@ -179,7 +179,7 @@ struct TypeTraits<T, std::enable_if_t<
     }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isstring(vm, idx); }
+    { return lua_type(vm, idx) == LUA_TSTRING; }
 
     static void Push(StateRef vm, const T& val)
     { lua_pushlstring(vm, val.data(), val.length()); }
