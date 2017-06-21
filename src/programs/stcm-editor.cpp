@@ -500,6 +500,7 @@ int main(int argc, char** argv)
             if (st.stcm) st.stcm->Fixup();
         }};
 
+#ifndef NEPTOOLS_WITHOUT_LUA
     Option lua{ // temp
         lgrp, "lua", 0, nullptr, "ignore",
         [&](auto&&)
@@ -514,6 +515,7 @@ int main(int argc, char** argv)
                     lua_pop(vm, 1);
                 }
         }};
+#endif
 
     boost::filesystem::path self{argv[0]};
     if (boost::iequals(self.filename().string(), "cl3-tool")

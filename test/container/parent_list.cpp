@@ -608,6 +608,7 @@ CHK(merge, lst0.merge OPENPAREN lst1 COMMA, (auto& a, auto& b), a.data < b.data,
     List lst0(xs, xs+5) COMMA lst1(xs+5, xs+10);,
     CHECK(lst0.size() + lst1.size() == 10);)
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 TEST_CASE("ParentList lua", "[parent_list]")
 {
     SmartPtr<X> xs[5];
@@ -651,6 +652,7 @@ end                                            \n\
 assert(tbl[5] == nil)");
     }
 }
+#endif
 
 #include "container/parent_list.lua.hpp"
 NEPTOOLS_PARENT_LIST_LUAGEN(parent_list_item, Neptools::Test::ParentListItem,

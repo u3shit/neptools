@@ -46,6 +46,7 @@ end
 
 local template_str = [=[
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 //$ for i,cls in ipairs(classes) do
@@ -91,6 +92,7 @@ const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
 //$   end
 
 //$ end
+#endif
 ]=]
 
 local function generate(classes)

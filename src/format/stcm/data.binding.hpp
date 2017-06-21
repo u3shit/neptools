@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -43,3 +44,4 @@ static TypeRegister::StateRegister<::Neptools::Stcm::DataItem> reg_neptools_stcm
 
 const char ::Neptools::Stcm::DataItem::TYPE_NAME[] = "neptools.stcm.data_item";
 
+#endif

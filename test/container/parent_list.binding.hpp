@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -132,3 +133,4 @@ static TypeRegister::StateRegister<::parent_list_item> reg_neptools_parent_list_
 template <>
 const char ::parent_list_item::TYPE_NAME[] = "neptools.parent_list_parent_list_item";
 
+#endif

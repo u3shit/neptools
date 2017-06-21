@@ -2,13 +2,22 @@
 #define UUID_0DFFCD6C_CA34_4A76_B8D7_1A0B4DF20DC6
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+
+namespace Neptools::Lua
+{
+
+struct ValueObject {};
+
+}
+
+#else
+
 #include "type_traits.hpp"
 #include "function_call_types.hpp"
 #include "../meta.hpp"
 
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 // no inheritance support for now
@@ -84,6 +93,6 @@ struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 };
 
 }
-}
 
+#endif
 #endif

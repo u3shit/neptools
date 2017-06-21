@@ -638,6 +638,7 @@ void Gbnl::ReadTxt_(std::istream& is)
     NEPTOOLS_THROW(DecodeError{"GbnlTxt: EOF"});
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 template <>
 struct DynamicStructTypeTraits<Gbnl::OffsetString>
 {
@@ -718,6 +719,7 @@ struct DynamicStructTypeTraits<Gbnl::PaddingTag>
     static constexpr bool SIZABLE = true;
     static constexpr const char* NAME = "padding";
 };
+#endif
 
 }
 

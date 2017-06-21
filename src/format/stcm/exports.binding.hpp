@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -86,3 +87,4 @@ static TypeRegister::StateRegister<::Neptools::Stcm::ExportsItem::EntryType> reg
 
 const char ::Neptools::Stcm::ExportsItem::EntryType::TYPE_NAME[] = "neptools.stcm.exports_item.entry_type";
 
+#endif

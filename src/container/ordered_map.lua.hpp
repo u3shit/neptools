@@ -2,6 +2,10 @@
 #define UUID_2DF4B391_2856_41E2_995A_53CABE00D614
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+#define NEPTOOLS_ORDERED_MAP_LUAGEN(name, ...)
+#else
+
 #include "ordered_map.hpp"
 #include "../lua/function_call.hpp"
 
@@ -112,4 +116,5 @@ struct OrderedMapLua
     template struct ::Neptools::OrderedMapLua<__VA_ARGS__>;             \
     NEPTOOLS_LUA_TEMPLATE(name, nil, ::Neptools::OrderedMap<__VA_ARGS__>)
 
+#endif
 #endif

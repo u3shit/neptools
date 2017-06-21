@@ -2,6 +2,8 @@
 #define UUID_365580B3_AF64_4E79_8FC1_35F50DFF840F
 #pragma once
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+
 #include "function_call.hpp"
 #include "type_traits.hpp"
 #include "../shared_ptr.hpp"
@@ -193,4 +195,5 @@ struct TypeBuilder::InheritHelp<Deriv, Head, Rest...>
 }
 }
 
+#endif
 #endif

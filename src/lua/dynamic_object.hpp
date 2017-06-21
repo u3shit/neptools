@@ -2,6 +2,30 @@
 #define UUID_0863E64B_09C6_449B_A18D_EFD42D57C604
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+
+namespace Neptools::Lua
+{
+
+struct SmartObject {};
+class DynamicObject
+{
+public:
+    DynamicObject() = default;
+    DynamicObject(const DynamicObject&) = delete;
+    void operator=(const DynamicObject&) = delete;
+    virtual ~DynamicObject() = default;
+};
+
+#define NEPTOOLS_DYNAMIC_OBJ_GEN(...) private: static void dummy_function()
+#define NEPTOOLS_DYNAMIC_OBJECT NEPTOOLS_DYNAMIC_OBJ_GEN()
+
+template <typename T, typename Enable = void> struct SmartObjectMaker;
+
+}
+
+#else
+
 #include "ref_counted_user_data.hpp"
 #include "../meta.hpp"
 #include "../not_null.hpp"
@@ -14,9 +38,7 @@
 namespace std { using namespace experimental::fundamentals_v1; }
 #endif
 
-namespace Neptools
-{
-namespace Lua
+namespace Neptools::Lua
 {
 
 class NEPTOOLS_LUAGEN(no_inherit=true) SmartObject {};
@@ -161,6 +183,6 @@ GetSmartOwnedMember(const NotNull<SharedPtr<Class>>& cls)
 { return NotNull<SharedPtr<T>>{cls.Get(), &(cls.get()->*Member)}; }
 
 }
-}
 
+#endif
 #endif

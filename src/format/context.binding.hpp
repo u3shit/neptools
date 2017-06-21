@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -37,3 +38,4 @@ static TypeRegister::StateRegister<::Neptools::Context> reg_neptools_context;
 
 const char ::Neptools::Context::TYPE_NAME[] = "neptools.context";
 
+#endif

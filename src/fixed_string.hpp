@@ -80,6 +80,7 @@ inline std::istream& operator>>(std::istream& is, FixedString<N>& str)
 { is.width(N-1); return is >> &str[0]; }
 */
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 template <size_t N>
 struct Lua::TypeTraits<FixedString<N>>
 {
@@ -119,6 +120,7 @@ struct Lua::TypeTraits<FixedString<N>>
 
     static constexpr int LUA_TYPE = LUA_TSTRING;
 };
+#endif
 
 }
 #endif

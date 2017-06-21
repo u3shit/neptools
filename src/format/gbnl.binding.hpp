@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -154,3 +155,4 @@ static TypeRegister::StateRegister<::DynStructBldBindgbnl> reg_neptools_dynamic_
 template <>
 const char ::DynStructBldBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
 
+#endif

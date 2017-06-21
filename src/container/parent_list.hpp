@@ -2,9 +2,12 @@
 #define UUID_9372D768_26F4_4386_A5FB_FD14564CA6A3
 #pragma once
 
+#include "intrusive.hpp"
 #include "../assert.hpp"
 #include "../check.hpp"
-#include "intrusive.hpp"
+#include "../meta.hpp"
+#include "../shared_ptr.hpp"
+#include "../lua/type_traits.hpp"
 #include "../lua/dynamic_object.hpp"
 
 #include <boost/intrusive/circular_list_algorithms.hpp>

@@ -42,7 +42,8 @@ def options(opt):
                    help='Enable some flags for release builds')
     grp.add_option('--overload-check', action='store_true', default=False,
                    help='Check for uncallable lua overloads (compile-time)')
-
+    grp.add_option('--without-lua', action='store_true', default=False,
+                   help='No lua support')
 
     opt.add_option('--skip-run-tests', action='store_true', default=False,
                    help="Skip actually running tests with `test'")
@@ -199,6 +200,9 @@ int main() { return 0; }
 
     if cfg.options.overload_check:
         cfg.define('NEPTOOLS_LUA_OVERLOAD_CHECK', 1)
+    if cfg.options.without_lua:
+        cfg.define('NEPTOOLS_WITHOUT_LUA', 1)
+        cfg.env.WITHOUT_LUA = True
 
     Logs.pprint('NORMAL', 'Configuring ext '+variant)
     cfg.recurse('ext', name='configure', once=False)
@@ -229,13 +233,11 @@ def build_common(bld):
         'src/except.cpp',
         'src/dumpable.cpp',
         'src/logger.cpp',
-        'src/logger.lua',
         'src/low_io.cpp',
         'src/options.cpp',
         'src/pattern.cpp',
         'src/sink.cpp',
         'src/source.cpp',
-        'src/txt_serializable.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
         'src/format/eof_item.cpp',
@@ -254,12 +256,17 @@ def build_common(bld):
         'src/format/stsc/header.cpp',
         'src/format/stsc/instruction.cpp',
         'src/format/stsc/string.cpp',
-        'src/lua/base.cpp',
-        'src/lua/base_funcs.lua',
-        'src/lua/user_data.cpp',
-        'src/lua/user_type.cpp',
-        'src/lua/ref_counted_user_data.cpp',
     ]
+    if not bld.env.WITHOUT_LUA:
+        src += [
+            'src/logger.lua',
+            'src/txt_serializable.cpp',
+            'src/lua/base.cpp',
+            'src/lua/base_funcs.lua',
+            'src/lua/user_data.cpp',
+            'src/lua/user_type.cpp',
+            'src/lua/ref_counted_user_data.cpp',
+        ]
 
     bld.stlib(source   = src,
               uselib   = 'NEPTOOLS',
@@ -395,11 +402,14 @@ def test(bld):
         'test/sink.cpp',
         'test/container/ordered_map.cpp',
         'test/container/parent_list.cpp',
-        'test/lua/base.cpp',
-        'test/lua/function_call.cpp',
-        'test/lua/function_ref.cpp',
-        'test/lua/user_type.cpp',
     ]
+    if not bld.env.WITHOUT_LUA:
+        src += [
+            'test/lua/base.cpp',
+            'test/lua/function_call.cpp',
+            'test/lua/function_ref.cpp',
+            'test/lua/user_type.cpp',
+        ]
     bld.program(source   = src,
                 includes = 'src ext/catch/include ext/brigand/include',
                 uselib   = 'NEPTOOLS',

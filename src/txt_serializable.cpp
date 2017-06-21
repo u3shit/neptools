@@ -1,5 +1,7 @@
 #include "txt_serializable.hpp"
 
+#include <sstream>
+
 namespace Neptools
 {
 

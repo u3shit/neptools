@@ -2,6 +2,10 @@
 #define UUID_8BEC2FCA_66B2_48E5_A689_E29590320829
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+#define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(name, ...)
+#else
+
 #include "dynamic_struct.hpp"
 #include "lua/user_type.hpp"
 
@@ -249,4 +253,5 @@ struct DynamicStructLua
     NEPTOOLS_LUA_TEMPLATE(DynStructBldBind##name, #name..".builder",            \
                           ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder)
 
+#endif
 #endif

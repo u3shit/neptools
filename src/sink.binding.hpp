@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -76,3 +77,4 @@ static TypeRegister::StateRegister<::Neptools::MemorySink> reg_neptools_memory_s
 
 const char ::Neptools::MemorySink::TYPE_NAME[] = "neptools.memory_sink";
 
+#endif

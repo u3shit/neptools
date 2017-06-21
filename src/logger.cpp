@@ -8,7 +8,10 @@
 #include "logger.hpp"
 #include "options.hpp"
 #include "lua/function_call.hpp"
+
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "logger.lua.h"
+#endif
 
 #include <algorithm>
 #include <cstdio>
@@ -288,6 +291,7 @@ std::ostream& Log(
     return log_os;
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 static void LuaLog(Lua::StateRef vm, const char* name, int level/*, any msg */)
 {
     const char* file = nullptr;
@@ -339,5 +343,6 @@ static Lua::State::Register reg{[](Lua::StateRef vm)
         NEPTOOLS_LUA_RUNBC(vm, logger);
     }};
 
+#endif
 }
 }

@@ -210,6 +210,7 @@ TEST_CASE("OrderedMap::basic", "[ordered_map]")
     CHECK(X::count == 0);
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 TEST_CASE("OrderedMap::lua", "[ordered_map]")
 {
     State vm;
@@ -345,6 +346,7 @@ assert(t[3] == nil)");
         }
     }
 }
+#endif
 
 #include "container/ordered_map.lua.hpp"
 NEPTOOLS_ORDERED_MAP_LUAGEN(om_item_test, Neptools::Test::OMItemTest,

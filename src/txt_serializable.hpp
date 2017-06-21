@@ -2,8 +2,12 @@
 #define UUID_E17CE799_6569_40E4_A8FE_39F088AE30AB
 #pragma once
 
+#include "meta.hpp"
+#include "lua/type_traits.hpp"
 #include "lua/dynamic_object.hpp"
+
 #include <iosfwd>
+#include <string>
 
 namespace Neptools
 {

@@ -2,6 +2,8 @@
 #define UUID_C721F2E1_C293_4D82_8244_2AA0F1B26774
 #pragma once
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
 #include "../meta_utils.hpp"
@@ -376,4 +378,5 @@ inline void StateRef::PushFunction()
 
 }
 
+#endif
 #endif

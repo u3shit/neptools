@@ -2,6 +2,8 @@
 #define UUID_04CE9898_AACA_4B50_AC3F_FED6669C33C6
 #pragma once
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+
 #include "../assert.hpp"
 #include "../except.hpp"
 
@@ -151,4 +153,5 @@ public:
 }
 }
 
+#endif
 #endif

@@ -3,10 +3,12 @@
 #pragma once
 
 #include "../assert.hpp"
-#include "../utils.hpp"
+#include "../meta.hpp"
 #include "../shared_ptr.hpp"
+#include "../utils.hpp"
 #include "../container/intrusive.hpp"
 #include "../lua/dynamic_object.hpp"
+#include "../lua/function_call_types.hpp"
 #include "../lua/type_traits.hpp"
 
 #include <cstdint>

@@ -2,6 +2,17 @@
 #define UUID_6B456DF2_313B_4FCC_9019_6A38BC7878A3
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+
+namespace Neptools::Lua
+{
+
+struct IntrusiveObject {};
+
+}
+
+#else
+
 #include "../meta.hpp"
 #include "user_data.hpp"
 
@@ -80,4 +91,5 @@ struct TypeTraits<
 
 }
 
+#endif
 #endif

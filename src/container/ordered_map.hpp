@@ -4,8 +4,10 @@
 
 #include "intrusive.hpp"
 #include "../check.hpp"
+#include "../meta.hpp"
 #include "../shared_ptr.hpp"
 #include "../lua/dynamic_object.hpp"
+#include "../lua/type_traits.hpp"
 
 #include <boost/intrusive/set.hpp>
 #include <vector>

@@ -210,6 +210,7 @@ void MemorySink::Write_(StringView)
 void MemorySink::Pad_(FileMemSize)
 { NEPTOOLS_UNREACHABLE("MemorySink::Pad_ called"); }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 NEPTOOLS_LUAGEN(name="new", class="Neptools::MemorySink")
 static NotNull<SmartPtr<MemorySink>> MemorySinkFromLua(StringView view)
 {
@@ -217,6 +218,8 @@ static NotNull<SmartPtr<MemorySink>> MemorySinkFromLua(StringView view)
     memcpy(buf.get(), view.data(), view.length());
     return MakeSmart<MemorySink>(std::move(buf), view.length());
 }
+#endif
+
 }
 
 #include "sink.binding.hpp"

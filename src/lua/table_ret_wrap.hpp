@@ -2,6 +2,8 @@
 #define UUID_2BA17F45_80C0_4F6E_A84A_1BEAC95A48DC
 #pragma once
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+
 #include "base.hpp"
 #include "function_call_types.hpp"
 #include "../meta_utils.hpp"
@@ -43,4 +45,5 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
 
 }
 
+#endif
 #endif

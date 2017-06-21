@@ -260,6 +260,8 @@ std::string to_string(const UsedSource& src)
     return ss.str();
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+
 NEPTOOLS_LUAGEN(name="read")
 static Lua::RetNum LuaRead(Lua::StateRef vm, Source& src, FileMemSize len)
 {
@@ -278,6 +280,8 @@ static Lua::RetNum LuaPread(
     lua_pushlstring(vm, ptr.get(), len);
     return {1};
 }
+
+#endif
 
 }
 

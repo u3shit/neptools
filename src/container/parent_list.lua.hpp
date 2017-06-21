@@ -2,6 +2,10 @@
 #define UUID_BCAE493F_27B2_4196_8980_F2289A849FED
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+#define NEPTOOLS_PARENT_LIST_LUAGEN(name, ...)
+#else
+
 #include "parent_list.hpp"
 #include "../lua/type_traits.hpp"
 #include "../lua/function_ref.hpp"
@@ -69,4 +73,5 @@ struct ParentListLua
     template struct ::Neptools::ParentListLua<__VA_ARGS__>;             \
     NEPTOOLS_LUA_TEMPLATE(name, nil, ::Neptools::ParentList<__VA_ARGS__>)
 
+#endif
 #endif

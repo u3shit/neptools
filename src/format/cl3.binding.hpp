@@ -1,4 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
+#ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
 namespace Neptools::Lua
@@ -178,3 +179,4 @@ static TypeRegister::StateRegister<::cl3_entry> reg_neptools_ordered_map_cl3_ent
 template <>
 const char ::cl3_entry::TYPE_NAME[] = "neptools.ordered_map_cl3_entry";
 
+#endif

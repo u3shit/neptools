@@ -2,6 +2,10 @@
 #define UUID_E374ABCE_6BEB_482C_9506_4E4AE9174D22
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+#define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)
+#else
+
 #include <vector>
 
 #include "../lua/user_type.hpp"
@@ -190,4 +194,5 @@ struct VectorBinding
     template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>     \
     { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
 
+#endif
 #endif

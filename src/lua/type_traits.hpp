@@ -2,6 +2,20 @@
 #define UUID_AFD13C49_2B38_4C98_88BE_F8D45F347F14
 #pragma once
 
+#ifdef NEPTOOLS_WITHOUT_LUA
+
+namespace Neptools::Lua
+{
+
+template <typename T, typename Enable = void> struct TypeTraits;
+
+#define NEPTOOLS_LUA_CLASS public: static void dummy_ignore()
+#define NEPTOOLS_ENUM(name)
+
+}
+
+#else
+
 #include "base.hpp"
 #include "function_call_types.hpp"
 #include "../nullable.hpp"
@@ -277,4 +291,5 @@ static_assert(COMPATIBLE_WITH<int, double>);
 }
 }
 
+#endif
 #endif
