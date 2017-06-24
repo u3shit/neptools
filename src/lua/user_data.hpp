@@ -119,20 +119,18 @@ struct UserDataTraits
 
     using RawType = BaseType;
 
+    template <bool Unsafe>
     inline static Ret Get(StateRef vm, bool arg, int idx)
     {
-        return Base::UBGet(UserDataDetail::GetBase(
-            vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
-    }
-
-    inline static Ret UnsafeGet(StateRef vm, bool, int idx)
-    {
-        if constexpr (std::is_final_v<T>)
+        if constexpr (Unsafe && std::is_final_v<T>)
             return Base::UBGet({
                 static_cast<UserDataBase*>(lua_touserdata(vm, idx)), 0});
-
-        return Base::UBGet(UserDataDetail::UnsafeGetBase(
-            vm, idx, &TYPE_TAG<BaseType>));
+        else if constexpr (Unsafe)
+            return Base::UBGet(UserDataDetail::UnsafeGetBase(
+                vm, idx, &TYPE_TAG<BaseType>));
+        else
+            return Base::UBGet(UserDataDetail::GetBase(
+                vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
     }
 
     inline static bool Is(StateRef vm, int idx)

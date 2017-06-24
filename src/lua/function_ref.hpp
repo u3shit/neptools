@@ -77,12 +77,13 @@ struct IsFunctionWrap<FunctionWrap<Fun, Value>> : std::true_type {};
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<IsFunctionWrap<T>::value>>
 {
+    template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
-        if (BOOST_LIKELY(lua_isfunction(vm, idx))) return {vm, idx};
+        if (Unsafe || BOOST_LIKELY(lua_isfunction(vm, idx))) return {vm, idx};
         vm.TypeError(arg, "function", idx);
     }
-    static T UnsafeGet(StateRef vm, bool, int idx) { return {vm, idx}; };
+
     static bool Is(StateRef vm, int idx) { return lua_isfunction(vm, idx); }
 
     static constexpr int LUA_TYPE = LUA_TFUNCTION;

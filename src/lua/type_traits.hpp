@@ -81,22 +81,25 @@ struct TypeTraits<T, std::enable_if_t<
     std::is_integral<T>::value || std::is_enum<T>::value ||
     IsBoostEndian<T>::value>>
 {
+    template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
-        int isnum;
-        // use tonumber instead of tointeger
-        // in luajit/ljx lua_Integer is ptrdiff_t, which means 32 or 64 bits
-        // depending on architecture... avoid this compatibility madness
+        if constexpr (Unsafe)
+            return static_cast<T>(lua_tonumberx(vm, idx, nullptr));
+        else
+        {
+            int isnum;
+            // use tonumber instead of tointeger
+            // in luajit/ljx lua_Integer is ptrdiff_t, which means 32 or 64 bits
+            // depending on architecture... avoid this compatibility madness
 #ifndef LUA_VERSION_LJX
 #error "Update code for normal lua"
 #endif
-        auto ret = lua_tonumberx(vm, idx, &isnum);
-        if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
-        vm.TypeError(arg, TYPE_NAME<T>, idx);
+            auto ret = lua_tonumberx(vm, idx, &isnum);
+            if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
+            vm.TypeError(arg, TYPE_NAME<T>, idx);
+        }
     }
-
-    static T UnsafeGet(StateRef vm, bool, int idx)
-    { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
     { return lua_type(vm, idx) == LUA_TNUMBER; }
@@ -111,16 +114,19 @@ struct TypeTraits<T, std::enable_if_t<
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
 {
+    template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
-        int isnum;
-        auto ret = lua_tonumberx(vm, idx, &isnum);
-        if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
-        vm.TypeError(arg, TYPE_NAME<T>, idx);
+        if constexpr (Unsafe)
+            return static_cast<T>(lua_tonumberx(vm, idx, nullptr));
+        else
+        {
+            int isnum;
+            auto ret = lua_tonumberx(vm, idx, &isnum);
+            if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
+            vm.TypeError(arg, TYPE_NAME<T>, idx);
+        }
     }
-
-    static T UnsafeGet(StateRef vm, bool, int idx)
-    { return static_cast<T>(lua_tonumberx(vm, idx, nullptr)); }
 
     static bool Is(StateRef vm, int idx)
     { return lua_type(vm, idx) == LUA_TNUMBER; }
@@ -134,15 +140,13 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
 template <>
 struct TypeTraits<bool>
 {
+    template <bool Unsafe>
     static bool Get(StateRef vm, bool arg, int idx)
     {
-        if (BOOST_LIKELY(lua_isboolean(vm, idx)))
+        if (Unsafe || BOOST_LIKELY(lua_isboolean(vm, idx)))
             return lua_toboolean(vm, idx);
         vm.TypeError(arg, TYPE_NAME<bool>, idx);
     }
-
-    static bool UnsafeGet(StateRef vm, bool, int idx)
-    { return lua_toboolean(vm, idx); }
 
     static bool Is(StateRef vm, int idx)
     { return lua_isboolean(vm, idx); }
@@ -156,15 +160,13 @@ struct TypeTraits<bool>
 template<>
 struct TypeTraits<const char*>
 {
+    template <bool Unsafe>
     static const char* Get(StateRef vm, bool arg, int idx)
     {
         auto str = lua_tostring(vm, idx);
-        if (BOOST_LIKELY(!!str)) return str;
+        if (Unsafe || BOOST_LIKELY(!!str)) return str;
         vm.TypeError(arg, TYPE_NAME<const char*>, idx);
-    };
-
-    static const char* UnsafeGet(StateRef vm, bool, int idx)
-    { return lua_tostring(vm, idx); }
+    }
 
     static bool Is(StateRef vm, int idx)
     { return lua_type(vm, idx) == LUA_TSTRING; }
@@ -181,19 +183,13 @@ struct TypeTraits<T, std::enable_if_t<
     std::is_same<T, NonowningString>::value ||
     std::is_same<T, StringView>::value>>
 {
+    template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
-        if (BOOST_LIKELY(!!str)) return T(str, len);
+        if (Unsafe || BOOST_LIKELY(!!str)) return T(str, len);
         vm.TypeError(arg, TYPE_NAME<std::string>, idx);
-    };
-
-    static T UnsafeGet(StateRef vm, bool, int idx)
-    {
-        size_t len;
-        auto str = lua_tolstring(vm, idx, &len);
-        return T(str, len);
     }
 
     static bool Is(StateRef vm, int idx)
@@ -210,32 +206,20 @@ struct TypeTraits<std::array<unsigned char, N>>
 {
     using Type = std::array<unsigned char, N>;
 
-    static void Check(StateRef vm, bool arg, int idx, size_t len)
-    {
-        if (len == N) return;
-        std::stringstream ss;
-        ss << "bad string length (expected " << N << ", got " << len << ')';
-        vm.GetError(arg, idx, ss.str().c_str());
-    }
-
-    // todo: reduce copy-paste
+    template <bool Unsafe>
     static Type Get(StateRef vm, bool arg, int idx)
     {
         size_t len;
         auto str = lua_tolstring(vm, idx, &len);
-        if (BOOST_UNLIKELY(!str))
+        if (!Unsafe && BOOST_UNLIKELY(!str))
             vm.TypeError(arg, TYPE_NAME<const char*>, idx);
-        Check(vm, arg, idx, len);
-        Type ret;
-        memcpy(ret.data(), str, N);
-        return ret;
-    }
+        if (len != N)
+        {
+            std::stringstream ss;
+            ss << "bad string length (expected " << N << ", got " << len << ')';
+            vm.GetError(arg, idx, ss.str().c_str());
+        }
 
-    static Type UnsafeGet(StateRef vm, bool arg, int idx)
-    {
-        size_t len;
-        auto str = lua_tolstring(vm, idx, &len);
-        Check(vm, arg, idx, len);
         Type ret;
         memcpy(ret.data(), str, N);
         return ret;
@@ -271,18 +255,12 @@ struct NullableTypeTraits
 {
     using NotNullable = std::remove_reference_t<typename ToNotNullable<T>::Type>;
 
+    template <bool Unsafe>
     static Ret Get(StateRef vm, bool arg, int idx)
     {
         if (lua_isnil(vm, idx)) return nullptr;
         return ToNullable<NotNullable>::Conv(
-            TypeTraits<NotNullable>::Get(vm, arg, idx));
-    }
-
-    static Ret UnsafeGet(StateRef vm, bool arg, int idx)
-    {
-        if (lua_isnil(vm, idx)) return nullptr;
-        return ToNullable<NotNullable>::Conv(
-            TypeTraits<NotNullable>::UnsafeGet(vm, arg, idx));
+            TypeTraits<NotNullable>::template Get<Unsafe>(vm, arg, idx));
     }
 
     static bool Is(StateRef vm, int idx)

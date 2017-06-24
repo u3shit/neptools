@@ -27,12 +27,10 @@ namespace Detail
 {
 template <typename T, typename = void> struct LuaGetRefHlp
 {
+    using X = decltype(TypeTraits<T>::template Get<false>(
+                           std::declval<StateRef>(), false, 0));
     using Type = std::conditional_t<
-        !std::is_reference<
-            decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value ||
-        std::is_rvalue_reference<
-            decltype(TypeTraits<T>::Get(std::declval<StateRef>(), false, 0))>::value,
-        T, T&>;
+        !std::is_reference_v<X> || std::is_rvalue_reference_v<X>, T, T&>;
 };
 
 template <typename T>

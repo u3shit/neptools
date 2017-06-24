@@ -152,16 +152,13 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     using Type = WeakPtrBase<T, Storage>;
     using RawType = T;
 
+    template <bool Unsafe>
     static Type Get(StateRef vm, bool arg, int idx)
     {
         return lua_isnil(vm, idx) ? nullptr :
-            Type{&UserDataTraits<T>::Get(vm, arg, idx)};
+            Type{&UserDataTraits<T>::template Get<Unsafe>(vm, arg, idx)};
     }
-    static Type UnsafeGet(StateRef vm, bool arg, int idx)
-    {
-        return lua_isnil(vm, idx) ? nullptr :
-            Type{&UserDataTraits<T>::UnsafeGet(vm, arg, idx)};
-    }
+
     static bool Is(StateRef vm, int idx)
     { return lua_isnil(vm, idx) || UserDataTraits<T>::Is(vm, idx); }
 

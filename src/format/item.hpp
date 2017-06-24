@@ -177,7 +177,7 @@ template<> struct Lua::TypeTraits<Item::Key>
     // HACK
     // Dummy function, needed by LuaGetRef to get above maker to work when
     // using binding generator. It's undefined on purpose.
-    static void Get(Lua::StateRef, bool, int);
+    template <bool> static void Get(Lua::StateRef, bool, int);
 };
 
 }

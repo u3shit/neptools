@@ -84,30 +84,20 @@ inline std::istream& operator>>(std::istream& is, FixedString<N>& str)
 template <size_t N>
 struct Lua::TypeTraits<FixedString<N>>
 {
-    static void Check(StateRef vm, bool arg, int idx, size_t len)
+    template <bool Unsafe>
+    static FixedString<N> Get(StateRef vm, bool arg, int idx)
     {
+        size_t len;
+        auto str = lua_tolstring(vm, idx, &len);
+        if (!Unsafe && BOOST_UNLIKELY(!str))
+            vm.TypeError(arg, TYPE_NAME<const char*>, idx);
         if (BOOST_UNLIKELY(len >= N))
         {
             std::stringstream ss;
             ss << "string too long (" << len << " vs " << (N-1) << " max)";
             vm.GetError(arg, idx, ss.str().c_str());
         }
-    }
 
-    static FixedString<N> Get(StateRef vm, bool arg, int idx)
-    {
-        size_t len;
-        auto str = lua_tolstring(vm, idx, &len);
-        if (BOOST_UNLIKELY(!str)) vm.TypeError(arg, TYPE_NAME<const char*>, idx);
-        Check(vm, arg, idx, len);
-        return FixedString<N>{str};
-    }
-
-    static FixedString<N> UnsafeGet(StateRef vm, bool arg, int idx)
-    {
-        size_t len;
-        auto str = lua_tolstring(vm, idx, &len);
-        Check(vm, arg, idx, len);
         return FixedString<N>{str};
     }
 

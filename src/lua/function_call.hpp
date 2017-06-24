@@ -45,10 +45,7 @@ template <typename T, typename> struct GetArg
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
     template <bool Unsafe> static decltype(auto) Get(StateRef vm, int idx)
-    {
-        if constexpr (Unsafe) return vm.UnsafeArgGet<RawType>(idx);
-        else return vm.Check<RawType>(idx);
-    }
+    { return vm.Check<RawType, Unsafe>(idx); }
     static bool Is(StateRef vm, int idx) { return vm.Is<RawType>(idx); }
 
     template <typename Val>
@@ -109,12 +106,8 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
 
     template <bool Unsafe>
     static Tuple Get(StateRef vm, int idx)
-    {
-        if constexpr (Unsafe)
-            return {vm.UnsafeGet<TupleElement<Tuple, Index>>(idx+Index)...};
-        else
-            return {vm.Get<TupleElement<Tuple, Index>>(idx+Index)...};
-    }
+    { return {vm.Get<TupleElement<Tuple, Index>, Unsafe>(idx+Index)...}; }
+
     static bool Is(StateRef vm, int idx)
     { return (vm.Is<TupleElement<Tuple, Index>>(idx+Index) && ...); }
 

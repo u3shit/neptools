@@ -35,15 +35,13 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
     using RawType = T;
 
+    template <bool Unsafe>
     static T& Get(StateRef vm, bool arg, int idx)
     {
-        if (!Is(vm, idx))
+        if (!Unsafe && !Is(vm, idx))
             vm.TypeError(arg, TYPE_NAME<T>, idx);
-        return UnsafeGet(vm, arg, idx);
+        return *reinterpret_cast<T*>(lua_touserdata(vm, idx));
     }
-
-    static T& UnsafeGet(StateRef vm, bool, int idx)
-    { return *reinterpret_cast<T*>(lua_touserdata(vm, idx)); }
 
     static bool Is(StateRef vm, int idx)
     {
