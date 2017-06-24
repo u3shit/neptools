@@ -21,7 +21,7 @@ namespace Neptools::Lua
 {
 
 // no inheritance support for now
-struct NEPTOOLS_LUAGEN(no_inherit=true) ValueObject {};
+struct NEPTOOLS_LUAGEN(no_inherit=true,const=true) ValueObject {};
 
 // specialize if needed
 template <typename T, typename Enable = void>

@@ -83,9 +83,8 @@ public:
 
     struct LinkEntry : public Lua::ValueObject
     {
-        // immutable in lua
-        NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> name_0;
-        NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> name_1;
+        NotNull<LabelPtr> name_0;
+        NotNull<LabelPtr> name_1;
 
         LinkEntry(NotNull<LabelPtr> name_0, NotNull<LabelPtr> name_1)
             : name_0{std::move(name_0)}, name_1{std::move(name_1)} {}

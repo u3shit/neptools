@@ -28,7 +28,7 @@ using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
 std::string to_string(const UsedSource& src);
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
-class Source final : public Lua::ValueObject
+class NEPTOOLS_LUAGEN(const=false) Source final : public Lua::ValueObject
 {
     NEPTOOLS_LUA_CLASS;
 public:

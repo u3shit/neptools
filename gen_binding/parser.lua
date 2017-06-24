@@ -21,6 +21,14 @@ local function lua_class(c, tbl)
   return tbl
 end
 
+local function class_migrate_inheritable(mod, ref)
+  if not mod then return end
+
+  for _,v in ipairs{"smart_object", "const"} do
+    if ref[v] ~= nil and mod[v] == nil then mod[v] = ref[v] end
+  end
+end
+
 local function is_lua_class(type)
   if not type then return nil end
   local name = type:canonical():name()
@@ -35,9 +43,7 @@ local function is_lua_class(type)
   if tbl.ret == true then
     tbl.ret = lua_class(type:declaration(), {})
   end
-  if tbl.ret then
-    if tbl.smart_object then tbl.ret.smart_object = true end
-  end
+  class_migrate_inheritable(tbl.ret, tbl)
   inst.lua_classes[name] = tbl.ret
 
   return tbl.ret
@@ -50,7 +56,7 @@ check_lua_class = cl.regCursorVisitor(function (c, par)
     if lc then
       local tbl = inst.is_lua[#inst.is_lua]
       if tbl.ret == nil then tbl.ret = true end
-      if lc.smart_object then tbl.smart_object = true end
+      class_migrate_inheritable(tbl, lc)
     end
   elseif kind == "AnnotateAttr" then
     local at = utils.is_lua_annotation(c)
@@ -313,8 +319,12 @@ local function parse_method(c, kind, parent)
   if #ann == 0 then
     if kind == "FieldDecl" then
       ann[1] = { get = true, implicit = true }
-      if not c:isConst() then ann[2] = { set = true, implicit = true } end
-    else
+      -- no setter if class or field const
+      if not inst.parse_class_class.const and not c:isConst() then
+        ann[2] = { set = true, implicit = true }
+      end
+    -- only ctors/const methods in const classes. if class not const->everything
+    elseif kind == "Constructor" or not inst.parse_class_class.const or c:isConst() then
       ann[1] = { implicit = true }
     end
   end

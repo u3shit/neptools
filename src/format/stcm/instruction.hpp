@@ -164,9 +164,9 @@ public:
     public:
         struct MemOffset : Lua::ValueObject
         {
-            NEPTOOLS_LUAGEN(get=true) NotNull<LabelPtr> target;
-            NEPTOOLS_LUAGEN(get=true) Param48 param_4;
-            NEPTOOLS_LUAGEN(get=true) Param48 param_8;
+            NotNull<LabelPtr> target;
+            Param48 param_4;
+            Param48 param_8;
 
             MemOffset(NotNull<LabelPtr> target, Param48 param_4, Param48 param_8)
                 : target{std::move(target)}, param_4{std::move(param_4)},
@@ -175,8 +175,8 @@ public:
         };
         struct Indirect : Lua::ValueObject
         {
-            NEPTOOLS_LUAGEN(get=true) uint32_t param_0;
-            NEPTOOLS_LUAGEN(get=true) Param48 param_8;
+            uint32_t param_0;
+            Param48 param_8;
 
             Indirect(uint32_t param_0, Param48 param_8)
                 : param_0{param_0}, param_8{std::move(param_8)} {}
