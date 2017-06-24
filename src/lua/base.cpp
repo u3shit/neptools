@@ -105,10 +105,13 @@ void StateRef::TypeError(bool arg, const char* expected, int idx)
     ss << expected << " expected, got " << actual;
     if (pop) lua_pop(vm, 1);
 
-    if (arg)
-        luaL_argerror(vm, idx, ss.str().c_str());
-    else
-        luaL_error(vm, "invalid lua value: %s", ss.str().c_str());
+    GetError(arg, idx, ss.str().c_str());
+}
+
+void StateRef::GetError(bool arg, int idx, const char* msg)
+{
+    if (arg) luaL_argerror(vm, idx, msg);
+    else luaL_error(vm, "invalid lua value: %s", msg);
     NEPTOOLS_UNREACHABLE("lua_error returned");
 }
 

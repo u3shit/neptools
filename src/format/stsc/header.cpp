@@ -58,7 +58,7 @@ void HeaderItem::Parse_(Context& ctx, Source& src)
     flags = hdr.flags;
 
     if (flags & 1)
-        src.Read(extra_headers_1, 32);
+        src.ReadGen(extra_headers_1);
     if (flags & 2)
     {
         auto eh2 = src.ReadGen<ExtraHeader2>();
@@ -82,7 +82,7 @@ void HeaderItem::Dump_(Sink& sink) const
     hdr.flags = flags;
     sink.WriteGen(hdr);
 
-    if (flags & 1) sink.Write({extra_headers_1, 32});
+    if (flags & 1) sink.WriteGen(extra_headers_1);
     if (flags & 2)
     {
         ExtraHeader2 eh;
@@ -104,7 +104,11 @@ void HeaderItem::Inspect_(std::ostream& os) const
     Item::Inspect_(os);
 
     os << "stsc_header(@" << entry_point->GetName() << ", " << flags;
-    if (flags & 1) { os << ", "; DumpBytes(os, {extra_headers_1, 32}); }
+    if (flags & 1)
+    {
+        os << ", ";
+        DumpBytes(os, {extra_headers_1.data(), extra_headers_1.size()});
+    }
     if (flags & 2)
         os << ", " << extra_headers_2_0
            << ", " << extra_headers_2_2
@@ -119,3 +123,5 @@ void HeaderItem::Inspect_(std::ostream& os) const
 
 }
 }
+
+#include "header.binding.hpp"

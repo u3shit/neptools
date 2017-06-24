@@ -21,6 +21,10 @@ template <typename T, typename Enable = void> struct TypeTraits;
 #include "../nullable.hpp"
 #include "../nonowning_string.hpp"
 
+// small enough to don't care. probably.
+// something already includes it on linux with libc++...
+#include <array>
+
 namespace boost { namespace filesystem { class path; } }
 
 namespace Neptools
@@ -197,6 +201,51 @@ struct TypeTraits<T, std::enable_if_t<
 
     static void Push(StateRef vm, const T& val)
     { lua_pushlstring(vm, val.data(), val.length()); }
+
+    static constexpr int LUA_TYPE = LUA_TSTRING;
+};
+
+template <size_t N>
+struct TypeTraits<std::array<unsigned char, N>>
+{
+    using Type = std::array<unsigned char, N>;
+
+    static void Check(StateRef vm, bool arg, int idx, size_t len)
+    {
+        if (len == N) return;
+        std::stringstream ss;
+        ss << "bad string length (expected " << N << ", got " << len << ')';
+        vm.GetError(arg, idx, ss.str().c_str());
+    }
+
+    // todo: reduce copy-paste
+    static Type Get(StateRef vm, bool arg, int idx)
+    {
+        size_t len;
+        auto str = lua_tolstring(vm, idx, &len);
+        if (BOOST_UNLIKELY(!str))
+            vm.TypeError(arg, TYPE_NAME<const char*>, idx);
+        Check(vm, arg, idx, len);
+        Type ret;
+        memcpy(ret.data(), str, N);
+        return ret;
+    }
+
+    static Type UnsafeGet(StateRef vm, bool arg, int idx)
+    {
+        size_t len;
+        auto str = lua_tolstring(vm, idx, &len);
+        Check(vm, arg, idx, len);
+        Type ret;
+        memcpy(ret.data(), str, N);
+        return ret;
+    }
+
+    static bool Is(StateRef vm, int idx)
+    { return lua_type(vm, idx) == LUA_TSTRING; }
+
+    static void Push(StateRef vm, const Type& val)
+    { lua_pushlstring(vm, reinterpret_cast<const char*>(val.data()), val.size()); }
 
     static constexpr int LUA_TYPE = LUA_TSTRING;
 };

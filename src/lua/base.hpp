@@ -99,6 +99,8 @@ public:
 
     BOOST_NORETURN
     void TypeError(bool arg, const char* expected, int idx);
+    BOOST_NORETURN
+    void GetError(bool arg, int idx, const char* msg);
 
 protected:
     lua_State* vm;

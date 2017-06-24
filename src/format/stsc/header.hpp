@@ -46,7 +46,7 @@ public:
     NotNull<LabelPtr> entry_point;
     uint32_t flags = 0;
 
-    uint8_t extra_headers_1[32];
+    std::array<uint8_t, 32> extra_headers_1;
 
     uint16_t extra_headers_2_0;
     uint16_t extra_headers_2_2;

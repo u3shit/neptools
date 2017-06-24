@@ -90,8 +90,7 @@ struct Lua::TypeTraits<FixedString<N>>
         {
             std::stringstream ss;
             ss << "string too long (" << len << " vs " << (N-1) << " max)";
-            if (arg) luaL_argerror(vm, idx, ss.str().c_str());
-            else luaL_error(vm, ss.str().c_str());
+            vm.GetError(arg, idx, ss.str().c_str());
         }
     }
 
