@@ -16,9 +16,9 @@ class StringItem final : public Item
 public:
     StringItem(Key k, Context& ctx, const Source& src);
     static StringItem& CreateAndInsert(ItemPointer ptr);
-    FilePosition GetSize() const noexcept override { return str.size() + 1; }
+    FilePosition GetSize() const noexcept override { return string.size() + 1; }
 
-    std::string str;
+    std::string string;
 
 private:
     void Dump_(Sink& sink) const override;

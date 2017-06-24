@@ -37,7 +37,7 @@ void File::WriteTxt_(std::ostream& os) const
         auto str = dynamic_cast<const StringItem*>(&it);
         if (str)
         {
-            os << boost::replace_all_copy(str->str, "\\n", "\r\n")
+            os << boost::replace_all_copy(str->string, "\\n", "\r\n")
                << "\r\n" << SEP_DASH << '\n';
         }
     }
@@ -60,7 +60,7 @@ void File::ReadTxt_(std::istream& is)
 
             NEPTOOLS_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
             if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
-            static_cast<StringItem&>(*it).str = std::move(msg);
+            static_cast<StringItem&>(*it).string = std::move(msg);
 
             ++it;
             while (it != end && !dynamic_cast<StringItem*>(&*it)) ++it;
@@ -80,3 +80,5 @@ void File::ReadTxt_(std::istream& is)
 
 }
 }
+
+#include "file.binding.hpp"

@@ -8,7 +8,7 @@ namespace Stsc
 {
 
 StringItem::StringItem(Key k, Context& ctx, const Source& src)
-    : Item{k, ctx}, str{src.PreadCString(0)}
+    : Item{k, ctx}, string{src.PreadCString(0)}
 {}
 
 StringItem& StringItem::CreateAndInsert(ItemPointer ptr)
@@ -19,16 +19,18 @@ StringItem& StringItem::CreateAndInsert(ItemPointer ptr)
 
 void StringItem::Dump_(Sink& sink) const
 {
-    sink.WriteCString(str);
+    sink.WriteCString(string);
 }
 
 void StringItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
     os << "string(";
-    DumpBytes(os, str);
+    DumpBytes(os, string);
     os << ')';
 }
 
 }
 }
+
+#include "string.binding.hpp"
