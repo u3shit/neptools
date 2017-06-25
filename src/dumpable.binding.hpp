@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.dumpable
 template<>
-void TypeRegister::DoRegister<::Neptools::Dumpable>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Dumpable>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

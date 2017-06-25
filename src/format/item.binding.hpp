@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.label
 template<>
-void TypeRegister::DoRegister<::Neptools::Label>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Label>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -33,7 +33,7 @@ namespace Neptools::Lua
 
 // class neptools.item
 template<>
-void TypeRegister::DoRegister<::Neptools::Item>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Item>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Item, ::Neptools::Dumpable>();
 
@@ -69,7 +69,7 @@ namespace Neptools::Lua
 
 // class neptools.item_with_children
 template<>
-void TypeRegister::DoRegister<::Neptools::ItemWithChildren>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::ItemWithChildren>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::ItemWithChildren, ::Neptools::Item>();
 

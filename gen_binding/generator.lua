@@ -55,7 +55,7 @@ namespace Neptools::Lua
 
 // class /*$= cls.name */
 template<>
-void TypeRegister::DoRegister</*$= cls.cpp_name */>(TypeBuilder& bld)
+void TypeRegisterTraits</*$= cls.cpp_name */>::Register(TypeBuilder& bld)
 {
 //$   local x = { cls.cpp_name }
 //$   for i,v in ipairs(cls.parents) do

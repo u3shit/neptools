@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.data_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::DataItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::DataItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::DataItem, ::Neptools::ItemWithChildren>();
 

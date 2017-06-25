@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.collection_link_header_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::CollectionLinkHeaderItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::CollectionLinkHeaderItem, ::Neptools::Item>();
 
@@ -37,7 +37,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.collection_link_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::CollectionLinkItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::CollectionLinkItem, ::Neptools::Item>();
 
@@ -62,7 +62,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.collection_link_item.link_entry
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::CollectionLinkItem::LinkEntry>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

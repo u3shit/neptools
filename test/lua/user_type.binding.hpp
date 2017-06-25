@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class smart
 template<>
-void TypeRegister::DoRegister<::Smart>(TypeBuilder& bld)
+void TypeRegisterTraits<::Smart>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -30,7 +30,7 @@ namespace Neptools::Lua
 
 // class foo
 template<>
-void TypeRegister::DoRegister<::Foo>(TypeBuilder& bld)
+void TypeRegisterTraits<::Foo>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -62,7 +62,7 @@ namespace Neptools::Lua
 
 // class bar.baz.asdfgh
 template<>
-void TypeRegister::DoRegister<::Bar::Baz::Asdfgh>(TypeBuilder& bld)
+void TypeRegisterTraits<::Bar::Baz::Asdfgh>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -82,7 +82,7 @@ namespace Neptools::Lua
 
 // class baz
 template<>
-void TypeRegister::DoRegister<::Baz>(TypeBuilder& bld)
+void TypeRegisterTraits<::Baz>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction_base
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::InstructionBase>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::InstructionBase>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::InstructionBase, ::Neptools::Item>();
 
@@ -31,7 +31,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction0d_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::Instruction0dItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::Instruction0dItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::Instruction0dItem, ::Neptools::Stsc::InstructionBase>();
 
@@ -55,7 +55,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.unimplemented_instruction_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::UnimplementedInstructionItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::UnimplementedInstructionItem, ::Neptools::Stsc::InstructionBase>();
 
@@ -76,7 +76,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction1d_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::Instruction1dItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::Instruction1dItem, ::Neptools::Stsc::InstructionBase>();
 
@@ -106,7 +106,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction1d_item.node
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::Instruction1dItem::Node>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem::Node>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -138,7 +138,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction1e_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::Instruction1eItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::Instruction1eItem, ::Neptools::Stsc::InstructionBase>();
 
@@ -174,7 +174,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.instruction1e_item.expression
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::Instruction1eItem::Expression>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

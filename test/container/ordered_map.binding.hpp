@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.test.om_item_test
 template<>
-void TypeRegister::DoRegister<::Neptools::Test::OMItemTest>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Test::OMItemTest>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -39,7 +39,7 @@ namespace Neptools::Lua
 
 // class neptools.ordered_map_om_item_test
 template<>
-void TypeRegister::DoRegister<::om_item_test>(TypeBuilder& bld)
+void TypeRegisterTraits<::om_item_test>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

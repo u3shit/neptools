@@ -1,7 +1,10 @@
 #include "instruction.hpp"
+
 #include "string.hpp"
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
+#include "../../lua/static_class.hpp"
+#include "../../lua/user_type.hpp"
 
 namespace Neptools
 {
@@ -508,6 +511,85 @@ void Instruction1eItem::PostInsert()
 }
 
 }
+}
+
+namespace Neptools::Lua
+{
+
+template <bool NoReturn, typename... Args>
+struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
+{
+    using T = Stsc::SimpleInstruction<NoReturn, Args...>;
+
+    template <size_t I>
+    static RetNum Get(StateRef vm, T& instr, int idx)
+    {
+        if constexpr (I == sizeof...(Args))
+            lua_pushnil(vm);
+        else if (idx == I)
+            vm.Push(std::get<I>(instr.args));
+        else
+            return Get<I+1>(vm, instr, idx);
+        return 1;
+    }
+
+    template <size_t I>
+    static void Set(StateRef vm, T& instr, int idx)
+    {
+        if constexpr (I == sizeof...(Args))
+            luaL_error(vm, "trying to set invalid index");
+        else if (idx == I)
+            std::get<I>(instr.args) = vm.Check<std::tuple_element_t<
+                I, typename T::ArgsT>>(3);
+        else
+            Set<I+1>(vm, instr, idx);
+    }
+
+    static void Register(TypeBuilder& bld)
+    {
+        bld.Inherit<Stsc::InstructionBase>();
+
+        // that tuple constructors can blow up exponentially, disable overload
+        // check (tuple constructors can't take source, so it should be ok)
+        bld.GetVm().PushFunctionNocheck<
+            TypeTraits<T>::template Make<
+                Context::Key, Context&, uint8_t, Source&>,
+            TypeTraits<T>::template Make<
+                Context::Key, Context&, uint8_t,
+                LuaGetRef<Stsc::TupleTypeMapT<Args>>...>
+        >();
+        bld.SetField("new");
+
+        bld.AddFunction<&Get<0>>("get");
+        bld.AddFunction<&Set<0>>("set");
+    }
+};
+
+namespace
+{
+struct InstructionItem : StaticClass
+{
+    constexpr static char TYPE_NAME[] = "neptools.stsc.instruction_item";
+};
+constexpr char InstructionItem::TYPE_NAME[];
+
+template <typename T> struct InstructionReg;
+template <size_t... Idx> struct InstructionReg<std::index_sequence<Idx...>>
+{
+    static void Register(TypeBuilder& bld)
+    {
+        auto vm = bld.GetVm();
+        ((TypeRegister::Register<Stsc::InstructionItem<Idx>>(vm), lua_rawseti(vm, -3, Idx)), ...);
+    }
+};
+
+}
+
+template<> struct TypeRegisterTraits<InstructionItem>
+    : InstructionReg<std::make_index_sequence<256>> {};
+
+static TypeRegister::StateRegister<InstructionItem> reg;
+
 }
 
 #include "../../container/vector.lua.hpp"

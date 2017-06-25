@@ -2,6 +2,8 @@
 #define UUID_365580B3_AF64_4E79_8FC1_35F50DFF840F
 #pragma once
 
+#include "user_type_fwd.hpp"
+
 #ifndef NEPTOOLS_WITHOUT_LUA
 
 #include "function_call.hpp"
@@ -149,7 +151,7 @@ public:
         {
             TypeBuilder bld{vm, type_tag, TYPE_NAME<Class>};
             bld.Init<Class>();
-            DoRegister<Class>(bld);
+            TypeRegisterTraits<Class>::Register(bld);
             bld.Done();
         }
 
@@ -168,10 +170,6 @@ public:
     {
         StateRegister() : Register{&TypeRegister::MultiRegister<Classes...>} {}
     };
-
-private:
-    template <typename Class>
-    static void DoRegister(TypeBuilder& bld);
 };
 
 template <typename Deriv>

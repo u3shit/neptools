@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class function_ref_test
 template<>
-void TypeRegister::DoRegister<::FunctionRefTest>(TypeBuilder& bld)
+void TypeRegisterTraits<::FunctionRefTest>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

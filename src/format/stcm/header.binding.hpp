@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.header_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::HeaderItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::HeaderItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::HeaderItem, ::Neptools::Item>();
 

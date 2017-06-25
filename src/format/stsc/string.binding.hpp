@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stsc.string_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stsc::StringItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stsc::StringItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stsc::StringItem, ::Neptools::Item>();
 

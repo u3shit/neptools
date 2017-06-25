@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.gbnl_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::GbnlItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::GbnlItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::GbnlItem, ::Neptools::Item, ::Neptools::Gbnl>();
 

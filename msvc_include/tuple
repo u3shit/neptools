@@ -25,3 +25,14 @@
 
 #undef tuple
 #undef __GET_MACRO
+
+namespace std
+{
+
+template <typename T>
+inline constexpr size_t tuple_size_v = tuple_size<T>::value;
+
+template <std::size_t I, typename T>
+using tuple_element_t = typename tuple_element<I, T>::type;
+
+}

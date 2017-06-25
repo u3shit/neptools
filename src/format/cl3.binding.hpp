@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.cl3
 template<>
-void TypeRegister::DoRegister<::Neptools::Cl3>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Cl3>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Cl3, ::Neptools::Dumpable>();
 
@@ -53,7 +53,7 @@ namespace Neptools::Lua
 
 // class neptools.cl3.entry
 template<>
-void TypeRegister::DoRegister<::Neptools::Cl3::Entry>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Cl3::Entry>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -95,7 +95,7 @@ namespace Neptools::Lua
 
 // class neptools.ordered_map_cl3_entry
 template<>
-void TypeRegister::DoRegister<::cl3_entry>(TypeBuilder& bld)
+void TypeRegisterTraits<::cl3_entry>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

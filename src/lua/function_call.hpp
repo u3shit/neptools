@@ -355,15 +355,16 @@ inline constexpr void CheckUnique()
 
 }
 
-template <auto... Funs>
-inline void StateRef::PushFunction()
+template <bool DoCheck, auto... Funs>
+inline void StateRef::PushFunction_()
 {
     if constexpr (sizeof...(Funs) == 1)
         lua_pushcfunction(vm, (Detail::WrapFunc<Funs..., false>::Func));
     else
     {
 #ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-        Detail::CheckUnique<Funs...>();
+        if constexpr (DoCheck)
+            Detail::CheckUnique<Funs...>();
 #endif
         lua_pushcfunction(vm, (Detail::OverloadWrap<Funs...>::Func));
     }

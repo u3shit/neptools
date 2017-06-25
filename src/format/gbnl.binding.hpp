@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.gbnl
 template<>
-void TypeRegister::DoRegister<::Neptools::Gbnl>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Gbnl>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Gbnl, ::Neptools::Dumpable, ::Neptools::TxtSerializable>();
 
@@ -64,7 +64,7 @@ namespace Neptools::Lua
 
 // class neptools.dynamic_struct_gbnl
 template<>
-void TypeRegister::DoRegister<::DynStructBindgbnl>(TypeBuilder& bld)
+void TypeRegisterTraits<::DynStructBindgbnl>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -103,7 +103,7 @@ namespace Neptools::Lua
 
 // class neptools.dynamic_struct_gbnl.type
 template<>
-void TypeRegister::DoRegister<::DynStructBindgbnl::Type>(TypeBuilder& bld)
+void TypeRegisterTraits<::DynStructBindgbnl::Type>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -133,7 +133,7 @@ namespace Neptools::Lua
 
 // class neptools.dynamic_struct_gbnl.builder
 template<>
-void TypeRegister::DoRegister<::DynStructBldBindgbnl>(TypeBuilder& bld)
+void TypeRegisterTraits<::DynStructBldBindgbnl>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

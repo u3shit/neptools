@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.sink
 template<>
-void TypeRegister::DoRegister<::Neptools::Sink>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Sink>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -57,7 +57,7 @@ namespace Neptools::Lua
 
 // class neptools.memory_sink
 template<>
-void TypeRegister::DoRegister<::Neptools::MemorySink>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::MemorySink>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::MemorySink, ::Neptools::Sink>();
 

@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.file
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::File>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::File>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::File, ::Neptools::Context, ::Neptools::TxtSerializable>();
 

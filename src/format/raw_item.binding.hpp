@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.raw_item
 template<>
-void TypeRegister::DoRegister<::Neptools::RawItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::RawItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::RawItem, ::Neptools::Item>();
 

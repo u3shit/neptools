@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.test.parent_list_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Test::ParentListItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Test::ParentListItem>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -40,7 +40,7 @@ namespace Neptools::Lua
 
 // class neptools.parent_list_parent_list_item
 template<>
-void TypeRegister::DoRegister<::parent_list_item>(TypeBuilder& bld)
+void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

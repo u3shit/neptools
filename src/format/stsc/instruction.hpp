@@ -38,17 +38,60 @@ template<> struct TupleTypeMap<std::string> { using Type = LabelPtr; };
 template<> struct TupleTypeMap<void*> { using Type = LabelPtr; };
 template<> struct TupleTypeMap<Code*> { using Type = LabelPtr; };
 
+template <typename T>
+using TupleTypeMapT = typename TupleTypeMap<T>::Type;
+
+// namegen
+template <char... Args> struct StringContainer
+{
+    template <char... X> using Append = StringContainer<Args..., X...>;
+    static inline constexpr const char str[sizeof...(Args)+1] = { Args... };
+};
+
+template <typename Cnt, typename... Args> struct AppendTypes;
+template <typename Cnt> struct AppendTypes<Cnt> { using Type = Cnt; };
+#define NEPTOOLS_GEN(x, ...)                                                \
+    template <typename Cnt, typename... Args>                               \
+    struct AppendTypes<Cnt, x, Args...>                                     \
+    {                                                                       \
+        using Type = typename AppendTypes<typename Cnt::template Append<    \
+            '_',__VA_ARGS__>, Args...>::Type;                               \
+    }
+NEPTOOLS_GEN(uint8_t, 'u','i','n','t','8');
+NEPTOOLS_GEN(uint16_t, 'u','i','n','t','1','6');
+NEPTOOLS_GEN(uint32_t, 'u','i','n','t','3','2');
+NEPTOOLS_GEN(float, 'f','l','o','a','t');
+NEPTOOLS_GEN(std::string, 's','t','r','i','n','g');
+NEPTOOLS_GEN(Code*, 'c','o','d','e');
+NEPTOOLS_GEN(void*, 'd','a','t','a');
+#undef NEPTOOLS_GEN
+
 template <bool NoReturn, typename... Args>
 class SimpleInstruction final : public InstructionBase
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    using Pref = StringContainer<
+        'n','e','p','t','o','o','l','s','.','s','t','s','c','.',
+        's','i','m','p','l','e','_','i','n','s','t','r','u','c','t','i','o','n','_'>;
+    using Boold = std::conditional_t<
+        NoReturn,
+        Pref::Append<'t','r','u','e'>,
+        Pref::Append<'f','a','l','s','e'>>;
+    using TypeName = typename AppendTypes<Boold, Args...>::Type;
+
+    NEPTOOLS_DYNAMIC_OBJ_GEN(Lua::RefCountedUserData);
 public:
+    static constexpr const char* TYPE_NAME = TypeName::str;
+
     SimpleInstruction(Key k, Context& ctx, uint8_t opcode, Source src);
+    SimpleInstruction(
+        Key k, Context& ctx, uint8_t opcode, TupleTypeMapT<Args>... args)
+        : InstructionBase{k, ctx, opcode}, args{std::move(args)...} {}
 
     static const FilePosition SIZE;
     FilePosition GetSize() const noexcept override { return SIZE; }
 
-    std::tuple<typename TupleTypeMap<Args>::Type...> args;
+    using ArgsT = std::tuple<TupleTypeMapT<Args>...>;
+    ArgsT args;
 
 private:
     void Parse_(Context& ctx, Source& src);

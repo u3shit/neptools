@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.source
 template<>
-void TypeRegister::DoRegister<::Neptools::Source>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Source>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -105,7 +105,7 @@ namespace Neptools::Lua
 
 // class neptools.dumpable_source
 template<>
-void TypeRegister::DoRegister<::Neptools::DumpableSource>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::DumpableSource>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::DumpableSource, ::Neptools::Dumpable>();
 

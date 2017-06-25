@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::InstructionItem, ::Neptools::ItemWithChildren>();
 
@@ -50,7 +50,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param48
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param48>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -106,7 +106,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param48.type
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param48::Type>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48::Type>::Register(TypeBuilder& bld)
 {
 
     bld.Add("MEM_OFFSET", ::Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET);
@@ -128,7 +128,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -193,7 +193,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param.mem_offset
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param::MemOffset>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::MemOffset>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -222,7 +222,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param.indirect
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param::Indirect>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Indirect>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
@@ -248,7 +248,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.instruction_item.param.type
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::InstructionItem::Param::Type>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Type>::Register(TypeBuilder& bld)
 {
 
     bld.Add("MEM_OFFSET", ::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET);

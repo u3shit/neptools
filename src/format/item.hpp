@@ -7,6 +7,7 @@
 #include "../dumpable.hpp"
 #include "../shared_ptr.hpp"
 #include "../container/parent_list.hpp"
+#include "../lua/user_type_fwd.hpp"
 
 #include <iosfwd>
 #include <vector>
@@ -15,8 +16,6 @@
 
 namespace Neptools
 {
-
-namespace Lua { class TypeRegister; }
 
 class ItemWithChildren;
 struct ItemListTraits;
@@ -109,7 +108,7 @@ private:
     friend class Context;
     friend struct ItemListTraits;
     friend class ItemWithChildren;
-    friend class Lua::TypeRegister;
+    template <typename, typename> friend struct Lua::TypeRegisterTraits;
 };
 NEPTOOLS_STATIC_ASSERT(
     std::is_same<SmartPtr<Item>, RefCountedPtr<Item>>::value);

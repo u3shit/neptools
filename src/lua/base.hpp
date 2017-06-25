@@ -64,7 +64,10 @@ public:
         NEPTOOLS_LUA_CHECKTOP(vm, top+1);
     }
 
-    template <auto... Funs> void PushFunction();
+    template <auto... Funs> void PushFunction()
+    { PushFunction_<true, Funs...>(); }
+    template <auto... Funs> void PushFunctionNocheck()
+    { PushFunction_<false, Funs...>(); }
 
     template <typename... Args> void PushAll(Args&&... args)
     { (Push(std::forward<Args>(args)), ...); }
@@ -104,6 +107,8 @@ protected:
     lua_State* vm;
 
 private:
+    template <bool Check, auto... Funs> void PushFunction_();
+
 #ifdef _MSC_VER
     static int SEHFilter(lua_State* vm, unsigned code);
 #else

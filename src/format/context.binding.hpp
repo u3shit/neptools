@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.context
 template<>
-void TypeRegister::DoRegister<::Neptools::Context>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Context>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Context, ::Neptools::ItemWithChildren>();
 

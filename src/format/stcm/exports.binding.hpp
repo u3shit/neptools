@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.exports_item
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::ExportsItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::ExportsItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::Stcm::ExportsItem, ::Neptools::Item>();
 
@@ -35,7 +35,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.exports_item.type
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::ExportsItem::Type>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::ExportsItem::Type>::Register(TypeBuilder& bld)
 {
 
     bld.Add("CODE", ::Neptools::Stcm::ExportsItem::Type::CODE);
@@ -54,7 +54,7 @@ namespace Neptools::Lua
 
 // class neptools.stcm.exports_item.entry_type
 template<>
-void TypeRegister::DoRegister<::Neptools::Stcm::ExportsItem::EntryType>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::Stcm::ExportsItem::EntryType>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

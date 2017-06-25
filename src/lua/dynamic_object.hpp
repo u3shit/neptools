@@ -73,7 +73,6 @@ constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
 
 #define NEPTOOLS_THIS_TYPE std::remove_pointer_t<decltype(this)>
 #define NEPTOOLS_DYNAMIC_OBJ_GEN(...)                                        \
-    NEPTOOLS_LUA_CLASS;                                                      \
     private:                                                                 \
     void PushLua(::Neptools::Lua::StateRef vm,                               \
                  ::Neptools::RefCounted& ctrl) override                      \
@@ -83,6 +82,7 @@ constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
     }
 
 #define NEPTOOLS_DYNAMIC_OBJECT                                                 \
+    NEPTOOLS_LUA_CLASS;                                                         \
     NEPTOOLS_DYNAMIC_OBJ_GEN(                                                   \
         std::conditional_t<                                                     \
             std::is_base_of<::Neptools::RefCounted, NEPTOOLS_THIS_TYPE>::value, \

@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.txt_serializable
 template<>
-void TypeRegister::DoRegister<::Neptools::TxtSerializable>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::TxtSerializable>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<

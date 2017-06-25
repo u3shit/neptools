@@ -34,8 +34,8 @@ NEPTOOLS_COMP_CHECK(Lt, LT, <);
 
 }
 
-template <typename T, typename Allocator = std::allocator<T>>
-struct VectorBinding
+template <typename T, typename Allocator>
+struct TypeRegisterTraits<std::vector<T, Allocator>>
 {
     using Vect = std::vector<T, Allocator>;
     using size_type = typename Vect::size_type;
@@ -185,10 +185,6 @@ struct VectorBinding
 }
 
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)                               \
-    template<> void Neptools::Lua::TypeRegister::DoRegister<                \
-        ::std::vector<__VA_ARGS__>>(TypeBuilder& bld)                       \
-    { ::Neptools::Lua::VectorBinding<__VA_ARGS__>::Register(bld); }         \
-                                                                            \
     static ::Neptools::Lua::TypeRegister::StateRegister<                    \
         ::std::vector<__VA_ARGS__>> reg_std_vector_##name;                  \
     template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>     \

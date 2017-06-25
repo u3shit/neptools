@@ -7,7 +7,7 @@ namespace Neptools::Lua
 
 // class neptools.eof_item
 template<>
-void TypeRegister::DoRegister<::Neptools::EofItem>(TypeBuilder& bld)
+void TypeRegisterTraits<::Neptools::EofItem>::Register(TypeBuilder& bld)
 {
     bld.Inherit<::Neptools::EofItem, ::Neptools::Item>();
 
