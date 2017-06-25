@@ -320,7 +320,7 @@ local function parse_method(c, kind, parent)
     if kind == "FieldDecl" then
       ann[1] = { get = true, implicit = true }
       -- no setter if class or field const
-      if not inst.parse_class_class.const and not c:isConst() then
+      if not inst.parse_class_class.const and not c:type():isConst() then
         ann[2] = { set = true, implicit = true }
       end
     -- only ctors/const methods in const classes. if class not const->everything

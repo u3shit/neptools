@@ -13,20 +13,21 @@ namespace Stsc
 
 class InstructionBase : public Item
 {
+    NEPTOOLS_LUA_CLASS;
 public:
     InstructionBase(Key k, Context& ctx, uint8_t opcode)
         : Item{k, ctx}, opcode{opcode} {}
 
     static InstructionBase& CreateAndInsert(ItemPointer ptr);
 
-    uint8_t opcode;
+    const uint8_t opcode;
 
 protected:
     void InstrDump(Sink& sink) const;
     std::ostream& InstrInspect(std::ostream& os) const;
 
 private:
-    virtual void PostInsert() {}
+    virtual void PostInsert() = 0;
 };
 
 using Tagged = uint32_t;
@@ -63,6 +64,7 @@ public:
     Instruction0dItem(Key k, Context& ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
 
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<NotNull<LabelPtr>> tgts;
 
 private:
@@ -86,6 +88,7 @@ public:
 private:
     void Dump_(Sink&) const override {}
     void Inspect_(std::ostream&) const override {}
+    void PostInsert() override {}
 };
 
 class Instruction1dItem final : public InstructionBase
@@ -117,12 +120,17 @@ public:
     { return 1 + sizeof(FixParams) + tree.size() * sizeof(NodeParams); }
 
     NotNull<LabelPtr> tgt;
-    struct Node
+    struct Node : Lua::ValueObject
     {
         uint8_t operation;
         uint32_t value;
         size_t left, right;
+
+        Node(uint8_t operation, uint32_t value, size_t left, size_t right)
+            : operation{operation}, value{value}, left{left}, right{right} {}
+        NEPTOOLS_LUA_CLASS;
     };
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<Node> tree;
 
     void Dispose() noexcept override;
@@ -164,7 +172,17 @@ public:
     uint32_t field_0;
     bool flag;
 
-    std::vector<std::pair<uint32_t, NotNull<LabelPtr>>> expressions;
+    struct Expression : Lua::ValueObject
+    {
+        uint32_t expression;
+        NotNull<LabelPtr> target;
+
+        Expression(uint32_t expression, NotNull<LabelPtr> target)
+            : expression{expression}, target{std::move(target)} {}
+        NEPTOOLS_LUA_CLASS;
+    };
+    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    std::vector<Expression> expressions;
 
     void Dispose() noexcept override;
 

@@ -482,7 +482,8 @@ void Instruction1eItem::Dump_(Sink& sink) const
     InstrDump(sink);
     sink.WriteGen(FixParams{field_0, (flag << 15) | expressions.size()});
     for (auto& e : expressions)
-        sink.WriteGen(ExpressionParams{e.first, ToFilePos(e.second->GetPtr())});
+        sink.WriteGen(ExpressionParams{
+            e.expression, ToFilePos(e.target->GetPtr())});
 
 }
 
@@ -494,7 +495,7 @@ void Instruction1eItem::Inspect_(std::ostream& os) const
     {
         if (!first) os << ", ";
         first = false;
-        os << '{' << e.first << ", @" << e.second->GetName() << '}';
+        os << '{' << e.expression << ", @" << e.target->GetName() << '}';
     }
     os << "})";
 }
@@ -502,9 +503,16 @@ void Instruction1eItem::Inspect_(std::ostream& os) const
 void Instruction1eItem::PostInsert()
 {
     for (const auto& e : expressions)
-        MaybeCreate<InstructionBase>(e.second->GetPtr());
+        MaybeCreate<InstructionBase>(e.target->GetPtr());
     MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
 }
 
 }
 }
+
+#include "../../container/vector.lua.hpp"
+NEPTOOLS_STD_VECTOR_LUAGEN(
+    instruction1d_node, Neptools::Stsc::Instruction1dItem::Node);
+NEPTOOLS_STD_VECTOR_LUAGEN(
+    instruction1e_expression, Neptools::Stsc::Instruction1eItem::Expression);
+#include "instruction.binding.hpp"
