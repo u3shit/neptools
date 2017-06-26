@@ -31,7 +31,8 @@ end
 
 local function is_lua_class(type)
   if not type then return nil end
-  local name = type:canonical():name()
+  type = type:canonical()
+  local name = type:name()
   if inst.lua_classes[name] ~= nil then return inst.lua_classes[name] end
 
   local tbl = {}
@@ -59,7 +60,7 @@ check_lua_class = cl.regCursorVisitor(function (c, par)
       class_migrate_inheritable(tbl, lc)
     end
   elseif kind == "AnnotateAttr" then
-    local at = utils.is_lua_annotation(c)
+    local at = utils.is_lua_annotation(c, {c=c})
     if at then
       inst.is_lua[#inst.is_lua].ret = lua_class(par, at)
     end
@@ -315,7 +316,7 @@ local function lua_function(c, tbl, parent)
 end
 
 local function parse_method(c, kind, parent)
-  local ann = utils.get_annotations(c)
+  local ann = utils.get_annotations(c, {cls=inst.parse_class_class})
   if #ann == 0 then
     if kind == "FieldDecl" then
       ann[1] = { get = true, implicit = true }
@@ -337,7 +338,7 @@ end
 -- inside class
 local parse_class_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
-  if kind == "CXXBaseSpecifier" then
+  if kind == "CXXBaseSpecifier" and c:access() == "public" then
     local lc = is_lua_class(c:type())
     if lc then
       local parents = inst.parse_class_class.parents
@@ -391,11 +392,11 @@ local parse_v = cl.regCursorVisitor(function (c, par)
     end
     return vr.Recurse -- support inner classes
   elseif kind == "FunctionDecl" then
-    for _,a in ipairs(utils.get_annotations(c)) do
+    for _,a in ipairs(utils.get_annotations(c, {})) do
       lua_function(c, a)
     end
   elseif kind == "TypeAliasDecl" then
-    for _,a in ipairs(utils.get_annotations(c)) do
+    for _,a in ipairs(utils.get_annotations(c, {})) do
       local t = c:typedefType()
       --print(c:type():declaration():kind())
       utils.add_alias(inst.aliases, t:canonical(), c:name())
@@ -405,6 +406,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
         inst.templates[t] = c:name()
         x.name = x.name.."_"..(a.name or c:name())
         x.template = true
+        x.alias = a
         -- hack!
         x.template_args = t:name():gsub("^[:0-9a-zA-Z ]*<", ""):gsub(">[ *&]*$", "")
         inst.ret_lua_classes[#inst.ret_lua_classes+1] = parse_class(t, x)
@@ -427,7 +429,7 @@ local parse_templates2_v = cl.regCursorVisitor(function (c, par)
   if not inst.fake_class then return vr.Break end
 
   if kind == "CXXMethod" then
-    local anns = utils.get_annotations(c)
+    local anns = utils.get_annotations(c, {})
     if not anns[1] then anns[1] = { implicit = true } end
     for _,a in ipairs(anns) do
       a.class = is_lua_class(inst.fake_class)

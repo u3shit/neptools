@@ -231,24 +231,28 @@ function ret.type_list(args, aliases, wrap, pre)
   return cat
 end
 
-function ret.is_lua_annotation(c)
+local index_G_tbl = {__index=_G}
+function ret.is_lua_annotation(c, env)
   if c:name():sub(1,4) == "lua{" then
-    return assert(loadstring("return "..c:name():sub(4)))()
+    local fun = assert(loadstring("return "..c:name():sub(4)))
+    setfenv(fun, setmetatable(env, index_G_tbl))
+    return fun()
   end
 end
 
 -- get annotation
-local get_annot_tbl
+local get_annot_tbl, get_annot_env
 local get_annot_v = cl.regCursorVisitor(function (c, par)
   if c:kind() == "AnnotateAttr" then
-    local x = ret.is_lua_annotation(c)
+    local x = ret.is_lua_annotation(c, get_annot_env)
     if x then get_annot_tbl[#get_annot_tbl+1] = x end
   end
   return vr.Continue
 end)
 
-function ret.get_annotations(c)
+function ret.get_annotations(c, env)
   get_annot_tbl = {}
+  get_annot_env = env
   c:children(get_annot_v)
   return get_annot_tbl
 end

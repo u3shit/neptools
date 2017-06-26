@@ -85,4 +85,96 @@ static TypeRegister::StateRegister<::Neptools::ItemWithChildren> reg_neptools_it
 
 const char ::Neptools::ItemWithChildren::TYPE_NAME[] = "neptools.item_with_children";
 
+namespace Neptools::Lua
+{
+
+// class neptools.parent_list_item
+template<>
+void TypeRegisterTraits<::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >>::Register(TypeBuilder& bld)
+{
+
+    bld.AddFunction<
+        &::Neptools::Lua::TypeTraits<::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >>::Make<>
+    >("new");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item &) noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::swap)
+    >("swap");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::reference)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::push_back<Check::Throw>)
+    >("push_back");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)()>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::pop_back<Check::Throw>)
+    >("pop_back");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::reference)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::push_front<Check::Throw>)
+    >("push_front");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)()>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::pop_front<Check::Throw>)
+    >("pop_front");
+    bld.AddFunction<
+        static_cast<::item::reference (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)()>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::front<Check::Throw>)
+    >("front");
+    bld.AddFunction<
+        static_cast<::item::reference (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)()>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::back<Check::Throw>)
+    >("back");
+    bld.AddFunction<
+        static_cast<::item::size_type (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)() const noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::size)
+    >("size");
+    bld.AddFunction<
+        static_cast<bool (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)() const noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::empty)
+    >("empty");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::size_type) noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::shift_backwards)
+    >("shift_backwards");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::size_type) noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::shift_forward)
+    >("shift_forward");
+    bld.AddFunction<
+        static_cast<::item::iterator (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator, ::item::const_iterator)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::erase<Check::Throw>),
+        static_cast<::item::iterator (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::erase<Check::Throw>)
+    >("erase");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)() noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::clear)
+    >("clear");
+    bld.AddFunction<
+        static_cast<::item::iterator (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator, ::item::reference)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::insert<Check::Throw>)
+    >("insert");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator, ::item &, ::item::const_iterator, ::item::const_iterator)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::splice<Check::Throw>),
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator, ::item &, ::item::const_iterator)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::splice<Check::Throw>),
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item::const_iterator, ::item &)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::splice<Check::Throw>)
+    >("splice");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::sort<::Neptools::Lua::FunctionWrapGen<bool>>)
+    >("sort");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::item &, ::Neptools::Lua::FunctionWrapGen<bool>)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::merge<::Neptools::Check::Throw, ::Neptools::Lua::FunctionWrapGen<bool>>)
+    >("merge");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)() noexcept>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::reverse)
+    >("reverse");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::remove_if<::Neptools::Lua::FunctionWrapGen<bool>>)
+    >("remove_if");
+    bld.AddFunction<
+        static_cast<void (::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::unique<::Neptools::Lua::FunctionWrapGen<bool>>)
+    >("unique");
+    bld.AddFunction<
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::FakeClass &, ::Neptools::Item &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Next)
+    >("next");
+    bld.AddFunction<
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::FakeClass &, ::Neptools::Item &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Prev)
+    >("prev");
+    bld.AddFunction<
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::ToTable)
+    >("to_table");
+
+}
+static TypeRegister::StateRegister<::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >> reg_neptools_parent_list_item;
+
+}
+
+template <>
+const char ::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::TYPE_NAME[] = "neptools.parent_list_item";
+
 #endif

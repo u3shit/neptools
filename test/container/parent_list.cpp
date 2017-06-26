@@ -628,6 +628,8 @@ TEST_CASE("ParentList lua", "[parent_list]")
     {
         vm.DoString("lst:sort(function(a,b) return a.data > b.data end)");
         CHECK(Equal({ *xs[4], *xs[3], *xs[2], *xs[1], *xs[0] }, *lst));
+        vm.DoString("lst:sort()");
+        CHECK(Equal({ *xs[0], *xs[1], *xs[2], *xs[3], *xs[4] }, *lst));
     }
 
     SECTION("unique")
@@ -655,6 +657,7 @@ assert(tbl[5] == nil)");
 #endif
 
 #include "container/parent_list.lua.hpp"
-NEPTOOLS_PARENT_LIST_LUAGEN(parent_list_item, Neptools::Test::ParentListItem,
-                            Neptools::Test::ParentListItemTraits);
+NEPTOOLS_PARENT_LIST_LUAGEN(
+    parent_list_item, true, Neptools::Test::ParentListItem,
+    Neptools::Test::ParentListItemTraits);
 #include "parent_list.binding.hpp"

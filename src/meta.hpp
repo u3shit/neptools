@@ -10,7 +10,7 @@
 
 #define NEPTOOLS_LUAGEN(...) NEPTOOLS_META(lua{__VA_ARGS__})
 #define NEPTOOLS_NOLUA NEPTOOLS_LUAGEN(hidden=true)
-#define NEPTOOLS_LUA_TEMPLATE(id, nam, ...)     \
-    using id NEPTOOLS_LUAGEN(name=nam) = __VA_ARGS__
+#define NEPTOOLS_LUA_TEMPLATE(id, luagen, ...)     \
+    using id NEPTOOLS_LUAGEN luagen = __VA_ARGS__
 
 #endif

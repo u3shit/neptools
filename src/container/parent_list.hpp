@@ -401,6 +401,7 @@ public:
     }
 
     // O(n log n), n=size(); exception->basic guarantee
+    NEPTOOLS_LUAGEN(hidden=not cls.alias.comparable)
     void sort() { sort(std::less<value_type>{}); }
     template <typename Predicate>
     NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<bool>"})
@@ -473,6 +474,7 @@ public:
 
     // O(size() + o.size()); exception->basic guarantee
     template <typename Checker = Check::Assert>
+    NEPTOOLS_LUAGEN(hidden=not cls.alias.comparable)
     void merge(ParentList& o) { merge<Checker>(o, std::less<value_type>{}); }
     template <typename Checker = Check::Assert, typename Predicate>
     NEPTOOLS_LUAGEN(template_params={
@@ -495,6 +497,7 @@ public:
     void reverse() noexcept { ListAlgo::reverse(GetRoot()); }
 
     // O(size()); exception->basic guarantee
+    NEPTOOLS_LUAGEN(hidden=not cls.alias.comparable)
     void remove(const_reference val)
     { remove_if([&val](auto& x) { return x == val; }); }
     template <typename Predicate>
@@ -507,6 +510,7 @@ public:
     }
 
     // O(size()); exception->basic guarantee
+    NEPTOOLS_LUAGEN(hidden=not cls.alias.comparable)
     void unique() { unique(std::equal_to<value_type>{}); }
     template <typename Predicate>
     NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<bool>"})

@@ -182,6 +182,8 @@ void ItemWithChildren::Dispose() noexcept
 
 }
 
+#include "../container/parent_list.lua.hpp"
 #include "../lua/table_ret_wrap.hpp"
 #include "../lua/owned_shared_ptr_wrap.hpp"
+NEPTOOLS_PARENT_LIST_LUAGEN(item, false, Neptools::Item, Neptools::ItemListTraits);
 #include "item.binding.hpp"

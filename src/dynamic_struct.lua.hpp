@@ -241,16 +241,16 @@ struct DynamicStructLua
 
 }
 
-#define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(name, ...)                               \
+#define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(nam, ...)                                \
     template class ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder;         \
     template struct ::Neptools::DynamicStructLua<__VA_ARGS__>;                  \
     template struct ::Neptools::DynamicStructBuilderLua<__VA_ARGS__>;           \
     template struct ::Neptools::DynamicStructTypeLua<__VA_ARGS__>;              \
-    NEPTOOLS_LUA_TEMPLATE(DynStructBind##name, #name,                           \
+    NEPTOOLS_LUA_TEMPLATE(DynStructBind##nam, (name=#nam),                      \
                           ::Neptools::DynamicStruct<__VA_ARGS__>);              \
-    NEPTOOLS_LUA_TEMPLATE(DynStructTypeBind##name, #name..".type",              \
+    NEPTOOLS_LUA_TEMPLATE(DynStructTypeBind##nam, (name=#nam..".type"),         \
                           ::Neptools::DynamicStruct<__VA_ARGS__>::Type);        \
-    NEPTOOLS_LUA_TEMPLATE(DynStructBldBind##name, #name..".builder",            \
+    NEPTOOLS_LUA_TEMPLATE(DynStructBldBind##nam, (name=#nam..".builder"),       \
                           ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder)
 
 #endif

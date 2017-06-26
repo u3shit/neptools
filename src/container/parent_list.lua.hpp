@@ -67,9 +67,10 @@ struct ParentListLua
 
 }
 
-#define NEPTOOLS_PARENT_LIST_LUAGEN(name, ...)                          \
+#define NEPTOOLS_PARENT_LIST_LUAGEN(name, cmp, ...)                     \
     template struct ::Neptools::ParentListLua<__VA_ARGS__>;             \
-    NEPTOOLS_LUA_TEMPLATE(name, nil, ::Neptools::ParentList<__VA_ARGS__>)
+    NEPTOOLS_LUA_TEMPLATE(name, (comparable=cmp),                       \
+                          ::Neptools::ParentList<__VA_ARGS__>)
 
 #endif
 #endif
