@@ -33,11 +33,11 @@ int TypeTraits::GcFun(lua_State* vm)
 }
 
 UBArgs GetBase(
-    StateRef vm, bool arg, int idx, const char* name, void* tag)
+    StateRef vm, bool arg, int idx, const char* name)
 {
     if (!lua_getmetatable(vm, idx)) // +1
         vm.TypeError(arg, name, idx);
-    lua_rawgetp(vm, -1, tag); // +2
+    lua_rawgetp(vm, -1, name); // +2
 
     int isvalid;
     auto offs = lua_tointegerx(vm, -1, &isvalid);
@@ -49,10 +49,10 @@ UBArgs GetBase(
     return {ud, offs};
 }
 
-UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag)
+UBArgs UnsafeGetBase(StateRef vm, int idx, const char* name)
 {
     lua_getmetatable(vm, idx); // +1
-    lua_rawgetp(vm, -1, tag); // +2
+    lua_rawgetp(vm, -1, name); // +2
     auto offs = lua_tointeger(vm, -1);
     lua_pop(vm, 2); // 0
 
@@ -61,11 +61,11 @@ UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag)
     return {ud, offs};
 }
 
-bool IsBase(StateRef vm, int idx, void* tag)
+bool IsBase(StateRef vm, int idx, const char* name)
 {
     if (!lua_getmetatable(vm, idx)) // +1
         return false;
-    auto type = lua_rawgetp(vm, -1, tag); // +2
+    auto type = lua_rawgetp(vm, -1, name); // +2
     lua_pop(vm, 2); // 0
     return type == LUA_TNUMBER;
 }

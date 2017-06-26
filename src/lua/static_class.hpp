@@ -12,7 +12,7 @@ struct StaticClass {};
 template<typename T>
 struct TypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>
 {
-    constexpr static bool TYPE_TAGGED = false;
+    constexpr static bool INSTANTIABLE = false;
 };
 
 template<typename T>

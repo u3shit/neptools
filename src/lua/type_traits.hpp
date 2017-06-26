@@ -65,11 +65,6 @@ constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
     template<> struct Neptools::Lua::TypeName<name> \
     { static const char TYPE_NAME[]; }
 
-// type tag
-template <typename T>
-std::enable_if_t<TypeTraits<T>::TYPE_TAGGED, char>
-TYPE_TAG = {};
-
 // lauxlib operations:
 // luaL_check*: call lua_to*, fail if it fails
 // luaL_opt*: lua_isnoneornil ? default : luaL_check*
@@ -108,7 +103,7 @@ struct TypeTraits<T, std::enable_if_t<
     { lua_pushnumber(vm, lua_Number(val)); }
 
     static constexpr int LUA_TYPE = LUA_TNUMBER;
-    static constexpr bool TYPE_TAGGED = false; // needed for enums
+    static constexpr bool INSTANTIABLE = false; // needed for enums
 };
 
 template <typename T>

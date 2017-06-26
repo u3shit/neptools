@@ -67,7 +67,7 @@ struct TypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
     static void Push(StateRef vm, T& obj)
     {
         UserDataDetail::CreateCachedUserData<IntrusiveUserData<T>>(
-            vm, &obj, &TYPE_TAG<std::remove_const_t<T>>, &obj);
+            vm, &obj, TYPE_NAME<std::remove_const_t<T>>, &obj);
     }
 };
 
@@ -80,7 +80,7 @@ struct TypeTraits<
     {
         auto ptr = const_cast<std::remove_const_t<T>*>(obj.get());
         UserDataDetail::CreateCachedUserData<IntrusiveUserData<T>>(
-            vm, ptr, &TYPE_TAG<std::remove_const_t<T>>, ptr);
+            vm, ptr, TYPE_NAME<std::remove_const_t<T>>, ptr);
     }
 };
 

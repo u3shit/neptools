@@ -67,7 +67,7 @@ struct TraitsBase
 };
 
 template <typename T, typename... Args>
-void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
+void CreateCachedUserData(StateRef vm, void* ptr, const char* name, Args&&... args)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
@@ -81,7 +81,7 @@ void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
 
         // create object
         auto ud = lua_newuserdata(vm, sizeof(T)); // +1
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, tag); // +2
+        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, name); // +2
         NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
 
         new (ud) T{std::forward<Args>(args)...};
@@ -95,7 +95,7 @@ void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
     {
         NEPTOOLS_ASSERT_MSG(
             lua_getmetatable(vm, -1) &&
-            lua_rawgetp(vm, -1, tag) == LUA_TNUMBER &&
+            lua_rawgetp(vm, -1, name) == LUA_TNUMBER &&
             (lua_pop(vm, 2), true), "Pointer aliasing?");
     }
 
@@ -104,9 +104,9 @@ void CreateCachedUserData(StateRef vm, void* ptr, void* tag, Args&&... args)
 }
 
 UBArgs GetBase(
-    StateRef vm, bool arg, int idx, const char* name, void* tag);
-UBArgs UnsafeGetBase(StateRef vm, int idx, void* tag);
-bool IsBase(StateRef vm, int idx, void* tag);
+    StateRef vm, bool arg, int idx, const char* name);
+UBArgs UnsafeGetBase(StateRef vm, int idx, const char* name);
+bool IsBase(StateRef vm, int idx, const char* name);
 
 }
 
@@ -127,16 +127,16 @@ struct UserDataTraits
                 static_cast<UserDataBase*>(lua_touserdata(vm, idx)), 0});
         else if constexpr (Unsafe)
             return Base::UBGet(UserDataDetail::UnsafeGetBase(
-                vm, idx, &TYPE_TAG<BaseType>));
+                vm, idx, TYPE_NAME<BaseType>));
         else
             return Base::UBGet(UserDataDetail::GetBase(
-                vm, arg, idx, TYPE_NAME<BaseType>, &TYPE_TAG<BaseType>));
+                vm, arg, idx, TYPE_NAME<BaseType>));
     }
 
     inline static bool Is(StateRef vm, int idx)
-    { return UserDataDetail::IsBase(vm, idx, &TYPE_TAG<BaseType>); }
+    { return UserDataDetail::IsBase(vm, idx, TYPE_NAME<BaseType>); }
 
-    static constexpr bool TYPE_TAGGED = true;
+    static constexpr bool INSTANTIABLE = true;
 };
 
 }

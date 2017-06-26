@@ -57,7 +57,7 @@ void SetMember(Class& cls, const T& val) { cls.*member = val; }
 class TypeBuilder
 {
 public:
-    TypeBuilder(StateRef vm, void* type_tag, const char* name);
+    TypeBuilder(StateRef vm, const char* name, bool instantiable);
     TypeBuilder(const TypeBuilder&) = delete;
     void operator=(const TypeBuilder&) = delete;
 
@@ -99,7 +99,7 @@ public:
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        if (type_tag)
+        if (instantiable)
         {
             if (strcmp(name, "get") == 0)      has_get  = true;
             if (strncmp(name, "get_", 4) == 0) has_get_ = true;
@@ -127,7 +127,7 @@ private:
 
     StateRef vm;
     bool has_get_ = false, has_get = false, has_set_ = false, has_set = false;
-    void* type_tag;
+    bool instantiable;
 };
 
 class TypeRegister
@@ -138,18 +138,17 @@ public:
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        void* type_tag = nullptr;
         bool doit = true;
-        if constexpr (TypeTraits<Class>::TYPE_TAGGED)
+        if constexpr (TypeTraits<Class>::INSTANTIABLE)
         {
-            type_tag = &TYPE_TAG<Class>;
-            lua_rawgetp(vm, LUA_REGISTRYINDEX, type_tag); // +1
+            lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<Class>); // +1
             doit = lua_isnil(vm, -1);
             if (doit) lua_pop(vm, 1);
         }
         if (doit)
         {
-            TypeBuilder bld{vm, type_tag, TYPE_NAME<Class>};
+            TypeBuilder bld{
+                vm, TYPE_NAME<Class>, TypeTraits<Class>::INSTANTIABLE};
             bld.Init<Class>();
             TypeRegisterTraits<Class>::Register(bld);
             bld.Done();

@@ -78,7 +78,7 @@ constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
                  ::Neptools::RefCounted& ctrl) override                      \
     {                                                                        \
         ::Neptools::Lua::UserDataDetail::CreateCachedUserData<__VA_ARGS__>(  \
-            vm, this, &::Neptools::Lua::TYPE_TAG<NEPTOOLS_THIS_TYPE>, &ctrl, this); \
+            vm, this, ::Neptools::Lua::TYPE_NAME<NEPTOOLS_THIS_TYPE>, &ctrl, this); \
     }
 
 #define NEPTOOLS_DYNAMIC_OBJECT                                                 \
@@ -103,7 +103,7 @@ struct SmartPush
             RefCountedUserData,
             SharedUserData>;
         UserDataDetail::CreateCachedUserData<UD>(
-            vm, &ptr, &TYPE_TAG<T>, &ctrl, &ptr);
+            vm, &ptr, TYPE_NAME<T>, &ctrl, &ptr);
     }
 };
 

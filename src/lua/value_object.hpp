@@ -46,7 +46,7 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     static bool Is(StateRef vm, int idx)
     {
         if (!lua_getmetatable(vm, idx)) return false; // +1
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &TYPE_TAG<T>); // +2
+        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
         NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
         auto ret = lua_rawequal(vm, -1, -2);
         lua_pop(vm, 1); // 0
@@ -57,7 +57,7 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     static void Push(StateRef vm, Args&&... args)
     {
         auto ptr = lua_newuserdata(vm, sizeof(T)); // +1
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &TYPE_TAG<T>); // +2
+        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
         NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
 
         new (ptr) T{std::forward<Args>(args)...};
@@ -71,7 +71,7 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
         return 1;
     }
 
-    static constexpr bool TYPE_TAGGED = true;
+    static constexpr bool INSTANTIABLE = true;
 };
 
 template <typename T>

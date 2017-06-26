@@ -6,14 +6,14 @@ namespace Neptools
 namespace Lua
 {
 
-TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
-    : vm{vm}, type_tag{type_tag}
+TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
+    : vm{vm}, instantiable{instantiable}
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
     // type table
     lua_createtable(vm, 0, 0); // +1
-    if (type_tag) // has actual type
+    if (instantiable)
     {
         lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // +2
         NEPTOOLS_ASSERT(lua_istable(vm, -1));
@@ -28,17 +28,17 @@ TypeBuilder::TypeBuilder(StateRef vm, void* type_tag, const char* name)
         lua_setfield(vm, -2, "__index"); // +2
 
         lua_pushinteger(vm, 0); // +3
-        lua_rawsetp(vm, -2, type_tag); // +2
+        lua_rawsetp(vm, -2, name); // +2
 
         lua_pushvalue(vm, -1); // +3
-        lua_rawsetp(vm, LUA_REGISTRYINDEX, type_tag); //+2
+        lua_rawsetp(vm, LUA_REGISTRYINDEX, name); //+2
 
         // metatable.__name = name
         lua_pushstring(vm, name); // +3
         lua_setfield(vm, -2, "__name"); // +2
 
         // is function
-        lua_pushlightuserdata(vm, type_tag); // +3
+        lua_pushlightuserdata(vm, const_cast<char*>(name)); // +3
         lua_pushcclosure(vm, &IsFunc, 1); // +3
         SetField("is"); // +2
     }
@@ -68,7 +68,7 @@ void TypeBuilder::Done()
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
-    if (type_tag)
+    if (instantiable)
     {
         if (has_get_ || has_get)
             SetMt(
