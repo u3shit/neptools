@@ -596,7 +596,8 @@ static TypeRegister::StateRegister<InstructionItem> reg;
 NEPTOOLS_STD_VECTOR_LUAGEN(
     label, Neptools::NotNull<Neptools::LabelPtr>);
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    instruction1d_node, Neptools::Stsc::Instruction1dItem::Node);
+    stsc_instruction1d_item_node, Neptools::Stsc::Instruction1dItem::Node);
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    instruction1e_expression, Neptools::Stsc::Instruction1eItem::Expression);
+    stsc_instruction1e_item_expression,
+    Neptools::Stsc::Instruction1eItem::Expression);
 #include "instruction.binding.hpp"

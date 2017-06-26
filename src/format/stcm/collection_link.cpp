@@ -155,5 +155,6 @@ void CollectionLinkItem::Inspect_(std::ostream& os) const
 
 #include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    collection_link_item_entry, Neptools::Stcm::CollectionLinkItem::LinkEntry);
+    stcm_collection_link_item_link_entry,
+    Neptools::Stcm::CollectionLinkItem::LinkEntry);
 #include "collection_link.binding.hpp"

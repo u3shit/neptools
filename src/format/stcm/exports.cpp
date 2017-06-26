@@ -97,6 +97,6 @@ void ExportsItem::Inspect_(std::ostream& os) const
 
 #include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    exports_item_entry, Neptools::NotNull<Neptools::RefCountedPtr<
+    stcm_exports_item_entry_type, Neptools::NotNull<Neptools::RefCountedPtr<
         Neptools::Stcm::ExportsItem::EntryType>>);
 #include "exports.binding.hpp"
