@@ -162,4 +162,41 @@ TEST_CASE("aliased objects", "[lua]")
        "assert(f.smart.x == 7)\n");
 }
 
+struct A : public DynamicObject
+{
+    int x = 0;
+
+    NEPTOOLS_DYNAMIC_OBJECT;
+};
+
+struct B : public DynamicObject
+{
+    int y = 1;
+
+    NEPTOOLS_DYNAMIC_OBJECT;
+};
+
+struct Multi : public A, public B
+{
+    Multi() = default;
+    SharedPtr<B> ptr;
+
+    NEPTOOLS_DYNAMIC_OBJECT;
+};
+
+static DynamicObject& GetDynamicObject(Multi& m) { return static_cast<A&>(m); }
+
+TEST_CASE("multiple inheritance", "[lua]")
+{
+    State vm;
+    vm.DoString(R"(
+local m = multi()
+m.ptr = m
+m.ptr.y = 13
+assert(m.x == 0, "m.x")
+assert(m.y == 13, "m.y")
+)");
+}
+
+
 #include "user_type.binding.hpp"

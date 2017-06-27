@@ -103,4 +103,77 @@ static TypeRegister::StateRegister<::Baz> reg_baz;
 
 const char ::Baz::TYPE_NAME[] = "baz";
 
+namespace Neptools::Lua
+{
+
+// class a
+template<>
+void TypeRegisterTraits<::A>::Register(TypeBuilder& bld)
+{
+
+    bld.AddFunction<
+        &::Neptools::Lua::GetMember<::A, int, &::A::x>
+    >("get_x");
+    bld.AddFunction<
+        &::Neptools::Lua::SetMember<::A, int, &::A::x>
+    >("set_x");
+
+}
+static TypeRegister::StateRegister<::A> reg_a;
+
+}
+
+
+const char ::A::TYPE_NAME[] = "a";
+
+namespace Neptools::Lua
+{
+
+// class b
+template<>
+void TypeRegisterTraits<::B>::Register(TypeBuilder& bld)
+{
+
+    bld.AddFunction<
+        &::Neptools::Lua::GetMember<::B, int, &::B::y>
+    >("get_y");
+    bld.AddFunction<
+        &::Neptools::Lua::SetMember<::B, int, &::B::y>
+    >("set_y");
+
+}
+static TypeRegister::StateRegister<::B> reg_b;
+
+}
+
+
+const char ::B::TYPE_NAME[] = "b";
+
+namespace Neptools::Lua
+{
+
+// class multi
+template<>
+void TypeRegisterTraits<::Multi>::Register(TypeBuilder& bld)
+{
+    bld.Inherit<::Multi, ::A, ::B>();
+
+    bld.AddFunction<
+        &::Neptools::Lua::TypeTraits<::Multi>::Make<>
+    >("new");
+    bld.AddFunction<
+        &::Neptools::Lua::GetMember<::Multi, SharedPtr<::B>, &::Multi::ptr>
+    >("get_ptr");
+    bld.AddFunction<
+        &::Neptools::Lua::SetMember<::Multi, SharedPtr<::B>, &::Multi::ptr>
+    >("set_ptr");
+
+}
+static TypeRegister::StateRegister<::Multi> reg_multi;
+
+}
+
+
+const char ::Multi::TYPE_NAME[] = "multi";
+
 #endif
