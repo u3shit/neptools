@@ -85,6 +85,7 @@ struct TypeTraits<T, std::enable_if_t<IsFunctionWrap<T>::value>>
     }
 
     static bool Is(StateRef vm, int idx) { return lua_isfunction(vm, idx); }
+    static void PrintName(std::ostream& os) { os << "function"; }
 
     static constexpr int LUA_TYPE = LUA_TFUNCTION;
 };

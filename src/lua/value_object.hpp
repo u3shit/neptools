@@ -71,6 +71,7 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
         return 1;
     }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr bool INSTANTIABLE = true;
 };
 

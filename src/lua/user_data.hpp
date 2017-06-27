@@ -135,6 +135,7 @@ struct UserDataTraits
 
     inline static bool Is(StateRef vm, int idx)
     { return UserDataDetail::IsBase(vm, idx, TYPE_NAME<BaseType>); }
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<BaseType>; }
 
     static constexpr bool INSTANTIABLE = true;
 };

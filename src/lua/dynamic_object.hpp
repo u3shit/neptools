@@ -168,6 +168,8 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
         if (sptr) Detail::SmartPush<T>::Push(vm, *sptr.GetCtrl(), *sptr);
         else lua_pushnil(vm);
     }
+
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
 };
 
 template <typename Class, typename T, T Class::* Member>

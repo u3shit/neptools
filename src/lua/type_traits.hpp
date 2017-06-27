@@ -102,6 +102,7 @@ struct TypeTraits<T, std::enable_if_t<
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, lua_Number(val)); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr int LUA_TYPE = LUA_TNUMBER;
     static constexpr bool INSTANTIABLE = false; // needed for enums
 };
@@ -129,6 +130,7 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
     static void Push(StateRef vm, T val)
     { lua_pushnumber(vm, val); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr int LUA_TYPE = LUA_TNUMBER;
 };
 
@@ -149,6 +151,7 @@ struct TypeTraits<bool>
     static void Push(StateRef vm, bool val)
     { lua_pushboolean(vm, val); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<bool>; }
     static constexpr int LUA_TYPE = LUA_TBOOLEAN;
 };
 
@@ -169,6 +172,7 @@ struct TypeTraits<const char*>
     static void Push(StateRef vm, const char* val)
     { lua_pushstring(vm, val); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<const char*>; }
     static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
@@ -193,6 +197,7 @@ struct TypeTraits<T, std::enable_if_t<
     static void Push(StateRef vm, const T& val)
     { lua_pushlstring(vm, val.data(), val.length()); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<std::string>; }
     static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
@@ -226,6 +231,7 @@ struct TypeTraits<std::array<unsigned char, N>>
     static void Push(StateRef vm, const Type& val)
     { lua_pushlstring(vm, reinterpret_cast<const char*>(val.data()), val.size()); }
 
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<const char*>; }
     static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
@@ -249,24 +255,30 @@ template <typename T, typename Ret = T>
 struct NullableTypeTraits
 {
     using NotNullable = std::remove_reference_t<typename ToNotNullable<T>::Type>;
+    using BaseTraits = TypeTraits<NotNullable>;
 
     template <bool Unsafe>
     static Ret Get(StateRef vm, bool arg, int idx)
     {
         if (lua_isnil(vm, idx)) return nullptr;
         return ToNullable<NotNullable>::Conv(
-            TypeTraits<NotNullable>::template Get<Unsafe>(vm, arg, idx));
+            BaseTraits::template Get<Unsafe>(vm, arg, idx));
     }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isnil(vm, idx) || TypeTraits<NotNullable>::Is(vm, idx); }
+    { return lua_isnil(vm, idx) || BaseTraits::Is(vm, idx); }
 
     static void Push(StateRef vm, const T& obj)
     {
-        if (obj) TypeTraits<NotNullable>::Push(vm, ToNotNullable<T>::Conv(obj));
+        if (obj) BaseTraits::Push(vm, ToNotNullable<T>::Conv(obj));
         else lua_pushnil(vm);
     }
 
+    static void PrintName(std::ostream& os)
+    {
+        BaseTraits::PrintName(os);
+        os << " or nil";
+    }
     using RawType = typename TypeTraits<NotNullable>::RawType;
 };
 

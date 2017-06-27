@@ -48,6 +48,12 @@ template <typename T, typename> struct GetArg
     { return vm.Check<RawType, Unsafe>(idx); }
     static bool Is(StateRef vm, int idx) { return vm.Is<RawType>(idx); }
 
+    static void Print(bool comma, std::ostream& os)
+    {
+        if (comma) os << ", ";
+        TypeTraits<RawType>::PrintName(os);
+    }
+
     template <typename Val>
     static constexpr const bool IS = COMPATIBLE_WITH<RawType, Val>;
 };
@@ -58,6 +64,7 @@ template <> struct GetArg<Skip>
     template <bool>
     static constexpr Skip Get(StateRef, int) noexcept { return {}; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
+    static void Print(bool, std::ostream&) {}
 
     using type = brigand::list<>;
     template <typename Val>
@@ -70,6 +77,7 @@ template <> struct GetArg<StateRef>
     template <bool>
     static constexpr StateRef Get(StateRef vm, int) noexcept { return vm; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
+    static void Print(bool, std::ostream&) {}
 
     using type = brigand::list<>;
     template <typename Val>
@@ -88,6 +96,11 @@ template <int LType> struct GetArg<Raw<LType>>
     }
     static bool Is(StateRef vm, int idx) noexcept
     { return lua_type(vm, idx) == LType; }
+    static void Print(bool comma, std::ostream& os)
+    {
+        if (comma) os << ", ";
+        os << lua_typename(nullptr, LType);
+    }
 
     using type = brigand::list<Raw<LType>>;
     template <typename Val>
@@ -111,6 +124,12 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
     static bool Is(StateRef vm, int idx)
     { return (vm.Is<TupleElement<Tuple, Index>>(idx+Index) && ...); }
 
+    static void Print(bool comma, std::ostream& os)
+    {
+        ((((comma || Index != 0) && os << ", "),
+          TypeTraits<TupleElement<Tuple, Index>>::PrintName(os)), ...);
+    }
+
     using type = brigand::list<TupleElement<Tuple, Index>...>;
     // IS: should be called on underlying types
 };
@@ -120,20 +139,36 @@ struct GetArg<T, EnableIfTupleLike<std::decay_t<T>>>
     : TupleGet<std::decay_t<T>,
                std::make_index_sequence<TupleLike<std::decay_t<T>>::SIZE>> {};
 
-template <bool Unsafe, size_t N, typename Seq, typename... Args>
+template <size_t I, typename Func> struct Arg
+{
+    static constexpr const size_t Idx = I;
+    using Fun = Func;
+};
+
+
+template <size_t N, typename Seq, typename Args>
 struct GenArgSequence;
-template <bool Unsafe, size_t N, size_t... Seq, typename Head, typename... Args>
-struct GenArgSequence<Unsafe, N, std::index_sequence<Seq...>, Head, Args...>
+
+template <size_t N, typename... Seq, typename Head, typename... Args>
+struct GenArgSequence<N, brigand::list<Seq...>, brigand::list<Head, Args...>>
 {
     using Type = typename GenArgSequence<
-        Unsafe,
         GetArg<Head>::template NEXT_IDX<N>,
-        std::index_sequence<Seq..., N>,
-        Args...>::Type;
+        brigand::list<Seq..., Arg<N, Head>>,
+        brigand::list<Args...>>::Type;
 };
-template <bool Unsafe, size_t N, typename Seq>
-struct GenArgSequence<Unsafe, N, Seq>
+template <size_t N, typename Seq>
+struct GenArgSequence<N, Seq, brigand::list<>>
 { using Type = Seq; };
+
+template <auto Fun>
+using ArgSequence = typename GenArgSequence<
+    1, brigand::list<>, FunctionArguments<decltype(Fun)>>::Type;
+
+template <typename Args>
+using ArgSequenceFromArgs = typename GenArgSequence<
+    1, brigand::list<>, Args>::Type;
+
 
 
 template <typename T, typename Enable = void> struct ResultPush
@@ -196,45 +231,37 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
     }
 }
 
-template <auto Fun, bool Unsafe, typename Ret, typename Args, typename Seq>
+template <auto Fun, bool Unsafe, typename Ret, typename Args>
 struct WrapFunGen;
 
-template <auto Fun, bool Unsafe, typename Ret, typename... Args, size_t... Seq>
-struct WrapFunGen<Fun, Unsafe, Ret, brigand::list<Args...>,
-                  std::index_sequence<Seq...>>
+template <auto Fun, bool Unsafe, typename Ret, typename... Args>
+struct WrapFunGen<Fun, Unsafe, Ret, brigand::list<Args...>>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
         return ResultPush<Ret>::Push(
-            vm, CatchInvoke(vm, Fun, GetArg<Args>::template Get<Unsafe>(vm, Seq)...));
+            vm, CatchInvoke(
+                vm, Fun, GetArg<typename Args::Fun>::template Get<Unsafe>(
+                    vm, Args::Idx)...));
     }
 };
 
-template <auto Fun, bool Unsafe, typename... Args, size_t... Seq>
-struct WrapFunGen<Fun, Unsafe, void, brigand::list<Args...>,
-                  std::index_sequence<Seq...>>
+template <auto Fun, bool Unsafe, typename... Args>
+struct WrapFunGen<Fun, Unsafe, void, brigand::list<Args...>>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        CatchInvoke(vm, Fun, GetArg<Args>::template Get<Unsafe>(vm, Seq)...);
+        CatchInvoke(vm, Fun, GetArg<typename Args::Fun>::template Get<Unsafe>(
+                        vm, Args::Idx)...);
         return 0;
     }
 };
 
-template <auto Fun, bool Unsafe, typename Args> struct WrapFunGen2;
-template <auto Fun, bool Unsafe, typename... Args>
-struct WrapFunGen2<Fun, Unsafe, brigand::list<Args...>>
-    : public WrapFunGen<
-        Fun, Unsafe,
-        FunctionReturn<decltype(Fun)>, brigand::list<Args...>,
-        typename GenArgSequence<Unsafe, 1, std::index_sequence<>, Args...>::Type>
-{};
-
 template <auto Fun, bool Unsafe>
-struct WrapFunc : WrapFunGen2<Fun, Unsafe, FunctionArguments<decltype(Fun)>>
-{};
+struct WrapFunc : WrapFunGen<
+    Fun, Unsafe, FunctionReturn<decltype(Fun)>, ArgSequence<Fun>> {};
 
 // allow plain old lua functions
 template <int (*Fun)(lua_State*), bool Unsafe>
@@ -243,50 +270,62 @@ struct WrapFunc<Fun, Unsafe>
 
 
 // overload
-template <typename Args, typename Seq> struct OverloadCheck2;
-template <typename... Args, size_t... Seq>
-struct OverloadCheck2<brigand::list<Args...>, std::index_sequence<Seq...>>
-{
-    static bool Is(StateRef vm)
-    {
-        (void) vm;
-        return (GetArg<Args>::Is(vm, Seq) && ...);
-    }
-
-    template <typename ValsList>
-    static constexpr bool IS = (
-        GetArg<Args>::template IS<brigand::at_c<ValsList, Seq-1>> && ...);
-};
+template <auto... args> struct AutoList;
 
 template <typename Args> struct OverloadCheck;
 template <typename... Args>
 struct OverloadCheck<brigand::list<Args...>>
-    : public OverloadCheck2<
-        brigand::list<Args...>,
-        typename GenArgSequence<true, 1, std::index_sequence<>, Args...>::Type>
-{};
+{
+    static bool Is(StateRef vm)
+    {
+        (void) vm;
+        return (GetArg<typename Args::Fun>::Is(vm, Args::Idx) && ...);
+    }
 
-template <auto... Args> struct OverloadWrap;
-template <auto Fun, auto... Rest>
-struct OverloadWrap<Fun, Rest...>
+    template <typename ValsList>
+    static constexpr bool IS = (GetArg<typename Args::Fun>::template IS<
+        brigand::at_c<ValsList, Args::Idx-1>> && ...);
+};
+
+template <typename Funs, typename Orig = Funs> struct OverloadWrap;
+template <auto Fun, auto... Rest, typename Orig>
+struct OverloadWrap<AutoList<Fun, Rest...>, Orig>
 {
     static int Func(lua_State* l)
     {
         StateRef vm{l};
-        if (OverloadCheck<FunctionArguments<decltype(Fun)>>::Is(vm))
+        if (OverloadCheck<ArgSequence<Fun>>::Is(vm))
             return WrapFunc<Fun, true>::Func(vm);
         else
-            return OverloadWrap<Rest...>::Func(vm);
+            return OverloadWrap<AutoList<Rest...>, Orig>::Func(vm);
     }
 };
 
-template<> struct OverloadWrap<>
+template <typename Args> struct PrintOverload;
+template <typename... Args> struct PrintOverload<brigand::list<Args...>>
+{
+    static void Print(std::ostream& os)
+    {
+        os << "\n(";
+        (GetArg<typename Args::Fun>::Print(Args::Idx != 1, os), ...);
+        os << ')';
+    }
+};
+
+template <auto... Funs>
+struct OverloadWrap<AutoList<>, AutoList<Funs...>>
 {
     static int Func(lua_State* l)
     {
-        return luaL_error(l, "Invalid arguments to overloaded function");
+        std::stringstream ss;
+        ss << "Invalid arguments to overloaded function. Overloads:";
+        (PrintOverload<ArgSequence<Funs>>::Print(ss), ...);
+        return luaL_error(l, ss.str().c_str());
     }
 };
+
+template <auto... Funs>
+using Overload = OverloadWrap<AutoList<Funs...>, AutoList<Funs...>>;
 
 #ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
 namespace b = brigand;
@@ -310,7 +349,8 @@ template <typename... T> struct LCartesian<b::list<b::list<T...>>>
 template <> struct LCartesian<b::list<>> { using type = b::list<>; };
 
 template <typename A, typename B>
-using IsOverload = b::integral_constant<bool, OverloadCheck<A>::template IS<B>>;
+using IsOverload = b::integral_constant<
+    bool, OverloadCheck<ArgSequenceFromArgs<A>>::template IS<B>>;
 
 // brigand as_set fails on duplicate elements
 template <typename T>
@@ -366,7 +406,8 @@ inline void StateRef::PushFunction_()
         if constexpr (DoCheck)
             Detail::CheckUnique<Funs...>();
 #endif
-        lua_pushcfunction(vm, (Detail::OverloadWrap<Funs...>::Func));
+        lua_pushcfunction(
+            vm, Detail::Overload<Funs...>::Func);
     }
 }
 
