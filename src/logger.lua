@@ -42,7 +42,7 @@ end
 -- do not remove returns, tail call optimization removes callframe needed to get
 -- proper file and line values in output
 function log.err(name, ...) return log.log(name, log.ERROR, ...) end
-log.error = err
+log.error = log.err
 function log.warn(name, ...) return log.log(name, log.WARNING, ...) end
 log.warning = log.warn
 function log.info(name, ...) return log.log(name, log.INFO, ...) end
