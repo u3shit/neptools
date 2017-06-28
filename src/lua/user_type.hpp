@@ -93,25 +93,13 @@ public:
     }
 
     // low-level, pops value from lua stack
-    // force inlining so the optimizer can optimize out strcmp calls
-    BOOST_FORCEINLINE
     void SetField(const char* name)
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
-        if (instantiable)
-        {
-            if (strcmp(name, "get") == 0)      has_get  = true;
-            if (strncmp(name, "get_", 4) == 0) has_get_ = true;
-            if (strcmp(name, "set") == 0)      has_set  = true;
-            if (strncmp(name, "set_", 4) == 0) has_set_ = true;
-
-            lua_pushvalue(vm, -1);
-            lua_setfield(vm, -4, name);
-            lua_setfield(vm, -2, name);
-        }
-        else
-            lua_setfield(vm, -3, name);
+        lua_pushvalue(vm, -1);
+        lua_setfield(vm, -4, name);
+        lua_setfield(vm, -2, name);
 
         NEPTOOLS_LUA_CHECKTOP(vm, top-1);
     }
@@ -126,7 +114,6 @@ private:
     void DoInherit(ptrdiff_t offs);
 
     StateRef vm;
-    bool has_get_ = false, has_get = false, has_set_ = false, has_set = false;
     bool instantiable;
 };
 

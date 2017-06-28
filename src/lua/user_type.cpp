@@ -45,7 +45,7 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     else
     {
         // "metatable"
-        lua_pushnil(vm); //+2
+        lua_pushvalue(vm, -1); //+2
     }
 
     // set global name
@@ -70,6 +70,29 @@ void TypeBuilder::Done()
 
     if (instantiable)
     {
+        bool has_get_ = false, has_get = false,
+             has_set_ = false, has_set = false;
+
+        lua_pushnil(vm); // +1
+        while (lua_next(vm, -2)) // +2/0
+        {
+            lua_pop(vm, 1); // +1
+            if (lua_type(vm, -1) != LUA_TSTRING) continue;
+
+            auto name = lua_tostring(vm, -1);
+            if (strcmp(name, "get") == 0)      has_get  = true;
+            if (strncmp(name, "get_", 4) == 0) has_get_ = true;
+            if (strcmp(name, "set") == 0)      has_set  = true;
+            if (strncmp(name, "set_", 4) == 0) has_set_ = true;
+
+            if (has_get_ && has_set_)
+            {
+                lua_pop(vm, 1); // 0
+                break;
+            }
+        }
+
+
         if (has_get_ || has_get)
             SetMt(
                 vm, "__index",
@@ -95,9 +118,9 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
     // -1: base class meta
     // -2: this meta
 
+    NEPTOOLS_ASSERT(instantiable);
     NEPTOOLS_ASSERT(lua_type(vm, -1) == LUA_TTABLE);
-    NEPTOOLS_ASSERT_MSG(lua_type(vm, -2) == LUA_TTABLE,
-                        "DoInherit from type_tag == nullptr type");
+    NEPTOOLS_ASSERT(lua_type(vm, -2) == LUA_TTABLE);
 
     // for k,v in pairs(base_mt) do
     lua_pushnil(vm); // +1
