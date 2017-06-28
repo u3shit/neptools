@@ -507,13 +507,35 @@ int main(int argc, char** argv)
         {
             Lua::State vm;
             std::string str;
-            while (std::getline(std::cin, str))
-                if (luaL_dostring(vm, str.c_str()))
+
+            // use print (I'm lazy to write my own)
+            lua_getglobal(vm, "print"); // 1
+
+            while ((std::cout << "> ", std::getline(std::cin, str)))
+            {
+                // if input starts with "> " it's a copy-pasted prompt, remove
+                if (boost::algorithm::starts_with(str, "> "))
+                    str.erase(0, 2);
+
+                lua_pushvalue(vm, 1); // 2
+                if ((luaL_loadstring(vm, ("return "+str).c_str()) &&
+                     (lua_pop(vm, 1),
+                      luaL_loadstring(vm, str.c_str()))) ||
+                    lua_pcall(vm, 0, LUA_MULTRET, 0))
                 {
                     Logger::Log("lua", Logger::ERROR, nullptr, 0, nullptr)
                         << lua_tostring(vm, -1) << std::endl;
-                    lua_pop(vm, 1);
+                    lua_pop(vm, 2);
                 }
+                else
+                {
+                    auto top = lua_gettop(vm);
+                    if (top > 2)
+                        lua_call(vm, top-2, 0);
+                    else
+                        lua_pop(vm, 1);
+                }
+            }
         }};
 #endif
 
