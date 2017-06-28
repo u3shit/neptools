@@ -149,7 +149,7 @@ void TypeRegisterTraits<::cl3_entry>::Register(TypeBuilder& bld)
     bld.AddFunction<
         static_cast<SmartPtr<::Neptools::Cl3::Entry> (*)(::cl3_entry &, ::size_t) noexcept>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get),
         static_cast<SmartPtr<::Neptools::Cl3::Entry> (*)(::cl3_entry &, const typename ::cl3_entry::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get),
-        static_cast<void (*)() noexcept>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get)
+        static_cast<void (*)(::cl3_entry &, ::Neptools::Lua::Skip) noexcept>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get)
     >("get");
     bld.AddFunction<
         static_cast<std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Cl3::Entry> > &&)>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert)

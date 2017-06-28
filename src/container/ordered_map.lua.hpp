@@ -33,7 +33,8 @@ struct OrderedMapLua
         else return &*it;
     }
 
-    static void get() noexcept {} // ignore non-int/string keys
+    // ignore non-int/string keys
+    static void get(OrderedMap<T, Traits, Compare>&, Lua::Skip) noexcept {}
 
     // todo: newindex -- what happens on key collission??
     // todo __ipairs: since lua 5.3, built-in ipairs calls metamethods

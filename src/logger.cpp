@@ -292,8 +292,9 @@ std::ostream& Log(
 }
 
 #ifndef NEPTOOLS_WITHOUT_LUA
-static void LuaLog(Lua::StateRef vm, const char* name, int level/*, any msg */)
+static void LuaLog(Lua::StateRef vm, const char* name, int level, Lua::Skip msg)
 {
+    (void) msg;
     const char* file = nullptr;
     unsigned line = 0;
     const char* fun = nullptr;

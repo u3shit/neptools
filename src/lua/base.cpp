@@ -32,6 +32,22 @@ static int type_name(lua_State* vm)
     return 1;
 }
 
+const char* StateRef::TypeName(int idx)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    if (!luaL_getmetafield(vm, idx, "__name")) // 0/+1
+    {
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        return luaL_typename(vm, idx);
+    }
+
+    auto ret = lua_tostring(vm, -1); // +1
+    NEPTOOLS_ASSERT_MSG(ret, "invalid __name");
+    lua_pop(vm, 1); // 0
+    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    return ret;
+}
+
 State::State() : State(0)
 {
     Catch(
@@ -92,18 +108,9 @@ void StateRef::HandleDotdotdotCatch()
 
 void StateRef::TypeError(bool arg, const char* expected, int idx)
 {
-    const char* actual;
-    bool pop = false;
-    if (luaL_getmetafield(vm, idx, "__name"))
-    {
-        actual = lua_tostring(vm, -1);
-        pop = true;
-    }
-    else
-        actual = luaL_typename(vm, idx);
+    const char* actual = TypeName(idx);
     std::stringstream ss;
     ss << expected << " expected, got " << actual;
-    if (pop) lua_pop(vm, 1);
 
     GetError(arg, idx, ss.str().c_str());
 }

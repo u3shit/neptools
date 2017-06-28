@@ -534,15 +534,16 @@ struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
     }
 
     template <size_t I>
-    static void Set(StateRef vm, T& instr, int idx)
+    static void Set(StateRef vm, T& instr, int idx, Skip val)
     {
+        (void) val;
         if constexpr (I == sizeof...(Args))
             luaL_error(vm, "trying to set invalid index");
         else if (idx == I)
             std::get<I>(instr.args) = vm.Check<std::tuple_element_t<
                 I, typename T::ArgsT>>(3);
         else
-            Set<I+1>(vm, instr, idx);
+            Set<I+1>(vm, instr, idx, {});
     }
 
     static void Register(TypeBuilder& bld)

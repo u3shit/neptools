@@ -14,6 +14,9 @@ class StateRef;
 // placeholder to skip parsing this argument
 struct Skip {};
 
+// placeholder to indicate that the function takes extra arguments
+struct VarArg {};
+
 // the function pushes result manually
 struct RetNum
 {

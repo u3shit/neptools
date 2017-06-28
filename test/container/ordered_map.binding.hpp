@@ -93,7 +93,7 @@ void TypeRegisterTraits<::om_item_test>::Register(TypeBuilder& bld)
     bld.AddFunction<
         static_cast<SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, ::size_t) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
         static_cast<SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
-        static_cast<void (*)() noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get)
+        static_cast<void (*)(::om_item_test &, ::Neptools::Lua::Skip) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get)
     >("get");
     bld.AddFunction<
         static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Test::OMItemTest> > &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::insert)

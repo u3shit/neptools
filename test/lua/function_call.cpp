@@ -97,5 +97,5 @@ TEST_CASE("overload function", "[lua]")
     vm.Push(false);
     CHECK_THROWS_WITH(
         vm.Catch([&]() { lua_call(vm, 1, 0); }),
-        Catch::Matchers::Contains("Invalid arguments to overloaded function"));
+        Catch::Matchers::Contains("Invalid arguments (boolean) to overloaded function"));
 }

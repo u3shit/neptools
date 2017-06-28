@@ -93,7 +93,7 @@ public:
     template <typename T> bool Is(int idx)
     { return TypeTraits<T>::Is(*this, idx); }
 
-
+    const char* TypeName(int idx);
     void DoString(const char* str);
 
     constexpr operator lua_State*() noexcept { return vm; }

@@ -42,14 +42,14 @@ struct TypeRegisterTraits<std::vector<T, Allocator>>
 
     static void Assign(Vect& v, const Vect& o) { v = o; }
 
-    static RetNum Get0(StateRef vm, Vect& v, size_type i) noexcept
+    static RetNum Get0(StateRef vm, const Vect& v, size_type i) noexcept
     {
         if (i < v.size()) vm.Push(v[i]);
         else lua_pushnil(vm);
         return 1;
     }
 
-    static void Get1() noexcept {}
+    static void Get1(const Vect&, Lua::VarArg) noexcept {}
 
     static void Set(StateRef vm, Vect& v, size_type i, const T& val)
     {

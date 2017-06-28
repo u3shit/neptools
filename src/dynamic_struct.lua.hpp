@@ -175,7 +175,7 @@ struct DynamicStructTypeLua
         return 1;
     }
 
-    static void Get() noexcept {}
+    static void Get(const FakeClass&, Lua::VarArg) noexcept {}
 };
 
 template <typename... Args>
@@ -196,7 +196,7 @@ struct DynamicStructLua
         infos<Args...>[idx].push(vm, s.GetData(i), s.GetSize(i));
         return 1;
     }
-    static void Get() noexcept {}
+    static void Get(const FakeClass&, Lua::VarArg) noexcept {}
 
     static void Set(Lua::StateRef vm, FakeClass& s, size_t i)
     {

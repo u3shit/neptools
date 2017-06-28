@@ -268,9 +268,9 @@ struct NullableTypeTraits
     static bool Is(StateRef vm, int idx)
     { return lua_isnil(vm, idx) || BaseTraits::Is(vm, idx); }
 
-    static void Push(StateRef vm, const T& obj)
+    static void Push(StateRef vm, T obj)
     {
-        if (obj) BaseTraits::Push(vm, ToNotNullable<T>::Conv(obj));
+        if (obj) BaseTraits::Push(vm, ToNotNullable<T>::Conv(std::move(obj)));
         else lua_pushnil(vm);
     }
 
