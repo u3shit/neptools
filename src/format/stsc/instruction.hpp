@@ -78,7 +78,7 @@ class SimpleInstruction final : public InstructionBase
         Pref::Append<'f','a','l','s','e'>>;
     using TypeName = typename AppendTypes<Boold, Args...>::Type;
 
-    NEPTOOLS_DYNAMIC_OBJ_GEN(Lua::RefCountedUserData);
+    NEPTOOLS_DYNAMIC_OBJ_GEN;
 public:
     static constexpr const char* TYPE_NAME = TypeName::str;
 

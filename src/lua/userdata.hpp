@@ -12,6 +12,7 @@ namespace Neptools::Lua::Userdata
 void UnsetMetatable(StateRef vm);
 
 bool IsSimple(StateRef vm, int idx, const char* name);
+bool IsInherited(StateRef vm, int idx, const char* name);
 
 template <bool Unsafe, typename Ret>
 Ret& GetSimple(StateRef vm, bool arg, int idx, const char* name)
@@ -19,6 +20,28 @@ Ret& GetSimple(StateRef vm, bool arg, int idx, const char* name)
     if (!Unsafe && !IsSimple(vm, idx, name))
         vm.TypeError(arg, name, idx);
     return *reinterpret_cast<Ret*>(lua_touserdata(vm, idx));
+}
+
+template <bool Unsafe, typename UD, typename Ret>
+std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    if (!lua_getmetatable(vm, idx) && !Unsafe) // +1
+        vm.TypeError(arg, TYPE_NAME<Ret>, idx);
+    lua_rawgetp(vm, -1, TYPE_NAME<Ret>); // +2
+
+    int isvalid;
+    auto offs = lua_tointegerx(vm, -1, Unsafe ? nullptr : &isvalid);
+    lua_pop(vm, 2); // 0
+    if (!Unsafe && !isvalid) vm.TypeError(arg, TYPE_NAME<Ret>, idx);
+
+    auto ud = static_cast<UD*>(lua_touserdata(vm, idx));
+    NEPTOOLS_ASSERT(ud);
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    return {
+        ud, reinterpret_cast<Ret*>(reinterpret_cast<char*>(ud->get()) + offs)};
+
 }
 
 template <typename T, typename... Args>
@@ -78,9 +101,11 @@ inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
 
 void Clear(StateRef vm, void* ptr);
 
-template <typename T, const char* Tag>
+template <typename T, typename NameT>
 inline int GcFun(lua_State* vm)
 {
+    static constexpr const char* Tag = TYPE_NAME<NameT>;
+
     NEPTOOLS_LUA_GETTOP(vm, top);
     if (!lua_getmetatable(vm, 1) || // +1
         IsNoneOrNil(lua_rawgetp(vm, -1, Tag))) // +2

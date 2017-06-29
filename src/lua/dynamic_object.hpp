@@ -17,8 +17,8 @@ public:
     virtual ~DynamicObject() = default;
 };
 
-#define NEPTOOLS_DYNAMIC_OBJ_GEN(...) private: static void dummy_function()
-#define NEPTOOLS_DYNAMIC_OBJECT NEPTOOLS_DYNAMIC_OBJ_GEN()
+#define NEPTOOLS_DYNAMIC_OBJ_GEN private: static void dummy_function()
+#define NEPTOOLS_DYNAMIC_OBJECT NEPTOOLS_DYNAMIC_OBJ_GEN
 
 template <typename T, typename Enable = void> struct SmartObjectMaker;
 
@@ -26,17 +26,12 @@ template <typename T, typename Enable = void> struct SmartObjectMaker;
 
 #else
 
-#include "ref_counted_user_data.hpp"
+#include "userdata.hpp"
 #include "../meta.hpp"
 #include "../not_null.hpp"
+#include "../shared_ptr.hpp"
 
 #include <type_traits>
-
-// todo: move to external header or just wait for gcc 7
-#if defined(__GLIBCXX__) && __cpp_lib_type_trait_variable_templates < 201510
-#include <experimental/type_traits>
-namespace std { using namespace experimental::fundamentals_v1; }
-#endif
 
 namespace Neptools::Lua
 {
@@ -49,10 +44,6 @@ struct IsSmartObject : std::is_base_of<SmartObject, T> {};
 
 template <typename T>
 constexpr bool IS_SMART_OBJECT = IsSmartObject<T>::value;
-
-template <typename T>
-struct IsUserDataObject<T, std::enable_if_t<IsSmartObject<T>::value>>
-    : std::true_type {};
 
 
 class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
@@ -72,22 +63,19 @@ constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
     std::is_base_of_v<DynamicObject, T> && std::is_base_of_v<RefCounted, T>;
 
 #define NEPTOOLS_THIS_TYPE std::remove_pointer_t<decltype(this)>
-#define NEPTOOLS_DYNAMIC_OBJ_GEN(...)                                        \
-    private:                                                                 \
-    void PushLua(::Neptools::Lua::StateRef vm,                               \
-                 ::Neptools::RefCounted& ctrl) override                      \
-    {                                                                        \
-        ::Neptools::Lua::UserDataDetail::CreateCachedUserData<__VA_ARGS__>(  \
-            vm, this, ::Neptools::Lua::TYPE_NAME<NEPTOOLS_THIS_TYPE>, &ctrl, this); \
+#define NEPTOOLS_DYNAMIC_OBJ_GEN                                                \
+    private:                                                                    \
+    void PushLua(::Neptools::Lua::StateRef vm,                                  \
+                 ::Neptools::RefCounted& ctrl) override                         \
+    {                                                                           \
+        ::Neptools::Lua::Userdata::Cached::Create<::Neptools::SharedPtr<char>>( \
+            vm, this, ::Neptools::Lua::TYPE_NAME<NEPTOOLS_THIS_TYPE>, &ctrl,    \
+            reinterpret_cast<char*>(this), true);                               \
     }
 
-#define NEPTOOLS_DYNAMIC_OBJECT                                                 \
-    NEPTOOLS_LUA_CLASS;                                                         \
-    NEPTOOLS_DYNAMIC_OBJ_GEN(                                                   \
-        std::conditional_t<                                                     \
-            std::is_base_of<::Neptools::RefCounted, NEPTOOLS_THIS_TYPE>::value, \
-            ::Neptools::Lua::RefCountedUserData, \
-            ::Neptools::Lua::SharedUserData>)
+#define NEPTOOLS_DYNAMIC_OBJECT                 \
+    NEPTOOLS_LUA_CLASS;                         \
+    NEPTOOLS_DYNAMIC_OBJ_GEN
 
 inline DynamicObject& GetDynamicObject(DynamicObject& obj) { return obj; }
 
@@ -96,14 +84,10 @@ namespace Detail
 template <typename T, typename Enable = void>
 struct SmartPush
 {
-    static void Push(StateRef& vm, RefCounted& ctrl, T& ptr)
+    static void Push(StateRef& vm, RefCounted& ctrl, T& obj)
     {
-        using UD = std::conditional_t<
-            std::is_base_of<RefCounted, T>::value,
-            RefCountedUserData,
-            SharedUserData>;
-        UserDataDetail::CreateCachedUserData<UD>(
-            vm, &ptr, TYPE_NAME<T>, &ctrl, &ptr);
+        Userdata::Cached::Create<SharedPtr<char>>(
+            vm, &obj, TYPE_NAME<T>, &ctrl, reinterpret_cast<char*>(&obj), true);
     }
 };
 
@@ -119,24 +103,50 @@ template <typename T, typename Enable = void>
 struct SmartObjectMaker : MakeSharedHelper<T, SmartPtr<T>> {};
 
 template <typename T>
-struct TypeTraits<T, std::enable_if_t<
-        IS_SMART_OBJECT<T> && !IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
-    : UserDataTraits<T>, SmartObjectMaker<T> {};
-
-template <typename T>
-struct TypeTraits<T, std::enable_if_t<IS_SELF_PUSHABLE_DYNAMIC_OBJECT<T>>>
-    : UserDataTraits<T>, SmartObjectMaker<T>
+struct TypeTraits<T, std::enable_if_t<IS_SMART_OBJECT<T>>> : SmartObjectMaker<T>
 {
+    using RawType = T;
+
+    template <bool Unsafe>
+    static T& Get(StateRef vm, bool arg, int idx)
+    {
+        return *Userdata::GetInherited<Unsafe, SharedPtr<char>, T>(
+            vm, arg, idx).second;
+    }
+
+    static bool Is(StateRef vm, int idx)
+    { return Userdata::IsInherited(vm, idx, TYPE_NAME<T>); }
+
     static void Push(StateRef vm, T& obj)
     { GetDynamicObject(obj).PushLua(vm, obj); }
+
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr bool INSTANTIABLE = true;
+};
+
+template <typename T>
+struct UserTypeTraits<T, std::enable_if_t<IS_SMART_OBJECT<T>>>
+{
+    inline static void MetatableCreate(StateRef) {}
+    static constexpr bool NEEDS_GC = true;
+    static constexpr auto GcFun = Userdata::Cached::GcFun<
+        SharedPtr<char>, T>;
 };
 
 template <typename T, template<typename> class Storage>
 struct TypeTraits<NotNull<SharedPtrBase<T, Storage>>,
-                  std::enable_if_t<IsSmartObject<T>::value>>
-    : UserDataTraits<SharedPtrBase<T, Storage>>
+                  std::enable_if_t<IsSmartObject<T>::value>> : TypeTraits<T>
 {
-    static void Push(StateRef vm, const NotNull<SharedPtrBase<T, Storage>>& obj)
+    using Ptr = NotNull<SharedPtrBase<T, Storage>>;
+
+    template <bool Unsafe>
+    static Ptr Get(StateRef vm, bool arg, int idx)
+    {
+        auto x = Userdata::GetInherited<Unsafe, SharedPtr<char>, T>(vm, arg, idx);
+        return Ptr{x.first->GetCtrl(), x.second, true};
+    }
+
+    static void Push(StateRef vm, const Ptr& obj)
     { Detail::SmartPush<T>::Push(vm, *obj.Get().GetCtrl(), *obj); }
 };
 
@@ -155,17 +165,18 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     template <bool Unsafe>
     static Type Get(StateRef vm, bool arg, int idx)
     {
-        return lua_isnil(vm, idx) ? nullptr :
-            Type{&UserDataTraits<T>::template Get<Unsafe>(vm, arg, idx)};
+        if (lua_isnil(vm, idx)) return nullptr;
+        auto x = Userdata::GetInherited<Unsafe, SharedPtr<char>, T>(vm, arg, idx);
+        return {x.first->GetCtrl(), x.second, true};
     }
 
     static bool Is(StateRef vm, int idx)
-    { return lua_isnil(vm, idx) || UserDataTraits<T>::Is(vm, idx); }
+    { return lua_isnil(vm, idx) || Userdata::IsInherited(vm, idx, TYPE_NAME<T>); }
 
     static void Push(StateRef vm, const Type& obj)
     {
-        auto sptr = obj.lock();
-        if (sptr) Detail::SmartPush<T>::Push(vm, *sptr.GetCtrl(), *sptr);
+        if (auto sptr = obj.lock())
+            Detail::SmartPush<T>::Push(vm, *sptr.GetCtrl(), *sptr);
         else lua_pushnil(vm);
     }
 

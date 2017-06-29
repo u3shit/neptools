@@ -301,7 +301,7 @@ struct OverloadCheck<ArgSeq<N, brigand::list<Args...>>>
     {
         auto top = lua_gettop(vm);
         if (N & IDX_VARARG && size_t(top) >= N & IDX_MASK) return false;
-        if (!(N & IDX_VARARG) && top != N)                 return false;
+        if (!(N & IDX_VARARG) && size_t(top) != N)         return false;
 
         return (GetArg<typename Args::ArgT>::Is(vm, Args::Idx) && ...);
     }

@@ -85,7 +85,7 @@ struct UserTypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
     static void MetatableCreate(StateRef) {}
     static constexpr bool NEEDS_GC = true;
     static constexpr auto GcFun = Userdata::Cached::GcFun<
-        boost::intrusive_ptr<T>, TYPE_NAME<T>>;
+        boost::intrusive_ptr<T>, T>;
 };
 
 }
