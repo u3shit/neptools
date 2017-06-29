@@ -64,7 +64,7 @@ public:
     static constexpr const size_t SIZE_OF[] = { sizeof(Args)... };
     static constexpr const size_t ALIGN_OF[] = { alignof(Args)... };
 
-    struct Type : public Lua::IntrusiveObject
+    struct Type final : public Lua::IntrusiveObject
     {
         NEPTOOLS_LUA_CLASS;
     public:

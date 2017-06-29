@@ -13,74 +13,63 @@ struct IntrusiveObject {};
 
 #else
 
+#include "type_traits.hpp"
+#include "userdata.hpp"
 #include "../meta.hpp"
-#include "user_data.hpp"
 
 #include <boost/intrusive_ptr.hpp>
 
 namespace Neptools::Lua
 {
 
-template <typename T>
-class IntrusiveUserData final : public UserDataBase
-{
-public:
-    IntrusiveUserData(T* ptr) noexcept
-        : UserDataBase{const_cast<std::remove_const_t<T>*>(ptr)}
-    { intrusive_ptr_add_ref(ptr); }
-
-    void Destroy(StateRef vm) noexcept
-    {
-        ClearCache(vm);
-        intrusive_ptr_release(static_cast<T*>(obj));
-        this->~IntrusiveUserData();
-    }
-};
-
 class NEPTOOLS_LUAGEN(no_inherit=true) IntrusiveObject {};
-
-namespace UserDataDetail
-{
-template <typename T>
-struct TraitsBase<boost::intrusive_ptr<T>>
-{
-    using Type = std::remove_const_t<T>;
-    using Ret = NotNull<boost::intrusive_ptr<T>>;
-
-    inline static Ret UBGet(UBArgs a) { return Ret{&a.ud->Get<T>(a.offs)}; }
-};
-}
 
 template <typename T>
 constexpr bool IS_INTRUSIVE_OBJECT = std::is_base_of_v<IntrusiveObject, T>;
-
-template <typename T>
-struct IsUserDataObject<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
-    : std::true_type {};
 
 
 
 template <typename T>
 struct TypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
-    : UserDataTraits<T>
 {
+    static_assert(std::is_final_v<T>);
+    using RawType = std::remove_const_t<T>;
+    using Ptr = boost::intrusive_ptr<T>;
+    static constexpr const char* NAME = TYPE_NAME<RawType>;
+
+    template <bool Unsafe>
+    static T& Get(StateRef vm, bool arg, int idx)
+    { return *Userdata::GetSimple<Unsafe, Ptr>(vm, arg, idx, NAME); }
+
+    static bool Is(StateRef vm, int idx)
+    { return Userdata::IsSimple(vm, idx, NAME); }
+
     static void Push(StateRef vm, T& obj)
-    {
-        UserDataDetail::CreateCachedUserData<IntrusiveUserData<T>>(
-            vm, &obj, TYPE_NAME<std::remove_const_t<T>>, &obj);
-    }
+    { Userdata::Cached::Create<Ptr>(vm, &obj, NAME, &obj); }
+
+    static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr bool INSTANTIABLE = true;
 };
 
 template <typename T>
 struct TypeTraits<
     NotNull<boost::intrusive_ptr<T>>, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
-    : UserDataTraits<boost::intrusive_ptr<T>>
+    : TypeTraits<T>
 {
+    using typename TypeTraits<T>::Ptr;
+    using TypeTraits<T>::NAME;
+
+    template <bool Unsafe>
+    static NotNull<Ptr> Get(StateRef vm, bool arg, int idx)
+    {
+        return NotNull<Ptr>{Userdata::GetSimple<Unsafe, Ptr>(
+                vm, arg, idx, NAME).get()};
+    }
+
     static void Push(StateRef vm, const NotNull<boost::intrusive_ptr<T>>& obj)
     {
         auto ptr = const_cast<std::remove_const_t<T>*>(obj.get());
-        UserDataDetail::CreateCachedUserData<IntrusiveUserData<T>>(
-            vm, ptr, TYPE_NAME<std::remove_const_t<T>>, ptr);
+        Userdata::Cached::Create<Ptr>(vm, ptr, NAME, ptr);
     }
 };
 
@@ -88,6 +77,16 @@ template <typename T>
 struct TypeTraits<
     boost::intrusive_ptr<T>, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
     : NullableTypeTraits<boost::intrusive_ptr<T>> {};
+
+
+template <typename T>
+struct UserTypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
+{
+    static void MetatableCreate(StateRef) {}
+    static constexpr bool NEEDS_GC = true;
+    static constexpr auto GcFun = Userdata::Cached::GcFun<
+        boost::intrusive_ptr<T>, TYPE_NAME<T>>;
+};
 
 }
 

@@ -263,6 +263,7 @@ def build_common(bld):
             'src/txt_serializable.cpp',
             'src/lua/base.cpp',
             'src/lua/base_funcs.lua',
+            'src/lua/userdata.cpp',
             'src/lua/user_data.cpp',
             'src/lua/user_type.cpp',
             'src/lua/ref_counted_user_data.cpp',

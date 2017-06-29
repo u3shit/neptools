@@ -13,8 +13,9 @@ struct ValueObject {};
 
 #else
 
-#include "type_traits.hpp"
 #include "function_call_types.hpp"
+#include "type_traits.hpp"
+#include "userdata.hpp"
 #include "../meta.hpp"
 
 namespace Neptools::Lua
@@ -37,39 +38,18 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 
     template <bool Unsafe>
     static T& Get(StateRef vm, bool arg, int idx)
-    {
-        if (!Unsafe && !Is(vm, idx))
-            vm.TypeError(arg, TYPE_NAME<T>, idx);
-        return *reinterpret_cast<T*>(lua_touserdata(vm, idx));
-    }
+    { return Userdata::GetSimple<Unsafe, T>(vm, arg, idx, TYPE_NAME<T>); }
 
     static bool Is(StateRef vm, int idx)
-    {
-        if (!lua_getmetatable(vm, idx)) return false; // +1
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
-        NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
-        auto ret = lua_rawequal(vm, -1, -2);
-        lua_pop(vm, 1); // 0
-        return ret;
-    }
+    { return Userdata::IsSimple(vm, idx, TYPE_NAME<T>); }
 
     template <typename... Args>
     static void Push(StateRef vm, Args&&... args)
-    {
-        auto ptr = lua_newuserdata(vm, sizeof(T)); // +1
-        auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
-        NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
-
-        new (ptr) T{std::forward<Args>(args)...};
-        lua_setmetatable(vm, -2); // +1
-    }
+    { Userdata::Create<T, Args...>(vm, std::forward<Args>(args)...); }
 
     template <typename... Args>
-    static RetNum Make(StateRef vm, Args&&... args)
-    {
-        Push(vm, std::forward<Args>(args)...);
-        return 1;
-    }
+    static void Make(StateRef vm, Args&&... args)
+    { Userdata::Create<T, Args...>(vm, std::forward<Args>(args)...); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr bool INSTANTIABLE = true;
@@ -86,8 +66,7 @@ struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     {
         static_assert(NEEDS_GC);
         t.~T();
-        lua_pushnil(vm);
-        lua_setmetatable(vm, 1);
+        Userdata::UnsetMetatable(vm);
     }
 };
 

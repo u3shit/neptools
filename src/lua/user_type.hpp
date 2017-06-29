@@ -70,7 +70,7 @@ public:
         using UT = UserTypeTraits<T>;
         UT::MetatableCreate(vm);
         if constexpr (UT::NEEDS_GC)
-            AddFunction<&UT::GcFun>("__gc");
+            AddFunction<UT::GcFun>("__gc");
     }
 
     void Done();
