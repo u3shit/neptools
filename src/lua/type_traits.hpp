@@ -79,6 +79,7 @@ struct TypeTraits<T, std::enable_if_t<
     template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
+        (void) arg; // shut up retarded gcc
         if constexpr (Unsafe)
             return static_cast<T>(lua_tonumberx(vm, idx, nullptr));
         else
@@ -91,6 +92,7 @@ struct TypeTraits<T, std::enable_if_t<
 #error "Update code for normal lua"
 #endif
             auto ret = lua_tonumberx(vm, idx, &isnum);
+            (void) ret; // seriously wtf gcc
             if (BOOST_LIKELY(isnum)) return static_cast<T>(ret);
             vm.TypeError(arg, TYPE_NAME<T>, idx);
         }
@@ -112,6 +114,7 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
     template <bool Unsafe>
     static T Get(StateRef vm, bool arg, int idx)
     {
+        (void) arg; // shut up retarded gcc
         if constexpr (Unsafe)
             return static_cast<T>(lua_tonumberx(vm, idx, nullptr));
         else

@@ -129,7 +129,8 @@ def configure(cfg):
         '-fdiagnostics-color', '-fdiagnostics-show-option',
     ])
     cfg.filter_flags(['CFLAGS_NEPTOOLS', 'CXXFLAGS_NEPTOOLS'], [
-        '-Wall', '-Wextra', '-pedantic', '-Wno-parentheses', '-Wno-assume',
+        '-Wall', '-Wextra', '-pedantic',
+        '-Wno-parentheses', '-Wno-assume', '-Wno-attributes',
         '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
     ])
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [

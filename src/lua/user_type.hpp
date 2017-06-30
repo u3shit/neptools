@@ -167,7 +167,7 @@ struct TypeBuilder::InheritHelp<Deriv, Head, Rest...>
     static void Do(TypeBuilder& bld)
     {
         TypeRegister::Register<Head>(bld.vm);
-        char c[sizeof(Head)];
+        char* c = reinterpret_cast<char*>(1);
         bld.DoInherit(
             reinterpret_cast<char*>(static_cast<Head*>(reinterpret_cast<Deriv*>(c)))-c);
         InheritHelp<Deriv, Rest...>::Do(bld);
