@@ -121,13 +121,12 @@ struct TypeTraits<T, std::enable_if_t<IS_SMART_OBJECT<T>>> : SmartObjectMaker<T>
     { GetDynamicObject(obj).PushLua(vm, obj); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    static constexpr bool INSTANTIABLE = true;
 };
 
 template <typename T>
 struct UserTypeTraits<T, std::enable_if_t<IS_SMART_OBJECT<T>>>
 {
-    inline static void MetatableCreate(StateRef) {}
+    static constexpr bool INSTANTIABLE = true;
     static constexpr bool NEEDS_GC = true;
     static constexpr auto GcFun = Userdata::Cached::GcFun<
         SharedPtr<char>, T>;

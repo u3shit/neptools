@@ -13,13 +13,12 @@ template<typename T>
 struct TypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>
 {
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    constexpr static bool INSTANTIABLE = false;
 };
 
 template<typename T>
 struct UserTypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>
 {
-    inline static void MetatableCreate(StateRef) {}
+    constexpr static bool INSTANTIABLE = false;
     static constexpr bool NEEDS_GC = false;
 };
 

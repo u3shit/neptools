@@ -48,7 +48,6 @@ struct TypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
     { Userdata::Cached::Create<Ptr>(vm, &obj, NAME, &obj); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    static constexpr bool INSTANTIABLE = true;
 };
 
 template <typename T>
@@ -82,7 +81,7 @@ struct TypeTraits<
 template <typename T>
 struct UserTypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
 {
-    static void MetatableCreate(StateRef) {}
+    static constexpr bool INSTANTIABLE = true;
     static constexpr bool NEEDS_GC = true;
     static constexpr auto GcFun = Userdata::Cached::GcFun<
         boost::intrusive_ptr<T>, T>;

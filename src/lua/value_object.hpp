@@ -52,13 +52,12 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     { Userdata::Create<T, Args...>(vm, std::forward<Args>(args)...); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    static constexpr bool INSTANTIABLE = true;
 };
 
 template <typename T>
 struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 {
-    inline static void MetatableCreate(StateRef) {}
+    static constexpr bool INSTANTIABLE = true;
     static constexpr bool NEEDS_GC = !std::is_trivially_destructible_v<T>;
 
     BOOST_FORCEINLINE

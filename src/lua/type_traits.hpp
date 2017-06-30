@@ -104,7 +104,6 @@ struct TypeTraits<T, std::enable_if_t<
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr int LUA_TYPE = LUA_TNUMBER;
-    static constexpr bool INSTANTIABLE = false; // needed for enums
 };
 
 template <typename T>
@@ -291,7 +290,7 @@ template <typename T, typename Enable = void> struct UserTypeTraits;
 template <typename T>
 struct UserTypeTraits<T, std::enable_if_t<std::is_enum_v<T>>>
 {
-    inline static void MetatableCreate(StateRef) {}
+    static constexpr bool INSTANTIABLE = false;
     static constexpr bool NEEDS_GC = false;
 };
 

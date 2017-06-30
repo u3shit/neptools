@@ -68,7 +68,6 @@ public:
     void Init()
     {
         using UT = UserTypeTraits<T>;
-        UT::MetatableCreate(vm);
         if constexpr (UT::NEEDS_GC)
             AddFunction<UT::GcFun>("__gc");
     }
@@ -126,7 +125,7 @@ public:
         NEPTOOLS_LUA_GETTOP(vm, top);
 
         bool doit = true;
-        if constexpr (TypeTraits<Class>::INSTANTIABLE)
+        if constexpr (UserTypeTraits<Class>::INSTANTIABLE)
         {
             lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<Class>); // +1
             doit = lua_isnil(vm, -1);
@@ -135,7 +134,7 @@ public:
         if (doit)
         {
             TypeBuilder bld{
-                vm, TYPE_NAME<Class>, TypeTraits<Class>::INSTANTIABLE};
+                vm, TYPE_NAME<Class>, UserTypeTraits<Class>::INSTANTIABLE};
             bld.Init<Class>();
             TypeRegisterTraits<Class>::Register(bld);
             bld.Done();
