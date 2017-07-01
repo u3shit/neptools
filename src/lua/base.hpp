@@ -19,11 +19,13 @@ using std::is_assignable;
 #include <boost/optional.hpp>
 
 #ifdef NDEBUG
-#define NEPTOOLS_LUA_GETTOP(vm, name) ((void) 0)
-#define NEPTOOLS_LUA_CHECKTOP(vm, val) ((void) 0)
+#define NEPTOOLS_LUA_STACKCHECK(...) ((void) 0)
 #else
-#define NEPTOOLS_LUA_GETTOP(vm, name) auto name = lua_gettop(vm)
-#define NEPTOOLS_LUA_CHECKTOP(vm, val) NEPTOOLS_ASSERT(lua_gettop(vm) == val)
+#define NEPTOOLS_CONCAT2(a, b) a ## b
+#define NEPTOOLS_CONCAT(a, b) NEPTOOLS_CONCAT2(a, b)
+#define NEPTOOLS_LUA_STACKCHECK(...) \
+    ::Neptools::Lua::CheckTop NEPTOOLS_CONCAT(xxluastackcheck_, __LINE__) \
+    {__VA_ARGS__}
 #endif
 
 namespace Neptools
@@ -35,6 +37,8 @@ template <typename T, typename Enable = void> struct TypeTraits;
 extern char reftbl;
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
+
+class CheckTop;
 
 class StateRef
 {
@@ -57,12 +61,7 @@ public:
 #endif
     }
 
-    template <typename T> void Push(T&& t)
-    {
-        NEPTOOLS_LUA_GETTOP(vm, top);
-        TypeTraits<std::decay_t<T>>::Push(*this, std::forward<T>(t));
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
-    }
+    template <typename T> void Push(T&& t);
 
     template <auto... Funs> void PushFunction()
     { PushFunction_<true, Funs...>(); }
@@ -154,6 +153,29 @@ public:
 };
 
 //using Traceback = boost::error_info<struct TracebackTag, std::string>;
+
+class CheckTop
+{
+public:
+    CheckTop(StateRef vm, int offs = 0)
+        : vm{vm}, expected{lua_gettop(vm) + offs} {}
+    CheckTop(const CheckTop&) = delete;
+    void operator=(const CheckTop&) = delete;
+    ~CheckTop()
+    {
+        if (!std::uncaught_exception())
+            NEPTOOLS_ASSERT(lua_gettop(vm) == expected);
+    }
+private:
+    StateRef vm;
+    int expected;
+};
+
+template <typename T> inline void StateRef::Push(T&& t)
+{
+    NEPTOOLS_LUA_STACKCHECK(vm, 1);
+    TypeTraits<std::decay_t<T>>::Push(*this, std::forward<T>(t));
+}
 
 }
 }

@@ -25,7 +25,7 @@ Ret& GetSimple(StateRef vm, bool arg, int idx, const char* name)
 template <bool Unsafe, typename UD, typename Ret>
 std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm);
     if (!lua_getmetatable(vm, idx) && !Unsafe) // +1
         vm.TypeError(arg, TYPE_NAME<Ret>, idx);
     lua_rawgetp(vm, -1, TYPE_NAME<Ret>); // +2
@@ -38,7 +38,6 @@ std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
     auto ud = static_cast<UD*>(lua_touserdata(vm, idx));
     NEPTOOLS_ASSERT(ud);
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
     return {
         ud, reinterpret_cast<Ret*>(reinterpret_cast<char*>(ud->get()) + offs)};
 
@@ -47,7 +46,7 @@ std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
 template <typename T, typename... Args>
 inline RetNum Create(StateRef vm, Args&&... args)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm, 1);
     auto ptr = lua_newuserdata(vm, sizeof(T)); // +1
     NEPTOOLS_ASSERT(ptr);
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
@@ -55,7 +54,6 @@ inline RetNum Create(StateRef vm, Args&&... args)
 
     new (ptr) T{std::forward<Args>(args)...};
     lua_setmetatable(vm, -2); // +1
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
     return 1;
 }
 
@@ -65,7 +63,7 @@ namespace Cached
 template <typename T, typename... Args>
 inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm, 1);
 
     // check cache
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
@@ -96,7 +94,6 @@ inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
     }
 
     lua_remove(vm, -2); // +1 remove reftbl
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
 }
 
 void Clear(StateRef vm, void* ptr);
@@ -106,7 +103,7 @@ inline int GcFun(lua_State* vm)
 {
     static constexpr const char* Tag = TYPE_NAME<NameT>;
 
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm);
     if (!lua_getmetatable(vm, 1) || // +1
         IsNoneOrNil(lua_rawgetp(vm, -1, Tag))) // +2
         StateRef{vm}.TypeError(true, Tag, 1);
@@ -118,9 +115,7 @@ inline int GcFun(lua_State* vm)
     ud->~T();
 
     UnsetMetatable(vm);
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
     return 0;
-
 }
 
 }

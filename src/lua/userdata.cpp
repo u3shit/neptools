@@ -11,7 +11,7 @@ void UnsetMetatable(StateRef vm)
 
 bool IsSimple(StateRef vm, int idx, const char* name)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm);
 
     if (!lua_getmetatable(vm, idx)) return false; // +1|0
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, name); // +2
@@ -19,25 +19,23 @@ bool IsSimple(StateRef vm, int idx, const char* name)
     auto ret = lua_rawequal(vm, -1, -2);
     lua_pop(vm, 2); // 0
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
     return ret;
 }
 
 bool IsInherited(StateRef vm, int idx, const char* name)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm);
 
     if (!lua_getmetatable(vm, idx)) return false; // +1|0
     auto type = lua_rawgetp(vm, -1, name); // +2
     lua_pop(vm, 2); // 0
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
     return type == LUA_TNUMBER;
 }
 
 void Cached::Clear(StateRef vm, void* ptr)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_LUA_STACKCHECK(vm);
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
     NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
     lua_pushnil(vm); // +2
@@ -45,7 +43,6 @@ void Cached::Clear(StateRef vm, void* ptr)
     lua_pop(vm, 1); // 0
 
     UnsetMetatable(vm);
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
 }
 
 

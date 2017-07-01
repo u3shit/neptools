@@ -25,7 +25,7 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
 {
     static RetNum Wrap(StateRef vm, Args&&... args)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        NEPTOOLS_LUA_STACKCHECK(vm, 1);
         const auto& ret = Invoke(Fun, std::forward<Args>(args)...);
         auto size = ret.size();
 
@@ -38,7 +38,6 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
             lua_rawseti(vm, -2, i++); // +1
         }
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 };

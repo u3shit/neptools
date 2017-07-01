@@ -94,13 +94,11 @@ public:
     // low-level, pops value from lua stack
     void SetField(const char* name)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        NEPTOOLS_LUA_STACKCHECK(vm, -1);
 
         lua_pushvalue(vm, -1);
         lua_setfield(vm, -4, name);
         lua_setfield(vm, -2, name);
-
-        NEPTOOLS_LUA_CHECKTOP(vm, top-1);
     }
 
 
@@ -122,7 +120,7 @@ public:
     template <typename Class>
     static void Register(StateRef vm)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        NEPTOOLS_LUA_STACKCHECK(vm, 1);
 
         bool doit = true;
         if constexpr (UserTypeTraits<Class>::INSTANTIABLE)
@@ -139,8 +137,6 @@ public:
             TypeRegisterTraits<Class>::Register(bld);
             bld.Done();
         }
-
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
     }
 
     template <typename... Args>
