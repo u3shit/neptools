@@ -1,6 +1,8 @@
 #include "cl3.hpp"
 #include "stcm/file.hpp"
 #include "../except.hpp"
+#include "../open.hpp"
+
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -325,6 +327,17 @@ Stcm::File& Cl3::GetStcm()
     dat->src = std::move(nstcm);
     return *ret;
 }
+
+static OpenFactory cl3_open{[](Source src) -> SmartPtr<Cl3>
+{
+    if (src.GetSize() < sizeof(Cl3::Header)) return nullptr;
+    char buf[3];
+    src.PreadGen(0, buf);
+    if (memcmp(buf, "CL3", 3) == 0)
+        return MakeSmart<Cl3>(src);
+    else
+        return nullptr;
+}};
 
 }
 

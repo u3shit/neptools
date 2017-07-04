@@ -3,11 +3,14 @@
 #pragma once
 
 #include "type_traits.hpp"
+#include "../meta.hpp"
 
 namespace Neptools::Lua
 {
 
-struct StaticClass {};
+struct NEPTOOLS_LUAGEN(no_inherit=true) StaticClass {};
+
+#ifndef NEPTOOLS_WITHOUT_LUA
 
 template<typename T>
 struct TypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>
@@ -21,6 +24,8 @@ struct UserTypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>
     constexpr static bool INSTANTIABLE = false;
     static constexpr bool NEEDS_GC = false;
 };
+
+#endif
 
 }
 

@@ -4,6 +4,7 @@
 #include "../format/stcm/gbnl.hpp"
 #include "../format/stsc/file.hpp"
 #include "../except.hpp"
+#include "../open.hpp"
 #include "../options.hpp"
 #include "../txt_serializable.hpp"
 #include "../utils.hpp"
@@ -25,6 +26,16 @@ using namespace Neptools;
 namespace
 {
 
+// bring in required shit for OpenFactory
+// do not actually call this, as it would crash
+void Dependencies()
+{
+    Source* src = nullptr;
+    Cl3 cl3{*src};
+    Stcm::File stcm{*src};
+    Stsc::File stsc{*src};
+}
+
 struct State
 {
     SmartPtr<Dumpable> dump;
@@ -33,46 +44,11 @@ struct State
     TxtSerializable* txt;
 };
 
-State SmartOpen_(const boost::filesystem::path& fname)
-{
-    auto src = Source::FromFile(fname.native());
-    src.CheckSize(4);
-
-    char buf[4];
-    src.Pread(0, buf, 4);
-    if (memcmp(buf, "CL3L", 4) == 0)
-    {
-        auto cl3 = MakeSmart<Cl3>(src);
-        return {cl3, cl3.get(), nullptr, nullptr};
-    }
-    else if (memcmp(buf, "STCM", 4) == 0)
-    {
-        auto stcm = MakeSmart<Stcm::File>(src);
-        return {stcm, nullptr, stcm.get(), nullptr};
-    }
-    else if (memcmp(buf, "STSC", 4) == 0)
-    {
-        auto stsc = MakeSmart<Stsc::File>(src);
-        return {stsc, nullptr, nullptr, stsc.get()};
-    }
-    else if (src.GetSize() >= sizeof(Gbnl::Header) &&
-             (memcmp(buf, "GSTL", 4) == 0 ||
-              (src.Pread(src.GetSize() - sizeof(Gbnl::Header), buf, 4),
-               memcmp(buf, "GBNL", 4) == 0)))
-    {
-        auto gbnl = MakeSmart<Gbnl>(src);
-        return {gbnl, nullptr, nullptr, gbnl.get()};
-    }
-    else
-        NEPTOOLS_THROW(DecodeError{"Unknown input file"});
-}
-
 State SmartOpen(const boost::filesystem::path& fname)
 {
-    return AddInfo(
-        SmartOpen_,
-        [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
-        fname);
+    auto x = OpenFactory::Open(fname);
+    return {x, dynamic_cast<Cl3*>(x.get()), dynamic_cast<Stcm::File*>(x.get()),
+          dynamic_cast<TxtSerializable*>(x.get())};
 }
 
 template <typename T>
@@ -307,6 +283,7 @@ void DoAuto(const boost::filesystem::path& path)
 
 int main(int argc, char** argv)
 {
+    if (argc < 0) Dependencies();
     State st;
     auto& parser = OptionParser::GetGlobal();
     OptionGroup hgrp{parser, "High-level options"};

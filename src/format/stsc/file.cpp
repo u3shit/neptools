@@ -1,14 +1,13 @@
 #include "file.hpp"
 #include "header.hpp"
 #include "string.hpp"
-#include "../raw_item.hpp"
 #include "../eof_item.hpp"
+#include "../raw_item.hpp"
+#include "../../open.hpp"
 
 #include <boost/algorithm/string/replace.hpp>
 
-namespace Neptools
-{
-namespace Stsc
+namespace Neptools::Stsc
 {
 
 File::File(Source src)
@@ -78,7 +77,17 @@ void File::ReadTxt_(std::istream& is)
         NEPTOOLS_THROW(DecodeError{"StscTxt: not enough strings"});
 }
 
-}
+static OpenFactory stsc_open{[](Source src) -> SmartPtr<File>
+{
+    if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
+    char buf[4];
+    src.PreadGen(0, buf);
+    if (memcmp(buf, "STSC", 4) == 0)
+        return MakeSmart<File>(src);
+    else
+        return nullptr;
+}};
+
 }
 
 #include "file.binding.hpp"

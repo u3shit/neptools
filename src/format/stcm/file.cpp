@@ -1,12 +1,11 @@
 #include "file.hpp"
-#include "header.hpp"
-#include "../item.hpp"
-#include "../eof_item.hpp"
 #include "gbnl.hpp"
+#include "header.hpp"
+#include "../eof_item.hpp"
+#include "../item.hpp"
+#include "../../open.hpp"
 
-namespace Neptools
-{
-namespace Stcm
+namespace Neptools::Stcm
 {
 
 File::File(Source src)
@@ -78,8 +77,17 @@ void File::ReadTxt_(std::istream& is)
         x->ReadTxt(is);
 }
 
+static OpenFactory stcm_open{[](Source src) -> SmartPtr<File>
+{
+    if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
+    char buf[4];
+    src.PreadGen(0, buf);
+    if (memcmp(buf, "STCM", 4) == 0)
+        return MakeSmart<File>(src);
+    else
+        return nullptr;
+}};
 
-}
 }
 
 #include "../../lua/table_ret_wrap.hpp"

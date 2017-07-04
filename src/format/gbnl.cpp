@@ -1,6 +1,7 @@
 #include "gbnl.hpp"
 #include "../dynamic_struct.lua.hpp"
 #include "../except.hpp"
+#include "../open.hpp"
 #include "../sink.hpp"
 
 #include <map>
@@ -720,6 +721,20 @@ struct DynamicStructTypeTraits<Gbnl::PaddingTag>
     static constexpr const char* NAME = "padding";
 };
 #endif
+
+static OpenFactory gbnl_open{[](Source src) -> SmartPtr<Gbnl>
+{
+    if (src.GetSize() < sizeof(Gbnl::Header)) return nullptr;
+    char buf[4];
+    src.PreadGen(0, buf);
+    if (memcmp(buf, "STSC", 4) == 0)
+        return MakeSmart<Gbnl>(src);
+    src.PreadGen(src.GetSize() - sizeof(Gbnl::Header), buf);
+    if (memcmp(buf, "STSC", 4) == 0)
+        return MakeSmart<Gbnl>(src);
+
+    return nullptr;
+}};
 
 }
 

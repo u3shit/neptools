@@ -568,7 +568,7 @@ struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
 
 namespace
 {
-struct InstructionItem : StaticClass
+struct NEPTOOLS_NOLUA InstructionItem : StaticClass
 {
     constexpr static char TYPE_NAME[] = "neptools.stsc.instruction_item";
 };

@@ -235,6 +235,7 @@ def build_common(bld):
         'src/dumpable.cpp',
         'src/logger.cpp',
         'src/low_io.cpp',
+        'src/open.cpp',
         'src/options.cpp',
         'src/pattern.cpp',
         'src/sink.cpp',
