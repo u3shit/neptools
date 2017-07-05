@@ -13,7 +13,11 @@ bool IsSimple(StateRef vm, int idx, const char* name)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
-    if (!lua_getmetatable(vm, idx)) return false; // +1|0
+    if (!lua_getmetatable(vm, idx)) // +1|0
+    {
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        return false;
+    }
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, name); // +2
     NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
     auto ret = lua_rawequal(vm, -1, -2);
@@ -27,7 +31,11 @@ bool IsInherited(StateRef vm, int idx, const char* name)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
 
-    if (!lua_getmetatable(vm, idx)) return false; // +1|0
+    if (!lua_getmetatable(vm, idx))  // +1|0
+    {
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        return false;
+    }
     auto type = lua_rawgetp(vm, -1, name); // +2
     lua_pop(vm, 2); // 0
 
