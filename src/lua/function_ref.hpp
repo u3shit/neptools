@@ -17,7 +17,7 @@ public:
     template <typename Ret, typename... Args>
     Ret Call(StateRef vm, Args&&... args)
     {
-        NEPTOOLS_LUA_STACKCHECK(vm);
+        NEPTOOLS_LUA_GETTOP(vm, top);
 
         fun.Push(vm);
         NEPTOOLS_ASSERT(lua_type(vm, -1) == LUA_TFUNCTION);
@@ -26,6 +26,7 @@ public:
 
         auto ret = vm.Get<Ret>();
         lua_pop(vm, 1);
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
         return ret;
     }
 

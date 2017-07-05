@@ -9,7 +9,7 @@ namespace Lua
 TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     : vm{vm}, instantiable{instantiable}
 {
-    NEPTOOLS_LUA_STACKCHECK(vm, 2);
+    NEPTOOLS_LUA_GETTOP(vm, top);
 
     // type table
     lua_createtable(vm, 0, 0); // +1
@@ -51,6 +51,8 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     // set global name
     lua_pushglobaltable(vm); // +3
     vm.SetRecTable(name, -3); // +2
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top+2);
 }
 
 static void SetMt(StateRef vm, const char* dst, const char* mt)
@@ -64,7 +66,7 @@ static void SetMt(StateRef vm, const char* dst, const char* mt)
 
 void TypeBuilder::Done()
 {
-    NEPTOOLS_LUA_STACKCHECK(vm, -1);
+    NEPTOOLS_LUA_GETTOP(vm, top);
 
     if (instantiable)
     {
@@ -106,11 +108,13 @@ void TypeBuilder::Done()
     }
 
     lua_remove(vm, -2);
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
 void TypeBuilder::DoInherit(ptrdiff_t offs)
 {
-    NEPTOOLS_LUA_STACKCHECK(vm, -1);
+    NEPTOOLS_LUA_GETTOP(vm, top);
     // -1: base class meta
     // -2: this meta
 
@@ -143,6 +147,8 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
             lua_pop(vm, 2); // +1
     }
     lua_pop(vm, 1); // -1
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
 int TypeBuilder::IsFunc(lua_State* vm) noexcept

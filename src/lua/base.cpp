@@ -34,15 +34,17 @@ static int type_name(lua_State* vm)
 
 const char* StateRef::TypeName(int idx)
 {
-    NEPTOOLS_LUA_STACKCHECK(vm);
+    NEPTOOLS_LUA_GETTOP(vm, top);
     if (!luaL_getmetafield(vm, idx, "__name")) // 0/+1
     {
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
         return luaL_typename(vm, idx);
     }
 
     auto ret = lua_tostring(vm, -1); // +1
     NEPTOOLS_ASSERT_MSG(ret, "invalid __name");
     lua_pop(vm, 1); // 0
+    NEPTOOLS_LUA_CHECKTOP(vm, top);
     return ret;
 }
 
@@ -51,7 +53,7 @@ State::State() : State(0)
     Catch(
         [](StateRef vm)
         {
-            NEPTOOLS_LUA_STACKCHECK(vm);
+            NEPTOOLS_LUA_GETTOP(vm, top);
 
             lua_atpanic(vm, panic);
             luaL_openlibs(vm);
@@ -72,6 +74,8 @@ State::State() : State(0)
 
             for (auto r : Registers())
                 r(vm);
+
+            NEPTOOLS_LUA_CHECKTOP(vm, top);
         }, *this);
 }
 
@@ -120,7 +124,7 @@ void StateRef::GetError(bool arg, int idx, const char* msg)
 
 void StateRef::SetRecTable(const char* name, int idx)
 {
-    NEPTOOLS_LUA_STACKCHECK(vm, -1);
+    NEPTOOLS_LUA_GETTOP(vm, top);
 
     const char* dot;
     while (dot = strchr(name, '.'))
@@ -150,6 +154,8 @@ void StateRef::SetRecTable(const char* name, int idx)
     lua_pushvalue(vm, idx); // +1
     lua_setfield(vm, -2, name); // 0
     lua_pop(vm, 1); // -1
+
+    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
 }
 
 void StateRef::DoString(const char* str)

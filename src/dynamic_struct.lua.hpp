@@ -101,7 +101,7 @@ struct DynamicStructBuilderLua
     NEPTOOLS_NOLUA
     static const DynamicStructTypeInfo<Args...>& GetInfo(Lua::StateRef vm)
     {
-        NEPTOOLS_LUA_STACKCHECK(vm);
+        NEPTOOLS_LUA_GETTOP(vm, top);
 
         int r = lua_rawgetp(vm, LUA_REGISTRYINDEX, &infos<Args...>); //+1
         NEPTOOLS_ASSERT(r);
@@ -115,6 +115,7 @@ struct DynamicStructBuilderLua
         NEPTOOLS_ASSERT(ret);
         lua_pop(vm, 2); //+0
 
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
         return *static_cast<DynamicStructTypeInfo<Args...>*>(ret);
     }
 
@@ -153,10 +154,11 @@ struct DynamicStructTypeLua
     // type[i] -> {type=string,size=int}|nil
     static Lua::RetNum Get(Lua::StateRef vm, const FakeClass& t, size_t i) noexcept
     {
-        NEPTOOLS_LUA_STACKCHECK(vm, 1);
+        NEPTOOLS_LUA_GETTOP(vm, top);
         if (i >= t.item_count)
         {
             lua_pushnil(vm); // +1
+            NEPTOOLS_LUA_CHECKTOP(vm, top+1);
             return 1;
         }
         NEPTOOLS_ASSERT(t.items[i].idx < sizeof...(Args));
@@ -169,6 +171,7 @@ struct DynamicStructTypeLua
         lua_pushinteger(vm, info.size); // +2
         lua_setfield(vm, -2, "size"); // +1
 
+        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 
