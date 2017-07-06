@@ -6,9 +6,7 @@
 #include "../../source.hpp"
 #include "../../txt_serializable.hpp"
 
-namespace Neptools
-{
-namespace Stsc
+namespace Neptools::Stsc
 {
 
 class File final : public Context, public TxtSerializable
@@ -23,14 +21,6 @@ private:
     void WriteTxt_(std::ostream& os) const override;
     void ReadTxt_(std::istream& is) override;
 };
-
-}
-
-namespace Lua
-{
-inline DynamicObject& GetDynamicObject(Stsc::File& file)
-{ return static_cast<Context&>(file); }
-}
 
 }
 

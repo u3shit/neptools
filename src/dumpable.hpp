@@ -45,5 +45,7 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
 
+inline Lua::DynamicObject& GetDynamicObject(Dumpable& d) { return d; }
+
 }
 #endif

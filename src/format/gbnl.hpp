@@ -113,11 +113,5 @@ private:
     size_t real_item_count; // excluding dummy pad items
 };
 
-namespace Lua
-{
-inline DynamicObject& GetDynamicObject(Gbnl& gbnl)
-{ return static_cast<Dumpable&>(gbnl); }
-}
-
 }
 #endif
