@@ -6,6 +6,8 @@
 #include <lua.hpp>
 #endif
 
+#include "../assert.hpp"
+
 namespace Neptools::Lua
 {
 
@@ -26,8 +28,9 @@ struct RetNum
 
 // ensure type but do not parse
 template <int Type>
-struct Raw
+class Raw
 {
+public:
 #ifndef NEPTOOLS_WITHOUT_LUA
     static_assert(
         Type == LUA_TNIL || Type == LUA_TNUMBER || Type == LUA_TBOOLEAN ||
@@ -36,6 +39,15 @@ struct Raw
         "Type is not a lua type constant");
 #endif
     static constexpr int TYPE = Type;
+
+    Raw(int idx) : idx{idx}
+    { NEPTOOLS_ASSERT_MSG(idx > 0, "Index must be absolute"); }
+
+    int Get() const { return idx; }
+    operator int() const { return idx; }
+
+private:
+    int idx;
 };
 
 template <typename T, typename Enable = void> struct TupleLike;

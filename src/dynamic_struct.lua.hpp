@@ -99,16 +99,17 @@ struct DynamicStructBuilderLua
     using FakeClass = typename DynamicStruct<Args...>::TypeBuilder;
 
     NEPTOOLS_NOLUA
-    static const DynamicStructTypeInfo<Args...>& GetInfo(Lua::StateRef vm)
+    static const DynamicStructTypeInfo<Args...>&
+    GetInfo(Lua::StateRef vm, Lua::Raw<LUA_TSTRING> name)
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
 
         int r = lua_rawgetp(vm, LUA_REGISTRYINDEX, &infos<Args...>); //+1
         NEPTOOLS_ASSERT(r);
-        lua_pushvalue(vm, 2); //+2
+        lua_pushvalue(vm, name); //+2
         r = lua_rawget(vm, -2); //+2
         if (Lua::IsNoneOrNil(r))
-            luaL_error(vm, "Invalid type %s", vm.Get<const char*>(2));
+            luaL_error(vm, "Invalid type %s", vm.Get<const char*, true>(name));
 
         NEPTOOLS_ASSERT(r == LUA_TLIGHTUSERDATA);
         auto ret = lua_touserdata(vm, -1);
@@ -121,27 +122,31 @@ struct DynamicStructBuilderLua
 
     // bld:add(type, size) -> bld
     static Lua::RetNum Add(
-        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING>, size_t size)
+        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING> name, size_t size)
     {
-        auto& t = GetInfo(vm);
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        auto& t = GetInfo(vm, name);
         if (!t.sizable && t.size != size)
             luaL_error(vm, "Type %s is not sizable", t.name);
         bld.Add(t.index, size);
 
         lua_pushvalue(vm, 1);
+        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 
     // bld:add(type) -> bld
     static Lua::RetNum Add(
-        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING>)
+        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING> name)
     {
-        auto& t = GetInfo(vm);
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        auto& t = GetInfo(vm, name);
         if (t.sizable)
             luaL_error(vm, "Type %s requires size", t.name);
         bld.Add(t.index, t.size);
 
         lua_pushvalue(vm, 1);
+        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 };
@@ -150,6 +155,8 @@ template <typename... Args>
 struct DynamicStructTypeLua
 {
     using FakeClass = typename DynamicStruct<Args...>::Type;
+    using Builder = typename DynamicStruct<Args...>::TypeBuilder;
+    using BuilderLua = DynamicStructBuilderLua<Args...>;
 
     // type[i] -> {type=string,size=int}|nil
     static Lua::RetNum Get(Lua::StateRef vm, const FakeClass& t, size_t i) noexcept
@@ -176,6 +183,62 @@ struct DynamicStructTypeLua
     }
 
     static void Get(const FakeClass&, Lua::VarArg) noexcept {}
+
+    NEPTOOLS_NOLUA
+    // {"name",size} or {name="name",size=size}
+    // size optional
+    static void AddTableType(Lua::StateRef vm, Builder& bld)
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        int size_type = LUA_TSTRING; // whatever, just be invalid
+        if (lua_rawgeti(vm, -1, 1) == LUA_TSTRING) // +1
+            size_type = lua_rawgeti(vm, -2, 2); // +2
+        else if (lua_pop(vm, 1); lua_getfield(vm, -1, "name") == LUA_TSTRING) // +1
+            size_type = lua_getfield(vm, -2, "size"); // +2
+
+        if (Lua::IsNoneOrNil(size_type))
+            BuilderLua::Add(vm, bld, {lua_absindex(vm, -2)}); // +3
+        else if (size_type == LUA_TNUMBER)
+            BuilderLua::Add(vm, bld, {lua_absindex(vm, -2)},
+                            vm.Get<int, true>(-1)); // +3
+        else
+            luaL_error(vm, "invalid type table, expected {string,integer} or "
+                       "{name=string, size=integer}");
+
+        lua_pop(vm, 2);
+        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    }
+
+    // create from table
+    static boost::intrusive_ptr<const FakeClass>
+    New(Lua::StateRef vm, Lua::Raw<LUA_TTABLE> tbl)
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        Builder bld;
+        size_t i = 0;
+        int type;
+        if (Lua::IsNoneOrNil(type = lua_rawgeti(vm, tbl, i))) // +1
+        {
+            lua_pop(vm, 1); // 0
+            type = lua_rawgeti(vm, tbl, ++i); // +1
+        }
+
+        for (; !Lua::IsNoneOrNil(type); type = lua_rawgeti(vm, tbl, ++i))
+        {
+            if (type == LUA_TSTRING)
+                BuilderLua::Add(vm, bld, {lua_absindex(vm, -1)}); // +1
+            else if (type == LUA_TTABLE)
+                AddTableType(vm, bld); // +1
+            else
+                vm.TypeError(false, "string or table", -1);
+
+            lua_pop(vm, 2); // 0
+        } // +1
+
+        lua_pop(vm, 1); // 0
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        return bld.Build();
+    }
 };
 
 template <typename... Args>

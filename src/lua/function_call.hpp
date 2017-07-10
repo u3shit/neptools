@@ -111,7 +111,7 @@ template <int LType> struct GetArg<Raw<LType>>
     {
         if (!Unsafe && !Is(vm, idx))
             vm.TypeError(true, lua_typename(vm, LType), idx);
-        return {};
+        return {idx};
     }
     static bool Is(StateRef vm, int idx) noexcept
     { return lua_type(vm, idx) == LType; }
