@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::GbnlItem::TYPE_NAME[] = "neptools.stcm.gbnl_item";
+
 namespace Neptools::Lua
 {
 
@@ -22,8 +25,4 @@ void TypeRegisterTraits<::Neptools::Stcm::GbnlItem>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::Stcm::GbnlItem> reg_neptools_stcm_gbnl_item;
 
 }
-
-
-const char ::Neptools::Stcm::GbnlItem::TYPE_NAME[] = "neptools.stcm.gbnl_item";
-
 #endif

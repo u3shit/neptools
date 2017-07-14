@@ -2,6 +2,11 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Test::ParentListItem::TYPE_NAME[] = "neptools.test.parent_list_item";
+template <>
+const char ::parent_list_item::TYPE_NAME[] = "neptools.parent_list_parent_list_item";
+
 namespace Neptools::Lua
 {
 
@@ -29,14 +34,6 @@ void TypeRegisterTraits<::Neptools::Test::ParentListItem>::Register(TypeBuilder&
 
 }
 static TypeRegister::StateRegister<::Neptools::Test::ParentListItem> reg_neptools_test_parent_list_item;
-
-}
-
-
-const char ::Neptools::Test::ParentListItem::TYPE_NAME[] = "neptools.test.parent_list_item";
-
-namespace Neptools::Lua
-{
 
 // class neptools.parent_list_parent_list_item
 template<>
@@ -129,8 +126,4 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::parent_list_item> reg_neptools_parent_list_parent_list_item;
 
 }
-
-template <>
-const char ::parent_list_item::TYPE_NAME[] = "neptools.parent_list_parent_list_item";
-
 #endif

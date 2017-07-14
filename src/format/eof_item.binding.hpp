@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::EofItem::TYPE_NAME[] = "neptools.eof_item";
+
 namespace Neptools::Lua
 {
 
@@ -19,8 +22,4 @@ void TypeRegisterTraits<::Neptools::EofItem>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::EofItem> reg_neptools_eof_item;
 
 }
-
-
-const char ::Neptools::EofItem::TYPE_NAME[] = "neptools.eof_item";
-
 #endif

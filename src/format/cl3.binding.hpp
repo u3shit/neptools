@@ -2,6 +2,13 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Cl3::TYPE_NAME[] = "neptools.cl3";
+
+const char ::Neptools::Cl3::Entry::TYPE_NAME[] = "neptools.cl3.entry";
+template <>
+const char ::cl3_entry::TYPE_NAME[] = "neptools.ordered_map_cl3_entry";
+
 namespace Neptools::Lua
 {
 
@@ -43,14 +50,6 @@ void TypeRegisterTraits<::Neptools::Cl3>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Neptools::Cl3> reg_neptools_cl3;
 
-}
-
-
-const char ::Neptools::Cl3::TYPE_NAME[] = "neptools.cl3";
-
-namespace Neptools::Lua
-{
-
 // class neptools.cl3.entry
 template<>
 void TypeRegisterTraits<::Neptools::Cl3::Entry>::Register(TypeBuilder& bld)
@@ -84,14 +83,6 @@ void TypeRegisterTraits<::Neptools::Cl3::Entry>::Register(TypeBuilder& bld)
 
 }
 static TypeRegister::StateRegister<::Neptools::Cl3::Entry> reg_neptools_cl3_entry;
-
-}
-
-
-const char ::Neptools::Cl3::Entry::TYPE_NAME[] = "neptools.cl3.entry";
-
-namespace Neptools::Lua
-{
 
 // class neptools.ordered_map_cl3_entry
 template<>
@@ -175,8 +166,4 @@ void TypeRegisterTraits<::cl3_entry>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::cl3_entry> reg_neptools_ordered_map_cl3_entry;
 
 }
-
-template <>
-const char ::cl3_entry::TYPE_NAME[] = "neptools.ordered_map_cl3_entry";
-
 #endif

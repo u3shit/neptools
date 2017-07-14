@@ -2,6 +2,11 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Sink::TYPE_NAME[] = "neptools.sink";
+
+const char ::Neptools::MemorySink::TYPE_NAME[] = "neptools.memory_sink";
+
 namespace Neptools::Lua
 {
 
@@ -47,14 +52,6 @@ void TypeRegisterTraits<::Neptools::Sink>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Neptools::Sink> reg_neptools_sink;
 
-}
-
-
-const char ::Neptools::Sink::TYPE_NAME[] = "neptools.sink";
-
-namespace Neptools::Lua
-{
-
 // class neptools.memory_sink
 template<>
 void TypeRegisterTraits<::Neptools::MemorySink>::Register(TypeBuilder& bld)
@@ -73,8 +70,4 @@ void TypeRegisterTraits<::Neptools::MemorySink>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::MemorySink> reg_neptools_memory_sink;
 
 }
-
-
-const char ::Neptools::MemorySink::TYPE_NAME[] = "neptools.memory_sink";
-
 #endif

@@ -2,6 +2,13 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::ExportsItem::TYPE_NAME[] = "neptools.stcm.exports_item";
+const char ::Neptools::Lua::TypeName<::Neptools::Stcm::ExportsItem::Type>::TYPE_NAME[] =
+    "neptools.stcm.exports_item.type";
+
+const char ::Neptools::Stcm::ExportsItem::EntryType::TYPE_NAME[] = "neptools.stcm.exports_item.entry_type";
+
 namespace Neptools::Lua
 {
 
@@ -25,14 +32,6 @@ void TypeRegisterTraits<::Neptools::Stcm::ExportsItem>::Register(TypeBuilder& bl
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::ExportsItem> reg_neptools_stcm_exports_item;
 
-}
-
-
-const char ::Neptools::Stcm::ExportsItem::TYPE_NAME[] = "neptools.stcm.exports_item";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.exports_item.type
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::ExportsItem::Type>::Register(TypeBuilder& bld)
@@ -43,14 +42,6 @@ void TypeRegisterTraits<::Neptools::Stcm::ExportsItem::Type>::Register(TypeBuild
 
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::ExportsItem::Type> reg_neptools_stcm_exports_item_type;
-
-}
-
-const char ::Neptools::Lua::TypeName<::Neptools::Stcm::ExportsItem::Type>::TYPE_NAME[] =
-    "neptools.stcm.exports_item.type";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stcm.exports_item.entry_type
 template<>
@@ -83,8 +74,4 @@ void TypeRegisterTraits<::Neptools::Stcm::ExportsItem::EntryType>::Register(Type
 static TypeRegister::StateRegister<::Neptools::Stcm::ExportsItem::EntryType> reg_neptools_stcm_exports_item_entry_type;
 
 }
-
-
-const char ::Neptools::Stcm::ExportsItem::EntryType::TYPE_NAME[] = "neptools.stcm.exports_item.entry_type";
-
 #endif

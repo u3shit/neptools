@@ -2,6 +2,21 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stsc::InstructionBase::TYPE_NAME[] = "neptools.stsc.instruction_base";
+
+const char ::Neptools::Stsc::Instruction0dItem::TYPE_NAME[] = "neptools.stsc.instruction0d_item";
+
+const char ::Neptools::Stsc::UnimplementedInstructionItem::TYPE_NAME[] = "neptools.stsc.unimplemented_instruction_item";
+
+const char ::Neptools::Stsc::Instruction1dItem::TYPE_NAME[] = "neptools.stsc.instruction1d_item";
+
+const char ::Neptools::Stsc::Instruction1dItem::Node::TYPE_NAME[] = "neptools.stsc.instruction1d_item.node";
+
+const char ::Neptools::Stsc::Instruction1eItem::TYPE_NAME[] = "neptools.stsc.instruction1e_item";
+
+const char ::Neptools::Stsc::Instruction1eItem::Expression::TYPE_NAME[] = "neptools.stsc.instruction1e_item.expression";
+
 namespace Neptools::Lua
 {
 
@@ -21,14 +36,6 @@ void TypeRegisterTraits<::Neptools::Stsc::InstructionBase>::Register(TypeBuilder
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::InstructionBase> reg_neptools_stsc_instruction_base;
 
-}
-
-
-const char ::Neptools::Stsc::InstructionBase::TYPE_NAME[] = "neptools.stsc.instruction_base";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stsc.instruction0d_item
 template<>
 void TypeRegisterTraits<::Neptools::Stsc::Instruction0dItem>::Register(TypeBuilder& bld)
@@ -45,14 +52,6 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction0dItem>::Register(TypeBuild
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::Instruction0dItem> reg_neptools_stsc_instruction0d_item;
 
-}
-
-
-const char ::Neptools::Stsc::Instruction0dItem::TYPE_NAME[] = "neptools.stsc.instruction0d_item";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stsc.unimplemented_instruction_item
 template<>
 void TypeRegisterTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Register(TypeBuilder& bld)
@@ -65,14 +64,6 @@ void TypeRegisterTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Registe
 
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::UnimplementedInstructionItem> reg_neptools_stsc_unimplemented_instruction_item;
-
-}
-
-
-const char ::Neptools::Stsc::UnimplementedInstructionItem::TYPE_NAME[] = "neptools.stsc.unimplemented_instruction_item";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stsc.instruction1d_item
 template<>
@@ -95,14 +86,6 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem>::Register(TypeBuild
 
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::Instruction1dItem> reg_neptools_stsc_instruction1d_item;
-
-}
-
-
-const char ::Neptools::Stsc::Instruction1dItem::TYPE_NAME[] = "neptools.stsc.instruction1d_item";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stsc.instruction1d_item.node
 template<>
@@ -127,14 +110,6 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem::Node>::Register(Typ
 
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::Instruction1dItem::Node> reg_neptools_stsc_instruction1d_item_node;
-
-}
-
-
-const char ::Neptools::Stsc::Instruction1dItem::Node::TYPE_NAME[] = "neptools.stsc.instruction1d_item.node";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stsc.instruction1e_item
 template<>
@@ -164,14 +139,6 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem>::Register(TypeBuild
 }
 static TypeRegister::StateRegister<::Neptools::Stsc::Instruction1eItem> reg_neptools_stsc_instruction1e_item;
 
-}
-
-
-const char ::Neptools::Stsc::Instruction1eItem::TYPE_NAME[] = "neptools.stsc.instruction1e_item";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stsc.instruction1e_item.expression
 template<>
 void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Register(TypeBuilder& bld)
@@ -191,8 +158,4 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Regist
 static TypeRegister::StateRegister<::Neptools::Stsc::Instruction1eItem::Expression> reg_neptools_stsc_instruction1e_item_expression;
 
 }
-
-
-const char ::Neptools::Stsc::Instruction1eItem::Expression::TYPE_NAME[] = "neptools.stsc.instruction1e_item.expression";
-
 #endif

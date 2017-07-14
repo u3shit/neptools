@@ -2,6 +2,13 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::CollectionLinkHeaderItem::TYPE_NAME[] = "neptools.stcm.collection_link_header_item";
+
+const char ::Neptools::Stcm::CollectionLinkItem::TYPE_NAME[] = "neptools.stcm.collection_link_item";
+
+const char ::Neptools::Stcm::CollectionLinkItem::LinkEntry::TYPE_NAME[] = "neptools.stcm.collection_link_item.link_entry";
+
 namespace Neptools::Lua
 {
 
@@ -27,14 +34,6 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Register(Ty
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::CollectionLinkHeaderItem> reg_neptools_stcm_collection_link_header_item;
 
-}
-
-
-const char ::Neptools::Stcm::CollectionLinkHeaderItem::TYPE_NAME[] = "neptools.stcm.collection_link_header_item";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.collection_link_item
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem>::Register(TypeBuilder& bld)
@@ -51,14 +50,6 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem>::Register(TypeBuil
 
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::CollectionLinkItem> reg_neptools_stcm_collection_link_item;
-
-}
-
-
-const char ::Neptools::Stcm::CollectionLinkItem::TYPE_NAME[] = "neptools.stcm.collection_link_item";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stcm.collection_link_item.link_entry
 template<>
@@ -79,8 +70,4 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Regist
 static TypeRegister::StateRegister<::Neptools::Stcm::CollectionLinkItem::LinkEntry> reg_neptools_stcm_collection_link_item_link_entry;
 
 }
-
-
-const char ::Neptools::Stcm::CollectionLinkItem::LinkEntry::TYPE_NAME[] = "neptools.stcm.collection_link_item.link_entry";
-
 #endif

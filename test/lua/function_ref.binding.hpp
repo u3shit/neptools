@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::FunctionRefTest::TYPE_NAME[] = "function_ref_test";
+
 namespace Neptools::Lua
 {
 
@@ -33,8 +36,4 @@ void TypeRegisterTraits<::FunctionRefTest>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::FunctionRefTest> reg_function_ref_test;
 
 }
-
-
-const char ::FunctionRefTest::TYPE_NAME[] = "function_ref_test";
-
 #endif

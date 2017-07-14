@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::RawItem::TYPE_NAME[] = "neptools.raw_item";
+
 namespace Neptools::Lua
 {
 
@@ -27,8 +30,4 @@ void TypeRegisterTraits<::Neptools::RawItem>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::RawItem> reg_neptools_raw_item;
 
 }
-
-
-const char ::Neptools::RawItem::TYPE_NAME[] = "neptools.raw_item";
-
 #endif

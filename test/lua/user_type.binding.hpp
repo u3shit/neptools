@@ -2,6 +2,21 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Smart::TYPE_NAME[] = "smart";
+
+const char ::Foo::TYPE_NAME[] = "foo";
+
+const char ::Bar::Baz::Asdfgh::TYPE_NAME[] = "bar.baz.asdfgh";
+
+const char ::Baz::TYPE_NAME[] = "baz";
+
+const char ::A::TYPE_NAME[] = "a";
+
+const char ::B::TYPE_NAME[] = "b";
+
+const char ::Multi::TYPE_NAME[] = "multi";
+
 namespace Neptools::Lua
 {
 
@@ -19,14 +34,6 @@ void TypeRegisterTraits<::Smart>::Register(TypeBuilder& bld)
 
 }
 static TypeRegister::StateRegister<::Smart> reg_smart;
-
-}
-
-
-const char ::Smart::TYPE_NAME[] = "smart";
-
-namespace Neptools::Lua
-{
 
 // class foo
 template<>
@@ -52,14 +59,6 @@ void TypeRegisterTraits<::Foo>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Foo> reg_foo;
 
-}
-
-
-const char ::Foo::TYPE_NAME[] = "foo";
-
-namespace Neptools::Lua
-{
-
 // class bar.baz.asdfgh
 template<>
 void TypeRegisterTraits<::Bar::Baz::Asdfgh>::Register(TypeBuilder& bld)
@@ -71,14 +70,6 @@ void TypeRegisterTraits<::Bar::Baz::Asdfgh>::Register(TypeBuilder& bld)
 
 }
 static TypeRegister::StateRegister<::Bar::Baz::Asdfgh> reg_bar_baz_asdfgh;
-
-}
-
-
-const char ::Bar::Baz::Asdfgh::TYPE_NAME[] = "bar.baz.asdfgh";
-
-namespace Neptools::Lua
-{
 
 // class baz
 template<>
@@ -98,14 +89,6 @@ void TypeRegisterTraits<::Baz>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Baz> reg_baz;
 
-}
-
-
-const char ::Baz::TYPE_NAME[] = "baz";
-
-namespace Neptools::Lua
-{
-
 // class a
 template<>
 void TypeRegisterTraits<::A>::Register(TypeBuilder& bld)
@@ -121,14 +104,6 @@ void TypeRegisterTraits<::A>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::A> reg_a;
 
-}
-
-
-const char ::A::TYPE_NAME[] = "a";
-
-namespace Neptools::Lua
-{
-
 // class b
 template<>
 void TypeRegisterTraits<::B>::Register(TypeBuilder& bld)
@@ -143,14 +118,6 @@ void TypeRegisterTraits<::B>::Register(TypeBuilder& bld)
 
 }
 static TypeRegister::StateRegister<::B> reg_b;
-
-}
-
-
-const char ::B::TYPE_NAME[] = "b";
-
-namespace Neptools::Lua
-{
 
 // class multi
 template<>
@@ -172,8 +139,4 @@ void TypeRegisterTraits<::Multi>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Multi> reg_multi;
 
 }
-
-
-const char ::Multi::TYPE_NAME[] = "multi";
-
 #endif

@@ -2,6 +2,11 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Source::TYPE_NAME[] = "neptools.source";
+
+const char ::Neptools::DumpableSource::TYPE_NAME[] = "neptools.dumpable_source";
+
 namespace Neptools::Lua
 {
 
@@ -95,14 +100,6 @@ void TypeRegisterTraits<::Neptools::Source>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Neptools::Source> reg_neptools_source;
 
-}
-
-
-const char ::Neptools::Source::TYPE_NAME[] = "neptools.source";
-
-namespace Neptools::Lua
-{
-
 // class neptools.dumpable_source
 template<>
 void TypeRegisterTraits<::Neptools::DumpableSource>::Register(TypeBuilder& bld)
@@ -121,8 +118,4 @@ void TypeRegisterTraits<::Neptools::DumpableSource>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::DumpableSource> reg_neptools_dumpable_source;
 
 }
-
-
-const char ::Neptools::DumpableSource::TYPE_NAME[] = "neptools.dumpable_source";
-
 #endif

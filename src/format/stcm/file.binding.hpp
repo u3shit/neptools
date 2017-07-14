@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::File::TYPE_NAME[] = "neptools.stcm.file";
+
 namespace Neptools::Lua
 {
 
@@ -22,8 +25,4 @@ void TypeRegisterTraits<::Neptools::Stcm::File>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::Stcm::File> reg_neptools_stcm_file;
 
 }
-
-
-const char ::Neptools::Stcm::File::TYPE_NAME[] = "neptools.stcm.file";
-
 #endif

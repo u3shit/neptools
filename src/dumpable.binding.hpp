@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Dumpable::TYPE_NAME[] = "neptools.dumpable";
+
 namespace Neptools::Lua
 {
 
@@ -29,8 +32,4 @@ void TypeRegisterTraits<::Neptools::Dumpable>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::Dumpable> reg_neptools_dumpable;
 
 }
-
-
-const char ::Neptools::Dumpable::TYPE_NAME[] = "neptools.dumpable";
-
 #endif

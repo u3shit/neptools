@@ -2,6 +2,11 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Test::OMItemTest::TYPE_NAME[] = "neptools.test.om_item_test";
+template <>
+const char ::om_item_test::TYPE_NAME[] = "neptools.ordered_map_om_item_test";
+
 namespace Neptools::Lua
 {
 
@@ -28,14 +33,6 @@ void TypeRegisterTraits<::Neptools::Test::OMItemTest>::Register(TypeBuilder& bld
 
 }
 static TypeRegister::StateRegister<::Neptools::Test::OMItemTest> reg_neptools_test_om_item_test;
-
-}
-
-
-const char ::Neptools::Test::OMItemTest::TYPE_NAME[] = "neptools.test.om_item_test";
-
-namespace Neptools::Lua
-{
 
 // class neptools.ordered_map_om_item_test
 template<>
@@ -119,8 +116,4 @@ void TypeRegisterTraits<::om_item_test>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::om_item_test> reg_neptools_ordered_map_om_item_test;
 
 }
-
-template <>
-const char ::om_item_test::TYPE_NAME[] = "neptools.ordered_map_om_item_test";
-
 #endif

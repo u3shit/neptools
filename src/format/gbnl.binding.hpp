@@ -2,6 +2,15 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Gbnl::TYPE_NAME[] = "neptools.gbnl";
+template <>
+const char ::DynStructBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl";
+template <>
+const char ::DynStructBindgbnl::Type::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.type";
+template <>
+const char ::DynStructBldBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
+
 namespace Neptools::Lua
 {
 
@@ -54,14 +63,6 @@ void TypeRegisterTraits<::Neptools::Gbnl>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Neptools::Gbnl> reg_neptools_gbnl;
 
-}
-
-
-const char ::Neptools::Gbnl::TYPE_NAME[] = "neptools.gbnl";
-
-namespace Neptools::Lua
-{
-
 // class neptools.dynamic_struct_gbnl
 template<>
 void TypeRegisterTraits<::DynStructBindgbnl>::Register(TypeBuilder& bld)
@@ -93,14 +94,6 @@ void TypeRegisterTraits<::DynStructBindgbnl>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::DynStructBindgbnl> reg_neptools_dynamic_struct_gbnl;
 
-}
-
-template <>
-const char ::DynStructBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl";
-
-namespace Neptools::Lua
-{
-
 // class neptools.dynamic_struct_gbnl.type
 template<>
 void TypeRegisterTraits<::DynStructBindgbnl::Type>::Register(TypeBuilder& bld)
@@ -126,14 +119,6 @@ void TypeRegisterTraits<::DynStructBindgbnl::Type>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::DynStructBindgbnl::Type> reg_neptools_dynamic_struct_gbnl_type;
 
-}
-
-template <>
-const char ::DynStructBindgbnl::Type::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.type";
-
-namespace Neptools::Lua
-{
-
 // class neptools.dynamic_struct_gbnl.builder
 template<>
 void TypeRegisterTraits<::DynStructBldBindgbnl>::Register(TypeBuilder& bld)
@@ -154,8 +139,4 @@ void TypeRegisterTraits<::DynStructBldBindgbnl>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::DynStructBldBindgbnl> reg_neptools_dynamic_struct_gbnl_builder;
 
 }
-
-template <>
-const char ::DynStructBldBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
-
 #endif

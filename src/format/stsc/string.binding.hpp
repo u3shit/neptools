@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stsc::StringItem::TYPE_NAME[] = "neptools.stsc.string_item";
+
 namespace Neptools::Lua
 {
 
@@ -28,8 +31,4 @@ void TypeRegisterTraits<::Neptools::Stsc::StringItem>::Register(TypeBuilder& bld
 static TypeRegister::StateRegister<::Neptools::Stsc::StringItem> reg_neptools_stsc_string_item;
 
 }
-
-
-const char ::Neptools::Stsc::StringItem::TYPE_NAME[] = "neptools.stsc.string_item";
-
 #endif

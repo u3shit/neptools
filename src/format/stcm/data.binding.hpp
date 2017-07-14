@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::DataItem::TYPE_NAME[] = "neptools.stcm.data_item";
+
 namespace Neptools::Lua
 {
 
@@ -40,8 +43,4 @@ void TypeRegisterTraits<::Neptools::Stcm::DataItem>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::Stcm::DataItem> reg_neptools_stcm_data_item;
 
 }
-
-
-const char ::Neptools::Stcm::DataItem::TYPE_NAME[] = "neptools.stcm.data_item";
-
 #endif

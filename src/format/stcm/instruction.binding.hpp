@@ -2,6 +2,21 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stcm::InstructionItem::TYPE_NAME[] = "neptools.stcm.instruction_item";
+
+const char ::Neptools::Stcm::InstructionItem::Param48::TYPE_NAME[] = "neptools.stcm.instruction_item.param48";
+const char ::Neptools::Lua::TypeName<::Neptools::Stcm::InstructionItem::Param48::Type>::TYPE_NAME[] =
+    "neptools.stcm.instruction_item.param48.type";
+
+const char ::Neptools::Stcm::InstructionItem::Param::TYPE_NAME[] = "neptools.stcm.instruction_item.param";
+
+const char ::Neptools::Stcm::InstructionItem::Param::MemOffset::TYPE_NAME[] = "neptools.stcm.instruction_item.param.mem_offset";
+
+const char ::Neptools::Stcm::InstructionItem::Param::Indirect::TYPE_NAME[] = "neptools.stcm.instruction_item.param.indirect";
+const char ::Neptools::Lua::TypeName<::Neptools::Stcm::InstructionItem::Param::Type>::TYPE_NAME[] =
+    "neptools.stcm.instruction_item.param.type";
+
 namespace Neptools::Lua
 {
 
@@ -39,14 +54,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem>::Register(TypeBuilder
 
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem> reg_neptools_stcm_instruction_item;
-
-}
-
-
-const char ::Neptools::Stcm::InstructionItem::TYPE_NAME[] = "neptools.stcm.instruction_item";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stcm.instruction_item.param48
 template<>
@@ -96,14 +103,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48>::Register(Ty
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param48> reg_neptools_stcm_instruction_item_param48;
 
-}
-
-
-const char ::Neptools::Stcm::InstructionItem::Param48::TYPE_NAME[] = "neptools.stcm.instruction_item.param48";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.instruction_item.param48.type
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48::Type>::Register(TypeBuilder& bld)
@@ -117,14 +116,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48::Type>::Regis
 
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param48::Type> reg_neptools_stcm_instruction_item_param48_type;
-
-}
-
-const char ::Neptools::Lua::TypeName<::Neptools::Stcm::InstructionItem::Param48::Type>::TYPE_NAME[] =
-    "neptools.stcm.instruction_item.param48.type";
-
-namespace Neptools::Lua
-{
 
 // class neptools.stcm.instruction_item.param
 template<>
@@ -183,14 +174,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param>::Register(Type
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param> reg_neptools_stcm_instruction_item_param;
 
-}
-
-
-const char ::Neptools::Stcm::InstructionItem::Param::TYPE_NAME[] = "neptools.stcm.instruction_item.param";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.instruction_item.param.mem_offset
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::MemOffset>::Register(TypeBuilder& bld)
@@ -212,14 +195,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::MemOffset>::Re
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param::MemOffset> reg_neptools_stcm_instruction_item_param_mem_offset;
 
-}
-
-
-const char ::Neptools::Stcm::InstructionItem::Param::MemOffset::TYPE_NAME[] = "neptools.stcm.instruction_item.param.mem_offset";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.instruction_item.param.indirect
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Indirect>::Register(TypeBuilder& bld)
@@ -238,14 +213,6 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Indirect>::Reg
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param::Indirect> reg_neptools_stcm_instruction_item_param_indirect;
 
-}
-
-
-const char ::Neptools::Stcm::InstructionItem::Param::Indirect::TYPE_NAME[] = "neptools.stcm.instruction_item.param.indirect";
-
-namespace Neptools::Lua
-{
-
 // class neptools.stcm.instruction_item.param.type
 template<>
 void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Type>::Register(TypeBuilder& bld)
@@ -263,8 +230,4 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param::Type>::Registe
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param::Type> reg_neptools_stcm_instruction_item_param_type;
 
 }
-
-const char ::Neptools::Lua::TypeName<::Neptools::Stcm::InstructionItem::Param::Type>::TYPE_NAME[] =
-    "neptools.stcm.instruction_item.param.type";
-
 #endif

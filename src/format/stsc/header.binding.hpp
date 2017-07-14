@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Stsc::HeaderItem::TYPE_NAME[] = "neptools.stsc.header_item";
+
 namespace Neptools::Lua
 {
 
@@ -88,8 +91,4 @@ void TypeRegisterTraits<::Neptools::Stsc::HeaderItem>::Register(TypeBuilder& bld
 static TypeRegister::StateRegister<::Neptools::Stsc::HeaderItem> reg_neptools_stsc_header_item;
 
 }
-
-
-const char ::Neptools::Stsc::HeaderItem::TYPE_NAME[] = "neptools.stsc.header_item";
-
 #endif

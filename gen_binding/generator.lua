@@ -50,8 +50,18 @@ local template_str = [=[
 #include "lua/user_type.hpp"
 
 //$ for i,cls in ipairs(classes) do
+//$   if cls.is_enum then
+const char ::Neptools::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
+    "/*$= cls.name */";
+//$   else
+/*$ if cls.template then */template <>/*$ end */
+const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
+//$   end
+//$ end
+
 namespace Neptools::Lua
 {
+//$ for i,cls in ipairs(classes) do
 
 // class /*$= cls.name */
 template<>
@@ -80,18 +90,9 @@ void TypeRegisterTraits</*$= cls.cpp_name */>::Register(TypeBuilder& bld)
 /*$= cls.post_register or "", cls */
 }
 static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
+//$ end
 
 }
-
-//$   if cls.is_enum then
-const char ::Neptools::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
-    "/*$= cls.name */";
-//$   else
-/*$ if cls.template then */template <>/*$ end */
-const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
-//$   end
-
-//$ end
 #endif
 ]=]
 

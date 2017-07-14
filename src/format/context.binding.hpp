@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Context::TYPE_NAME[] = "neptools.context";
+
 namespace Neptools::Lua
 {
 
@@ -40,8 +43,4 @@ void TypeRegisterTraits<::Neptools::Context>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::Context> reg_neptools_context;
 
 }
-
-
-const char ::Neptools::Context::TYPE_NAME[] = "neptools.context";
-
 #endif

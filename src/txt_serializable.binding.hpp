@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::TxtSerializable::TYPE_NAME[] = "neptools.txt_serializable";
+
 namespace Neptools::Lua
 {
 
@@ -21,8 +24,4 @@ void TypeRegisterTraits<::Neptools::TxtSerializable>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::TxtSerializable> reg_neptools_txt_serializable;
 
 }
-
-
-const char ::Neptools::TxtSerializable::TYPE_NAME[] = "neptools.txt_serializable";
-
 #endif

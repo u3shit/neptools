@@ -2,6 +2,9 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::OpenFactory::TYPE_NAME[] = "neptools.open_factory";
+
 namespace Neptools::Lua
 {
 
@@ -19,8 +22,4 @@ void TypeRegisterTraits<::Neptools::OpenFactory>::Register(TypeBuilder& bld)
 static TypeRegister::StateRegister<::Neptools::OpenFactory> reg_neptools_open_factory;
 
 }
-
-
-const char ::Neptools::OpenFactory::TYPE_NAME[] = "neptools.open_factory";
-
 #endif

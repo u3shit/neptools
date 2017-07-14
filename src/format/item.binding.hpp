@@ -2,6 +2,15 @@
 #ifndef NEPTOOLS_WITHOUT_LUA
 #include "lua/user_type.hpp"
 
+
+const char ::Neptools::Label::TYPE_NAME[] = "neptools.label";
+
+const char ::Neptools::Item::TYPE_NAME[] = "neptools.item";
+
+const char ::Neptools::ItemWithChildren::TYPE_NAME[] = "neptools.item_with_children";
+template <>
+const char ::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::TYPE_NAME[] = "neptools.parent_list_item";
+
 namespace Neptools::Lua
 {
 
@@ -22,14 +31,6 @@ void TypeRegisterTraits<::Neptools::Label>::Register(TypeBuilder& bld)
 
 }
 static TypeRegister::StateRegister<::Neptools::Label> reg_neptools_label;
-
-}
-
-
-const char ::Neptools::Label::TYPE_NAME[] = "neptools.label";
-
-namespace Neptools::Lua
-{
 
 // class neptools.item
 template<>
@@ -59,14 +60,6 @@ void TypeRegisterTraits<::Neptools::Item>::Register(TypeBuilder& bld)
 }
 static TypeRegister::StateRegister<::Neptools::Item> reg_neptools_item;
 
-}
-
-
-const char ::Neptools::Item::TYPE_NAME[] = "neptools.item";
-
-namespace Neptools::Lua
-{
-
 // class neptools.item_with_children
 template<>
 void TypeRegisterTraits<::Neptools::ItemWithChildren>::Register(TypeBuilder& bld)
@@ -79,14 +72,6 @@ void TypeRegisterTraits<::Neptools::ItemWithChildren>::Register(TypeBuilder& bld
 
 }
 static TypeRegister::StateRegister<::Neptools::ItemWithChildren> reg_neptools_item_with_children;
-
-}
-
-
-const char ::Neptools::ItemWithChildren::TYPE_NAME[] = "neptools.item_with_children";
-
-namespace Neptools::Lua
-{
 
 // class neptools.parent_list_item
 template<>
@@ -173,8 +158,4 @@ void TypeRegisterTraits<::Neptools::ParentList<::Neptools::Item, ::Neptools::Ite
 static TypeRegister::StateRegister<::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >> reg_neptools_parent_list_item;
 
 }
-
-template <>
-const char ::Neptools::ParentList<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::TYPE_NAME[] = "neptools.parent_list_item";
-
 #endif
