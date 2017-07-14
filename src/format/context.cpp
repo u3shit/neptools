@@ -85,6 +85,39 @@ NotNull<LabelPtr> Context::CreateLabelFallback(std::string name, ItemPointer ptr
     return MakeNotNull(&*it);
 }
 
+NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
+{
+    FilterLabelName(name);
+    auto it = labels.find(name);
+    if (it == labels.end())
+    {
+        auto pair = labels.insert(*new Label{std::move(name), ptr});
+        NEPTOOLS_ASSERT(pair.second);
+        ptr->labels.insert(*pair.first);
+        return MakeNotNull(&*pair.first);
+    }
+    else
+    {
+        if (it->ptr != nullptr) it->ptr->labels.remove_node(*it);
+        it->ptr = ptr;
+        ptr->labels.insert(*it);
+        return MakeNotNull(&*it);
+    }
+}
+
+NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
+{
+    FilterLabelName(name);
+    auto it = labels.find(name);
+    if (it == labels.end())
+    {
+        auto pair = labels.insert(*new Label{std::move(name), {nullptr,0}});
+        NEPTOOLS_ASSERT(pair.second);
+        return MakeNotNull(&*pair.first);
+    }
+    return MakeNotNull(const_cast<Label*>(&*it));
+}
+
 NotNull<LabelPtr> Context::GetLabelTo(ItemPointer ptr)
 {
     auto& lctr = ptr.item->labels;

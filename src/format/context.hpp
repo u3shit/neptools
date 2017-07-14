@@ -32,6 +32,9 @@ public:
     NotNull<LabelPtr> CreateLabelFallback(std::string name, FilePosition pos)
     { return CreateLabelFallback(std::move(name), GetPointer(pos)); }
 
+    NotNull<LabelPtr> CreateOrSetLabel(std::string name, ItemPointer ptr);
+    NotNull<LabelPtr> GetOrCreateDummyLabel(std::string name);
+
     NotNull<LabelPtr> GetLabelTo(ItemPointer ptr);
     NotNull<LabelPtr> GetLabelTo(FilePosition pos)
     { return GetLabelTo(GetPointer(pos)); }
