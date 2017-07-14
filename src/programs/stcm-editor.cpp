@@ -487,6 +487,9 @@ int main(int argc, char** argv)
 
             // use print (I'm lazy to write my own)
             lua_getglobal(vm, "print"); // 1
+            lua_getglobal(vm, "debug"); // 2
+            lua_getfield(vm, 2, "traceback"); // 3
+            lua_remove(vm, 2); // 2 = traceback
 
             while ((std::cout << "> ", std::getline(std::cin, str)))
             {
@@ -494,11 +497,11 @@ int main(int argc, char** argv)
                 if (boost::algorithm::starts_with(str, "> "))
                     str.erase(0, 2);
 
-                lua_pushvalue(vm, 1); // 2
+                lua_pushvalue(vm, 1); // 3 // push print
                 if ((luaL_loadstring(vm, ("return "+str).c_str()) &&
                      (lua_pop(vm, 1),
-                      luaL_loadstring(vm, str.c_str()))) ||
-                    lua_pcall(vm, 0, LUA_MULTRET, 0))
+                      luaL_loadstring(vm, str.c_str()))) || // 4
+                    lua_pcall(vm, 0, LUA_MULTRET, 2)) // 3+?
                 {
                     Logger::Log("lua", Logger::ERROR, nullptr, 0, nullptr)
                         << lua_tostring(vm, -1) << std::endl;
@@ -507,8 +510,8 @@ int main(int argc, char** argv)
                 else
                 {
                     auto top = lua_gettop(vm);
-                    if (top > 2)
-                        lua_call(vm, top-2, 0);
+                    if (top > 3)
+                        lua_call(vm, top-3, 0);
                     else
                         lua_pop(vm, 1);
                 }
