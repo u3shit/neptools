@@ -127,7 +127,7 @@ local function func_common(c, info, tbl)
   end
   info.result_type = tbl.result_type or utils.type_name(c:resultType(), inst.aliases, c)
 
-  if not tbl.order then tbl.order = -100 * #info.args end
+  if not tbl.order then tbl.order = 0 end
   return true
 end
 
@@ -474,13 +474,16 @@ end
 local function sort(tbl, cmp)
   local n = #tbl
   for i=0,n-1 do
+    local change = false
     for j=0,n-2-i do
       if cmp(tbl[j+2], tbl[j+1]) then
         local x = tbl[j+1]
         tbl[j+1] = tbl[j+2]
         tbl[j+2] = x
+        change = true
       end
     end
+    if not change then return end
   end
 end
 

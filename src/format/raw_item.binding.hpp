@@ -15,8 +15,8 @@ void TypeRegisterTraits<::Neptools::RawItem>::Register(TypeBuilder& bld)
         &::Neptools::Lua::TypeTraits<::Neptools::RawItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::FilePosition>>
     >("new");
     bld.AddFunction<
-        static_cast<::Neptools::RawItem::GetSourceRet (*)(::Neptools::ItemPointer, ::Neptools::FilePosition)>(::Neptools::RawItem::GetSource),
-        static_cast<const ::Neptools::Source & (::Neptools::RawItem::*)() const noexcept>(&::Neptools::RawItem::GetSource)
+        static_cast<const ::Neptools::Source & (::Neptools::RawItem::*)() const noexcept>(&::Neptools::RawItem::GetSource),
+        static_cast<::Neptools::RawItem::GetSourceRet (*)(::Neptools::ItemPointer, ::Neptools::FilePosition)>(::Neptools::RawItem::GetSource)
     >("get_source");
     bld.AddFunction<
         static_cast<::Neptools::Item & (::Neptools::RawItem::*)(::Neptools::FilePosition, ::Neptools::NotNull<::Neptools::RefCountedPtr<::Neptools::Item> >)>(&::Neptools::RawItem::Split<::Neptools::Item>),

@@ -12,8 +12,8 @@ void TypeRegisterTraits<::Neptools::Stcm::ExportsItem>::Register(TypeBuilder& bl
     bld.Inherit<::Neptools::Stcm::ExportsItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::ExportsItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::ExportsItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::ExportsItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::ExportsItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::ExportsItem & (*)(::Neptools::ItemPointer, ::uint32_t)>(::Neptools::Stcm::ExportsItem::CreateAndInsert)

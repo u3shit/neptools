@@ -11,8 +11,8 @@ void TypeRegisterTraits<::Neptools::Test::ParentListItem>::Register(TypeBuilder&
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<LuaGetRef<int>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<>
+        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<LuaGetRef<int>>
     >("new");
     bld.AddFunction<
         &::Neptools::Lua::GetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::i>
@@ -80,8 +80,8 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
         static_cast<void (::parent_list_item::*)(::parent_list_item::size_type) noexcept>(&::parent_list_item::shift_forward)
     >("shift_forward");
     bld.AddFunction<
-        static_cast<::parent_list_item::iterator (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item::const_iterator)>(&::parent_list_item::erase<Check::Throw>),
-        static_cast<::parent_list_item::iterator (::parent_list_item::*)(::parent_list_item::const_iterator)>(&::parent_list_item::erase<Check::Throw>)
+        static_cast<::parent_list_item::iterator (::parent_list_item::*)(::parent_list_item::const_iterator)>(&::parent_list_item::erase<Check::Throw>),
+        static_cast<::parent_list_item::iterator (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item::const_iterator)>(&::parent_list_item::erase<Check::Throw>)
     >("erase");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)() noexcept>(&::parent_list_item::clear)
@@ -90,17 +90,17 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
         static_cast<::parent_list_item::iterator (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item::reference)>(&::parent_list_item::insert<Check::Throw>)
     >("insert");
     bld.AddFunction<
-        static_cast<void (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item &, ::parent_list_item::const_iterator, ::parent_list_item::const_iterator)>(&::parent_list_item::splice<Check::Throw>),
+        static_cast<void (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item &)>(&::parent_list_item::splice<Check::Throw>),
         static_cast<void (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item &, ::parent_list_item::const_iterator)>(&::parent_list_item::splice<Check::Throw>),
-        static_cast<void (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item &)>(&::parent_list_item::splice<Check::Throw>)
+        static_cast<void (::parent_list_item::*)(::parent_list_item::const_iterator, ::parent_list_item &, ::parent_list_item::const_iterator, ::parent_list_item::const_iterator)>(&::parent_list_item::splice<Check::Throw>)
     >("splice");
     bld.AddFunction<
-        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::sort<::Neptools::Lua::FunctionWrapGen<bool>>),
-        static_cast<void (::parent_list_item::*)()>(&::parent_list_item::sort)
+        static_cast<void (::parent_list_item::*)()>(&::parent_list_item::sort),
+        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::sort<::Neptools::Lua::FunctionWrapGen<bool>>)
     >("sort");
     bld.AddFunction<
-        static_cast<void (::parent_list_item::*)(::parent_list_item &, ::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::merge<::Neptools::Check::Throw, ::Neptools::Lua::FunctionWrapGen<bool>>),
-        static_cast<void (::parent_list_item::*)(::parent_list_item &)>(&::parent_list_item::merge<Check::Throw>)
+        static_cast<void (::parent_list_item::*)(::parent_list_item &)>(&::parent_list_item::merge<Check::Throw>),
+        static_cast<void (::parent_list_item::*)(::parent_list_item &, ::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::merge<::Neptools::Check::Throw, ::Neptools::Lua::FunctionWrapGen<bool>>)
     >("merge");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)() noexcept>(&::parent_list_item::reverse)
@@ -112,8 +112,8 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
         static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::remove_if<::Neptools::Lua::FunctionWrapGen<bool>>)
     >("remove_if");
     bld.AddFunction<
-        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::unique<::Neptools::Lua::FunctionWrapGen<bool>>),
-        static_cast<void (::parent_list_item::*)()>(&::parent_list_item::unique)
+        static_cast<void (::parent_list_item::*)()>(&::parent_list_item::unique),
+        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::unique<::Neptools::Lua::FunctionWrapGen<bool>>)
     >("unique");
     bld.AddFunction<
         static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Next)

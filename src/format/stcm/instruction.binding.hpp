@@ -12,8 +12,8 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem>::Register(TypeBuilder
     bld.Inherit<::Neptools::Stcm::InstructionItem, ::Neptools::ItemWithChildren>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::InstructionItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::InstructionItem::CreateAndInsert)
