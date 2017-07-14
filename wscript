@@ -40,8 +40,6 @@ def options(opt):
                    help='Optimize ext libs even if Neptools is in debug mode')
     grp.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
-    grp.add_option('--overload-check', action='store_true', default=False,
-                   help='Check for uncallable lua overloads (compile-time)')
     grp.add_option('--without-lua', action='store_true', default=False,
                    help='No lua support')
 
@@ -199,8 +197,6 @@ int main() { return 0; }
         cfg.check_cxx(lib='shell32')
         cfg.check_cxx(lib='user32')
 
-    if cfg.options.overload_check:
-        cfg.define('NEPTOOLS_LUA_OVERLOAD_CHECK', 1)
     if cfg.options.without_lua:
         cfg.define('NEPTOOLS_WITHOUT_LUA', 1)
         cfg.env.WITHOUT_LUA = True

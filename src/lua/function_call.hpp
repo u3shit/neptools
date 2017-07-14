@@ -8,16 +8,7 @@
 #include "type_traits.hpp"
 #include "../meta_utils.hpp"
 
-#include <brigand/sequences/at.hpp>
-
-#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-#include <brigand/algorithms/index_of.hpp>
-#include <brigand/algorithms/flatten.hpp>
-#include <brigand/algorithms/fold.hpp>
-#include <brigand/algorithms/transform.hpp>
-#include <brigand/functions/arithmetic/max.hpp>
-#include <brigand/sequences/set.hpp>
-#endif
+#include <brigand/sequences/list.hpp>
 
 namespace Neptools::Lua
 {
@@ -44,7 +35,6 @@ template <typename T, typename Enable = void> struct GetArg;
 template <typename T, typename> struct GetArg
 {
     using RawType = typename std::decay<T>::type;
-    using type = brigand::list<RawType>;
 
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
@@ -57,9 +47,6 @@ template <typename T, typename> struct GetArg
         if (comma) os << ", ";
         TypeTraits<RawType>::PrintName(os);
     }
-
-    template <typename Val>
-    static constexpr const bool IS = COMPATIBLE_WITH<RawType, Val>;
 };
 
 template <> struct GetArg<Skip>
@@ -69,10 +56,6 @@ template <> struct GetArg<Skip>
     static constexpr Skip Get(StateRef, int) noexcept { return {}; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
     static void Print(bool, std::ostream&) {}
-
-    using type = brigand::list<>;
-    template <typename Val>
-    static constexpr const bool IS = true;
 };
 
 template <> struct GetArg<VarArg>
@@ -85,9 +68,6 @@ template <> struct GetArg<VarArg>
     {
         os << (comma ? ", ..." : "...");
     }
-    using type = brigand::list<>;
-    template <typename Val>
-    static constexpr const bool IS = true;
 };
 
 template <> struct GetArg<StateRef>
@@ -97,10 +77,6 @@ template <> struct GetArg<StateRef>
     static constexpr StateRef Get(StateRef vm, int) noexcept { return vm; }
     static constexpr bool Is(StateRef, int) noexcept { return true; }
     static void Print(bool, std::ostream&) {}
-
-    using type = brigand::list<>;
-    template <typename Val>
-    static constexpr const bool IS = true;
 };
 
 template <int LType> struct GetArg<Raw<LType>>
@@ -120,10 +96,6 @@ template <int LType> struct GetArg<Raw<LType>>
         if (comma) os << ", ";
         os << lua_typename(nullptr, LType);
     }
-
-    using type = brigand::list<Raw<LType>>;
-    template <typename Val>
-    static constexpr const bool IS = std::is_same_v<Raw<LType>, Val>;
 };
 
 template <typename Tuple, size_t I>
@@ -148,9 +120,6 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
         ((((comma || Index != 0) && os << ", "),
           TypeTraits<TupleElement<Tuple, Index>>::PrintName(os)), ...);
     }
-
-    using type = brigand::list<TupleElement<Tuple, Index>...>;
-    // IS: should be called on underlying types
 };
 
 template <typename T>
@@ -305,10 +274,6 @@ struct OverloadCheck<ArgSeq<N, brigand::list<Args...>>>
 
         return (GetArg<typename Args::ArgT>::Is(vm, Args::Idx) && ...);
     }
-
-    template <typename ValsList>
-    static constexpr bool IS = (GetArg<typename Args::ArgT>::template IS<
-        brigand::at_c<ValsList, Args::Idx-1>> && ...);
 };
 
 template <typename Funs, typename Orig = Funs> struct OverloadWrap;
@@ -362,88 +327,15 @@ struct OverloadWrap<AutoList<>, AutoList<Funs...>>
 template <auto... Funs>
 using Overload = OverloadWrap<AutoList<Funs...>, AutoList<Funs...>>;
 
-#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-namespace b = brigand;
-
-template <typename List> struct LCartesian;
-template <typename List>
-using Cartesian = typename LCartesian<List>::type;
-
-template <typename Head, typename... Tail>
-struct LCartesian<b::list<Head, Tail...>>
-{
-    using Rest = Cartesian<b::list<Tail...>>;
-    using type = b::join<b::transform<
-        Head,
-        b::bind<b::transform,
-                b::pin<Rest>,
-                b::defer<b::bind<b::push_front, b::_1, b::parent<b::_1>>>>>>;
-};
-template <typename... T> struct LCartesian<b::list<b::list<T...>>>
-{ using type = b::list<b::list<T>...>; };
-template <> struct LCartesian<b::list<>> { using type = b::list<>; };
-
-template <typename A, typename B>
-using IsOverload = b::integral_constant<
-    bool, OverloadCheck<ArgSequenceFromArgs<A>>::template IS<B>>;
-
-// brigand as_set fails on duplicate elements
-template <typename T>
-using ToSet = b::fold<T, b::set<>, b::bind<b::insert, b::_state, b::_element>>;
-
-// used to report overload problems in a user-friendly.. khgrrr.. way
-template <typename CalculatedSize, typename ExpectedSize,
-          typename CalledOverloads, typename Overloads>
-constexpr inline void InvalidOverload() = delete;
-
-template <auto... Overloads>
-inline constexpr void CheckUnique()
-{
-    using Args = b::transform<
-        b::list<decltype(Overloads)...>,
-        b::bind<b::join,
-                b::bind<b::transform,
-                        b::bind<FunctionArguments, b::_1>,
-                        b::defer<GetArg<b::_1>>>>>;
-
-    // get possible argument types. add nil to simulate less arguments
-    using ArgSet = ToSet<b::push_back<b::flatten<Args>, Raw<LUA_TNIL>>>;
-
-    // longest argument count
-    using MaxCount = b::fold<b::transform<Args, b::bind<b::size, b::_1>>,
-                             b::size_t<0>, b::max<b::_1, b::_2>>;
-    // all possible calls with argset
-    using AllTests = Cartesian<
-        b::filled_list<b::wrap<ArgSet, b::list>, MaxCount::value>>;
-
-    // actually called function for each test
-    using Check = b::defer<b::bind<IsOverload, b::_1, b::parent<b::_1>>>;
-    using Called = b::transform<AllTests, b::bind<b::index_if, b::pin<Args>, Check>>;
-    // set of called overloads
-    using CalledSet = b::erase<ToSet<Called>, b::no_such_type_>;
-
-    if constexpr (b::size<CalledSet>::value != sizeof...(Overloads))
-        InvalidOverload<b::size<CalledSet>, b::size_t<sizeof...(Overloads)>,
-                        Called, Args>();
-}
-#endif
-
 }
 
-template <bool DoCheck, auto... Funs>
-inline void StateRef::PushFunction_()
+template <auto... Funs>
+inline void StateRef::PushFunction()
 {
     if constexpr (sizeof...(Funs) == 1)
         lua_pushcfunction(vm, (Detail::WrapFunc<Funs..., false>::Func));
     else
-    {
-#ifdef NEPTOOLS_LUA_OVERLOAD_CHECK
-        if constexpr (DoCheck)
-            Detail::CheckUnique<Funs...>();
-#endif
-        lua_pushcfunction(
-            vm, Detail::Overload<Funs...>::Func);
-    }
+        lua_pushcfunction(vm, Detail::Overload<Funs...>::Func);
 }
 
 }

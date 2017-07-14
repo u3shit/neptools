@@ -552,14 +552,13 @@ struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
 
         // that tuple constructors can blow up exponentially, disable overload
         // check (tuple constructors can't take source, so it should be ok)
-        bld.GetVm().PushFunctionNocheck<
+        bld.AddFunction<
             TypeTraits<T>::template Make<
                 Context::Key, Context&, uint8_t, Source&>,
             TypeTraits<T>::template Make<
                 Context::Key, Context&, uint8_t,
                 LuaGetRef<Stsc::TupleTypeMapT<Args>>...>
-        >();
-        bld.SetField("new");
+        >("new");
 
         bld.AddFunction<&Get<0>>("get");
         bld.AddFunction<&Set<0>>("set");

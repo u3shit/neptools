@@ -297,33 +297,6 @@ struct UserTypeTraits<T, std::enable_if_t<std::is_enum_v<T>>>
     static constexpr bool NEEDS_GC = false;
 };
 
-template <typename T, typename Enable = void>
-struct HasLuaType : std::false_type {};
-template <typename T>
-struct HasLuaType<T, std::void_t<decltype(TypeTraits<T>::LUA_TYPE)>>
-    : std::true_type {};
-
-template <typename T, typename Enable = void> struct RawType
-{ using Type = typename TypeTraits<T>::RawType; };
-template <typename T>
-struct RawType<T, std::void_t<decltype(TypeTraits<T>::LUA_TYPE)>>
-{ using Type = Raw<TypeTraits<T>::LUA_TYPE>; };
-
-template <int T> struct RawType<Raw<T>> { using Type = Raw<T>; };
-template <> struct RawType<Skip> { using Type = Skip; };
-
-template <typename T>
-using RawTypeT = typename RawType<T>::Type;
-
-
-// todo: nullable/optional Bs
-template <typename A, typename B>
-constexpr const bool COMPATIBLE_WITH =
-    std::is_same_v<A, Skip> || std::is_base_of_v<RawTypeT<A>, RawTypeT<B>>;
-
-static_assert(!COMPATIBLE_WITH<Raw<LUA_TTABLE>, Raw<LUA_TSTRING>>);
-static_assert(COMPATIBLE_WITH<int, double>);
-
 }
 }
 
