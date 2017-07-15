@@ -30,6 +30,7 @@ struct Lua::TypeTraits<ParentListIterator<Traits, IsConst>>
     { TypeTraits<RawType>::Push(vm, *it); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<RawType>; }
+    static constexpr const char* TAG = TYPE_NAME<RawType>;
 };
 
 template <typename T, typename LifetimeTraits = NullTraits,

@@ -3,6 +3,8 @@
 #pragma once
 
 #include "file.hpp"
+#include "lua/type_traits.hpp"
+
 #include <iosfwd>
 
 namespace Neptools
@@ -56,5 +58,7 @@ std::ostream& Log(
 
 }
 }
+
+NEPTOOLS_ENUM(Neptools::Logger::Level);
 
 #endif

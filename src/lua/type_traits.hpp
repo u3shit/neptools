@@ -105,7 +105,7 @@ struct TypeTraits<T, std::enable_if_t<
     { lua_pushnumber(vm, lua_Number(val)); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    static constexpr int LUA_TYPE = LUA_TNUMBER;
+    static constexpr const char* TAG = TYPE_NAME<T>;
 };
 
 template <typename T>
@@ -133,7 +133,6 @@ struct TypeTraits<T, std::enable_if_t<std::is_floating_point<T>::value>>
     { lua_pushnumber(vm, val); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
-    static constexpr int LUA_TYPE = LUA_TNUMBER;
 };
 
 template <>
@@ -154,7 +153,6 @@ struct TypeTraits<bool>
     { lua_pushboolean(vm, val); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<bool>; }
-    static constexpr int LUA_TYPE = LUA_TBOOLEAN;
 };
 
 template<>
@@ -175,7 +173,6 @@ struct TypeTraits<const char*>
     { lua_pushstring(vm, val); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<const char*>; }
-    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
 template <typename T>
@@ -200,7 +197,6 @@ struct TypeTraits<T, std::enable_if_t<
     { lua_pushlstring(vm, val.data(), val.length()); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<std::string>; }
-    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
 template <size_t N>
@@ -234,7 +230,6 @@ struct TypeTraits<std::array<unsigned char, N>>
     { lua_pushlstring(vm, reinterpret_cast<const char*>(val.data()), val.size()); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<const char*>; }
-    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 
 template<>
@@ -281,7 +276,7 @@ struct NullableTypeTraits
         BaseTraits::PrintName(os);
         os << " or nil";
     }
-    using RawType = typename TypeTraits<NotNullable>::RawType;
+    static constexpr const char* TAG = TypeTraits<NotNullable>::TAG;
 };
 
 template <typename T>

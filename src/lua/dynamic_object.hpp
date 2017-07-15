@@ -121,6 +121,7 @@ struct TypeTraits<T, std::enable_if_t<IS_SMART_OBJECT<T>>> : SmartObjectMaker<T>
     { GetDynamicObject(obj).PushLua(vm, obj); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr const char* TAG = TYPE_NAME<T>;
 };
 
 template <typename T>
@@ -180,6 +181,7 @@ struct TypeTraits<WeakPtrBase<T, Storage>,
     }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr const char* TAG = TYPE_NAME<T>;
 };
 
 template <typename Class, typename T, T Class::* Member>

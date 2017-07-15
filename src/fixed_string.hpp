@@ -106,8 +106,6 @@ struct Lua::TypeTraits<FixedString<N>>
 
     static void Push(StateRef vm, const FixedString<N>& str)
     { lua_pushstring(vm, str.c_str()); }
-
-    static constexpr int LUA_TYPE = LUA_TSTRING;
 };
 #endif
 

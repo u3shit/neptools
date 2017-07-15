@@ -52,6 +52,7 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
     { Userdata::Create<T, Args...>(vm, std::forward<Args>(args)...); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr const char* TAG = TYPE_NAME<T>;
 };
 
 template <typename T>

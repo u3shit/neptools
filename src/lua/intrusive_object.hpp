@@ -48,6 +48,7 @@ struct TypeTraits<T, std::enable_if_t<IS_INTRUSIVE_OBJECT<T>>>
     { Userdata::Cached::Create<Ptr>(vm, &obj, NAME, &obj); }
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
+    static constexpr const char* TAG = TYPE_NAME<T>;
 };
 
 template <typename T>
