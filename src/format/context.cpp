@@ -88,13 +88,14 @@ NotNull<LabelPtr> Context::CreateLabelFallback(std::string name, ItemPointer ptr
 NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
 {
     FilterLabelName(name);
-    auto it = labels.find(name);
-    if (it == labels.end())
+    LabelsMap::insert_commit_data commit;
+    auto [it, insertable] = labels.insert_check(name, commit);
+
+    if (insertable)
     {
-        auto pair = labels.insert(*new Label{std::move(name), ptr});
-        NEPTOOLS_ASSERT(pair.second);
-        ptr->labels.insert(*pair.first);
-        return MakeNotNull(&*pair.first);
+        auto it = labels.insert_commit(*new Label{std::move(name), ptr}, commit);
+        ptr->labels.insert(*it);
+        return MakeNotNull(&*it);
     }
     else
     {
@@ -108,13 +109,12 @@ NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
 NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
 {
     FilterLabelName(name);
-    auto it = labels.find(name);
-    if (it == labels.end())
-    {
-        auto pair = labels.insert(*new Label{std::move(name), {nullptr,0}});
-        NEPTOOLS_ASSERT(pair.second);
-        return MakeNotNull(&*pair.first);
-    }
+    LabelsMap::insert_commit_data commit;
+    auto [it, insertable] = labels.insert_check(name, commit);
+
+    if (insertable)
+        it = labels.insert_commit(
+            *new Label{std::move(name), {nullptr,0}}, commit);
     return MakeNotNull(const_cast<Label*>(&*it));
 }
 
