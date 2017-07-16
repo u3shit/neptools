@@ -315,8 +315,11 @@ public:
     // O(size())
     void clear() noexcept
     {
-        for (auto it = begin(); it != end(); ++it)
-            NodeRemoved(it.ptr);
+        for (auto it = begin(); it != end(); )
+        {
+            auto rem = it++;
+            NodeRemoved(rem.ptr);
+        }
         ListAlgo::init_header(GetRoot());
     }
 
