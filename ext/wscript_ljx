@@ -7,6 +7,7 @@ def options(ctx):
     ctx.load('gas')
 
 def configure(ctx):
+    ctx.add_os_flags('LUACFLAGS')
     variant = ctx.variant
     host_variant = variant + '_host'
 
@@ -345,7 +346,7 @@ def set_executable(self):
 # task .lua->.h
 @Task.update_outputs
 class ljx(Task.Task):
-    run_str = '${tsk.executable} -bt h ${SRC} ${TGT}'
+    run_str = '${tsk.executable} -bt h ${LUACFLAGS} ${SRC} ${TGT}'
     color = 'BLUE'
 
 @extension('.lua')
