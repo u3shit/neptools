@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#if !defined(NEPTOOLS_WITHOUT_LUA) && !defined(NEPTOOLS_BINDING_GENERATOR)
 #include "format/builder.lua.h"
 #endif
 

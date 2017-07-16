@@ -21,11 +21,9 @@ local args = {
   "-Iext/catch/include",
   "-Iext/brigand/include",
   "-Isrc",
-  "-Ibuild/clang-debug/src", "-Ibuild/src",
   "-std=c++1z",
   "-stdlib=libc++", -- probably better c++1* support than random gcc headers
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies
-  "-Wno-vla-extension", "-Wno-vla",
   "-Wno-assume"
 }
 
