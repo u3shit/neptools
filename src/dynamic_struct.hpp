@@ -148,12 +148,12 @@ public:
     // actual class begin
     NEPTOOLS_LUAGEN(result_type=
         "::boost::intrusive_ptr<::Neptools::DynamicStruct</*$= cls.template_args */>>")
-    static boost::intrusive_ptr<DynamicStruct> New(const TypePtr type)
+    static boost::intrusive_ptr<DynamicStruct> New(TypePtr type)
     {
         auto ptr = ::operator new(sizeof(DynamicStruct) + type->byte_size - 1);
         try
         {
-            auto obj = new (ptr) DynamicStruct{type};
+            auto obj = new (ptr) DynamicStruct{std::move(type)};
             return {obj, false};
         }
         catch (...)
@@ -190,7 +190,7 @@ public:
         return GetTypeIndex(i) == GetIndexFromType<T>();
     }
 
-    TypePtr GetType() const noexcept { return type; }
+    const TypePtr& GetType() const noexcept { return type; }
     NEPTOOLS_NOLUA void* GetData() noexcept { return data; }
     NEPTOOLS_NOLUA const void* GetData() const noexcept { return data; }
 
@@ -243,12 +243,12 @@ public:
     }
 
 private:
-    DynamicStruct(const TypePtr& type) : type{type}
+    DynamicStruct(TypePtr type) : type{std::move(type)}
     {
         size_t i = 0;
         try
         {
-            for (i = 0; i < type->item_count; ++i)
+            for (i = 0; i < this->type->item_count; ++i)
                 Visit(i, Make{});
         }
         catch (...)
@@ -282,7 +282,10 @@ private:
     friend void intrusive_ptr_release(const DynamicStruct* t)
     {
         if (t->refcount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+        {
+            t->~DynamicStruct();
             ::operator delete(const_cast<DynamicStruct*>(t));
+        }
     }
 };
 
