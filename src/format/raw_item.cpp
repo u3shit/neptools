@@ -5,15 +5,6 @@
 namespace Neptools
 {
 
-static inline char FilterPrintable(Byte c)
-{
-    //return isprint(c) ? c : '.';
-    if (c >= ' ' && c < '~')
-        return c;
-    else
-        return '.';
-}
-
 void RawItem::Dump_(Sink& sink) const
 {
     src.Dump(sink);
@@ -21,45 +12,8 @@ void RawItem::Dump_(Sink& sink) const
 
 void RawItem::Inspect_(std::ostream& os) const
 {
-    auto flags = os.flags();
-    os << std::hex;
-
-    auto it = GetLabels().begin();
-    size_t i = 0;
-    while (true)
-    {
-        for (; it != GetLabels().end() && it->GetPtr().offset == i; ++it)
-            os << '@' << it->GetName() << ":\n";
-        auto max = GetSize();
-        if (it != GetLabels().end() && it->GetPtr().offset < max)
-            max = it->GetPtr().offset;
-
-        os << std::setw(8) << std::setfill('0') << GetPosition() + i
-           << ' ';
-
-        Byte buf[16];
-        src.Pread(i, buf, std::min<uint64_t>(max-i, 16));
-
-        // numbers
-        size_t j = 0;
-        for (; j < 8 && i+j < max; ++j)
-            os << ' ' << std::setw(2) << static_cast<unsigned>(buf[j]);
-        os << ' ';
-        for (; j < 16 && i+j < max; ++j)
-            os << ' ' << std::setw(2) << static_cast<unsigned>(buf[j]);
-        for (; j < 16; ++j) os << "   ";
-
-        os << " |";
-        // chars
-        j = 0;
-        for (; j < 16 && i+j < max; ++j)
-            os << FilterPrintable(buf[j]);
-        os << '|';
-        if ((i+=j) >= GetSize()) break;
-        os << '\n';
-    }
-    NEPTOOLS_ASSERT(it == GetLabels().end());
-    os.flags(flags);
+    Item::Inspect_(os);
+    os << "raw(" << src << ")";
 }
 
 NotNull<RefCountedPtr<RawItem>> RawItem::InternalSlice(

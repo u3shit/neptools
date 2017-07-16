@@ -26,9 +26,23 @@ struct RetNum
     int n;
 };
 
+// like skip, but stores index
+class Any
+{
+public:
+    constexpr Any(int idx) : idx{idx}
+    { NEPTOOLS_ASSERT_MSG(idx > 0, "Index must be absolute"); }
+
+    constexpr int Get() const { return idx; }
+    constexpr operator int() const { return idx; }
+
+private:
+    int idx;
+};
+
 // ensure type but do not parse
 template <int Type>
-class Raw
+class Raw : public Any
 {
 public:
 #ifndef NEPTOOLS_WITHOUT_LUA
@@ -39,16 +53,11 @@ public:
         "Type is not a lua type constant");
 #endif
     static constexpr int TYPE = Type;
-
-    Raw(int idx) : idx{idx}
-    { NEPTOOLS_ASSERT_MSG(idx > 0, "Index must be absolute"); }
-
-    int Get() const { return idx; }
-    operator int() const { return idx; }
-
-private:
-    int idx;
+    using Any::Any;
 };
+
+using RawString = Raw<LUA_TSTRING>;
+using RawTable = Raw<LUA_TTABLE>;
 
 template <typename T, typename Enable = void> struct TupleLike;
 

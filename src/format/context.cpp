@@ -162,10 +162,12 @@ void Context::Dispose() noexcept
     {
         void operator()(Label* l)
         {
-            auto& lst = l->GetPtr().item->labels;
-            lst.erase(lst.iterator_to(*l));
-
-            l->ptr.item = nullptr;
+            auto& item = l->ptr.item;
+            if (item)
+            {
+                item->labels.erase(item->labels.iterator_to(*l));
+                item = nullptr;
+            }
             l->RemoveRef();
         }
     };
@@ -173,6 +175,13 @@ void Context::Dispose() noexcept
     GetChildren().clear();
 
     ItemWithChildren::Dispose();
+}
+
+std::ostream& operator<<(std::ostream& os, PrintLabelStruct l)
+{
+    if (l.label == nullptr)
+        return os << "nil";
+    return os << "l(" << Quoted(l.label->GetName()) << ')';
 }
 
 }

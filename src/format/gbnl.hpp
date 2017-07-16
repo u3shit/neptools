@@ -58,11 +58,6 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(TypeDescriptor) == 0x04);
 
-
-    Gbnl(Source src);
-
-    void Fixup() override { RecalcSize(); }
-
     struct OffsetString
     {
         std::string str;
@@ -76,6 +71,18 @@ public:
         uint8_t, uint16_t, uint32_t, uint64_t, float, OffsetString,
         FixStringTag, PaddingTag>;
     using StructPtr = NotNull<boost::intrusive_ptr<Struct>>;
+
+    Gbnl(Source src);
+    Gbnl(bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,
+         Struct::TypePtr type)
+        : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
+          type{std::move(type)} {}
+#ifndef NEPTOOLS_WITHOUT_LUA
+    Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
+         uint32_t field_30, Lua::RawTable type, Lua::RawTable messages);
+#endif
+
+    void Fixup() override { RecalcSize(); }
 
     bool is_gstl;
     uint32_t flags, field_28, field_30;
@@ -94,6 +101,7 @@ public:
 protected:
     // todo: private after removing GbnlItem
     void Dump_(Sink& sink) const override;
+    void InspectGbnl(std::ostream& os) const;
     void Inspect_(std::ostream& os) const override;
 
 private:

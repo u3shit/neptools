@@ -21,6 +21,13 @@ void File::Parse_(Source& src)
     HeaderItem::CreateAndInsert({root.get(), 0});
 }
 
+void File::Inspect_(std::ostream& os) const
+{
+    Item::Inspect_(os);
+    os << "neptools.stcm.file()";
+    InspectChildren(os);
+}
+
 std::vector<NotNull<SmartPtr<const GbnlItem>>> File::FindGbnl() const
 {
     std::vector<NotNull<SmartPtr<const GbnlItem>>> ret;

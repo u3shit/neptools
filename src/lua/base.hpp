@@ -36,6 +36,8 @@ extern char reftbl;
 
 NEPTOOLS_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
 
+inline bool IsNoneOrNil(int v) { return v <= 0; }
+
 class StateRef
 {
 public:
@@ -100,10 +102,43 @@ public:
     BOOST_NORETURN
     void GetError(bool arg, int idx, const char* msg);
 
+    struct RawLen01Ret { size_t len; bool one_based; };
+    RawLen01Ret RawLen01(int idx);
+    template <typename Fun>
+    void Ipairs01(int idx, Fun f)
+    {
+        auto [i, type] = Ipairs01Prep(idx);
+        while (!IsNoneOrNil(type))
+        {
+            NEPTOOLS_LUA_GETTOP(vm, top);
+            f(i, type);
+            NEPTOOLS_LUA_CHECKTOP(vm, top);
+
+            lua_pop(vm, 1); // 0
+            type = lua_rawgeti(vm, idx, ++i); // +1
+        }
+        lua_pop(vm, 1); // 0
+    }
+    template <typename Fun>
+    void Fori(int idx, size_t offset, size_t len, Fun f)
+    {
+        for (size_t i = 0; i < len; ++i)
+        {
+            NEPTOOLS_LUA_GETTOP(vm, top);
+            f(lua_rawgeti(vm, idx, i + offset));
+            lua_pop(vm, 1);
+            NEPTOOLS_LUA_CHECKTOP(vm, top);
+        }
+    }
+    size_t Unpack01(int idx); // +ret
+    bool GetNewFunction(const char* tag); // +1
+
 protected:
     lua_State* vm;
 
 private:
+    std::pair<size_t, int> Ipairs01Prep(int idx);
+
 #ifdef _MSC_VER
     static int SEHFilter(lua_State* vm, unsigned code);
 #else
@@ -113,15 +148,13 @@ private:
     static thread_local size_t error_len;
 };
 
-inline bool IsNoneOrNil(int v) { return v <= 0; }
-
-#define NEPTOOLS_LUA_RUNBC(vm, name)                                    \
+#define NEPTOOLS_LUA_RUNBC(vm, name, retnum)                            \
     do                                                                  \
     {                                                                   \
         auto runbc_ret = luaL_loadbuffer(                               \
-            vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, "neptools"); \
+            vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, #name);      \
         NEPTOOLS_ASSERT(runbc_ret == 0); (void) runbc_ret;              \
-        lua_call(vm, 0, 0);                                             \
+        lua_call(vm, 0, retnum);                                        \
     } while (false)
 
 

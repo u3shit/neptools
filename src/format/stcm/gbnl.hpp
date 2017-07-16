@@ -16,7 +16,21 @@ class GbnlItem final : public Item, public Gbnl
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    GbnlItem(Key k, Context& ctx, Source src);
+    GbnlItem(Key k, Context& ctx, Source src)
+        : Item{k, ctx}, Gbnl{std::move(src)} {}
+    GbnlItem(Key k, Context& ctx, bool is_gstl, uint32_t flags,
+             uint32_t field_28, uint32_t field_30, Gbnl::Struct::TypePtr type)
+        : Item{k, ctx},
+          Gbnl{is_gstl, flags, field_28, field_30, std::move(type)} {}
+#ifndef NEPTOOLS_WITHOUT_LUA
+    GbnlItem(
+        Key k, Context& ctx, Lua::StateRef vm, bool is_gstl, uint32_t flags,
+        uint32_t field_28, uint32_t field_30, Lua::RawTable type,
+        Lua::RawTable messages)
+        : Item{k, ctx},
+          Gbnl{vm, is_gstl, flags, field_28, field_30, type, messages} {}
+#endif
+
     static GbnlItem& CreateAndInsert(ItemPointer ptr);
 
     void Fixup() override { Gbnl::Fixup(); }
@@ -24,7 +38,8 @@ public:
 
 private:
     void Dump_(Sink& sink) const override { Gbnl::Dump_(sink); }
-    void Inspect_(std::ostream& os) const override { Gbnl::Inspect_(os); }
+    void Inspect_(std::ostream& os) const override
+    { Item::Inspect_(os); Gbnl::InspectGbnl(os); }
 };
 
 }

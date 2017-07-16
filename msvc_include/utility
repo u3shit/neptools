@@ -1,6 +1,10 @@
 // -*- c++ -*-
 #pragma once
 
+#pragma push_macro("tuple_size")
+#define tuple_size tuple_size;                          \
+    template <typename _Tuple> struct stupid_microsoft  \
+    _Pragma("pop_macro(\"tuple_size\")")
 #include_next <utility>
 
 namespace std

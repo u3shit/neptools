@@ -1,4 +1,6 @@
 #include "utils.hpp"
+
+#include "source.hpp"
 #include <fstream>
 #include <iomanip>
 
@@ -27,23 +29,42 @@ std::ifstream OpenIn(const boost::filesystem::path& pth)
     return is;
 }
 
+static void DumpByte(std::ostream& os, char c)
+{
+    if (c == '"')
+        os << "\\\"";
+    else if (c == '\\')
+        os << "\\\\";
+    else if (c == '\n')
+        os << "\\n";
+    else if (c == '\r')
+        os << "\\r";
+    else if (c >= ' ' && c <= '~')
+        os << c;
+    else
+        os << "\\x" << std::setw(2) << unsigned(static_cast<unsigned char>(c));
+}
+
 void DumpBytes(std::ostream& os, StringView data)
 {
     auto flags = os.flags();
     os << std::hex << std::setfill('0') << '"';
-    for (size_t i = 0; i < data.length(); ++i)
-        if (data[i] == '"')
-            os << "\\\"";
-        else if (data[i] == '\\')
-            os << "\\\\";
-        else if (data[i] == '\n')
-            os << "\\n";
-        else if (data[i] == '\r')
-            os << "\\r";
-        else if (data[i] >= ' ' && data[i] <= '~')
-            os << data[i];
-        else
-            os << "\\x" << std::setw(2) << unsigned(data.uindex(i));
+    for (size_t i = 0; i < data.length(); ++i) DumpByte(os, data[i]);
+    os << '"';
+    os.flags(flags);
+}
+
+void DumpBytes(std::ostream& os, Source data)
+{
+    auto flags = os.flags();
+    os << std::hex << std::setfill('0') << '"';
+
+    for (FilePosition offs = 0, size = data.GetSize(); offs < size; )
+    {
+        auto chunk = data.GetChunk(offs);
+        for (char c : chunk) DumpByte(os, c);
+        offs += chunk.length();
+    }
     os << '"';
     os.flags(flags);
 }

@@ -13,7 +13,10 @@ class RawItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    RawItem(Key k, Context& ctx, Source src, FilePosition pos = 0) noexcept
+    RawItem(Key k, Context& ctx, Source src) noexcept
+        : Item{k, ctx}, src{std::move(src)} {}
+    NEPTOOLS_NOLUA
+    RawItem(Key k, Context& ctx, Source src, FilePosition pos) noexcept
         : Item{k, ctx, pos}, src{std::move(src)} {}
 
     const Source& GetSource() const noexcept { return src; }

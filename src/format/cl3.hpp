@@ -90,6 +90,9 @@ public:
 
     Cl3(Source src);
     Cl3() : field_14{0} {}
+#ifndef NEPTOOLS_WITHOUT_LUA
+    Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl);
+#endif
 
     void Fixup() override;
     FilePosition GetSize() const override;
@@ -112,6 +115,10 @@ public:
         Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
         explicit Entry(std::string name) : name{std::move(name)} {}
+#ifndef NEPTOOLS_WITHOUT_LUA
+        Entry(Lua::StateRef vm, std::string name, uint32_t field_200,
+              Lua::RawTable links, SmartPtr<Dumpable> src);
+#endif
 
         void Dispose() noexcept override;
     };

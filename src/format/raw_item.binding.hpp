@@ -15,7 +15,7 @@ void TypeRegisterTraits<::Neptools::RawItem>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::RawItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::RawItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::FilePosition>>
+        &::Neptools::Lua::TypeTraits<::Neptools::RawItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
         static_cast<const ::Neptools::Source & (::Neptools::RawItem::*)() const noexcept>(&::Neptools::RawItem::GetSource),

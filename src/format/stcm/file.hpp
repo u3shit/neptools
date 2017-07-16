@@ -10,15 +10,19 @@
 namespace Neptools::Stcm
 {
 
-class File : public Context, public TxtSerializable
+class File final : public Context, public TxtSerializable
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    File() = default;
     File(Source src);
     NEPTOOLS_NOLUA
     std::vector<NotNull<SmartPtr<const GbnlItem>>> FindGbnl() const;
     NEPTOOLS_LUAGEN(wrap="TableRetWrap")
     std::vector<NotNull<SmartPtr<GbnlItem>>> FindGbnl();
+
+protected:
+    void Inspect_(std::ostream& os) const override;
 
 private:
     void Parse_(Source& src);

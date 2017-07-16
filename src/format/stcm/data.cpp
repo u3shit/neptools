@@ -69,9 +69,8 @@ void DataItem::Dump_(Sink& sink) const
 void DataItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
-    os << "data(" << type << ", " << offset_unit << ", " << field_8 << ") {";
-    ItemWithChildren::Inspect_(os);
-    os << '}';
+    os << "data(" << type << ", " << offset_unit << ", " << field_8 << ')';
+    InspectChildren(os);
 }
 
 FilePosition DataItem::GetSize() const noexcept

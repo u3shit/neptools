@@ -2,6 +2,7 @@
 #include "data.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
+#include "../../container/vector.lua.hpp"
 #include "../../except.hpp"
 #include "../../sink.hpp"
 #include <set>
@@ -119,6 +120,13 @@ void InstructionItem::Parse_(Context& ctx, Source& src)
     }
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+void InstructionItem::ParseArgs(Lua::StateRef vm, Lua::RawTable tbl)
+{
+    Lua::Vector<Param>::FillFromTable(vm, params, tbl);
+}
+#endif
+
 auto InstructionItem::Param::GetVariant(Context& ctx, const Parameter& in)
     -> Variant
 {
@@ -224,13 +232,14 @@ void InstructionItem::Param::Dump(Sink& sink) const
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
 {
+    os << "neptools.stcm.instruction_item.param.new_";
     using T = InstructionItem::Param::Type;
     switch (p.GetType())
     {
     case T::MEM_OFFSET:
     {
         const auto& o = p.Get<T::MEM_OFFSET>();
-        return os << "mem_offset(@" << o.target->GetName() << ", "
+        return os << "mem_offset(" << PrintLabel(o.target) << ", "
                   << o.param_4 << ", " << o.param_8 << ')';
     }
     case T::INDIRECT:
@@ -239,15 +248,15 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
         return os << "indirect(" << i.param_0 << ", " << i.param_8 << ')';
     }
     case T::READ_STACK:
-        return os << "stack(" << p.Get<T::READ_STACK>() << ")";
+        return os << "read_stack(" << p.Get<T::READ_STACK>() << ")";
     case T::READ_4AC:
-        return os << "4ac(" << p.Get<T::READ_4AC>() << ")";
+        return os << "read_4ac(" << p.Get<T::READ_4AC>() << ")";
     case T::INSTR_PTR0:
-        return os << "instr_ptr0(@" << p.Get<T::INSTR_PTR0>()->GetName() << ')';
+        return os << "instr_ptr0(" << PrintLabel(p.Get<T::INSTR_PTR0>()) << ')';
     case T::INSTR_PTR1:
-        return os << "instr_ptr1(@" << p.Get<T::INSTR_PTR1>()->GetName() << ')';
+        return os << "instr_ptr1(" << PrintLabel(p.Get<T::INSTR_PTR1>()) << ')';
     case T::COLL_LINK:
-        return os << "coll_link(@" << p.Get<T::COLL_LINK>()->GetName() << ')';
+        return os << "coll_link(" << PrintLabel(p.Get<T::COLL_LINK>()) << ')';
     }
     NEPTOOLS_UNREACHABLE("Invalid type");
 }
@@ -287,11 +296,12 @@ auto InstructionItem::Param48::GetVariant(Context& ctx, uint32_t in) -> Variant
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
 {
+    os << "neptools.stcm.instruction_item.param48.new_";
     using T = InstructionItem::Param48::Type;
     switch (p.GetType())
     {
     case T::MEM_OFFSET:
-        return os << "mem_offset(@" << p.Get<T::MEM_OFFSET>()->GetName() << ')';
+        return os << "mem_offset(" << PrintLabel(p.Get<T::MEM_OFFSET>()) << ')';
     case T::IMMEDIATE:
         return os << "immediate(" << p.Get<T::IMMEDIATE>() << ')';
     case T::INDIRECT:
@@ -411,10 +421,10 @@ void InstructionItem::Inspect_(std::ostream &os) const
     Item::Inspect_(os);
 
     if (IsCall())
-        os << "call @" << GetTarget()->GetName();
+        os << "call(" << PrintLabel(GetTarget());
     else
-        os << "instr " << GetOpcode();
-    os << '(';
+        os << "instruction(" << GetOpcode();
+    os << ", {";
     bool sep = false;
     for (const auto& p : params)
     {
@@ -422,15 +432,13 @@ void InstructionItem::Inspect_(std::ostream &os) const
         sep = true;
         os << p;
     }
-    os << ") {";
-    ItemWithChildren::Inspect_(os);
-    os << "}\n";
+    os << "})";
+    InspectChildren(os);
 }
 
 }
 }
 
-#include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
     stcm_instruction_param, Neptools::Stcm::InstructionItem::Param);
 #include "instruction.binding.hpp"

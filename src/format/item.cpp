@@ -1,9 +1,13 @@
-#include "context.hpp"
 #include "item.hpp"
+#include "context.hpp"
 #include "raw_item.hpp"
 #include "../utils.hpp"
 #include <algorithm>
 #include <iostream>
+
+#ifndef NEPTOOLS_WITHOUT_LUA
+#include "format/builder.lua.h"
+#endif
 
 #define NEPTOOLS_LOG_NAME "item"
 #include "../logger_helper.hpp"
@@ -20,10 +24,10 @@ void Item::Inspect_(std::ostream& os) const
 {
     for (const auto& it : GetLabels())
     {
-        os << '@' << it.GetName();
+        os << "label(" << Quoted(it.GetName());
         if (it.GetPtr().offset != 0)
-            os << '+' << it.GetPtr().offset;
-        os << ":\n";
+            os << ", " << it.GetPtr().offset;
+        os << ")\n";
     }
 }
 
@@ -136,13 +140,17 @@ void ItemWithChildren::Dump_(Sink& sink) const
         c.Dump(sink);
 }
 
-void ItemWithChildren::Inspect_(std::ostream& os) const
+void ItemWithChildren::InspectChildren(std::ostream& os) const
 {
+    if (GetChildren().empty()) return;
+
+    os << ":build(function()\n";
     for (auto& c : GetChildren())
     {
         c.Inspect(os);
         os << '\n';
     }
+    os << "end)";
 }
 
 

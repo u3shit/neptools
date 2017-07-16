@@ -15,7 +15,9 @@ void TypeRegisterTraits<::Neptools::Stcm::GbnlItem>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::Stcm::GbnlItem, ::Neptools::Item, ::Neptools::Gbnl>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::GbnlItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::GbnlItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::GbnlItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Gbnl::Struct::TypePtr>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::GbnlItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Lua::RawTable>, LuaGetRef<::Neptools::Lua::RawTable>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::GbnlItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::GbnlItem::CreateAndInsert)

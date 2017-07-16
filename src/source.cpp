@@ -50,6 +50,22 @@ struct UnixProvider final : public UnixLike<UnixProvider>
     void DeleteChunk(size_t i);
 };
 
+struct StringProvider final : public Source::Provider
+{
+    StringProvider(boost::filesystem::path file_name, std::string str)
+        : Source::Provider(std::move(file_name), str.size()),
+          str{std::move(str)}
+    {
+        LruPush(reinterpret_cast<const Byte*>(this->str.data()),
+                0, this->str.size());
+    }
+
+    void Pread(FilePosition, Byte*, FileMemSize) override
+    { NEPTOOLS_UNREACHABLE("StringProvider Pread"); }
+
+    std::string str;
+};
+
 }
 
 
@@ -76,6 +92,12 @@ Source Source::FromFile_(const boost::filesystem::path& fname)
         p = MakeSmart<UnixProvider>(std::move(io), fname, size);
     }
     return {MakeNotNull(std::move(p)), size};
+}
+
+Source Source::FromMemory(const boost::filesystem::path& fname, std::string str)
+{
+    FilePosition len = str.length();
+    return {MakeSmart<StringProvider>(std::move(fname), std::move(str)), len};
 }
 
 void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
@@ -107,7 +129,18 @@ Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const
     return p->lru[0];
 }
 
-void Source::Provider::LruPush(Byte* ptr, FilePosition offset, FileMemSize size)
+StringView Source::GetChunk(FilePosition offs) const
+{
+    NEPTOOLS_ASSERT(offs < size);
+    auto e = GetTemporaryEntry(offs + offset);
+    auto eoffs = offs + offset - e.offset;
+    auto size = std::min(e.size - eoffs, GetSize() - offs);
+    return { e.ptr + eoffs, size };
+}
+
+
+void Source::Provider::LruPush(
+    const Byte* ptr, FilePosition offset, FileMemSize size)
 {
     memmove(&lru[1], &lru[0], sizeof(BufEntry)*(lru.size()-1));
     lru[0].ptr = ptr;
@@ -202,7 +235,7 @@ void* MmapProvider::ReadChunk(FilePosition offs, FileMemSize size)
 void MmapProvider::DeleteChunk(size_t i)
 {
     if (lru[i].ptr)
-        io.Munmap(lru[i].ptr, lru[i].size);
+        io.Munmap(const_cast<Byte*>(lru[i].ptr), lru[i].size);
 }
 
 FilePosition UnixProvider::CHUNK_SIZE = LowIo::MEM_CHUNK;
@@ -221,11 +254,8 @@ void UnixProvider::DeleteChunk(size_t i)
 
 void Source::Inspect(std::ostream& os) const
 {
-    auto flags = os.flags();
-    os << std::hex << "bin(";
-    DumpBytes(os, GetFileName().generic_string());
-    os << ", 0x" << GetOffset() << ", 0x" << GetSize() << ")";
-    os.flags(flags);
+    os << "neptools.source.from_memory(" << Quoted(GetFileName().string())
+       << ", " << Quoted(*this)  << ")";
 }
 
 std::string Source::Inspect() const
@@ -237,17 +267,13 @@ std::string Source::Inspect() const
 
 void Source::Dump(Sink& sink) const
 {
-    auto offset = GetOffset();
-    auto rem_size = GetSize();
-    while (rem_size)
+    FilePosition offset = 0;
+    auto size = GetSize();
+    while (offset < size)
     {
-        auto x = GetTemporaryEntry(offset);
-        NEPTOOLS_ASSERT(x.offset <= offset);
-        auto ptroff = offset - x.offset;
-        auto size = std::min(rem_size, x.size - ptroff);
-        sink.Write({x.ptr + ptroff, size});
-        offset += size;
-        rem_size -= size;
+        auto chunk = GetChunk(offset);
+        sink.Write(chunk);
+        offset += chunk.size();
     }
 }
 

@@ -9,6 +9,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/container/small_vector.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
+#include <brigand/algorithms/wrap.hpp>
 
 //#define STRTOOL_COMPAT
 
@@ -180,6 +181,23 @@ void Gbnl::Parse_(Source& src)
     VALIDATE(" invalid size after repack", GetSize() == src.GetSize());
 #undef VALIDATE
 }
+
+#ifndef NEPTOOLS_WITHOUT_LUA
+Gbnl::Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
+           uint32_t field_30, Lua::RawTable type, Lua::RawTable msgs)
+    : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
+      type{brigand::wrap<Struct, DynamicStructTypeLua>::New(vm, type)}
+{
+    auto [len, one] = vm.RawLen01(msgs);
+    messages.reserve(len);
+    vm.Fori(msgs, one, len, [&](int type)
+    {
+        if (type != LUA_TTABLE) vm.TypeError(false, "table", -1);
+        messages.emplace_back(brigand::wrap<Struct, DynamicStructLua>::New(
+            vm, this->type, {lua_absindex(vm, -1)}));
+    });
+}
+#endif
 
 void Gbnl::Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& uint8_in_progress)
 {
@@ -394,41 +412,46 @@ struct Print
 
 void Gbnl::Inspect_(std::ostream& os) const
 {
-    os << (is_gstl ? "gstl(" : "gbnl(") << flags << ", " << field_28 << ", "
-       << field_30 << ", types[";
+    os << "neptools.";
+    InspectGbnl(os);
+}
+void Gbnl::InspectGbnl(std::ostream& os) const
+{
+    os << "gbnl(" << (is_gstl ? "true" : "false") << ", " << flags
+       << ", " << field_28 << ", " << field_30 << ", {";
 
     for (size_t i = 0; i < type->item_count; ++i)
     {
         if (i != 0) os << ", ";
         switch (type->items[i].idx)
         {
-        case Struct::GetIndexFromType<uint8_t>():      os << "uint8";  break;
-        case Struct::GetIndexFromType<uint16_t>():     os << "uint16"; break;
-        case Struct::GetIndexFromType<uint32_t>():     os << "uint32"; break;
-        case Struct::GetIndexFromType<uint64_t>():     os << "uint64"; break;
-        case Struct::GetIndexFromType<float>():        os << "float";  break;
-        case Struct::GetIndexFromType<OffsetString>(): os << "string"; break;
+        case Struct::GetIndexFromType<uint8_t>():      os << "\"uint8\"";  break;
+        case Struct::GetIndexFromType<uint16_t>():     os << "\"uint16\""; break;
+        case Struct::GetIndexFromType<uint32_t>():     os << "\"uint32\""; break;
+        case Struct::GetIndexFromType<uint64_t>():     os << "\"uint64\""; break;
+        case Struct::GetIndexFromType<float>():        os << "\"float\"";  break;
+        case Struct::GetIndexFromType<OffsetString>(): os << "\"string\""; break;
         case Struct::GetIndexFromType<FixStringTag>():
-            os << "fix_string(" << type->items[i].size << ")";
+            os << "{\"fix_string\", " << type->items[i].size << "}";
             break;
         case Struct::GetIndexFromType<PaddingTag>():
-            os << "pad(" << type->items[i].size << ")";
+            os << "{\"pad\", " << type->items[i].size << "}";
             break;
         }
     }
 
-    os << "], messages[\n";
+    os << "}, {\n";
     for (const auto& m : messages)
     {
-        os << "  (";
+        os << "  {";
         for (size_t i = 0; i < m->GetSize(); ++i)
         {
             if (i != 0) os << ", ";
             m->Visit<void>(i, Print{os});
         }
-        os << ")\n";
+        os << "},\n";
     }
-    os << "])";
+    os << "})";
 }
 
 void Gbnl::RecalcSize()

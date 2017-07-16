@@ -2,6 +2,8 @@
 #include "stcm/file.hpp"
 #include "../except.hpp"
 #include "../open.hpp"
+#include "../container/ordered_map.lua.hpp"
+#include "../container/vector.lua.hpp"
 
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
@@ -63,6 +65,21 @@ Cl3::Cl3(Source src)
 {
     AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
 }
+
+#ifndef NEPTOOLS_WITHOUT_LUA
+Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
+    : field_14{field_14}
+{
+    OrderedMapLua<Entry, EntryKeyOfValue>::FillFromTable(vm, entries, tbl);
+}
+
+Cl3::Entry::Entry(Lua::StateRef vm, std::string name, uint32_t field_200,
+              Lua::RawTable tbl, SmartPtr<Dumpable> src)
+    : name{std::move(name)}, field_200{field_200}, src{std::move(src)}
+{
+    Lua::Vector<WeakRefCountedPtr<Entry>>::FillFromTable(vm, links, tbl);
+}
+#endif
 
 void Cl3::Dispose() noexcept
 {
@@ -208,13 +225,10 @@ uint32_t Cl3::IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept
 
 void Cl3::Inspect_(std::ostream& os) const
 {
-    os << "cl3(" << field_14 << ", files[\n";
-    size_t i = 0;
+    os << "neptools.cl3(" << field_14 << ", {\n";
     for (auto& e : entries)
     {
-        os << "  [" << i++ << "] (";
-        DumpBytes(os, e.name);
-        os << ", " << e.field_200 << ", links[";
+        os << "  {" << Quoted(e.name) << ", " << e.field_200 << ", {";
         bool first = true;
         for (auto& l : e.links)
         {
@@ -224,13 +238,14 @@ void Cl3::Inspect_(std::ostream& os) const
             if (ll) DumpBytes(os, ll->name);
             else os << "nil";
         }
-        os << "], ";
+        os << "}, ";
         if (e.src)
             e.src->Inspect(os);
         else
             os << "nil";
-        os << ")\n";
+        os << "},\n";
     }
+    os << "})";
 }
 
 void Cl3::Dump_(Sink& sink) const
@@ -341,8 +356,6 @@ static OpenFactory cl3_open{[](Source src) -> SmartPtr<Cl3>
 
 }
 
-#include "../container/ordered_map.lua.hpp"
-#include "../container/vector.lua.hpp"
 NEPTOOLS_ORDERED_MAP_LUAGEN(
     cl3_entry, Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue);
 NEPTOOLS_STD_VECTOR_LUAGEN(

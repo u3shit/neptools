@@ -66,6 +66,11 @@ private:
     PointerMap pmap;
 };
 
+struct PrintLabelStruct { const Label* label; };
+std::ostream& operator<<(std::ostream& os, PrintLabelStruct label);
+inline PrintLabelStruct PrintLabel(const LabelPtr& label)
+{ return {label.get()}; }
+
 using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
 }
 

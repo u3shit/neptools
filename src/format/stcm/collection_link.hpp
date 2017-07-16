@@ -77,6 +77,9 @@ public:
 
     CollectionLinkItem(Key k, Context& ctx) : Item{k, ctx} {}
     CollectionLinkItem(Key k, Context& ctx, Source src, uint32_t count);
+#ifndef NEPTOOLS_WITHOUT_LUA
+    CollectionLinkItem(Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable links);
+#endif
 
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }

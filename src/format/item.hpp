@@ -150,12 +150,15 @@ public:
 
 protected:
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& sink) const override;
+    void InspectChildren(std::ostream& sink) const;
     void Fixup_(FilePosition offset);
 
     friend struct ::Neptools::ItemListTraits;
     friend class Item;
-};
+} NEPTOOLS_LUAGEN(post_register=[[
+    NEPTOOLS_LUA_RUNBC(bld, builder, 1);
+    bld.SetField("build");
+]]);
 
 inline ItemWithChildren* Item::GetParent() noexcept
 { return static_cast<ItemWithChildren*>(ItemList::opt_get_parent(*this)); }

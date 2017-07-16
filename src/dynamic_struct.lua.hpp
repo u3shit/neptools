@@ -211,19 +211,12 @@ struct DynamicStructTypeLua
 
     // create from table
     static boost::intrusive_ptr<const FakeClass>
-    New(Lua::StateRef vm, Lua::Raw<LUA_TTABLE> tbl)
+    New(Lua::StateRef vm, Lua::RawTable tbl)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
         Builder bld;
-        size_t i = 0;
-        int type;
-        if (Lua::IsNoneOrNil(type = lua_rawgeti(vm, tbl, i))) // +1
-        {
-            lua_pop(vm, 1); // 0
-            type = lua_rawgeti(vm, tbl, ++i); // +1
-        }
-
-        for (; !Lua::IsNoneOrNil(type); type = lua_rawgeti(vm, tbl, ++i))
+        auto [len, one] = vm.RawLen01(tbl);
+        bld.Reserve(len);
+        vm.Fori(tbl, one, len, [&](int type)
         {
             if (type == LUA_TSTRING)
                 BuilderLua::Add(vm, bld, {lua_absindex(vm, -1)}); // +1
@@ -232,11 +225,9 @@ struct DynamicStructTypeLua
             else
                 vm.TypeError(false, "string or table", -1);
 
-            lua_pop(vm, 2); // 0
-        } // +1
+            lua_pop(vm, 1); // 0
+        });
 
-        lua_pop(vm, 1); // 0
-        NEPTOOLS_LUA_CHECKTOP(vm, top);
         return bld.Build();
     }
 };
@@ -261,13 +252,13 @@ struct DynamicStructLua
     }
     static void Get(const FakeClass&, Lua::VarArg) noexcept {}
 
-    static void Set(Lua::StateRef vm, FakeClass& s, size_t i)
+    static void Set(Lua::StateRef vm, FakeClass& s, size_t i, Lua::Any val)
     {
         if (i >= s.GetSize())
             NEPTOOLS_THROW(std::out_of_range{"DynamicStruct"});
         auto idx = s.GetTypeIndex(i);
         NEPTOOLS_ASSERT(idx < sizeof...(Args));
-        infos<Args...>[idx].get(vm, 3, s.GetData(i), s.GetSize(i));
+        infos<Args...>[idx].get(vm, val, s.GetData(i), s.GetSize(i));
     }
 
     static Lua::RetNum ToTable(Lua::StateRef vm, FakeClass& s)
@@ -282,6 +273,17 @@ struct DynamicStructLua
             lua_rawseti(vm, -2, i); // +1
         }
         return 1;
+    }
+
+    static boost::intrusive_ptr<FakeClass> New(
+        Lua::StateRef vm, const typename FakeClass::TypePtr type,
+        Lua::RawTable vals)
+    {
+        auto s = FakeClass::New(type);
+        size_t i = 0;
+        vm.Ipairs01(vals, [&](size_t, int)
+        { Set(vm, *s, i++, {lua_absindex(vm, -1)}); });
+        return s;
     }
 
     NEPTOOLS_NOLUA static void Register(Lua::TypeBuilder& bld)

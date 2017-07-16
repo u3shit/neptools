@@ -31,25 +31,22 @@ inline constexpr size_t IDX_VARARG =
     size_t{1} << (std::numeric_limits<size_t>::digits-1);
 inline constexpr size_t IDX_MASK = IDX_VARARG - 1;
 
-template <typename T, typename Enable = void> struct GetArg;
-template <typename T, typename> struct GetArg
+template <typename T, typename Enable = void> struct GetArgImpl
 {
-    using RawType = typename std::decay<T>::type;
-
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
 
     template <bool Unsafe> static decltype(auto) Get(StateRef vm, int idx)
-    { return vm.Check<RawType, Unsafe>(idx); }
-    static bool Is(StateRef vm, int idx) { return vm.Is<RawType>(idx); }
+    { return vm.Check<T, Unsafe>(idx); }
+    static bool Is(StateRef vm, int idx) { return vm.Is<T>(idx); }
 
     static void Print(bool comma, std::ostream& os)
     {
         if (comma) os << ", ";
-        TypeTraits<RawType>::PrintName(os);
+        TypeTraits<T>::PrintName(os);
     }
 };
 
-template <> struct GetArg<Skip>
+template <> struct GetArgImpl<Skip>
 {
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
     template <bool>
@@ -58,7 +55,7 @@ template <> struct GetArg<Skip>
     static void Print(bool, std::ostream&) {}
 };
 
-template <> struct GetArg<VarArg>
+template <> struct GetArgImpl<VarArg>
 {
     template <size_t Idx> static constexpr size_t NEXT_IDX = IDX_VARARG | Idx;
     template <bool> static constexpr VarArg Get(StateRef, int) noexcept
@@ -70,7 +67,7 @@ template <> struct GetArg<VarArg>
     }
 };
 
-template <> struct GetArg<StateRef>
+template <> struct GetArgImpl<StateRef>
 {
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx;
     template <bool>
@@ -79,7 +76,20 @@ template <> struct GetArg<StateRef>
     static void Print(bool, std::ostream&) {}
 };
 
-template <int LType> struct GetArg<Raw<LType>>
+template <> struct GetArgImpl<Any>
+{
+    template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
+    template <bool>
+    static constexpr Any Get(StateRef, int idx) noexcept { return {idx}; }
+    static constexpr bool Is(StateRef, int) noexcept { return true; }
+    static void Print(bool, std::ostream&) {}
+
+    using type = brigand::list<>;
+    template <typename Val>
+    static constexpr const bool IS = true;
+};
+
+template <int LType> struct GetArgImpl<Raw<LType>>
 {
     template <size_t Idx> static constexpr size_t NEXT_IDX = Idx+1;
     template <bool Unsafe>
@@ -123,9 +133,11 @@ struct TupleGet<Tuple, std::index_sequence<Index...>>
 };
 
 template <typename T>
-struct GetArg<T, EnableIfTupleLike<std::decay_t<T>>>
-    : TupleGet<std::decay_t<T>,
-               std::make_index_sequence<TupleLike<std::decay_t<T>>::SIZE>> {};
+struct GetArgImpl<T, EnableIfTupleLike<T>>
+    : TupleGet<T, std::make_index_sequence<TupleLike<T>::SIZE>> {};
+
+template <typename T> using GetArg = GetArgImpl<std::decay_t<T>>;
+
 
 template <size_t I, typename Argument> struct Arg
 {

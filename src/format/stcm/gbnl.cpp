@@ -2,15 +2,8 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 
-namespace Neptools
+namespace Neptools::Stcm
 {
-namespace Stcm
-{
-
-GbnlItem::GbnlItem(Key k, Context& ctx, Source src)
-    : Item{k, ctx}, Gbnl{std::move(src)}
-{
-}
 
 GbnlItem& GbnlItem::CreateAndInsert(ItemPointer ptr)
 {
@@ -18,7 +11,6 @@ GbnlItem& GbnlItem::CreateAndInsert(ItemPointer ptr)
     return x.ritem.SplitCreate<GbnlItem>(ptr.offset, x.src);
 }
 
-}
 }
 
 #include "gbnl.binding.hpp"

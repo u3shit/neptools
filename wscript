@@ -259,6 +259,7 @@ def build_common(bld):
         src += [
             'src/logger.lua',
             'src/txt_serializable.cpp',
+            'src/format/builder.lua',
             'src/lua/base.cpp',
             'src/lua/base_funcs.lua',
             'src/lua/userdata.cpp',

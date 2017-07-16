@@ -63,10 +63,8 @@ void HeaderItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
 
-    os << "stcm_header(";
-    DumpBytes(os, msg.c_str());
-    os << ", @" << export_sec->GetName() << ", @" << collection_link->GetName()
-       << ", " << field_28 << ")";
+    os << "header(" << Quoted(msg.c_str()) << ", " << PrintLabel(export_sec)
+       << ", " << PrintLabel(collection_link) << ", " << field_28 << ")";
 }
 
 }

@@ -15,6 +15,9 @@ class File final : public Context, public TxtSerializable
 public:
     File(Source src);
 
+protected:
+    void Inspect_(std::ostream& os) const override;
+
 private:
     void Parse_(Source& src);
 

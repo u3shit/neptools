@@ -34,8 +34,8 @@ NEPTOOLS_COMP_CHECK(Lt, LT, <);
 
 }
 
-template <typename T, typename Allocator>
-struct TypeRegisterTraits<std::vector<T, Allocator>>
+template <typename T, typename Allocator = std::allocator<T>>
+struct Vector
 {
     using Vect = std::vector<T, Allocator>;
     using size_type = typename Vect::size_type;
@@ -116,6 +116,39 @@ struct TypeRegisterTraits<std::vector<T, Allocator>>
         return 1;
     }
 
+    // not exposed directly to lua
+    static void FillFromTable(Lua::StateRef vm, Vect& v, Lua::RawTable tbl)
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        auto hasnew = vm.GetNewFunction(TypeTraits<T>::TAG); // +1
+        auto newidx = lua_absindex(vm, -1);
+
+        auto [len, one] = vm.RawLen01(tbl);
+        v.reserve(v.size() + len);
+        vm.Fori(tbl, one, len, [&](int type)
+        {
+            if (hasnew && type == LUA_TTABLE)
+            {
+                lua_pushvalue(vm, newidx); // +1
+                auto n = vm.Unpack01(lua_absindex(vm, -2)); // +1+n
+                lua_call(vm, n, 1); // +1
+                v.push_back(vm.Get<T>(-1));
+                lua_pop(vm, 1);
+            }
+            else
+                v.push_back(vm.Check<T>(-1));
+        });
+        lua_pop(vm, 1);
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+    }
+
+    static auto FromTable(Lua::StateRef vm, Lua::RawTable tbl)
+    {
+        auto v = MakeShared<Vect>();
+        FillFromTable(vm, *v, tbl);
+        return v;
+    }
+
     static void Register(TypeBuilder& bld)
     {
         if constexpr (std::is_default_constructible_v<T>)
@@ -161,6 +194,7 @@ struct TypeRegisterTraits<std::vector<T, Allocator>>
             bld.AddFunction<
                 static_cast<void (Vect::*)(size_type, const T&)>(&Vect::resize)
             >("resize");
+        bld.AddFunction<&FromTable>("from_table");
         bld.AddFunction<&ToTable>("to_table");
 
         if constexpr (Detail::IS_EQ_COMP<T>)
@@ -181,6 +215,10 @@ struct TypeRegisterTraits<std::vector<T, Allocator>>
         bld.SetField("__ipairs");
     }
 };
+
+template <typename T, typename Allocator>
+struct TypeRegisterTraits<std::vector<T, Allocator>>
+    : Vector<T, Allocator> {};
 
 }
 

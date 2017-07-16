@@ -23,6 +23,13 @@ void File::Parse_(Source& src)
     HeaderItem::CreateAndInsert({&*root, 0});
 }
 
+void File::Inspect_(std::ostream& os) const
+{
+    Item::Inspect_(os);
+    os << "neptools.stsc.file()";
+    InspectChildren(os);
+}
+
 static const char SEP_DASH[] = {
 #define REP_MACRO(x,y,z) char(0x81), char(0x5c),
     BOOST_PP_REPEAT(40, REP_MACRO, )

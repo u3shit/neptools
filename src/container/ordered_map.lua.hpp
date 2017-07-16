@@ -98,6 +98,29 @@ struct OrderedMapLua
         }
     }
 
+    NEPTOOLS_NOLUA static void FillFromTable(
+        Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om, Lua::RawTable tbl)
+    {
+        NEPTOOLS_LUA_GETTOP(vm, top);
+        auto hasnew = vm.GetNewFunction(Lua::TypeTraits<T>::TAG); // +1
+        auto newidx = lua_absindex(vm, -1);
+        vm.Ipairs01(tbl, [&](size_t, int type)
+        {
+            if (hasnew && type == LUA_TTABLE)
+            {
+                lua_pushvalue(vm, newidx);  // +1
+                auto n = vm.Unpack01(lua_absindex(vm, -2)); // +1+n
+                lua_call(vm, n, 1); // +1
+                om.push_back(vm.Get<NotNull<SmartPtr<T>>>(-1));
+                lua_pop(vm, 1); // 0
+            }
+            else
+                om.push_back(vm.Check<NotNull<SmartPtr<T>>>(-1));
+        });
+        lua_pop(vm, 1);
+        NEPTOOLS_LUA_CHECKTOP(vm, top);
+    }
+
     static Lua::RetNum to_table(
         Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om)
     {

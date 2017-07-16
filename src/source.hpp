@@ -34,7 +34,7 @@ class NEPTOOLS_LUAGEN(const=false) Source final : public Lua::ValueObject
 public:
     struct BufEntry
     {
-        Byte* ptr = nullptr;
+        const Byte* ptr = nullptr;
         FilePosition offset = -1;
         FileMemSize size = 0;
     };
@@ -43,6 +43,8 @@ public:
         : Source{std::move(s)} { Slice(offset, size); get = 0; }
 
     static Source FromFile(const boost::filesystem::path& fname);
+    static Source FromMemory(
+        const boost::filesystem::path& fname, std::string data);
 
     template <typename Checker = Check::Assert>
     void Slice(FilePosition offset, FilePosition size) noexcept
@@ -197,7 +199,7 @@ public:
 
         virtual void Pread(FilePosition offs, Byte* buf, FileMemSize len) = 0;
 
-        void LruPush(Byte* ptr, FilePosition offset, FileMemSize size);
+        void LruPush(const Byte* ptr, FilePosition offset, FileMemSize size);
         bool LruGet(FilePosition offs);
 
         std::array<BufEntry, 4> lru;
@@ -214,6 +216,8 @@ public:
     NEPTOOLS_NOLUA void Inspect(std::ostream&& os) const { Inspect(os); }
     std::string Inspect() const;
 
+    NEPTOOLS_NOLUA StringView GetChunk(FilePosition offs) const;
+
 private:
     // offset: in original file!
     BufEntry GetTemporaryEntry(FilePosition offs) const;
@@ -225,6 +229,9 @@ private:
 
     NotNull<SmartPtr<Provider>> p;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Source s)
+{ s.Inspect(os); return os; }
 
 class DumpableSource final : public Dumpable
 {
@@ -252,6 +259,11 @@ private:
         if (!::boost::get_error_info<UsedSource>(add_source_e)) \
             add_source_e << UsedSource{src};                    \
     }
+
+struct QuotedSource { Source src; };
+inline std::ostream& operator<<(std::ostream& os, QuotedSource q)
+{ DumpBytes(os, q.src); return os; }
+inline QuotedSource Quoted(Source src) { return {src}; }
 
 }
 #endif

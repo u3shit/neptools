@@ -41,6 +41,12 @@ struct LuaGetRefHlp<T, std::enable_if_t<std::is_reference<T>::value>>
 
 template <typename T>
 struct LuaGetRefHlp<T, EnableIfTupleLike<T>> { using Type = T; };
+
+template <> struct LuaGetRefHlp<StateRef> { using Type = StateRef; };
+template <> struct LuaGetRefHlp<Skip>     { using Type = Skip; };
+template <> struct LuaGetRefHlp<VarArg>   { using Type = VarArg; };
+template <> struct LuaGetRefHlp<Any>      { using Type = Any; };
+template <int I> struct LuaGetRefHlp<Raw<I>> { using Type = Raw<I>; };
 }
 
 template <typename T>

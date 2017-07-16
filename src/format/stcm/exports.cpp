@@ -4,6 +4,7 @@
 #include "instruction.hpp"
 #include "../context.hpp"
 #include "../../sink.hpp"
+#include "../../container/vector.lua.hpp"
 #include <iostream>
 
 namespace Neptools
@@ -40,6 +41,15 @@ void ExportsItem::Parse_(Context& ctx, Source& src, uint32_t export_count)
             ctx.CreateLabelFallback(e.name.c_str(), e.offset)));
     }
 }
+
+#ifndef NEPTOOLS_WITHOUT_LUA
+ExportsItem::ExportsItem(
+    Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable tbl)
+    : Item{k, ctx}
+{
+    Lua::Vector<VectorEntry>::FillFromTable(vm, entries, tbl);
+}
+#endif
 
 ExportsItem& ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count)
 {
@@ -84,18 +94,18 @@ void ExportsItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
 
+    os << "exports{\n";
     for (auto& e : entries)
     {
-        os << '{' << e->type << ", ";
-        DumpBytes(os, e->name.c_str());
-        os << ", @" << e->lbl->GetName() << ")\n";
+        os << "    {" << e->type << ", " << Quoted(e->name.c_str())
+           << ", " << PrintLabel(e->lbl) << "},\n";
     }
+    os << '}';
 }
 
 }
 }
 
-#include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
     stcm_exports_item_entry_type, Neptools::NotNull<Neptools::RefCountedPtr<
         Neptools::Stcm::ExportsItem::EntryType>>);

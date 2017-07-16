@@ -28,7 +28,11 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem>::Register(TypeBuilder
 
     bld.AddFunction<
         &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint32_t>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<::Neptools::Lua::RawTable>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::InstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<::Neptools::Lua::RawTable>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::InstructionItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::InstructionItem::CreateAndInsert)
@@ -165,10 +169,12 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param>::Register(Type
         static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::READ_STACK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>)
     >("new_read_stack");
     bld.AddFunction<
-        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INDIRECT), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INDIRECT>)
+        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INDIRECT), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INDIRECT>),
+        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::uint32_t, ::Neptools::Stcm::InstructionItem::Param48)>(::Neptools::Stcm::InstructionItem::Param::NewIndirect)
     >("new_indirect");
     bld.AddFunction<
-        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>)
+        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>),
+        static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::Neptools::NotNull<::Neptools::LabelPtr>, ::Neptools::Stcm::InstructionItem::Param48, ::Neptools::Stcm::InstructionItem::Param48)>(::Neptools::Stcm::InstructionItem::Param::NewMemOffset)
     >("new_mem_offset");
 
 }

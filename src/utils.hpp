@@ -11,6 +11,8 @@
 namespace Neptools
 {
 
+class Source; // fwd
+
 using Byte = unsigned char;
 
 // if you want to change it to 64-bit: change FileMemSize to size_t,
@@ -51,6 +53,12 @@ std::ofstream OpenOut(const boost::filesystem::path& pth);
 std::ifstream OpenIn(const boost::filesystem::path& pth);
 
 void DumpBytes(std::ostream& os, StringView data);
+void DumpBytes(std::ostream& os, Source data);
+
+struct QuotedString { StringView view; };
+inline std::ostream& operator<<(std::ostream& os, QuotedString q)
+{ DumpBytes(os, q.view); return os; }
+inline QuotedString Quoted(StringView view) { return {view}; }
 
 #define NEPTOOLS_STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
 

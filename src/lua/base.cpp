@@ -70,7 +70,7 @@ State::State() : State(0)
             lua_setfield(vm, LUA_GLOBALSINDEX, "typename");
 
             // helper funs
-            NEPTOOLS_LUA_RUNBC(vm, base_funcs);
+            NEPTOOLS_LUA_RUNBC(vm, base_funcs, 0);
 
             for (auto r : Registers())
                 r(vm);
@@ -121,6 +121,57 @@ void StateRef::GetError(bool arg, int idx, const char* msg)
     else luaL_error(vm, "invalid lua value: %s", msg);
     NEPTOOLS_UNREACHABLE("lua_error returned");
 }
+
+StateRef::RawLen01Ret StateRef::RawLen01(int idx)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_ASSERT(lua_type(vm, idx) == LUA_TTABLE);
+    auto len = lua_rawlen(vm, idx);
+    auto type = lua_rawgeti(vm, idx, 0); // +1
+    lua_pop(vm, 1); // 0
+    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    return {len + !IsNoneOrNil(type), IsNoneOrNil(type)};
+}
+
+std::pair<size_t, int> StateRef::Ipairs01Prep(int idx)
+{
+    size_t i = 0;
+    int type;
+    if (IsNoneOrNil(type = lua_rawgeti(vm, idx, i))) // +1
+    {
+        lua_pop(vm, 1); // 0
+        type = lua_rawgeti(vm, idx, ++i); // +1
+    }
+    return {i, type};
+}
+
+size_t StateRef::Unpack01(int idx)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    NEPTOOLS_ASSERT(idx > 0);
+
+    auto [len,one] = RawLen01(idx);
+    if (len > INT_MAX || !lua_checkstack(vm, len))
+        luaL_error(vm, "too many items to unpack");
+
+    for (size_t i = 0; i < len; ++i)
+        lua_rawgeti(vm, idx, i + one);
+
+    NEPTOOLS_LUA_CHECKTOP(vm, int(top+len));
+    return len;
+}
+
+bool StateRef::GetNewFunction(const char* tag)
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    auto t = lua_rawgetp(vm, LUA_REGISTRYINDEX, tag); // +1
+    NEPTOOLS_ASSERT(t == LUA_TTABLE); (void) t;
+    t = lua_getfield(vm, -1, "new"); // +2
+    lua_remove(vm, -2); // +1
+    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    return t == LUA_TFUNCTION;
+}
+
 
 void StateRef::SetRecTable(const char* name, int idx)
 {

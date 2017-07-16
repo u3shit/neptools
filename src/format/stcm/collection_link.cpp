@@ -2,6 +2,7 @@
 #include "../context.hpp"
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
+#include "../../container/vector.lua.hpp"
 #include "../../sink.hpp"
 
 namespace Neptools
@@ -80,7 +81,7 @@ void CollectionLinkHeaderItem::Dump_(Sink& sink) const
 void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
 {
     Item::Inspect_(os);
-    os << "collection_link_header(@" << data->GetName() << ")";
+    os << "collection_link_header(" << PrintLabel(data) << ")";
 }
 
 CollectionLinkItem::CollectionLinkItem(
@@ -89,6 +90,15 @@ CollectionLinkItem::CollectionLinkItem(
 {
     AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, ctx, src, count);
 }
+
+#ifndef NEPTOOLS_WITHOUT_LUA
+CollectionLinkItem::CollectionLinkItem(
+    Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable links)
+    : Item{k, ctx}
+{
+    Lua::Vector<LinkEntry>::FillFromTable(vm, entries, links);
+}
+#endif
 
 void CollectionLinkItem::Dispose() noexcept
 {
@@ -122,38 +132,20 @@ void CollectionLinkItem::Dump_(Sink& sink) const
 
 void CollectionLinkItem::Inspect_(std::ostream& os) const
 {
-    bool good_labels = true;
-    for (auto& lbl : GetLabels())
-        if (lbl.GetPtr().offset % sizeof(Entry) != 0 ||
-            lbl.GetPtr().offset / sizeof(Entry) >= entries.size())
-        {
-            good_labels = false;
-            break;
-        }
-    if (!good_labels)
-        Item::Inspect_(os);
+    Item::Inspect_(os);
 
-    size_t i = 0;
+    os << "collection_link{\n";
     for (const auto& e : entries)
     {
-        if (good_labels)
-        {
-            auto x = GetLabels().equal_range(i);
-            for (auto it = x.first; it != x.second; ++it)
-                os << '@' << it->GetName() << ":\n";
-            i += sizeof(Entry);
-        }
-
-
-        os << "collection_link(@" << e.name_0->GetName() << ", @"
-           << e.name_1->GetName() << ")\n";
+        os << "    {" << PrintLabel(e.name_0) << ", "
+           << PrintLabel(e.name_1) << "},\n";
     }
+    os << "}";
 }
 
 }
 }
 
-#include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
     stcm_collection_link_item_link_entry,
     Neptools::Stcm::CollectionLinkItem::LinkEntry);

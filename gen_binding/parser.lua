@@ -325,7 +325,8 @@ local function parse_method(c, kind, parent)
         ann[2] = { set = true, implicit = true }
       end
     -- only ctors/const methods in const classes. if class not const->everything
-    elseif kind == "Constructor" or not inst.parse_class_class.const or c:isConst() then
+    elseif kind == "Constructor" or not inst.parse_class_class.const or
+           c:isConst() or c:isStatic() then
       ann[1] = { implicit = true }
     end
   end

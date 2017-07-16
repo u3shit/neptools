@@ -341,7 +341,7 @@ static Lua::State::Register reg{[](Lua::StateRef vm)
         vm.SetRecTable("neptools.log", -2); // +1
         lua_pop(vm, 1); // 0
 
-        NEPTOOLS_LUA_RUNBC(vm, logger);
+        NEPTOOLS_LUA_RUNBC(vm, logger, 0);
     }};
 
 #endif

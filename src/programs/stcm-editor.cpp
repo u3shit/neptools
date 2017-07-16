@@ -73,7 +73,10 @@ void ShellInspectGen(const T* item, const char* name, Fun f)
 
 template <typename T>
 void ShellInspect(const T* item, const char* name)
-{ ShellInspectGen(item, name, [](auto x, auto&& y) { y << *x; }); }
+{
+    ShellInspectGen(
+        item, name, [](auto x, auto&& y) { y << "return " << *x << '\n'; });
+}
 
 void EnsureStcm(State& st)
 {

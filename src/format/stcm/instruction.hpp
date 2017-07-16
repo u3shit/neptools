@@ -89,6 +89,20 @@ public:
 
     InstructionItem(Key k, Context& ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context& ctx, Source src);
+    InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt)
+        : ItemWithChildren{k, ctx}, opcode_target{std::move(tgt)} {}
+    InstructionItem(Key k, Context& ctx, uint32_t opcode)
+        : ItemWithChildren{k, ctx}, opcode_target{opcode} {}
+#ifndef NEPTOOLS_WITHOUT_LUA
+    InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt,
+                    Lua::StateRef vm, Lua::RawTable tbl)
+        : ItemWithChildren{k, ctx}, opcode_target{std::move(tgt)}
+    { ParseArgs(vm, tbl); }
+    InstructionItem(Key k, Context& ctx, uint32_t opcode,
+                    Lua::StateRef vm, Lua::RawTable tbl)
+        : ItemWithChildren{k, ctx}, opcode_target{opcode}
+    { ParseArgs(vm, tbl); }
+#endif
     static InstructionItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override;
@@ -224,6 +238,17 @@ public:
         template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "new_")
         static Param New(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
         { return {std::in_place_index<static_cast<size_t>(type)>, std::move(nval)}; }
+
+        //NEPTOOLS_LUAGEN()
+        static Param NewMemOffset(
+            NotNull<LabelPtr> target, Param48 param_4, Param48 param_8)
+        {
+            return New<Type::MEM_OFFSET>({
+                std::move(target), std::move(param_4), std::move(param_8)});
+        }
+        static Param NewIndirect(uint32_t param_0, Param48 param_8)
+        { return New<Type::INDIRECT>({param_0, std::move(param_8)}); }
+
 #undef NEPTOOLS_GEN_TYPES
 #undef NEPTOOL_GEN_ENUM
 #undef NEPTOOLS_GEN_TMPL
@@ -245,6 +270,7 @@ public:
     std::vector<Param> params;
 
 private:
+    void ParseArgs(Lua::StateRef vm, Lua::RawTable tbl);
     std::variant<uint32_t, NotNull<LabelPtr>> opcode_target;
 
     void Dump_(Sink& sink) const override;

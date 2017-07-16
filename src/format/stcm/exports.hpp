@@ -35,6 +35,9 @@ public:
 
     ExportsItem(Key k, Context& ctx) : Item{k, ctx} {}
     ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count);
+#ifndef NEPTOOLS_WITHOUT_LUA
+    ExportsItem(Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable tbl);
+#endif
     static ExportsItem& CreateAndInsert(ItemPointer ptr, uint32_t export_count);
 
     FilePosition GetSize() const noexcept override
@@ -52,8 +55,9 @@ public:
 
         NEPTOOLS_DYNAMIC_OBJECT;
     };
+    using VectorEntry = NotNull<RefCountedPtr<EntryType>>;
     NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
-    std::vector<NotNull<RefCountedPtr<EntryType>>> entries;
+    std::vector<VectorEntry> entries;
 
     void Dispose() noexcept override;
 

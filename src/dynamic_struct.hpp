@@ -105,6 +105,8 @@ public:
         NEPTOOLS_NOLUA auto& GetDesc() { return desc; }
         NEPTOOLS_NOLUA const auto& GetDesc() const { return desc; }
 
+        void Reserve(size_t size) { desc.reserve(size); }
+
         template <typename T>
         NEPTOOLS_NOLUA void Add(size_t size = sizeof(T))
         { desc.emplace_back(IndexOfV<T, Args...>, size); }
