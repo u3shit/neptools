@@ -87,8 +87,8 @@ using LabelOffsetHook = boost::intrusive::set_base_hook<
     boost::intrusive::tag<struct OffsetTag>,
     boost::intrusive::optimize_size<true>, LinkMode>;
 
-class Label : public RefCounted, public Lua::DynamicObject,
-              public LabelNameHook, public LabelOffsetHook
+class Label final : public RefCounted, public Lua::DynamicObject,
+                    public LabelNameHook, public LabelOffsetHook
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:

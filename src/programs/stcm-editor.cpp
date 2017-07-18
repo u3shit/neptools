@@ -331,7 +331,7 @@ int main(int argc, char** argv)
             st = {c, c.get(), nullptr, nullptr};
         }};
     Option list_files_opt{
-        lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive\n",
+        lgrp, "list-files", 0, nullptr, "Lists the contents of the cl3 archive",
         [&](auto&&)
         {
             mode = Mode::MANUAL;

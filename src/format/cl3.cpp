@@ -71,6 +71,7 @@ Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
     : field_14{field_14}
 {
     OrderedMapLua<Entry, EntryKeyOfValue>::FillFromTable(vm, entries, tbl);
+    Fixup();
 }
 
 Cl3::Entry::Entry(Lua::StateRef vm, std::string name, uint32_t field_200,
