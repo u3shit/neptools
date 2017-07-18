@@ -18,6 +18,12 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#ifdef WINDOWS
+#undef _CRT_NONSTDC_DEPRECATE // fuck off m$
+#define _CRT_NONSTDC_DEPRECATE(x)
+#include <io.h>
+#endif
+
 #define NEPTOOLS_LOG_NAME "stcm-editor"
 #include "../logger_helper.hpp"
 
@@ -494,7 +500,9 @@ int main(int argc, char** argv)
             lua_getfield(vm, 2, "traceback"); // 3
             lua_remove(vm, 2); // 2 = traceback
 
-            while ((std::cout << "> ", std::getline(std::cin, str)))
+            auto prompt = isatty(0);
+
+            while ((prompt && std::cout << "> ", std::getline(std::cin, str)))
             {
                 // if input starts with "> " it's a copy-pasted prompt, remove
                 if (boost::algorithm::starts_with(str, "> "))
