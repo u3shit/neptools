@@ -117,7 +117,6 @@ inline int GcFun(lua_State* vm)
     Clear(vm, &**ud);
     ud->~T();
 
-    UnsetMetatable(vm);
     NEPTOOLS_LUA_CHECKTOP(vm, top);
     return 0;
 
