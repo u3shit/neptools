@@ -232,31 +232,30 @@ void InstructionItem::Param::Dump(Sink& sink) const
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
 {
-    os << "neptools.stcm.instruction_item.param.new_";
     using T = InstructionItem::Param::Type;
     switch (p.GetType())
     {
     case T::MEM_OFFSET:
     {
         const auto& o = p.Get<T::MEM_OFFSET>();
-        return os << "mem_offset(" << PrintLabel(o.target) << ", "
-                  << o.param_4 << ", " << o.param_8 << ')';
+        return os << "{'mem_offset', " << PrintLabel(o.target) << ", "
+                  << o.param_4 << ", " << o.param_8 << '}';
     }
     case T::INDIRECT:
     {
         const auto& i = p.Get<T::INDIRECT>();
-        return os << "indirect(" << i.param_0 << ", " << i.param_8 << ')';
+        return os << "{'indirect', " << i.param_0 << ", " << i.param_8 << '}';
     }
     case T::READ_STACK:
-        return os << "read_stack(" << p.Get<T::READ_STACK>() << ")";
+        return os << "{'read_stack', " << p.Get<T::READ_STACK>() << "}";
     case T::READ_4AC:
-        return os << "read_4ac(" << p.Get<T::READ_4AC>() << ")";
+        return os << "{'read_4ac', " << p.Get<T::READ_4AC>() << "}";
     case T::INSTR_PTR0:
-        return os << "instr_ptr0(" << PrintLabel(p.Get<T::INSTR_PTR0>()) << ')';
+        return os << "{'instr_ptr0', " << PrintLabel(p.Get<T::INSTR_PTR0>()) << '}';
     case T::INSTR_PTR1:
-        return os << "instr_ptr1(" << PrintLabel(p.Get<T::INSTR_PTR1>()) << ')';
+        return os << "{'instr_ptr1', " << PrintLabel(p.Get<T::INSTR_PTR1>()) << '}';
     case T::COLL_LINK:
-        return os << "coll_link(" << PrintLabel(p.Get<T::COLL_LINK>()) << ')';
+        return os << "{'coll_link', " << PrintLabel(p.Get<T::COLL_LINK>()) << '}';
     }
     NEPTOOLS_UNREACHABLE("Invalid type");
 }

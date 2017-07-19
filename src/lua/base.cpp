@@ -161,17 +161,6 @@ size_t StateRef::Unpack01(int idx)
     return len;
 }
 
-bool StateRef::GetNewFunction(const char* tag)
-{
-    NEPTOOLS_LUA_GETTOP(vm, top);
-    auto t = lua_rawgetp(vm, LUA_REGISTRYINDEX, tag); // +1
-    NEPTOOLS_ASSERT(t == LUA_TTABLE); (void) t;
-    t = lua_getfield(vm, -1, "new"); // +2
-    lua_remove(vm, -2); // +1
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
-    return t == LUA_TFUNCTION;
-}
-
 
 void StateRef::SetRecTable(const char* name, int idx)
 {

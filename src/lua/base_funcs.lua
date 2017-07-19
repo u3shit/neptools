@@ -1,7 +1,13 @@
 local reg = debug.getregistry()
 local type, rawget, error, format = type, rawget, error, string.format
 
+-- foo(...) -> foo.new(...)
 reg.neptools_new_mt = { __call = function(t, ...) return t.new(...) end }
+-- foo("bar", ...) -> foo.new_bar(...)
+local function tagged_new(t, name, ...)
+  return t[format("new_%s", name)](...)
+end
+reg.neptools_tagged_new_mt = { __call = tagged_new }
 
 -- __index for classes with "get_*" and maybe "get"
 function reg.neptools_mt_index(mt)

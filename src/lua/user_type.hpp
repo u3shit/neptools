@@ -109,6 +109,7 @@ public:
         NEPTOOLS_LUA_CHECKTOP(vm, top-1);
     }
 
+    void TaggedNew();
 
 private:
     template <typename Deriv, typename... Base>

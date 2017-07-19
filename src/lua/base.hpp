@@ -131,7 +131,6 @@ public:
         }
     }
     size_t Unpack01(int idx); // +ret
-    bool GetNewFunction(const char* tag); // +1
 
 protected:
     lua_State* vm;

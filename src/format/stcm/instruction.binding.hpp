@@ -103,7 +103,7 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param48>::Register(Ty
     bld.AddFunction<
         static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>)
     >("new_mem_offset");
-
+bld.TaggedNew();
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param48> reg_neptools_stcm_instruction_item_param48;
 
@@ -176,7 +176,7 @@ void TypeRegisterTraits<::Neptools::Stcm::InstructionItem::Param>::Register(Type
         static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>),
         static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::Neptools::NotNull<::Neptools::LabelPtr>, ::Neptools::Stcm::InstructionItem::Param48, ::Neptools::Stcm::InstructionItem::Param48)>(::Neptools::Stcm::InstructionItem::Param::NewMemOffset)
     >("new_mem_offset");
-
+bld.TaggedNew();
 }
 static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param> reg_neptools_stcm_instruction_item_param;
 

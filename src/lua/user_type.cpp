@@ -13,6 +13,9 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
 
     // type table
     lua_createtable(vm, 0, 0); // +1
+    lua_pushvalue(vm, -1); // +2
+    lua_rawsetp(vm, LUA_REGISTRYINDEX, name+1); // +1
+
     if (instantiable)
     {
         lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // +2
@@ -53,6 +56,15 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     vm.SetRecTable(name, -3); // +2
 
     NEPTOOLS_LUA_CHECKTOP(vm, top+2);
+}
+
+void TypeBuilder::TaggedNew()
+{
+    NEPTOOLS_LUA_GETTOP(vm, top);
+    auto t = lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_tagged_new_mt"); // +1
+    NEPTOOLS_ASSERT(t == LUA_TTABLE); (void) t;
+    lua_setmetatable(vm, -3); // 0
+    NEPTOOLS_LUA_CHECKTOP(vm, top);
 }
 
 static void SetMt(StateRef vm, const char* dst, const char* mt)

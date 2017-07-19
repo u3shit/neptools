@@ -120,14 +120,14 @@ struct Vector
     static void FillFromTable(Lua::StateRef vm, Vect& v, Lua::RawTable tbl)
     {
         NEPTOOLS_LUA_GETTOP(vm, top);
-        auto hasnew = vm.GetNewFunction(TypeTraits<T>::TAG); // +1
+        lua_rawgetp(vm, LUA_REGISTRYINDEX, TypeTraits<T>::TAG + 1); // +1
         auto newidx = lua_absindex(vm, -1);
 
         auto [len, one] = vm.RawLen01(tbl);
         v.reserve(v.size() + len);
         vm.Fori(tbl, one, len, [&](int type)
         {
-            if (hasnew && type == LUA_TTABLE)
+            if (type == LUA_TTABLE)
             {
                 lua_pushvalue(vm, newidx); // +1
                 auto n = vm.Unpack01(lua_absindex(vm, -2)); // +1+n
@@ -136,7 +136,7 @@ struct Vector
                 lua_pop(vm, 1);
             }
             else
-                v.push_back(vm.Check<T>(-1));
+                v.push_back(vm.Get<T>(-1));
         });
         lua_pop(vm, 1);
         NEPTOOLS_LUA_CHECKTOP(vm, top);

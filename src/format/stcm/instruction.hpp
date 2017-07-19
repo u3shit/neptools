@@ -170,7 +170,7 @@ public:
     private:
         Variant val;
         static Variant GetVariant(Context& ctx, uint32_t val);
-    };
+    } NEPTOOLS_LUAGEN(post_register="bld.TaggedNew();");
 
     class Param : public Lua::ValueObject
     {
@@ -264,7 +264,7 @@ public:
     private:
         Variant val;
         static Variant GetVariant(Context& ctx, const Parameter& in);
-    };
+    } NEPTOOLS_LUAGEN(post_register="bld.TaggedNew();");
 
     NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<Param> params;
