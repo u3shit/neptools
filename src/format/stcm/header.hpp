@@ -49,7 +49,7 @@ public:
 
 private:
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 };
 
 }

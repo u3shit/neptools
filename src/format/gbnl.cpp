@@ -410,12 +410,12 @@ struct Print
 };
 }
 
-void Gbnl::Inspect_(std::ostream& os) const
+void Gbnl::Inspect_(std::ostream& os, unsigned indent) const
 {
     os << "neptools.";
-    InspectGbnl(os);
+    InspectGbnl(os, indent);
 }
-void Gbnl::InspectGbnl(std::ostream& os) const
+void Gbnl::InspectGbnl(std::ostream& os, unsigned indent) const
 {
     os << "gbnl(" << (is_gstl ? "true" : "false") << ", " << flags
        << ", " << field_28 << ", " << field_30 << ", {";
@@ -443,7 +443,7 @@ void Gbnl::InspectGbnl(std::ostream& os) const
     os << "}, {\n";
     for (const auto& m : messages)
     {
-        os << "  {";
+        Indent(os, indent+1) << '{';
         for (size_t i = 0; i < m->GetSize(); ++i)
         {
             if (i != 0) os << ", ";
@@ -451,7 +451,7 @@ void Gbnl::InspectGbnl(std::ostream& os) const
         }
         os << "},\n";
     }
-    os << "})";
+    Indent(os, indent) << "})";
 }
 
 void Gbnl::RecalcSize()

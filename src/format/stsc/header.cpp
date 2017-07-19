@@ -99,11 +99,11 @@ void HeaderItem::Dump_(Sink& sink) const
         sink.WriteLittleUint16(extra_headers_4);
 }
 
-void HeaderItem::Inspect_(std::ostream& os) const
+void HeaderItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
 
-    os << "stsc_header(@" << entry_point->GetName() << ", " << flags;
+    os << "header(" << PrintLabel(entry_point) << ", " << flags;
     if (flags & 1)
     {
         os << ", ";
@@ -118,7 +118,7 @@ void HeaderItem::Inspect_(std::ostream& os) const
            << ", " << extra_headers_2_a
            << ", " << extra_headers_2_c;
     if (flags & 4) os << ", " << extra_headers_4;
-    os << ")\n";
+    os << ")";
 }
 
 }

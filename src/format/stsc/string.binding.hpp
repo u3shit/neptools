@@ -15,6 +15,7 @@ void TypeRegisterTraits<::Neptools::Stsc::StringItem>::Register(TypeBuilder& bld
     bld.Inherit<::Neptools::Stsc::StringItem, ::Neptools::Item>();
 
     bld.AddFunction<
+        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::StringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<std::string>>,
         &::Neptools::Lua::TypeTraits<::Neptools::Stsc::StringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Source &>>
     >("new");
     bld.AddFunction<

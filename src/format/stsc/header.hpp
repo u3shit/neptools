@@ -61,7 +61,7 @@ public:
 private:
     void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 };
 
 }

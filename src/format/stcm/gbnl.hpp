@@ -38,8 +38,8 @@ public:
 
 private:
     void Dump_(Sink& sink) const override { Gbnl::Dump_(sink); }
-    void Inspect_(std::ostream& os) const override
-    { Item::Inspect_(os); Gbnl::InspectGbnl(os); }
+    void Inspect_(std::ostream& os, unsigned indent) const override
+    { Item::Inspect_(os, indent); Gbnl::InspectGbnl(os, indent); }
 };
 
 }

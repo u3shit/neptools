@@ -24,7 +24,7 @@ public:
 
 protected:
     void InstrDump(Sink& sink) const;
-    std::ostream& InstrInspect(std::ostream& os) const;
+    std::ostream& InstrInspect(std::ostream& os, unsigned indent) const;
 
 private:
     virtual void PostInsert() = 0;
@@ -96,7 +96,7 @@ public:
 private:
     void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     void PostInsert() override;
 };
 
@@ -113,7 +113,7 @@ public:
 private:
     void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     void PostInsert() override;
 };
 
@@ -130,7 +130,7 @@ public:
 
 private:
     void Dump_(Sink&) const override {}
-    void Inspect_(std::ostream&) const override {}
+    void Inspect_(std::ostream&, unsigned) const override {}
     void PostInsert() override {}
 };
 
@@ -181,7 +181,7 @@ public:
 private:
     void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     void InspectNode(std::ostream& os, size_t i) const;
     void PostInsert() override;
 };
@@ -232,7 +232,7 @@ public:
 private:
     void Parse_(Context& ctx, Source& src);
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     void PostInsert() override;
 };
 

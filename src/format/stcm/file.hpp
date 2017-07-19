@@ -22,7 +22,7 @@ public:
     std::vector<NotNull<SmartPtr<GbnlItem>>> FindGbnl();
 
 protected:
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 
 private:
     void Parse_(Source& src);

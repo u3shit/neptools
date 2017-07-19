@@ -13,10 +13,11 @@ class File final : public Context, public TxtSerializable
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    File() = default;
     File(Source src);
 
 protected:
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 
 private:
     void Parse_(Source& src);

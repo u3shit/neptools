@@ -101,8 +101,8 @@ public:
 protected:
     // todo: private after removing GbnlItem
     void Dump_(Sink& sink) const override;
-    void InspectGbnl(std::ostream& os) const;
-    void Inspect_(std::ostream& os) const override;
+    void InspectGbnl(std::ostream& os, unsigned indent) const;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 
 private:
     void WriteTxt_(std::ostream& os) const override;

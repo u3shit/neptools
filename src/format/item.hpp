@@ -90,7 +90,7 @@ public:
 protected:
     void UpdatePosition(FilePosition npos);
 
-    void Inspect_(std::ostream& os) const override = 0;
+    void Inspect_(std::ostream& os, unsigned indent) const override = 0;
 
     using SlicePair = std::pair<NotNull<RefCountedPtr<Item>>, FilePosition>;
     using SliceSeq = std::vector<SlicePair>;
@@ -150,7 +150,7 @@ public:
 
 protected:
     void Dump_(Sink& sink) const override;
-    void InspectChildren(std::ostream& sink) const;
+    void InspectChildren(std::ostream& sink, unsigned indent) const;
     void Fixup_(FilePosition offset);
 
     friend struct ::Neptools::ItemListTraits;

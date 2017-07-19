@@ -15,6 +15,7 @@ void TypeRegisterTraits<::Neptools::Stsc::File>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::Stsc::File, ::Neptools::Context, ::Neptools::TxtSerializable>();
 
     bld.AddFunction<
+        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::File>::Make<>,
         &::Neptools::Lua::TypeTraits<::Neptools::Stsc::File>::Make<LuaGetRef<::Neptools::Source>>
     >("new");
 

@@ -11,10 +11,10 @@ class EofItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
-    using Item::Item;
+    EofItem(Key k, Context& ctx) : Item{k, ctx} {}
 
     void Dump_(Sink&) const override {}
-    void Inspect_(std::ostream& os) const override { Item::Inspect_(os); }
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     FilePosition GetSize() const noexcept override { return 0; }
 };
 

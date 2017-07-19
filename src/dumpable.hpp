@@ -32,15 +32,20 @@ public:
     void Dump(const boost::filesystem::path& path) const;
 
     NEPTOOLS_NOLUA
-    void Inspect(std::ostream& os) const { return Inspect_(os); }
+    void Inspect(std::ostream& os, unsigned indent = 0) const
+    { return Inspect_(os, indent); }
     NEPTOOLS_NOLUA
-    void Inspect(std::ostream&& os) const { return Inspect_(os); }
+    void Inspect(std::ostream&& os, unsigned indent = 0) const
+    { return Inspect_(os, indent); }
     void Inspect(const boost::filesystem::path& path) const;
     std::string Inspect() const;
 
+protected:
+    static std::ostream& Indent(std::ostream& os, unsigned indent);
+
 private:
     virtual void Dump_(Sink& sink) const = 0;
-    virtual void Inspect_(std::ostream& os) const = 0;
+    virtual void Inspect_(std::ostream& os, unsigned indent) const = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);

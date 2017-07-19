@@ -90,17 +90,17 @@ void ExportsItem::Dump_(Sink& sink) const
     }
 }
 
-void ExportsItem::Inspect_(std::ostream& os) const
+void ExportsItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
 
     os << "exports{\n";
     for (auto& e : entries)
     {
-        os << "    {" << e->type << ", " << Quoted(e->name.c_str())
-           << ", " << PrintLabel(e->lbl) << "},\n";
+        Indent(os, indent+1) << '{' << e->type << ", " <<
+            Quoted(e->name.c_str()) << ", " << PrintLabel(e->lbl) << "},\n";
     }
-    os << '}';
+    Indent(os, indent) << '}';
 }
 
 }

@@ -416,9 +416,9 @@ void InstructionItem::Dump_(Sink& sink) const
     ItemWithChildren::Dump_(sink);
 }
 
-void InstructionItem::Inspect_(std::ostream &os) const
+void InstructionItem::Inspect_(std::ostream &os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
 
     if (IsCall())
         os << "call(" << PrintLabel(GetTarget());
@@ -433,7 +433,7 @@ void InstructionItem::Inspect_(std::ostream &os) const
         os << p;
     }
     os << "})";
-    InspectChildren(os);
+    InspectChildren(os, indent);
 }
 
 }

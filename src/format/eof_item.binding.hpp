@@ -15,7 +15,7 @@ void TypeRegisterTraits<::Neptools::EofItem>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::EofItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::FilePosition>>
+        &::Neptools::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
     >("new");
 
 }

@@ -250,7 +250,7 @@ public:
 private:
     Source src;
     void Dump_(Sink& sink) const override { src.Dump(sink); }
-    void Inspect_(std::ostream& os) const override { src.Inspect(os); }
+    void Inspect_(std::ostream& os, unsigned) const override { src.Inspect(os); }
 };
 
 #define ADD_SOURCE(src)                                         \

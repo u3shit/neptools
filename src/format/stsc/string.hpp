@@ -14,6 +14,8 @@ class StringItem final : public Item
 {
     NEPTOOLS_DYNAMIC_OBJECT;
 public:
+    StringItem(Key k, Context& ctx, std::string string)
+        : Item{k, ctx}, string{std::move(string)} {}
     StringItem(Key k, Context& ctx, const Source& src);
     static StringItem& CreateAndInsert(ItemPointer ptr);
     FilePosition GetSize() const noexcept override { return string.size() + 1; }
@@ -22,7 +24,7 @@ public:
 
 private:
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
 };
 
 }

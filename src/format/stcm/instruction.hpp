@@ -274,7 +274,7 @@ private:
     std::variant<uint32_t, NotNull<LabelPtr>> opcode_target;
 
     void Dump_(Sink& sink) const override;
-    void Inspect_(std::ostream& os) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
     void Parse_(Context& ctx, Source& src);
 };
 

@@ -53,11 +53,11 @@ void InstructionBase::InstrDump(Sink& sink) const
     sink.WriteLittleUint8(opcode);
 }
 
-std::ostream& InstructionBase::InstrInspect(std::ostream& os) const
+std::ostream& InstructionBase::InstrInspect(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
     auto flags = os.flags();
-    os << "instr(0x" << std::setw(2) << std::setfill('0') << std::hex
+    os << "instruction(0x" << std::setw(2) << std::setfill('0') << std::hex
        << unsigned(opcode);
     os.flags(flags);
     return os;
@@ -161,7 +161,7 @@ template<> struct Traits<void*>
     { return ToFilePos(l->GetPtr()); }
 
     static void Inspect(std::ostream& os, const LabelPtr& l)
-    { os << '@' << l->GetName(); }
+    { os << PrintLabel(l); }
 
     static void PostInsert(const LabelPtr&) {}
 };
@@ -279,9 +279,10 @@ void SimpleInstruction<NoReturn, Args...>::Dump_(Sink& sink) const
 }
 
 template <bool NoReturn, typename... Args>
-void SimpleInstruction<NoReturn, Args...>::Inspect_(std::ostream& os) const
+void SimpleInstruction<NoReturn, Args...>::Inspect_(
+    std::ostream& os, unsigned indent) const
 {
-    InstrInspect(os);
+    InstrInspect(os, indent);
     Operations<Args...>::Inspect(os, args);
     os << ')';
 }
@@ -327,15 +328,15 @@ void Instruction0dItem::Dump_(Sink& sink) const
         sink.WriteLittleUint32(ToFilePos(l->GetPtr()));
 }
 
-void Instruction0dItem::Inspect_(std::ostream& os) const
+void Instruction0dItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    InstrInspect(os);
+    InstrInspect(os, indent);
     bool first = true;
     for (const auto& l : tgts)
     {
         if (!first) os << ", ";
         first = false;
-        os << '@' << l->GetName();
+        os << PrintLabel(l);
     }
     os << ')';
 }
@@ -404,9 +405,9 @@ void Instruction1dItem::Dump_(Sink& sink) const
         sink.WriteGen(NodeParams{n.operation, n.value, n.left, n.right});
 }
 
-void Instruction1dItem::Inspect_(std::ostream& os) const
+void Instruction1dItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    InstrInspect(os) << ", @" << tgt->GetName() << ", ";
+    InstrInspect(os, indent) << ", " << PrintLabel(tgt) << ", ";
     InspectNode(os, 0);
     os << ')';
 }
@@ -490,15 +491,15 @@ void Instruction1eItem::Dump_(Sink& sink) const
 
 }
 
-void Instruction1eItem::Inspect_(std::ostream& os) const
+void Instruction1eItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    InstrInspect(os) << ", " << field_0 << ", " << flag << ", {";
+    InstrInspect(os, indent) << ", " << field_0 << ", " << flag << ", {";
     bool first = true;
     for (auto& e : expressions)
     {
         if (!first) os << ", ";
         first = false;
-        os << '{' << e.expression << ", @" << e.target->GetName() << '}';
+        os << '{' << e.expression << ", " << PrintLabel(e.target) << '}';
     }
     os << "})";
 }

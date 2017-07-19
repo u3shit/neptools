@@ -57,6 +57,13 @@ void Dumpable::Inspect(const boost::filesystem::path& path) const
     return Inspect(OpenOut(path));
 }
 
+std::ostream& Dumpable::Indent(std::ostream& os, unsigned indent)
+{
+    std::ostreambuf_iterator<char> it{os};
+    for (size_t i = 0; i < 2*indent; ++i) *it = ' ';
+    return os;
+}
+
 
 std::ostream& operator<<(std::ostream& os, const Dumpable& dmp)
 {

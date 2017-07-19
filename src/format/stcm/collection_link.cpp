@@ -78,9 +78,9 @@ void CollectionLinkHeaderItem::Dump_(Sink& sink) const
     sink.WriteGen(hdr);
 }
 
-void CollectionLinkHeaderItem::Inspect_(std::ostream& os) const
+void CollectionLinkHeaderItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
     os << "collection_link_header(" << PrintLabel(data) << ")";
 }
 
@@ -130,17 +130,17 @@ void CollectionLinkItem::Dump_(Sink& sink) const
     }
 }
 
-void CollectionLinkItem::Inspect_(std::ostream& os) const
+void CollectionLinkItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
 
     os << "collection_link{\n";
     for (const auto& e : entries)
     {
-        os << "    {" << PrintLabel(e.name_0) << ", "
-           << PrintLabel(e.name_1) << "},\n";
+        Indent(os, indent+1) << '{' << PrintLabel(e.name_0) << ", "
+                             << PrintLabel(e.name_1) << "},\n";
     }
-    os << "}";
+    Indent(os, indent) << "}";
 }
 
 }

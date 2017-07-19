@@ -66,11 +66,11 @@ void DataItem::Dump_(Sink& sink) const
     ItemWithChildren::Dump_(sink);
 }
 
-void DataItem::Inspect_(std::ostream& os) const
+void DataItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
     os << "data(" << type << ", " << offset_unit << ", " << field_8 << ')';
-    InspectChildren(os);
+    InspectChildren(os, indent);
 }
 
 FilePosition DataItem::GetSize() const noexcept

@@ -59,9 +59,9 @@ void HeaderItem::Dump_(Sink& sink) const
     sink.WriteGen(hdr);
 }
 
-void HeaderItem::Inspect_(std::ostream& os) const
+void HeaderItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
 
     os << "header(" << Quoted(msg.c_str()) << ", " << PrintLabel(export_sec)
        << ", " << PrintLabel(collection_link) << ", " << field_28 << ")";

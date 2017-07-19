@@ -23,11 +23,11 @@ void File::Parse_(Source& src)
     HeaderItem::CreateAndInsert({&*root, 0});
 }
 
-void File::Inspect_(std::ostream& os) const
+void File::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    NEPTOOLS_ASSERT(GetLabels().empty());
     os << "neptools.stsc.file()";
-    InspectChildren(os);
+    InspectChildren(os, indent);
 }
 
 static const char SEP_DASH[] = {

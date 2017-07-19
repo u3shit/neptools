@@ -22,12 +22,10 @@ void StringItem::Dump_(Sink& sink) const
     sink.WriteCString(string);
 }
 
-void StringItem::Inspect_(std::ostream& os) const
+void StringItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
-    os << "string(";
-    DumpBytes(os, string);
-    os << ')';
+    Item::Inspect_(os, indent);
+    os << "string(" << Quoted(string) << ')';
 }
 
 }

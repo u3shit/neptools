@@ -21,11 +21,11 @@ void File::Parse_(Source& src)
     HeaderItem::CreateAndInsert({root.get(), 0});
 }
 
-void File::Inspect_(std::ostream& os) const
+void File::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    NEPTOOLS_ASSERT(GetLabels().empty());
     os << "neptools.stcm.file()";
-    InspectChildren(os);
+    InspectChildren(os, indent);
 }
 
 std::vector<NotNull<SmartPtr<const GbnlItem>>> File::FindGbnl() const

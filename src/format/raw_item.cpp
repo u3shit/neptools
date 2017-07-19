@@ -10,9 +10,9 @@ void RawItem::Dump_(Sink& sink) const
     src.Dump(sink);
 }
 
-void RawItem::Inspect_(std::ostream& os) const
+void RawItem::Inspect_(std::ostream& os, unsigned indent) const
 {
-    Item::Inspect_(os);
+    Item::Inspect_(os, indent);
     os << "raw(" << src << ")";
 }
 

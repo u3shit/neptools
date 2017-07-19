@@ -224,12 +224,13 @@ uint32_t Cl3::IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept
     return entries.index_of(it);
 }
 
-void Cl3::Inspect_(std::ostream& os) const
+void Cl3::Inspect_(std::ostream& os, unsigned indent) const
 {
     os << "neptools.cl3(" << field_14 << ", {\n";
     for (auto& e : entries)
     {
-        os << "  {" << Quoted(e.name) << ", " << e.field_200 << ", {";
+        Indent(os, indent+1) << '{' << Quoted(e.name) << ", " << e.field_200
+                             << ", {";
         bool first = true;
         for (auto& l : e.links)
         {
@@ -241,7 +242,7 @@ void Cl3::Inspect_(std::ostream& os) const
         }
         os << "}, ";
         if (e.src)
-            e.src->Inspect(os);
+            e.src->Inspect(os, indent+1);
         else
             os << "nil";
         os << "},\n";

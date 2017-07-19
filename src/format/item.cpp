@@ -20,7 +20,7 @@ Item::~Item()
     Item::Dispose();
 }
 
-void Item::Inspect_(std::ostream& os) const
+void Item::Inspect_(std::ostream& os, unsigned indent) const
 {
     for (const auto& it : GetLabels())
     {
@@ -29,6 +29,7 @@ void Item::Inspect_(std::ostream& os) const
             os << ", " << it.GetPtr().offset;
         os << ")\n";
     }
+    Indent(os, indent);
 }
 
 void Item::UpdatePosition(FilePosition npos)
@@ -140,17 +141,17 @@ void ItemWithChildren::Dump_(Sink& sink) const
         c.Dump(sink);
 }
 
-void ItemWithChildren::InspectChildren(std::ostream& os) const
+void ItemWithChildren::InspectChildren(std::ostream& os, unsigned indent) const
 {
     if (GetChildren().empty()) return;
 
     os << ":build(function()\n";
     for (auto& c : GetChildren())
     {
-        c.Inspect(os);
+        c.Inspect_(os, indent+1);
         os << '\n';
     }
-    os << "end)";
+    Indent(os, indent) << "end)";
 }
 
 
