@@ -314,23 +314,31 @@ struct PrintOverload<ArgSeq<N, brigand::list<Args...>>>
     }
 };
 
+inline void PrintOverloadCommon(Lua::StateRef vm, std::stringstream& ss)
+{
+    ss << "Invalid arguments (";
+    auto top = lua_gettop(vm);
+    for (int i = 0; i < top; ++i)
+    {
+        if (i != 0) ss << ", ";
+        ss << vm.TypeName(i+1);
+    }
+
+    ss << ") to overloaded function. Overloads:";
+}
+
 template <auto... Funs>
 struct OverloadWrap<AutoList<>, AutoList<Funs...>>
 {
+#if defined(__GNUC__) || defined(__clang__)
+    __attribute__((minsize))
+#endif
     static int Func(lua_State* l)
     {
         Lua::StateRef vm{l};
         std::stringstream ss;
 
-        ss << "Invalid arguments (";
-        auto top = lua_gettop(vm);
-        for (int i = 0; i < top; ++i)
-        {
-            if (i != 0) ss << ", ";
-            ss << vm.TypeName(i+1);
-        }
-
-        ss << ") to overloaded function. Overloads:";
+        PrintOverloadCommon(vm, ss);
         (PrintOverload<ArgSequence<Funs>>::Print(ss), ...);
         return luaL_error(vm, ss.str().c_str());
     }
