@@ -1,0 +1,11 @@
+// -*- c++ -*-
+#pragma once
+
+#pragma push_macro("_Ty")
+#define _Ty constexpr _Ty _Pragma("pop_macro(\"_Ty\")")
+#pragma push_macro("_Ty")
+#define _Ty _Ty _Pragma("pop_macro(\"_Ty\")")
+#pragma push_macro("_Ty")
+#define _Ty _Ty _Pragma("pop_macro(\"_Ty\")")
+
+#include_next <xtr1common>
