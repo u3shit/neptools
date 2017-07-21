@@ -13,7 +13,7 @@ void RawItem::Dump_(Sink& sink) const
 void RawItem::Inspect_(std::ostream& os, unsigned indent) const
 {
     Item::Inspect_(os, indent);
-    os << "raw(" << src << ")";
+    os << "raw(" << Quoted(src) << ")";
 }
 
 NotNull<RefCountedPtr<RawItem>> RawItem::InternalSlice(

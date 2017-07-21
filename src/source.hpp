@@ -43,6 +43,8 @@ public:
         : Source{std::move(s)} { Slice(offset, size); get = 0; }
 
     static Source FromFile(const boost::filesystem::path& fname);
+    static Source FromMemory(std::string data)
+    { return FromMemory("", std::move(data)); }
     static Source FromMemory(
         const boost::filesystem::path& fname, std::string data);
 

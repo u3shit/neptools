@@ -22,6 +22,7 @@ void TypeRegisterTraits<::Neptools::Source>::Register(TypeBuilder& bld)
         static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &)>(::Neptools::Source::FromFile)
     >("from_file");
     bld.AddFunction<
+        static_cast<::Neptools::Source (*)(std::string)>(::Neptools::Source::FromMemory),
         static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &, std::string)>(::Neptools::Source::FromMemory)
     >("from_memory");
     bld.AddFunction<

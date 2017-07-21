@@ -15,6 +15,8 @@ class RawItem final : public Item
 public:
     RawItem(Key k, Context& ctx, Source src) noexcept
         : Item{k, ctx}, src{std::move(src)} {}
+    RawItem(Key k, Context& ctx, std::string src)
+        : Item{k, ctx}, src{Source::FromMemory(std::move(src))} {}
     NEPTOOLS_NOLUA
     RawItem(Key k, Context& ctx, Source src, FilePosition pos) noexcept
         : Item{k, ctx, pos}, src{std::move(src)} {}
