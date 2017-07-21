@@ -66,22 +66,6 @@ Cl3::Cl3(Source src)
     AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
-    : field_14{field_14}
-{
-    OrderedMapLua<Entry, EntryKeyOfValue>::FillFromTable(vm, entries, tbl);
-    Fixup();
-}
-
-Cl3::Entry::Entry(Lua::StateRef vm, std::string name, uint32_t field_200,
-              Lua::RawTable tbl, SmartPtr<Dumpable> src)
-    : name{std::move(name)}, field_200{field_200}, src{std::move(src)}
-{
-    Lua::Vector<WeakRefCountedPtr<Entry>>::FillFromTable(vm, links, tbl);
-}
-#endif
-
 void Cl3::Dispose() noexcept
 {
     entries.clear();

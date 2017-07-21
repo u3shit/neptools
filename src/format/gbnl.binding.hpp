@@ -22,8 +22,8 @@ void TypeRegisterTraits<::Neptools::Gbnl>::Register(TypeBuilder& bld)
 
     bld.AddFunction<
         &::Neptools::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Neptools::Source>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Gbnl::Struct::TypePtr>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Lua::RawTable>, LuaGetRef<::Neptools::Lua::RawTable>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<AT<::Neptools::Gbnl::Struct::TypePtr>>>,
+        &::Neptools::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<AT<::Neptools::Gbnl::Struct::TypePtr>>, LuaGetRef<::Neptools::Lua::RawTable>>
     >("new");
     bld.AddFunction<
         &::Neptools::Lua::GetMember<::Neptools::Gbnl, bool, &::Neptools::Gbnl::is_gstl>
@@ -50,7 +50,7 @@ void TypeRegisterTraits<::Neptools::Gbnl>::Register(TypeBuilder& bld)
         &::Neptools::Lua::SetMember<::Neptools::Gbnl, ::uint32_t, &::Neptools::Gbnl::field_30>
     >("set_field_30");
     bld.AddFunction<
-        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Gbnl, std::vector<::Neptools::Gbnl::StructPtr>, &::Neptools::Gbnl::messages>
+        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Gbnl, ::Neptools::Gbnl::Messages, &::Neptools::Gbnl::messages>
     >("get_messages");
     bld.AddFunction<
         &::Neptools::Lua::GetMember<::Neptools::Gbnl, ::Neptools::Gbnl::Struct::TypePtr, &::Neptools::Gbnl::type>

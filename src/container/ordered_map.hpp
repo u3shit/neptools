@@ -116,6 +116,7 @@ public:
     using key_type = typename SetType::key_type;
 
     OrderedMap() = default;
+    NEPTOOLS_NOLUA OrderedMap(OrderedMap&&) = default;
     ~OrderedMap() noexcept { for (auto& x : vect) RemoveItem(*x); }
     // set should have a move ctor but no copy ctor
 

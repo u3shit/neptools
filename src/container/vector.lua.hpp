@@ -4,12 +4,14 @@
 
 #ifdef NEPTOOLS_WITHOUT_LUA
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)
+#define NEPTOOLS_STD_VECTOR_FWD(...)
 #else
 
 #include <vector>
 
-#include "../lua/user_type.hpp"
+#include "../lua/auto_table.hpp"
 #include "../lua/dynamic_object.hpp"
+#include "../lua/user_type.hpp"
 
 namespace Neptools::Lua
 {
@@ -119,33 +121,25 @@ struct Vector
     // not exposed directly to lua
     static void FillFromTable(Lua::StateRef vm, Vect& v, Lua::RawTable tbl)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
-        lua_rawgetp(vm, LUA_REGISTRYINDEX, TypeTraits<T>::TAG + 1); // +1
-        auto newidx = lua_absindex(vm, -1);
-
         auto [len, one] = vm.RawLen01(tbl);
         v.reserve(v.size() + len);
-        vm.Fori(tbl, one, len, [&](int type)
+        vm.Fori(tbl, one, len, [&](int)
         {
-            if (type == LUA_TTABLE)
-            {
-                lua_pushvalue(vm, newidx); // +1
-                auto n = vm.Unpack01(lua_absindex(vm, -2)); // +1+n
-                lua_call(vm, n, 1); // +1
-                v.push_back(vm.Get<T>(-1));
-                lua_pop(vm, 1);
-            }
-            else
-                v.push_back(vm.Get<T>(-1));
+            v.push_back(vm.Get<Lua::AutoTable<T>>(-1));
         });
-        lua_pop(vm, 1);
-        NEPTOOLS_LUA_CHECKTOP(vm, top);
     }
 
     static auto FromTable(Lua::StateRef vm, Lua::RawTable tbl)
     {
         auto v = MakeShared<Vect>();
         FillFromTable(vm, *v, tbl);
+        return v;
+    }
+
+    static Vect TableCtor(Lua::StateRef vm, Lua::RawTable tbl)
+    {
+        Vect v;
+        FillFromTable(vm, v, tbl);
         return v;
     }
 
@@ -156,13 +150,15 @@ struct Vector
                 &MakeShared<Vect, size_type, const T&>,
                 &MakeShared<Vect, size_type>,
                 &MakeShared<Vect, const Vect&>,
-                &MakeShared<Vect>
+                &MakeShared<Vect>,
+                &FromTable
             >("new");
         else
             bld.AddFunction<
                 &MakeShared<Vect, size_type, const T&>,
                 &MakeShared<Vect, const Vect&>,
-                &MakeShared<Vect>
+                &MakeShared<Vect>,
+                &FromTable
             >("new");
 
         bld.AddFunction<
@@ -194,7 +190,6 @@ struct Vector
             bld.AddFunction<
                 static_cast<void (Vect::*)(size_type, const T&)>(&Vect::resize)
             >("resize");
-        bld.AddFunction<&FromTable>("from_table");
         bld.AddFunction<&ToTable>("to_table");
 
         if constexpr (Detail::IS_EQ_COMP<T>)
@@ -220,12 +215,20 @@ template <typename T, typename Allocator>
 struct TypeRegisterTraits<std::vector<T, Allocator>>
     : Vector<T, Allocator> {};
 
+template <typename T, typename Allocator>
+struct GetTableCtor<std::vector<T, Allocator>>
+    : std::integral_constant<TableCtorPtr<std::vector<T, Allocator>>,
+                             Vector<T, Allocator>::TableCtor> {};
+
 }
 
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)                               \
     static ::Neptools::Lua::TypeRegister::StateRegister<                    \
         ::std::vector<__VA_ARGS__>> reg_std_vector_##name;                  \
     template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>     \
+    { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
+#define NEPTOOLS_STD_VECTOR_FWD(name, ...)                              \
+    template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>> \
     { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
 
 #endif

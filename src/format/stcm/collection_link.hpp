@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../lua/auto_table.hpp"
 #include "../../lua/value_object.hpp"
 #include "../../source.hpp"
 #include <boost/endian/arithmetic.hpp>
@@ -75,11 +76,11 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x20);
 
+    struct LinkEntry;
     CollectionLinkItem(Key k, Context& ctx) : Item{k, ctx} {}
     CollectionLinkItem(Key k, Context& ctx, Source src, uint32_t count);
-#ifndef NEPTOOLS_WITHOUT_LUA
-    CollectionLinkItem(Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable links);
-#endif
+    CollectionLinkItem(Key k, Context& ctx, AT<std::vector<LinkEntry>> entries)
+        : Item{k, ctx}, entries{std::move(entries.Get())} {}
 
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }

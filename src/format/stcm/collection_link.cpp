@@ -91,15 +91,6 @@ CollectionLinkItem::CollectionLinkItem(
     AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, ctx, src, count);
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-CollectionLinkItem::CollectionLinkItem(
-    Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable links)
-    : Item{k, ctx}
-{
-    Lua::Vector<LinkEntry>::FillFromTable(vm, entries, links);
-}
-#endif
-
 void CollectionLinkItem::Dispose() noexcept
 {
     entries.clear();

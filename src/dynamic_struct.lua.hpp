@@ -7,6 +7,7 @@
 #else
 
 #include "dynamic_struct.hpp"
+#include "lua/auto_table.hpp"
 #include "lua/user_type.hpp"
 
 #include <type_traits>
@@ -311,6 +312,14 @@ struct DynamicStructLua
     template struct ::Neptools::DynamicStructLua<__VA_ARGS__>;                  \
     template struct ::Neptools::DynamicStructBuilderLua<__VA_ARGS__>;           \
     template struct ::Neptools::DynamicStructTypeLua<__VA_ARGS__>;              \
+    /* workaround can't specialize for nested classes in template class, because\
+       well, including a wrapper around cairo in the standard is more important \
+       than fixing problems like this */                                        \
+    template<> struct Neptools::Lua::GetTableCtor<                              \
+        boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>> \
+        : std::integral_constant<::Neptools::Lua::TableCtorPtr<                 \
+            boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>>, \
+            ::Neptools::DynamicStructTypeLua<__VA_ARGS__>::New> {};             \
     NEPTOOLS_LUA_TEMPLATE(DynStructBind##nam, (name=#nam),                      \
                           ::Neptools::DynamicStruct<__VA_ARGS__>);              \
     NEPTOOLS_LUA_TEMPLATE(DynStructTypeBind##nam, (name=#nam..".type"),         \

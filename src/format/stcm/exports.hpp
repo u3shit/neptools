@@ -5,6 +5,7 @@
 #include "../item.hpp"
 #include "../../source.hpp"
 #include "../../fixed_string.hpp"
+#include "../../lua/auto_table.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 namespace Neptools
@@ -33,16 +34,6 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Entry) == 0x28);
 
-    ExportsItem(Key k, Context& ctx) : Item{k, ctx} {}
-    ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count);
-#ifndef NEPTOOLS_WITHOUT_LUA
-    ExportsItem(Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable tbl);
-#endif
-    static ExportsItem& CreateAndInsert(ItemPointer ptr, uint32_t export_count);
-
-    FilePosition GetSize() const noexcept override
-    { return sizeof(Entry) * entries.size(); }
-
     struct EntryType : public RefCounted, public Lua::DynamicObject
     {
         Type type;
@@ -56,6 +47,16 @@ public:
         NEPTOOLS_DYNAMIC_OBJECT;
     };
     using VectorEntry = NotNull<RefCountedPtr<EntryType>>;
+
+    ExportsItem(Key k, Context& ctx) : Item{k, ctx} {}
+    ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count);
+    ExportsItem(Key k, Context& ctx, AT<std::vector<VectorEntry>> entries)
+        : Item{k, ctx}, entries{std::move(entries.Get())} {}
+    static ExportsItem& CreateAndInsert(ItemPointer ptr, uint32_t export_count);
+
+    FilePosition GetSize() const noexcept override
+    { return sizeof(Entry) * entries.size(); }
+
     NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
     std::vector<VectorEntry> entries;
 

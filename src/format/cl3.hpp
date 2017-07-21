@@ -10,6 +10,7 @@
 #include "../sink.hpp"
 #include "../fixed_string.hpp"
 #include "../container/ordered_map.hpp"
+#include "../lua/auto_table.hpp"
 
 namespace Neptools
 {
@@ -88,17 +89,6 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(LinkEntry) == 0x20);
 
-    Cl3(Source src);
-    Cl3() : field_14{0} {}
-#ifndef NEPTOOLS_WITHOUT_LUA
-    Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl);
-#endif
-
-    void Fixup() override;
-    FilePosition GetSize() const override;
-
-    uint32_t field_14;
-
     struct Entry : public OrderedMapItem, public Lua::DynamicObject
     {
         NEPTOOLS_DYNAMIC_OBJECT;
@@ -106,19 +96,20 @@ public:
         std::string name;
         uint32_t field_200 = 0;
 
+        using Links = std::vector<WeakRefCountedPtr<Cl3::Entry>>;
         // no setter - it doesn't work how you expect in lua
         NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
-        std::vector<WeakRefCountedPtr<Cl3::Entry>> links;
+        Links links;
 
         SmartPtr<Dumpable> src;
 
         Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
+        Entry(std::string name, uint32_t field_200, AT<Links> links,
+              SmartPtr<Dumpable> src)
+            : name{std::move(name)}, field_200{field_200},
+              links{std::move(links.Get())}, src{std::move(src)} {}
         explicit Entry(std::string name) : name{std::move(name)} {}
-#ifndef NEPTOOLS_WITHOUT_LUA
-        Entry(Lua::StateRef vm, std::string name, uint32_t field_200,
-              Lua::RawTable links, SmartPtr<Dumpable> src);
-#endif
 
         void Dispose() noexcept override;
     };
@@ -127,10 +118,22 @@ public:
         using type = std::string;
         const type& operator()(const Entry& e) { return e.name; }
     };
+    using Entries = OrderedMap<Entry, EntryKeyOfValue>;
+
+
+    Cl3(Source src);
+    Cl3() : field_14{0} {}
+    Cl3(uint32_t field_14, AT<Entries>&& entries)
+        : field_14{field_14}, entries{std::move(entries.Get())} { Fixup(); }
+
+    void Fixup() override;
+    FilePosition GetSize() const override;
+
+    uint32_t field_14;
 
     // no setter - it doesn't work how you expect in lua
     NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
-    OrderedMap<Entry, EntryKeyOfValue> entries;
+    Entries entries;
     uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
 
     Entry& GetOrCreateFile(StringView fname);

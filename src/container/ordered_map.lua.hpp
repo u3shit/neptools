@@ -7,6 +7,7 @@
 #else
 
 #include "ordered_map.hpp"
+#include "../lua/auto_table.hpp"
 #include "../lua/function_call.hpp"
 
 namespace Neptools
@@ -134,6 +135,30 @@ struct OrderedMapLua
         return 1;
     }
 };
+
+// Can't copy an OrderedMap, so AutoTable<OrderedMap<...>> will only work with
+// tables...
+template <typename T, typename Traits, typename Compare>
+struct Lua::TypeTraits<AT<OrderedMap<T, Traits, Compare>>>
+{
+    using RawType = OrderedMap<T, Traits, Compare>;
+    template <bool Unsafe>
+    static AT<RawType> Get(StateRef vm, bool arg, int idx)
+    {
+        if (!Unsafe && !Is(vm, idx))
+            vm.TypeError(arg, "table", idx);
+        AT<RawType> ret;
+        OrderedMapLua<T, Traits, Compare>::FillFromTable(vm, ret, idx);
+        return ret;
+    }
+
+    static bool Is(StateRef vm, int idx)
+    { return lua_type(vm, idx) == LUA_TTABLE; }
+
+    static void PrintName(std::ostream& os) { os << "table"; }
+    static constexpr const char* TAG = TYPE_NAME<RawType>;
+};
+
 }
 
 #define NEPTOOLS_ORDERED_MAP_LUAGEN(name, ...)                          \

@@ -42,15 +42,6 @@ void ExportsItem::Parse_(Context& ctx, Source& src, uint32_t export_count)
     }
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-ExportsItem::ExportsItem(
-    Key k, Context& ctx, Lua::StateRef vm, Lua::RawTable tbl)
-    : Item{k, ctx}
-{
-    Lua::Vector<VectorEntry>::FillFromTable(vm, entries, tbl);
-}
-#endif
-
 ExportsItem& ExportsItem::CreateAndInsert(ItemPointer ptr, uint32_t export_count)
 {
     auto x = RawItem::GetSource(ptr, export_count*sizeof(Entry));

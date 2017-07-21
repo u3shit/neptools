@@ -184,9 +184,9 @@ void Gbnl::Parse_(Source& src)
 
 #ifndef NEPTOOLS_WITHOUT_LUA
 Gbnl::Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
-           uint32_t field_30, Lua::RawTable type, Lua::RawTable msgs)
+           uint32_t field_30, AT<Struct::TypePtr> type, Lua::RawTable msgs)
     : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
-      type{brigand::wrap<Struct, DynamicStructTypeLua>::New(vm, type)}
+      type{std::move(type.Get())}
 {
     auto [len, one] = vm.RawLen01(msgs);
     messages.reserve(len);

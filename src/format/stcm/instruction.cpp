@@ -120,13 +120,6 @@ void InstructionItem::Parse_(Context& ctx, Source& src)
     }
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-void InstructionItem::ParseArgs(Lua::StateRef vm, Lua::RawTable tbl)
-{
-    Lua::Vector<Param>::FillFromTable(vm, params, tbl);
-}
-#endif
-
 auto InstructionItem::Param::GetVariant(Context& ctx, const Parameter& in)
     -> Variant
 {
@@ -295,20 +288,19 @@ auto InstructionItem::Param48::GetVariant(Context& ctx, uint32_t in) -> Variant
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
 {
-    os << "neptools.stcm.instruction_item.param48.new_";
     using T = InstructionItem::Param48::Type;
     switch (p.GetType())
     {
     case T::MEM_OFFSET:
-        return os << "mem_offset(" << PrintLabel(p.Get<T::MEM_OFFSET>()) << ')';
+        return os << "{'mem_offset', " << PrintLabel(p.Get<T::MEM_OFFSET>()) << '}';
     case T::IMMEDIATE:
-        return os << "immediate(" << p.Get<T::IMMEDIATE>() << ')';
+        return os << "{'immediate', " << p.Get<T::IMMEDIATE>() << '}';
     case T::INDIRECT:
-        return os << "indirect(" << p.Get<T::INDIRECT>() << ')';
+        return os << "{'indirect', " << p.Get<T::INDIRECT>() << '}';
     case T::READ_STACK:
-        return os << "read_stack(" << p.Get<T::READ_STACK>() << ')';
+        return os << "{'read_stack', " << p.Get<T::READ_STACK>() << '}';
     case T::READ_4AC:
-        return os << "read_4ac(" << p.Get<T::READ_4AC>() << ')';
+        return os << "{'read_4ac', " << p.Get<T::READ_4AC>() << '}';
     }
 
     NEPTOOLS_UNREACHABLE("Invalid 48 param");

@@ -6,6 +6,7 @@
 #include "../source.hpp"
 #include "../dynamic_struct.hpp"
 #include "../txt_serializable.hpp"
+#include "../lua/auto_table.hpp"
 #include <boost/endian/arithmetic.hpp>
 #include <vector>
 
@@ -71,15 +72,16 @@ public:
         uint8_t, uint16_t, uint32_t, uint64_t, float, OffsetString,
         FixStringTag, PaddingTag>;
     using StructPtr = NotNull<boost::intrusive_ptr<Struct>>;
+    using Messages = std::vector<StructPtr>;
 
     Gbnl(Source src);
     Gbnl(bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,
-         Struct::TypePtr type)
+         AT<Struct::TypePtr> type)
         : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
-          type{std::move(type)} {}
+          type{std::move(type.Get())} {}
 #ifndef NEPTOOLS_WITHOUT_LUA
     Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
-         uint32_t field_30, Lua::RawTable type, Lua::RawTable messages);
+         uint32_t field_30, AT<Struct::TypePtr> type, Lua::RawTable messages);
 #endif
 
     void Fixup() override { RecalcSize(); }
@@ -89,7 +91,7 @@ public:
 
     // no setter - it doesn't work how you expect in lua
     NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
-    std::vector<StructPtr> messages;
+    Messages messages;
 
     Struct::TypePtr type;
 
