@@ -39,10 +39,10 @@ static size_t GetSize(uint16_t type)
 {
     switch (type)
     {
-    case Gbnl::TypeDescriptor::UINT8: return 1;
-    case Gbnl::TypeDescriptor::UINT16: return 2;
-    case Gbnl::TypeDescriptor::UINT32: return 4;
-    case Gbnl::TypeDescriptor::UINT64: return 8;
+    case Gbnl::TypeDescriptor::INT8: return 1;
+    case Gbnl::TypeDescriptor::INT16: return 2;
+    case Gbnl::TypeDescriptor::INT32: return 4;
+    case Gbnl::TypeDescriptor::INT64: return 8;
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
     }
@@ -82,29 +82,29 @@ void Gbnl::Parse_(Source& src)
     //std::vector<uint16_t> offsets;
     //offsets.reserve(foot.count_types);
     Struct::TypeBuilder bld;
-    bool uint8_in_progress = false;
+    bool int8_in_progress = false;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
         auto type = src.ReadGen<TypeDescriptor>();
         VALIDATE("unordered types", calc_offs <= type.offset);
 
-        Pad(type.offset - calc_offs, bld, uint8_in_progress);
+        Pad(type.offset - calc_offs, bld, int8_in_progress);
         calc_offs = type.offset + ::Neptools::GetSize(type.type);
 
         switch (type.type)
         {
-        case TypeDescriptor::UINT8:
-            NEPTOOLS_ASSERT(!uint8_in_progress);
-            uint8_in_progress = true;
+        case TypeDescriptor::INT8:
+            NEPTOOLS_ASSERT(!int8_in_progress);
+            int8_in_progress = true;
             break;
-        case TypeDescriptor::UINT16:
-            bld.Add<uint16_t>();
+        case TypeDescriptor::INT16:
+            bld.Add<int16_t>();
             break;
-        case TypeDescriptor::UINT32:
-            bld.Add<uint32_t>();
+        case TypeDescriptor::INT32:
+            bld.Add<int32_t>();
             break;
-        case TypeDescriptor::UINT64:
-            bld.Add<uint64_t>();
+        case TypeDescriptor::INT64:
+            bld.Add<int64_t>();
             break;
         case TypeDescriptor::FLOAT:
             bld.Add<float>();
@@ -116,7 +116,7 @@ void Gbnl::Parse_(Source& src)
             NEPTOOLS_THROW(DecodeError{"GBNL: invalid type"});
         }
     }
-    Pad(msg_descr_size - calc_offs, bld, uint8_in_progress);
+    Pad(msg_descr_size - calc_offs, bld, int8_in_progress);
 
     type = bld.Build();
 
@@ -131,17 +131,17 @@ void Gbnl::Parse_(Source& src)
         {
             switch (type->items[i].idx)
             {
-            case Struct::GetIndexFromType<uint8_t>():
-                m->Get<uint8_t>(i) = src.ReadLittleUint8();
+            case Struct::GetIndexFromType<int8_t>():
+                m->Get<int8_t>(i) = src.ReadLittleUint8();
                 break;
-            case Struct::GetIndexFromType<uint16_t>():
-                m->Get<uint16_t>(i) = src.ReadLittleUint16();
+            case Struct::GetIndexFromType<int16_t>():
+                m->Get<int16_t>(i) = src.ReadLittleUint16();
                 break;
-            case Struct::GetIndexFromType<uint32_t>():
-                m->Get<uint32_t>(i) = src.ReadLittleUint32();
+            case Struct::GetIndexFromType<int32_t>():
+                m->Get<int32_t>(i) = src.ReadLittleUint32();
                 break;
-            case Struct::GetIndexFromType<uint64_t>():
-                m->Get<uint64_t>(i) = src.ReadLittleUint64();
+            case Struct::GetIndexFromType<int64_t>():
+                m->Get<int64_t>(i) = src.ReadLittleUint64();
                 break;
             case Struct::GetIndexFromType<float>():
             {
@@ -199,13 +199,13 @@ Gbnl::Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
 }
 #endif
 
-void Gbnl::Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& uint8_in_progress)
+void Gbnl::Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& int8_in_progress)
 {
-    if (uint8_in_progress)
+    if (int8_in_progress)
     {
-        uint8_in_progress = false;
+        int8_in_progress = false;
         if (diff <= 3) // probably padding
-            bld.Add<uint8_t>();
+            bld.Add<int8_t>();
         else
         {
             bld.Add<FixStringTag>(diff+1);
@@ -223,24 +223,24 @@ struct WriteDescr
     WriteDescr(Byte* ptr) : ptr{ptr} {}
     Byte* ptr;
     // todo: template
-    void operator()(uint8_t x, size_t)
+    void operator()(int8_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint8_t*>(ptr) = x;
+        *reinterpret_cast<boost::endian::little_int8_t*>(ptr) = x;
         ptr += 1;
     }
-    void operator()(uint16_t x, size_t)
+    void operator()(int16_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint16_t*>(ptr) = x;
+        *reinterpret_cast<boost::endian::little_int16_t*>(ptr) = x;
         ptr += 2;
     }
-    void operator()(uint32_t x, size_t)
+    void operator()(int32_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x;
+        *reinterpret_cast<boost::endian::little_int32_t*>(ptr) = x;
         ptr += 4;
     }
-    void operator()(uint64_t x, size_t)
+    void operator()(int64_t x, size_t)
     {
-        *reinterpret_cast<boost::endian::little_uint64_t*>(ptr) = x;
+        *reinterpret_cast<boost::endian::little_int64_t*>(ptr) = x;
         ptr += 8;
     }
     void operator()(float y, size_t)
@@ -299,20 +299,20 @@ void Gbnl::Dump_(Sink& sink) const
         ctrl.offset = offs;
         switch (type->items[i].idx)
         {
-        case Struct::GetIndexFromType<uint8_t>():
-            ctrl.type = TypeDescriptor::UINT8;
+        case Struct::GetIndexFromType<int8_t>():
+            ctrl.type = TypeDescriptor::INT8;
             offs += 1;
             break;
-        case Struct::GetIndexFromType<uint16_t>():
-            ctrl.type = TypeDescriptor::UINT16;
+        case Struct::GetIndexFromType<int16_t>():
+            ctrl.type = TypeDescriptor::INT16;
             offs += 2;
             break;
-        case Struct::GetIndexFromType<uint32_t>():
-            ctrl.type = TypeDescriptor::UINT32;
+        case Struct::GetIndexFromType<int32_t>():
+            ctrl.type = TypeDescriptor::INT32;
             offs += 4;
             break;
-        case Struct::GetIndexFromType<uint64_t>():
-            ctrl.type = TypeDescriptor::UINT64;
+        case Struct::GetIndexFromType<int64_t>():
+            ctrl.type = TypeDescriptor::INT64;
             offs += 8;
             break;
         case Struct::GetIndexFromType<float>():
@@ -324,7 +324,7 @@ void Gbnl::Dump_(Sink& sink) const
             offs += 4;
             break;
         case Struct::GetIndexFromType<FixStringTag>():
-            ctrl.type = TypeDescriptor::UINT8;
+            ctrl.type = TypeDescriptor::INT8;
             offs += type->items[i].size;
             break;
         case Struct::GetIndexFromType<PaddingTag>():
@@ -425,10 +425,10 @@ void Gbnl::InspectGbnl(std::ostream& os, unsigned indent) const
         if (i != 0) os << ", ";
         switch (type->items[i].idx)
         {
-        case Struct::GetIndexFromType<uint8_t>():      os << "\"uint8\"";  break;
-        case Struct::GetIndexFromType<uint16_t>():     os << "\"uint16\""; break;
-        case Struct::GetIndexFromType<uint32_t>():     os << "\"uint32\""; break;
-        case Struct::GetIndexFromType<uint64_t>():     os << "\"uint64\""; break;
+        case Struct::GetIndexFromType<int8_t>():       os << "\"int8\"";   break;
+        case Struct::GetIndexFromType<int16_t>():      os << "\"int16\"";  break;
+        case Struct::GetIndexFromType<int32_t>():      os << "\"int32\"";  break;
+        case Struct::GetIndexFromType<int64_t>():      os << "\"int64\"";  break;
         case Struct::GetIndexFromType<float>():        os << "\"float\"";  break;
         case Struct::GetIndexFromType<OffsetString>(): os << "\"string\""; break;
         case Struct::GetIndexFromType<FixStringTag>():
@@ -460,10 +460,10 @@ void Gbnl::RecalcSize()
     for (size_t i = 0; i < type->item_count; ++i)
         switch (type->items[i].idx)
         {
-        case Struct::GetIndexFromType<uint8_t>():      len += 1; ++count; break;
-        case Struct::GetIndexFromType<uint16_t>():     len += 2; ++count; break;
-        case Struct::GetIndexFromType<uint32_t>():     len += 4; ++count; break;
-        case Struct::GetIndexFromType<uint64_t>():     len += 8; ++count; break;
+        case Struct::GetIndexFromType<int8_t>():       len += 1; ++count; break;
+        case Struct::GetIndexFromType<int16_t>():      len += 2; ++count; break;
+        case Struct::GetIndexFromType<int32_t>():      len += 4; ++count; break;
+        case Struct::GetIndexFromType<int64_t>():      len += 8; ++count; break;
         case Struct::GetIndexFromType<float>():        len += 4; ++count; break;
         case Struct::GetIndexFromType<OffsetString>(): len += 4; ++count; break;
         case Struct::GetIndexFromType<FixStringTag>():
@@ -525,7 +525,7 @@ static const StringView SEP_DASH_UTF8{
     SEP_DASH_UTF8_DATA, sizeof(SEP_DASH_UTF8_DATA)};
 
 
-uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
+int32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
 {
     size_t this_k;
     if (m.Is<Gbnl::OffsetString>(i))
@@ -540,16 +540,16 @@ uint32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
         return -1;
 
     // hack
-    if (!is_gstl && m.Is<uint32_t>(0) && (
+    if (!is_gstl && m.Is<int32_t>(0) && (
             (i == 8 && m.GetSize() == 9) || // rebirths
             (i == 105 && m.GetSize() == 107))) // vii
-        return m.Get<uint32_t>(0);
-    else if (is_gstl && m.GetSize() == 3 && m.Is<uint32_t>(1))
+        return m.Get<int32_t>(0);
+    else if (is_gstl && m.GetSize() == 3 && m.Is<int32_t>(1))
     {
 #ifdef STRTOOL_COMPAT
         if (i == 0) return -1;
 #endif
-        return m.Get<uint32_t>(1) + 100000*(i==0);
+        return m.Get<int32_t>(1) + 100000*(i==0);
     }
     else
         return this_k*10000+j;
@@ -565,7 +565,7 @@ void Gbnl::WriteTxt_(std::ostream& os) const
         for (size_t i = 0; i < m->GetSize(); ++i)
         {
             auto id = GetId(*m, i, j, k);
-            if (id != static_cast<uint32_t>(-1))
+            if (id != -1)
             {
                 std::string str;
                 if (m->Is<FixStringTag>(i))
@@ -590,7 +590,7 @@ void Gbnl::WriteTxt_(std::ostream& os) const
     os << "EOF\r\n";
 }
 
-size_t Gbnl::FindDst(uint32_t id, std::vector<StructPtr>& messages,
+size_t Gbnl::FindDst(int32_t id, std::vector<StructPtr>& messages,
                      size_t& index) const
 {
     auto size = messages.size();
@@ -643,7 +643,7 @@ void Gbnl::ReadTxt_(std::istream& is)
                 RecalcSize();
                 return;
             }
-            uint32_t id = std::strtoul(line.data() + offs, nullptr, 10);
+            int32_t id = std::strtol(line.data() + offs, nullptr, 10);
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {
@@ -764,7 +764,7 @@ static OpenFactory gbnl_open{[](Source src) -> SmartPtr<Gbnl>
 #include "../container/vector.lua.hpp"
 
 NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(
-    gbnl, uint8_t, uint16_t, uint32_t, uint64_t, float,
+    gbnl, int8_t, int16_t, int32_t, int64_t, float,
     ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag,
     ::Neptools::Gbnl::PaddingTag);
 NEPTOOLS_STD_VECTOR_LUAGEN(gbnl_struct, Neptools::Gbnl::StructPtr);

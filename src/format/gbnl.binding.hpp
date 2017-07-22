@@ -9,7 +9,7 @@ const char ::DynStructBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl";
 template <>
 const char ::DynStructBindgbnl::Type::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.type";
 template <>
-const char ::DynStructBldBindgbnl::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
+const char ::DynStructBindgbnl::TypeBuilder::TYPE_NAME[] = "neptools.dynamic_struct_gbnl.builder";
 
 namespace Neptools::Lua
 {
@@ -71,8 +71,8 @@ void TypeRegisterTraits<::DynStructBindgbnl>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        static_cast<::boost::intrusive_ptr<::Neptools::DynamicStruct<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>> (*)(::DynStructBindgbnl::TypePtr)>(::DynStructBindgbnl::New),
-        static_cast<::boost::intrusive_ptr<::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass> (*)(::Neptools::Lua::StateRef, const typename ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass::TypePtr, ::Neptools::Lua::RawTable)>(::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::New)
+        static_cast<::boost::intrusive_ptr<::Neptools::DynamicStruct<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>> (*)(::DynStructBindgbnl::TypePtr)>(::DynStructBindgbnl::New),
+        static_cast<::boost::intrusive_ptr<::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass> (*)(::Neptools::Lua::StateRef, const typename ::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass::TypePtr, ::Neptools::Lua::RawTable)>(::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::New)
     >("new");
     bld.AddFunction<
         static_cast<::size_t (::DynStructBindgbnl::*)() const noexcept>(&::DynStructBindgbnl::GetSize)
@@ -84,16 +84,16 @@ void TypeRegisterTraits<::DynStructBindgbnl>::Register(TypeBuilder& bld)
         static_cast<const ::DynStructBindgbnl::TypePtr & (::DynStructBindgbnl::*)() const noexcept>(&::DynStructBindgbnl::GetType)
     >("get_type");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept>(::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get),
-        static_cast<void (*)(const ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::VarArg) noexcept>(::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get)
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept>(::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get),
+        static_cast<void (*)(const ::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::VarArg) noexcept>(::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get)
     >("get");
     bld.AddFunction<
-        static_cast<void (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t, ::Neptools::Lua::Any)>(::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Set)
+        static_cast<void (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t, ::Neptools::Lua::Any)>(::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Set)
     >("set");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &)>(::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::ToTable)
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &)>(::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::ToTable)
     >("to_table");
-::Neptools::DynamicStructLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Register(bld);
+::Neptools::DynamicStructLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Register(bld);
 }
 static TypeRegister::StateRegister<::DynStructBindgbnl> reg_neptools_dynamic_struct_gbnl;
 
@@ -112,11 +112,11 @@ void TypeRegisterTraits<::DynStructBindgbnl::Type>::Register(TypeBuilder& bld)
         &::Neptools::Lua::GetMember<::DynStructBindgbnl::Type, ::size_t, &::DynStructBindgbnl::Type::byte_size>
     >("get_byte_size");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept>(::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get),
-        static_cast<void (*)(const ::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::VarArg) noexcept>(::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get)
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, const ::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::size_t) noexcept>(::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get),
+        static_cast<void (*)(const ::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::VarArg) noexcept>(::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Get)
     >("get");
     bld.AddFunction<
-        static_cast<::boost::intrusive_ptr<const ::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass> (*)(::Neptools::Lua::StateRef, ::Neptools::Lua::RawTable)>(::Neptools::DynamicStructTypeLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::New)
+        static_cast<::boost::intrusive_ptr<const ::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass> (*)(::Neptools::Lua::StateRef, ::Neptools::Lua::RawTable)>(::Neptools::DynamicStructTypeLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::New)
     >("new");
 
 }
@@ -124,22 +124,22 @@ static TypeRegister::StateRegister<::DynStructBindgbnl::Type> reg_neptools_dynam
 
 // class neptools.dynamic_struct_gbnl.builder
 template<>
-void TypeRegisterTraits<::DynStructBldBindgbnl>::Register(TypeBuilder& bld)
+void TypeRegisterTraits<::DynStructBindgbnl::TypeBuilder>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::DynStructBldBindgbnl>::Make<>
+        &::Neptools::Lua::TypeTraits<::DynStructBindgbnl::TypeBuilder>::Make<>
     >("new");
     bld.AddFunction<
-        static_cast<::DynStructBindgbnl::TypePtr (::DynStructBldBindgbnl::*)() const>(&::DynStructBldBindgbnl::Build)
+        static_cast<::DynStructBindgbnl::TypePtr (::DynStructBindgbnl::TypeBuilder::*)() const>(&::DynStructBindgbnl::TypeBuilder::Build)
     >("build");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::Raw<4>, ::size_t)>(::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Add),
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::Raw<4>)>(::Neptools::DynamicStructBuilderLua<uint8_t, uint16_t, uint32_t, uint64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Add)
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructBuilderLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::Raw<4>, ::size_t)>(::Neptools::DynamicStructBuilderLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Add),
+        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::DynamicStructBuilderLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::FakeClass &, ::Neptools::Lua::Raw<4>)>(::Neptools::DynamicStructBuilderLua<int8_t, int16_t, int32_t, int64_t, float, ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag, ::Neptools::Gbnl::PaddingTag>::Add)
     >("add");
 
 }
-static TypeRegister::StateRegister<::DynStructBldBindgbnl> reg_neptools_dynamic_struct_gbnl_builder;
+static TypeRegister::StateRegister<::DynStructBindgbnl::TypeBuilder> reg_neptools_dynamic_struct_gbnl_builder;
 
 }
 #endif

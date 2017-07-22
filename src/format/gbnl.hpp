@@ -47,12 +47,12 @@ public:
     {
         enum Type
         {
-            UINT32 = 0,
-            UINT8  = 1,
-            UINT16 = 2,
+            INT32  = 0,
+            INT8   = 1,
+            INT16  = 2,
             FLOAT  = 3,
             STRING = 5,
-            UINT64 = 6,
+            INT64  = 6,
         };
         boost::endian::little_uint16_t type;
         boost::endian::little_uint16_t offset;
@@ -69,7 +69,7 @@ public:
     struct PaddingTag { char pad[1]; };
 
     using Struct = DynamicStruct<
-        uint8_t, uint16_t, uint32_t, uint64_t, float, OffsetString,
+        int8_t, int16_t, int32_t, int64_t, float, OffsetString,
         FixStringTag, PaddingTag>;
     using StructPtr = NotNull<boost::intrusive_ptr<Struct>>;
     using Messages = std::vector<StructPtr>;
@@ -112,11 +112,11 @@ private:
 
     void Parse_(Source& src);
     void DumpHeader(Sink& sink) const;
-    void Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& uint8_in_progress);
+    void Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& int8_in_progress);
     FilePosition Align(FilePosition x) const noexcept;
 
-    uint32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
-    size_t FindDst(uint32_t id, std::vector<StructPtr>& messages,
+    int32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
+    size_t FindDst(int32_t id, std::vector<StructPtr>& messages,
                    size_t& index) const;
 
     size_t msg_descr_size, msgs_size;
