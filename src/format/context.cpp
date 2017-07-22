@@ -49,7 +49,6 @@ NotNull<LabelPtr> Context::GetLabel(const std::string& name) const
 
 NotNull<LabelPtr> Context::CreateLabel(std::string name, ItemPointer ptr)
 {
-    FilterLabelName(name);
     auto lbl = new Label{std::move(name), ptr};
     auto pair = labels.insert(*lbl);
     if (!pair.second)
@@ -64,9 +63,9 @@ NotNull<LabelPtr> Context::CreateLabel(std::string name, ItemPointer ptr)
     return MakeNotNull(&*pair.first);
 }
 
-NotNull<LabelPtr> Context::CreateLabelFallback(std::string name, ItemPointer ptr)
+NotNull<LabelPtr> Context::CreateLabelFallback(
+    const std::string& name, ItemPointer ptr)
 {
-    FilterLabelName(name);
     LabelsMap::insert_commit_data commit;
     std::string str = name;
 
@@ -87,7 +86,6 @@ NotNull<LabelPtr> Context::CreateLabelFallback(std::string name, ItemPointer ptr
 
 NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
 {
-    FilterLabelName(name);
     LabelsMap::insert_commit_data commit;
     auto [it, insertable] = labels.insert_check(name, commit);
 
@@ -108,7 +106,6 @@ NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
 
 NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
 {
-    FilterLabelName(name);
     LabelsMap::insert_commit_data commit;
     auto [it, insertable] = labels.insert_check(name, commit);
 
@@ -138,12 +135,6 @@ NotNull<LabelPtr> Context::GetLabelTo(FilePosition pos, std::string name)
     if (it != lctr.end()) return MakeNotNull(&*it);
 
     return CreateLabelFallback(std::move(name), ptr);
-}
-
-void Context::FilterLabelName(std::string& name)
-{
-    for (auto& c : name)
-        if (!isalnum(c)) c = '_';
 }
 
 ItemPointer Context::GetPointer(FilePosition pos) const noexcept

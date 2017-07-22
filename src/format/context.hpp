@@ -28,9 +28,11 @@ public:
 
     NotNull<LabelPtr> GetLabel(const std::string& name) const;
     NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
-    NotNull<LabelPtr> CreateLabelFallback(std::string name, ItemPointer ptr);
-    NotNull<LabelPtr> CreateLabelFallback(std::string name, FilePosition pos)
-    { return CreateLabelFallback(std::move(name), GetPointer(pos)); }
+    NotNull<LabelPtr> CreateLabelFallback(
+        const std::string& name, ItemPointer ptr);
+    NotNull<LabelPtr> CreateLabelFallback(
+        const std::string& name, FilePosition pos)
+    { return CreateLabelFallback(name, GetPointer(pos)); }
 
     NotNull<LabelPtr> CreateOrSetLabel(std::string name, ItemPointer ptr);
     NotNull<LabelPtr> GetOrCreateDummyLabel(std::string name);
@@ -49,8 +51,6 @@ protected:
     void SetupParseFrom(Item& item);
 
 private:
-    static void FilterLabelName(std::string& name);
-
     friend class Item;
 
     // properties needed: stable pointers

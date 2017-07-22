@@ -21,8 +21,8 @@ void TypeRegisterTraits<::Neptools::Context>::Register(TypeBuilder& bld)
         static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateLabel)
     >("create_label");
     bld.AddFunction<
-        static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateLabelFallback),
-        static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(std::string, ::Neptools::FilePosition)>(&::Neptools::Context::CreateLabelFallback)
+        static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(const std::string &, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateLabelFallback),
+        static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(const std::string &, ::Neptools::FilePosition)>(&::Neptools::Context::CreateLabelFallback)
     >("create_label_fallback");
     bld.AddFunction<
         static_cast<::Neptools::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(std::string, ::Neptools::ItemPointer)>(&::Neptools::Context::CreateOrSetLabel)
