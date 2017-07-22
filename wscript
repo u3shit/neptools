@@ -238,6 +238,7 @@ def build_common(bld):
         'src/source.cpp',
         'src/utils.cpp',
         'src/format/context.cpp',
+        'src/format/cstring_item.cpp',
         'src/format/eof_item.cpp',
         'src/format/gbnl.cpp',
         'src/format/item.cpp',
@@ -253,7 +254,6 @@ def build_common(bld):
         'src/format/stsc/file.cpp',
         'src/format/stsc/header.cpp',
         'src/format/stsc/instruction.cpp',
-        'src/format/stsc/string.cpp',
     ]
     if not bld.env.WITHOUT_LUA:
         src += [

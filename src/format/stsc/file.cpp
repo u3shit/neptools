@@ -1,6 +1,6 @@
 #include "file.hpp"
 #include "header.hpp"
-#include "string.hpp"
+#include "../cstring_item.hpp"
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
 #include "../../open.hpp"
@@ -40,7 +40,7 @@ void File::WriteTxt_(std::ostream& os) const
 {
     for (auto& it : GetChildren())
     {
-        auto str = dynamic_cast<const StringItem*>(&it);
+        auto str = dynamic_cast<const CStringItem*>(&it);
         if (str)
         {
             os << boost::replace_all_copy(str->string, "\\n", "\r\n")
@@ -54,7 +54,7 @@ void File::ReadTxt_(std::istream& is)
     std::string line, msg;
     auto it = GetChildren().begin();
     auto end = GetChildren().end();
-    while (it != end && !dynamic_cast<StringItem*>(&*it)) ++it;
+    while (it != end && !dynamic_cast<CStringItem*>(&*it)) ++it;
 
     is.exceptions(std::ios_base::badbit);
     while (!std::getline(is, line).fail())
@@ -66,10 +66,10 @@ void File::ReadTxt_(std::istream& is)
 
             NEPTOOLS_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
             if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
-            static_cast<StringItem&>(*it).string = std::move(msg);
+            static_cast<CStringItem&>(*it).string = std::move(msg);
 
             ++it;
-            while (it != end && !dynamic_cast<StringItem*>(&*it)) ++it;
+            while (it != end && !dynamic_cast<CStringItem*>(&*it)) ++it;
 
             msg.clear();
         }

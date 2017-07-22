@@ -1,6 +1,6 @@
 #include "instruction.hpp"
 
-#include "string.hpp"
+#include "../cstring_item.hpp"
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
 #include "../../lua/static_class.hpp"
@@ -181,7 +181,7 @@ template<> struct Traits<std::string> : public Traits<void*>
     }
 
     static void PostInsert(const LabelPtr& lbl)
-    { MaybeCreate<StringItem>(lbl->GetPtr()); }
+    { MaybeCreate<CStringItem>(lbl->GetPtr()); }
 };
 
 template<> struct Traits<Code*> : public Traits<void*>
