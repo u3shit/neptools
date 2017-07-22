@@ -415,15 +415,15 @@ void InstructionItem::Inspect_(std::ostream &os, unsigned indent) const
         os << "call(" << PrintLabel(GetTarget());
     else
         os << "instruction(" << GetOpcode();
-    os << ", {";
-    bool sep = false;
-    for (const auto& p : params)
+    if (!params.empty())
     {
-        if (sep) os << ", ";
-        sep = true;
-        os << p;
+        os << ", {\n";
+        size_t i = 0;
+        for (const auto& p : params)
+            Indent(os, indent+1) << '[' << i++ << "] = " << p << ",\n";
+        Indent(os, indent) << '}';
     }
-    os << "})";
+    os << ')';
     InspectChildren(os, indent);
 }
 

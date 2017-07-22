@@ -91,10 +91,15 @@ public:
     class Param;
     InstructionItem(Key k, Context& ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context& ctx, Source src);
+    InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt)
+        : ItemWithChildren{k, ctx}, opcode_target{std::move(tgt)} {}
     InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt,
                     AT<std::vector<Param>> params)
         : ItemWithChildren{k, ctx}, params{std::move(params.Get())},
           opcode_target{std::move(tgt)} {}
+
+    InstructionItem(Key k, Context& ctx, uint32_t opcode)
+        : ItemWithChildren{k, ctx}, opcode_target{opcode} {}
     InstructionItem(Key k, Context& ctx, uint32_t opcode,
                     AT<std::vector<Param>> params)
         : ItemWithChildren{k, ctx}, params{std::move(params.Get())},
