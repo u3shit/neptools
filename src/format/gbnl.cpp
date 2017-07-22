@@ -190,7 +190,7 @@ Gbnl::Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
 {
     auto [len, one] = vm.RawLen01(msgs);
     messages.reserve(len);
-    vm.Fori(msgs, one, len, [&](int type)
+    vm.Fori(msgs, one, len, [&](size_t, int type)
     {
         if (type != LUA_TTABLE) vm.TypeError(false, "table", -1);
         messages.emplace_back(brigand::wrap<Struct, DynamicStructLua>::New(

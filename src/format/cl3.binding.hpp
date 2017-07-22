@@ -21,7 +21,7 @@ void TypeRegisterTraits<::Neptools::Cl3>::Register(TypeBuilder& bld)
     bld.AddFunction<
         &::Neptools::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Neptools::Source>>,
         &::Neptools::Lua::TypeTraits<::Neptools::Cl3>::Make<>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::uint32_t>, LuaGetRef<AT<::Neptools::Cl3::Entries> &&>>
+        &::Neptools::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Neptools::Lua::StateRef>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::Lua::RawTable>>
     >("new");
     bld.AddFunction<
         &::Neptools::Lua::GetMember<::Neptools::Cl3, ::uint32_t, &::Neptools::Cl3::field_14>
@@ -79,7 +79,6 @@ void TypeRegisterTraits<::Neptools::Cl3::Entry>::Register(TypeBuilder& bld)
     >("set_src");
     bld.AddFunction<
         &::Neptools::Lua::TypeTraits<::Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>, LuaGetRef<::uint32_t>, LuaGetRef<SmartPtr<::Neptools::Dumpable>>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>, LuaGetRef<::uint32_t>, LuaGetRef<AT<::Neptools::Cl3::Entry::Links>>, LuaGetRef<SmartPtr<::Neptools::Dumpable>>>,
         &::Neptools::Lua::TypeTraits<::Neptools::Cl3::Entry>::Make<LuaGetRef<std::string>>
     >("new");
 

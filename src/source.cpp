@@ -277,6 +277,13 @@ void Source::Dump(Sink& sink) const
     }
 }
 
+void DumpableSource::Inspect_(std::ostream& os, unsigned) const
+{
+    os << "neptools.dumpable_source(";
+    src.Inspect(os);
+    os << ')';
+}
+
 std::string to_string(const UsedSource& src)
 {
     std::stringstream ss;

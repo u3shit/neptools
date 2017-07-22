@@ -66,6 +66,67 @@ Cl3::Cl3(Source src)
     AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
+Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
+    : field_14{field_14}
+{
+    auto [len, one] = vm.RawLen01(tbl);
+    entries.reserve(len);
+    bool do_links = false;
+    // we need two passes: first add entries, ignoring links
+    // then add links when the entries are in place
+    // can't do in one pass, as there may be forward links
+    vm.Fori(tbl, one, len, [&](size_t, int type)
+    {
+        if (type == LUA_TTABLE)
+        {
+            auto [len, one] = vm.RawLen01(-1);
+            if (len == 4) // todo: is there a better way??
+            {
+                do_links = true;
+                lua_rawgeti(vm, -1, one); // +1
+                lua_rawgeti(vm, -2, one+1); // +2
+                lua_rawgeti(vm, -3, one+3); // +3
+                entries.emplace_back(
+                    vm.Get<std::string>(-3),
+                    vm.Get<uint32_t>(-2),
+                    vm.Get<SmartPtr<Dumpable>>(-1));
+                lua_pop(vm, 3);
+                return;
+            }
+        }
+        // probably unlikely: try the 3-param ctor, or use existing entry
+        entries.push_back(vm.Get<Lua::AutoTable<NotNull<SmartPtr<Entry>>>>());
+    });
+
+    if (do_links)
+    {
+        vm.Fori(tbl, one, len, [&](size_t i, int type)
+        {
+            if (type != LUA_TTABLE) return;
+            auto [len, one] = vm.RawLen01(-1);
+            if (len != 4) return;
+            auto t = lua_rawgeti(vm, -1, one+2); // +1
+            if (t != LUA_TTABLE) vm.TypeError(false, "table", -1);
+
+            auto [len2, one2] = vm.RawLen01(-1);
+            auto& e = entries[i];
+            e.links.reserve(len2);
+            vm.Fori(lua_absindex(vm, -1), one2, len2, [&](size_t, int)
+            {
+                auto it = entries.find(vm.Get<std::string>());
+                if (it == entries.end())
+                    luaL_error(vm, "invalid cl3 link: '%s' not found",
+                               vm.Get<const char*>());
+                e.links.push_back(&*it);
+            });
+            lua_pop(vm, 1);
+        });
+    }
+    Fixup();
+}
+#endif
+
 void Cl3::Dispose() noexcept
 {
     entries.clear();

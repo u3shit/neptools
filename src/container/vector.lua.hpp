@@ -123,7 +123,7 @@ struct Vector
     {
         auto [len, one] = vm.RawLen01(tbl);
         v.reserve(v.size() + len);
-        vm.Fori(tbl, one, len, [&](int)
+        vm.Fori(tbl, one, len, [&](size_t, int)
         {
             v.push_back(vm.Get<Lua::AutoTable<T>>(-1));
         });

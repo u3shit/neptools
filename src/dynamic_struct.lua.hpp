@@ -217,7 +217,7 @@ struct DynamicStructTypeLua
         Builder bld;
         auto [len, one] = vm.RawLen01(tbl);
         bld.Reserve(len);
-        vm.Fori(tbl, one, len, [&](int type)
+        vm.Fori(tbl, one, len, [&](size_t, int type)
         {
             if (type == LUA_TSTRING)
                 BuilderLua::Add(vm, bld, {lua_absindex(vm, -1)}); // +1

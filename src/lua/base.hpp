@@ -125,7 +125,7 @@ public:
         for (size_t i = 0; i < len; ++i)
         {
             NEPTOOLS_LUA_GETTOP(vm, top);
-            f(lua_rawgeti(vm, idx, i + offset));
+            f(i, lua_rawgeti(vm, idx, i + offset));
             lua_pop(vm, 1);
             NEPTOOLS_LUA_CHECKTOP(vm, top);
         }
