@@ -1,5 +1,6 @@
 #include "collection_link.hpp"
 #include "../context.hpp"
+#include "../cstring_item.hpp"
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
 #include "../../container/vector.lua.hpp"
@@ -104,9 +105,12 @@ void CollectionLinkItem::Parse_(Context& ctx, Source& src, uint32_t count)
     {
         auto e = src.ReadGen<Entry>();
         e.Validate(ctx.GetSize());
+
+        auto& str0 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_0));
+        auto& str1 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_1));
         entries.emplace_back(
-            ctx.GetLabelTo(e.name_0),
-            ctx.GetLabelTo(e.name_1));
+            ctx.GetLabelTo(e.name_0, str0.GetLabelName()),
+            ctx.GetLabelTo(e.name_1, str1.GetLabelName()));
     }
 }
 

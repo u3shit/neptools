@@ -91,13 +91,13 @@ template<> struct Lua::TupleLike<RawItem::GetSourceRet>
 };
 
 template <typename T>
-inline void MaybeCreate(ItemPointer ptr)
+inline auto& MaybeCreate(ItemPointer ptr)
 {
     auto item = ptr.Maybe<RawItem>();
     if (item)
-        T::CreateAndInsert(ptr);
+        return T::CreateAndInsert(ptr);
     else
-        ptr.As0<T>(); // assert it
+        return ptr.As0<T>(); // assert it
 }
 
 template <typename T>

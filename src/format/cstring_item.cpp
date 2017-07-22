@@ -26,6 +26,25 @@ void CStringItem::Inspect_(std::ostream& os, unsigned indent) const
     os << "c_string(" << Quoted(string) << ')';
 }
 
+std::string CStringItem::GetLabelName(std::string string)
+{
+    size_t iptr = 0, optr = 0;
+    bool last_valid = false;
+    for (size_t len = string.length(); iptr < len && optr < 16; ++iptr)
+        if (isalnum(string[iptr]))
+        {
+            string[optr++] = string[iptr];
+            last_valid = true;
+        }
+        else if (last_valid)
+        {
+            string[optr++] = '_';
+            last_valid = false;
+        }
+    string.resize(optr);
+    return "str_" + string;
+}
+
 }
 
 #include "cstring_item.binding.hpp"

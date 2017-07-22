@@ -18,6 +18,9 @@ public:
     static CStringItem& CreateAndInsert(ItemPointer ptr);
     FilePosition GetSize() const noexcept override { return string.size() + 1; }
 
+    static std::string GetLabelName(std::string string);
+    std::string GetLabelName() const { return GetLabelName(string); }
+
     std::string string;
 
 private:

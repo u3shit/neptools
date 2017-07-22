@@ -22,6 +22,10 @@ void TypeRegisterTraits<::Neptools::CStringItem>::Register(TypeBuilder& bld)
         static_cast<::Neptools::CStringItem & (*)(::Neptools::ItemPointer)>(::Neptools::CStringItem::CreateAndInsert)
     >("create_and_insert");
     bld.AddFunction<
+        static_cast<std::string (*)(std::string)>(::Neptools::CStringItem::GetLabelName),
+        static_cast<std::string (::Neptools::CStringItem::*)() const>(&::Neptools::CStringItem::GetLabelName)
+    >("get_label_name");
+    bld.AddFunction<
         &::Neptools::Lua::GetMember<::Neptools::CStringItem, std::string, &::Neptools::CStringItem::string>
     >("get_string");
     bld.AddFunction<

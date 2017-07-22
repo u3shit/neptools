@@ -174,7 +174,8 @@ template<> struct Traits<std::string> : public Traits<void*>
         if (ptr.Maybe<RawItem>())
         {
             auto x = RawItem::GetSource(ptr, -1);
-            return ctx.GetLabelTo(r, "str_"+x.src.PreadCString(0).substr(0, 16));
+            return ctx.GetLabelTo(
+                r, CStringItem::GetLabelName(x.src.PreadCString(0)));
         }
         else
             return ctx.GetLabelTo(r);
