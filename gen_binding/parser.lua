@@ -248,6 +248,7 @@ local function field(c, info, tbl)
     end
     tbl.value_tmpl = "&/*$= key */</*$= class */, /*$= type */, /*$= value */>"
   end
+  if not tbl.order then tbl.order = 0 end
   return true
 end
 
@@ -385,7 +386,9 @@ local parse_v = cl.regCursorVisitor(function (c, par)
   local kind = c:kind()
   if kind == "Namespace" then return vr.Recurse end
 
-  if (kind == "ClassDecl" or kind == "StructDecl" or kind == "EnumDecl") and c:isDefinition() then -- ignore fwd decls
+  if (kind == "ClassDecl" or kind == "StructDecl" or kind == "EnumDecl") and
+    c:isDefinition() and not c:baseTemplate() then -- ignore fwd decls/templates
+
     local x = is_lua_class(c:type())
     --print(c:type(), x, x.name)
     if x then
@@ -405,7 +408,7 @@ local parse_v = cl.regCursorVisitor(function (c, par)
       local x = is_lua_class(t)
       if x then
         inst.templates[t] = c:name()
-        x.name = x.name.."_"..(a.name or c:name())
+        x.name = a.fullname or x.name.."_"..(a.name or c:name())
         x.template = true
         x.alias = a
         -- hack!

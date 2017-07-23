@@ -1,5 +1,6 @@
 #include "../format/item.hpp"
 #include "../format/cl3.hpp"
+#include "../format/primitive_item.hpp"
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 #include "../format/stsc/file.hpp"
@@ -32,13 +33,15 @@ using namespace Neptools;
 namespace
 {
 
-// bring in required shit for OpenFactory
+// bring in required shit for OpenFactory/DataFactory
 // do not actually call this, as it would crash
 void Dependencies()
 {
     Source* src = nullptr;
     Cl3 cl3{*src};
     Stcm::File stcm{*src};
+    stcm.Create<Stcm::GbnlItem>(*src);
+    stcm.Create<Int32Item>(*src);
     Stsc::File stsc{*src};
 }
 

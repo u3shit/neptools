@@ -9,7 +9,8 @@ export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
 
 src=(src/dumpable src/open src/sink src/source src/txt_serializable
      src/format/cl3 src/format/context src/format/cstring_item
-     src/format/eof_item src/format/gbnl src/format/item src/format/raw_item
+     src/format/eof_item src/format/gbnl src/format/item
+     src/format/primitive_item src/format/raw_item
      src/format/stcm/collection_link src/format/stcm/data
      src/format/stcm/exports src/format/stcm/file src/format/stcm/gbnl
      src/format/stcm/header src/format/stcm/instruction

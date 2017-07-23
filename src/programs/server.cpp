@@ -4,6 +4,12 @@
 #include "../options.hpp"
 #include "version.hpp"
 
+// factory
+#include "../format/cl3.hpp"
+#include "../format/stcm/file.hpp"
+#include "../format/stcm/gbnl.hpp"
+#include "../format/primitive_item.hpp"
+
 #define NEPTOOLS_LOG_NAME "server"
 #include "../logger_helper.hpp"
 
@@ -42,6 +48,17 @@ using namespace Neptools;
 
 namespace
 {
+
+// bring in required shit for OpenFactory/DataFactory
+// do not actually call this, as it would crash
+void Dependencies()
+{
+    Source* src = nullptr;
+    Cl3 cl3{*src};
+    Stcm::File stcm{*src};
+    stcm.Create<Stcm::GbnlItem>(*src);
+    stcm.Create<Int32Item>(*src);
+}
 
 static std::string UnfuckString(wchar_t* str)
 {
@@ -201,6 +218,7 @@ constexpr size_t MAIN_CALL_OFFSET = -201+1;
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID)
 {
     if (reason != DLL_PROCESS_ATTACH) return true;
+    if (inst == nullptr) Dependencies();
     dll_base = inst;
 
     DisableThreadLibraryCalls(inst);

@@ -1,5 +1,4 @@
 #include "data.hpp"
-#include "gbnl.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
@@ -39,18 +38,10 @@ DataItem& DataItem::CreateAndInsert(ItemPointer ptr)
 
     NEPTOOLS_ASSERT(ret.GetSize() == sizeof(Header) + x.t.length);
 
-    // hack
+    // check heuristics
     if (!ret.GetChildren().empty())
-    {
-        auto child = dynamic_cast<RawItem*>(&ret.GetChildren().front());
-        if (child && child->GetSize() > sizeof(Gbnl::Header))
-        {
-            char buf[4];
-            child->GetSource().Pread(child->GetSize() - sizeof(Gbnl::Header), buf, 4);
-            if (memcmp(buf, "GBNL", 4) == 0)
-                GbnlItem::CreateAndInsert({child, 0});
-        }
-    }
+        DataFactory::Check(ret);
+
     return ret;
 }
 
@@ -81,6 +72,12 @@ FilePosition DataItem::GetSize() const noexcept
 void DataItem::Fixup()
 {
     ItemWithChildren::Fixup_(sizeof(Header));
+}
+
+void DataFactory::Check(DataItem& it)
+{
+    for (auto f : GetStore())
+        if (f(it)) return;
 }
 
 }
