@@ -130,6 +130,7 @@ def configure(cfg):
         '-Wall', '-Wextra', '-pedantic',
         '-Wno-parentheses', '-Wno-assume', '-Wno-attributes',
         '-Wold-style-cast', '-Woverloaded-virtual', '-Wimplicit-fallthrough',
+        '-Wno-undefined-var-template', # TYPE_NAME usage
     ])
     cfg.filter_flags(['CFLAGS_EXT', 'CXXFLAGS_EXT'], [
         '-Wno-parentheses-equality', # boost fs, windows build
