@@ -25,13 +25,6 @@ static int panic(lua_State* vm)
     else NEPTOOLS_THROW(Error{"Lua PANIC"});
 }
 
-static int type_name(lua_State* vm)
-{
-    if (!luaL_getmetafield(vm, 1, "__name"))
-        lua_pushstring(vm, luaL_typename(vm, 1));
-    return 1;
-}
-
 const char* StateRef::TypeName(int idx)
 {
     NEPTOOLS_LUA_GETTOP(vm, top);
@@ -65,9 +58,6 @@ State::State() : State(0)
             lua_setfield(vm, -2, "__mode"); // +2
             lua_setmetatable(vm, -2);       // +1
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
-
-            lua_pushcfunction(vm, type_name); //+1
-            lua_setfield(vm, LUA_GLOBALSINDEX, "typename");
 
             // helper funs
             NEPTOOLS_LUA_RUNBC(vm, base_funcs, 0);

@@ -1,5 +1,6 @@
 local reg = debug.getregistry()
-local type, rawget, error, format = type, rawget, error, string.format
+local type, rawget, error, format, getmetatable =
+  type, rawget, error, string.format, debug.getmetatable
 
 -- foo(...) -> foo.new(...)
 reg.neptools_new_mt = { __call = function(t, ...) return t.new(...) end }
@@ -62,4 +63,14 @@ end
 
 function reg.neptools_ipairs(container)
   return cb, container, -1
+end
+
+-- like type() but checks metatable for __name
+function typename(t)
+  local mt = getmetatable(t)
+  if mt then
+    local n = mt.__name
+    if n then return n end
+  end
+  return type(t)
 end
