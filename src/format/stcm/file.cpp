@@ -84,7 +84,7 @@ void File::ReadTxt_(std::istream& is)
         x->ReadTxt(is);
 }
 
-static OpenFactory stcm_open{[](Source src) -> SmartPtr<File>
+static OpenFactory stcm_open{[](Source src) -> SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];

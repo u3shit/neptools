@@ -350,7 +350,10 @@ local parse_class_v = cl.regCursorVisitor(function (c, par)
 
   if kind == "UsingDeclaration" then
     for k,v in pairs(c:referenced():overloadedDecls()) do
-      parse_method(v, v:kind(), c:parent())
+      local kind = v:kind()
+      if kind ~= "TypeAliasDecl" then
+        parse_method(v, kind, c:parent())
+      end
     end
   end
 

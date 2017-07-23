@@ -3,6 +3,7 @@
 #pragma once
 
 #include "dumpable.hpp"
+#include "factory.hpp"
 #include "shared_ptr.hpp"
 #include "source.hpp"
 #include "lua/static_class.hpp"
@@ -13,25 +14,16 @@
 namespace Neptools
 {
 
-class OpenFactory : public Lua::StaticClass
+class OpenFactory
+    : public BaseFactory<SmartPtr<Dumpable> (*)(Source)>, public Lua::StaticClass
 {
     NEPTOOLS_LUA_CLASS;
 public:
     using Ret = SmartPtr<Dumpable>;
-    using Fun = std::function<Ret (Source)>;
-    NEPTOOLS_NOLUA OpenFactory(Fun fun)
-    { GetStore().push_back(std::move(fun)); }
+    NEPTOOLS_NOLUA OpenFactory(BaseFactory::Fun f) : BaseFactory{f} {}
 
     static NotNull<Ret> Open(Source src);
     static NotNull<Ret> Open(const boost::filesystem::path& fname);
-
-private:
-    using Store = std::vector<Fun>;
-    static Store& GetStore()
-    {
-        static Store store;
-        return store;
-    }
 };
 
 }

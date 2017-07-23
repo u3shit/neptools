@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../item.hpp"
+#include "../../factory.hpp"
 #include <boost/endian/arithmetic.hpp>
 
 namespace Neptools
@@ -43,21 +44,10 @@ private:
     void Inspect_(std::ostream& os, unsigned indent) const override;
 };
 
-class DataFactory
+struct DataFactory : BaseFactory<bool (*)(DataItem& it)>
 {
-public:
-    using Fun = bool (*)(DataItem& it);
-    DataFactory(Fun f) { GetStore().push_back(f); }
-
+    using BaseFactory::BaseFactory;
     static void Check(DataItem& it);
-
-private:
-    using Store = std::vector<Fun>;
-    static Store& GetStore()
-    {
-        static Store store;
-        return store;
-    }
 };
 
 }

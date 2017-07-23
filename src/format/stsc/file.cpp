@@ -84,7 +84,7 @@ void File::ReadTxt_(std::istream& is)
         NEPTOOLS_THROW(DecodeError{"StscTxt: not enough strings"});
 }
 
-static OpenFactory stsc_open{[](Source src) -> SmartPtr<File>
+static OpenFactory stsc_open{[](Source src) -> SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];

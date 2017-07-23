@@ -745,7 +745,7 @@ struct DynamicStructTypeTraits<Gbnl::PaddingTag>
 };
 #endif
 
-static OpenFactory gbnl_open{[](Source src) -> SmartPtr<Gbnl>
+static OpenFactory gbnl_open{[](Source src) -> SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(Gbnl::Header)) return nullptr;
     char buf[4];

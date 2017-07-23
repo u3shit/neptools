@@ -390,7 +390,7 @@ Stcm::File& Cl3::GetStcm()
     return *ret;
 }
 
-static OpenFactory cl3_open{[](Source src) -> SmartPtr<Cl3>
+static OpenFactory cl3_open{[](Source src) -> SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(Cl3::Header)) return nullptr;
     char buf[3];
