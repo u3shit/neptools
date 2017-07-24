@@ -144,52 +144,13 @@ public:
     NEPTOOLS_GEN_HLP(64)
 #undef NEPTOOLS_GEN_HLP
 
-    static constexpr size_t GET_C_BUF_SIZE = 16;
     std::string ReadCString()
     {
-        std::string str;
-        char buf[GET_C_BUF_SIZE];
-        while (true)
-        {
-            auto rem = GetRemainingSize();
-            if (rem == 0)
-                NEPTOOLS_THROW(DecodeError{"Unterminated C-style string"} <<
-                               UsedSource{*this});
-
-            auto rd = std::min<FilePosition>(GET_C_BUF_SIZE, rem);
-            Read(buf, rd);
-            auto len = strnlen(buf, rd);
-            str.append(buf, len);
-            if (len < rd)
-            {
-                Seek(Tell() - (rd-len-1));
-                break;
-            }
-        }
-        return str;
+        auto ret = PreadCString(Tell());
+        Seek(Tell() + ret.size() + 1);
+        return ret;
     }
-
-    std::string PreadCString(FilePosition offs) const
-    {
-        std::string str;
-        char buf[GET_C_BUF_SIZE];
-        while (true)
-        {
-            auto rem = GetSize() - offs;
-            if (rem == 0)
-                NEPTOOLS_THROW(DecodeError{"Unterminated C-style string"} <<
-                               UsedSource{*this});
-
-            auto rd = std::min<FilePosition>(GET_C_BUF_SIZE, rem);
-            Pread(offs, buf, rd);
-            auto len = strnlen(buf, rd);
-            str.append(buf, len);
-            if (len < rd) break;
-            offs += rd;
-        }
-        return str;
-    }
-
+    std::string PreadCString(FilePosition offs) const;
 
     struct Provider : public RefCounted
     {

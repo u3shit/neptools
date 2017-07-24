@@ -120,6 +120,21 @@ void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
     }
 }
 
+std::string Source::PreadCString(FilePosition offs) const
+{
+    std::string ret;
+    StringView e;
+    size_t len;
+    do
+    {
+        e = GetChunk(offs);
+        len = strnlen(e.data(), e.size());
+        ret.append(e.data(), len);
+        offs += e.size();
+    } while (len == e.size());
+    return ret;
+}
+
 Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const
 {
     if (p->LruGet(offs)) return p->lru[0];
