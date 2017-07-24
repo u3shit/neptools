@@ -1,6 +1,7 @@
 #include "gbnl.hpp"
 #include "data.hpp"
 #include "../context.hpp"
+#include "../gbnl_lua.hpp"
 #include "../raw_item.hpp"
 #include "../../container/vector.lua.hpp"
 

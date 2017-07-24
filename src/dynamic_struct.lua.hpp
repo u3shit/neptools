@@ -4,6 +4,7 @@
 
 #ifdef NEPTOOLS_WITHOUT_LUA
 #define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(name, ...)
+#define NEPTOOLS_DYNAMIC_STRUCT_TABLECTOR(...)
 #else
 
 #include "dynamic_struct.hpp"
@@ -307,11 +308,7 @@ struct DynamicStructLua
 
 }
 
-#define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(nam, ...)                                \
-    template class ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder;         \
-    template struct ::Neptools::DynamicStructLua<__VA_ARGS__>;                  \
-    template struct ::Neptools::DynamicStructBuilderLua<__VA_ARGS__>;           \
-    template struct ::Neptools::DynamicStructTypeLua<__VA_ARGS__>;              \
+#define NEPTOOLS_DYNAMIC_STRUCT_TABLECTOR(...)                                  \
     /* workaround can't specialize for nested classes in template class, because\
        well, including a wrapper around cairo in the standard is more important \
        than fixing problems like this */                                        \
@@ -319,7 +316,17 @@ struct DynamicStructLua
         boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>> \
         : std::integral_constant<::Neptools::Lua::TableCtorPtr<                 \
             boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>>, \
-            ::Neptools::DynamicStructTypeLua<__VA_ARGS__>::New> {};             \
+            ::Neptools::DynamicStructTypeLua<__VA_ARGS__>::New> {}
+#define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(nam, ...)                                \
+    template class ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder;         \
+    template struct ::Neptools::DynamicStructLua<__VA_ARGS__>;                  \
+    template struct ::Neptools::DynamicStructBuilderLua<__VA_ARGS__>;           \
+    template struct ::Neptools::DynamicStructTypeLua<__VA_ARGS__>;              \
+    template<> struct Neptools::Lua::GetTableCtor<                              \
+        Neptools::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>> \
+        : std::integral_constant<::Neptools::Lua::TableCtorPtr<                 \
+            Neptools::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>>, \
+            nullptr> {};             \
     NEPTOOLS_LUA_TEMPLATE(DynStructBind##nam, (name=#nam),                      \
                           ::Neptools::DynamicStruct<__VA_ARGS__>);              \
     NEPTOOLS_LUA_TEMPLATE(DynStructTypeBind##nam, (name=#nam..".type"),         \
