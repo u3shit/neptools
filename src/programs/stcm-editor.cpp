@@ -130,24 +130,34 @@ void RecDo(const boost::filesystem::path& path, Pred p, Fun f, bool rec = false)
 
 enum class Mode
 {
-#define MODE_PARS(X)                                                            \
+#define MODE_PARS_PRE(X)                                                        \
     X(AUTO_STRTOOL,   "auto-strtool",   "import/export .cl3/.gbin/.gstr texts") \
     X(EXPORT_STRTOOL, "export-strtool", "export .cl3/.gbin/.gstr to .txt")      \
     X(IMPORT_STRTOOL, "import-strtool", "import .cl3/.gbin/.gstr from .txt")    \
     X(AUTO_CL3,       "auto-cl3",       "unpack/pack .cl3 files")               \
     X(UNPACK_CL3,     "unpack-cl3",     "unpack .cl3 files")                    \
-    X(PACK_CL3,       "pack-cl3",       "pack .cl3 files")                      \
+    X(PACK_CL3,       "pack-cl3",       "pack .cl3 files")
+#define MODE_PARS_LUA(X)                                                        \
+    X(AUTO_LUA,       "auto-lua",       "import/export stcms")                  \
+    X(EXPORT_LUA,     "export-lua",     "export stcms")                         \
+    X(IMPORT_LUA,     "import-lua",      "import lua")
+#define MODE_PARS_POST(X)                                                       \
     X(MANUAL,         "manual",         "manual processing (set automatically)")
+#ifdef NEPTOOLS_WITHOUT_LUA
+#   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_POST(X)
+#else
+#   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_LUA(X) MODE_PARS_POST(X)
+#endif
 #define GEN_ENUM(name, shit1, shit2) name,
     MODE_PARS(GEN_ENUM)
 #undef GEN_ENUM
 } mode = Mode::AUTO_STRTOOL;
 
-void DoAutoFun(const boost::filesystem::path& p)
+auto BaseDoAutoFun(const boost::filesystem::path& p, const char* ext)
 {
     boost::filesystem::path cl3, txt;
     bool import;
-    if (boost::ends_with(p.native(), ".txt"))
+    if (boost::ends_with(p.native(), ext))
     {
         cl3 = p.native().substr(0, p.native().size()-4);
         txt = p;
@@ -157,11 +167,17 @@ void DoAutoFun(const boost::filesystem::path& p)
     else
     {
         cl3 = txt = p;
-        txt += ".txt";
+        txt += ext;
         import = false;
         INFO << "Exporting: " << cl3 << " -> " << txt << std::endl;
     }
 
+    return std::make_tuple(import, cl3, txt);
+}
+
+void DoAutoTxt(const boost::filesystem::path& p)
+{
+    auto [import, cl3, txt] = BaseDoAutoFun(p, ".txt");
     auto st = SmartOpen(cl3);
     EnsureTxt(st);
     if (import)
@@ -173,6 +189,44 @@ void DoAutoFun(const boost::filesystem::path& p)
     }
     else
         st.txt->WriteTxt(OpenOut(txt));
+}
+
+void DoAutoLua(const boost::filesystem::path& p)
+{
+    auto [import, bin, lua] = BaseDoAutoFun(p, ".lua");
+    if (import)
+    {
+        Lua::State vm;
+        lua_getglobal(vm, "debug"); // +1
+        lua_getfield(vm, -1, "traceback"); // +2
+        if (luaL_loadfile(vm, lua.string().c_str()) || lua_pcall(vm, 0, 1, -2))
+        {
+            Logger::Log("lua", Logger::ERROR, nullptr, 0, nullptr)
+                << lua_tostring(vm, -1) << std::endl;
+            return;
+        }
+        auto dmp = vm.Get<NotNull<SmartPtr<Dumpable>>>(-1);
+        // hack? when importing a cl3, and we get a gbnl, put it into the
+        // existing cl3
+        if (boost::iends_with(bin.native(), ".cl3") &&
+            dynamic_cast<Stcm::File*>(dmp.get()))
+        {
+            auto cl3 = MakeSmart<Cl3>(Source::FromFile(bin));
+            auto stcme = cl3->entries.find("main.DAT", std::less<>{});
+            if (stcme == cl3->entries.end())
+                NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+            stcme->src = dmp;
+            cl3->Fixup();
+            dmp = cl3;
+        }
+        dmp->Dump(bin);
+    }
+    else
+    {
+        auto st = SmartOpen(bin);
+        EnsureTxt(st);
+        OpenOut(lua) << "return " << *(st.stcm ? st.stcm : st.dump.get()) << '\n';
+    }
 }
 
 void DoAutoCl3(const boost::filesystem::path& p)
@@ -221,6 +275,15 @@ bool IsTxt(const boost::filesystem::path& p, bool = false)
         boost::iends_with(p.native(), ".bin.txt"));
 }
 
+bool IsLua(const boost::filesystem::path& p, bool = false)
+{
+    return is_file(p) && (
+        boost::iends_with(p.native(), ".cl3.lua") ||
+        boost::iends_with(p.native(), ".gbin.lua") ||
+        boost::iends_with(p.native(), ".gstr.lua") ||
+        boost::iends_with(p.native(), ".bin.lua"));
+}
+
 bool IsCl3(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && boost::iends_with(p.native(), ".cl3");
@@ -252,16 +315,16 @@ void DoAuto(const boost::filesystem::path& path)
             else
                 return IsBin(p) || IsTxt(p);
         };
-        fun = DoAutoFun;
+        fun = DoAutoTxt;
         break;
 
     case Mode::EXPORT_STRTOOL:
         pred = IsBin;
-        fun = DoAutoFun;
+        fun = DoAutoTxt;
         break;
     case Mode::IMPORT_STRTOOL:
         pred = IsTxt;
-        fun = DoAutoFun;
+        fun = DoAutoTxt;
         break;
 
     case Mode::AUTO_CL3:
@@ -285,6 +348,32 @@ void DoAuto(const boost::filesystem::path& path)
     case Mode::PACK_CL3:
         pred = IsCl3Dir;
         fun = DoAutoCl3;
+        break;
+
+    case Mode::AUTO_LUA:
+        pred = [](auto& p, bool rec)
+        {
+            if (rec)
+                return (IsLua(p) &&
+                        boost::filesystem::exists(
+                            p.native().substr(0, p.native().size()-4))) ||
+                       (IsBin(p) &&
+                        !boost::filesystem::exists(
+                            boost::filesystem::path(p)+=".lua"));
+            else
+                return IsBin(p) || IsLua(p);
+        };
+        fun = DoAutoLua;
+        break;
+
+    case Mode::EXPORT_LUA:
+        pred = IsBin;
+        fun = DoAutoLua;
+        break;
+
+    case Mode::IMPORT_LUA:
+        pred = IsLua;
+        fun = DoAutoLua;
         break;
 
     case Mode::MANUAL:
@@ -492,8 +581,8 @@ int main(int argc, char** argv)
         }};
 
 #ifndef NEPTOOLS_WITHOUT_LUA
-    Option lua{ // temp
-        lgrp, "lua", 0, nullptr, "ignore",
+    Option lua{
+        lgrp, "lua", 'i', 0, nullptr, "Interactive lua prompt",
         [&](auto&&)
         {
             Lua::State vm;
@@ -532,6 +621,17 @@ int main(int argc, char** argv)
                         lua_pop(vm, 1);
                 }
             }
+        }};
+    Option lua_script{
+        lgrp, "lua-script", 'L', 1, "FILE", "Run lua script",
+        [&](auto&& args)
+        {
+            Lua::State vm;
+            lua_getglobal(vm, "debug"); // +1
+            lua_getfield(vm, -1, "traceback"); // +2
+            if (luaL_loadfile(vm, args[0]) || lua_pcall(vm, 0, 0, -2))
+                Logger::Log("lua", Logger::ERROR, nullptr, 0, nullptr)
+                    << lua_tostring(vm, -1) << std::endl;
         }};
 #endif
 
