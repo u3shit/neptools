@@ -253,6 +253,7 @@ def build_common(bld):
         'src/format/stcm/gbnl.cpp',
         'src/format/stcm/header.cpp',
         'src/format/stcm/instruction.cpp',
+        'src/format/stcm/string_data.cpp',
         'src/format/stsc/file.cpp',
         'src/format/stsc/header.cpp',
         'src/format/stsc/instruction.cpp',

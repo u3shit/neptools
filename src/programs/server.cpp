@@ -9,6 +9,7 @@
 #include "../format/stcm/file.hpp"
 #include "../format/stcm/gbnl.hpp"
 #include "../format/primitive_item.hpp"
+#include "../format/stcm/string_data.hpp"
 
 #define NEPTOOLS_LOG_NAME "server"
 #include "../logger_helper.hpp"
@@ -58,6 +59,7 @@ void Dependencies()
     Stcm::File stcm{*src};
     stcm.Create<Stcm::GbnlItem>(*src);
     stcm.Create<Int32Item>(*src);
+    stcm.Create<Stcm::StringDataItem>("");
 }
 
 static std::string UnfuckString(wchar_t* str)

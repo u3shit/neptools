@@ -14,6 +14,7 @@ src=(src/dumpable src/open src/sink src/source src/txt_serializable
      src/format/stcm/collection_link src/format/stcm/data
      src/format/stcm/exports src/format/stcm/file src/format/stcm/gbnl
      src/format/stcm/header src/format/stcm/instruction
+     src/format/stcm/string_data
      src/format/stsc/file src/format/stsc/header src/format/stsc/instruction
      test/container/ordered_map test/container/parent_list
      test/lua/function_ref test/lua/user_type)

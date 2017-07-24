@@ -104,6 +104,7 @@ private:
     LabelsContainer labels;
 
     void Replace_(const NotNull<RefCountedPtr<Item>>& nitem);
+    virtual void Removed();
 
     friend class Context;
     friend struct ItemListTraits;
@@ -123,7 +124,7 @@ struct ItemListTraits
     static void add(ItemList&, Item& item) noexcept
     { item.AddRef(); }
     static void remove(ItemList&, Item& item) noexcept
-    { item.RemoveRef(); }
+    { item.Removed(); item.RemoveRef(); }
 };
 
 inline auto Item::Iterator() const noexcept
@@ -152,6 +153,9 @@ protected:
     void Dump_(Sink& sink) const override;
     void InspectChildren(std::ostream& sink, unsigned indent) const;
     void Fixup_(FilePosition offset);
+
+private:
+    void Removed() override;
 
     friend struct ::Neptools::ItemListTraits;
     friend class Item;

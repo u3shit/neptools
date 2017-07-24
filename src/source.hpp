@@ -72,7 +72,7 @@ public:
         get = pos;
     }
     FilePosition Tell() const noexcept { return get; }
-    FilePosition GetRemainingSize() const noexcept { return p->size - get; }
+    FilePosition GetRemainingSize() const noexcept { return size - get; }
     bool Eof() const noexcept { return get == size; }
 
     void CheckSize(FilePosition size) const
@@ -162,7 +162,7 @@ public:
             str.append(buf, len);
             if (len < rd)
             {
-                Seek(Tell() - (rd-len+1));
+                Seek(Tell() - (rd-len-1));
                 break;
             }
         }

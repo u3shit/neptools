@@ -59,6 +59,15 @@ void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem)
     list.erase(self);
 }
 
+void Item::Removed()
+{
+    auto ctx = GetContextMaybe();
+    if (!ctx) return;
+    auto it = ctx->pmap.find(position);
+    if (it != ctx->pmap.end() && it->second == this)
+        ctx->pmap.erase(it);
+}
+
 void Item::Slice(SliceSeq seq)
 {
     NEPTOOLS_ASSERT(std::is_sorted(seq.begin(), seq.end(),
@@ -67,20 +76,13 @@ void Item::Slice(SliceSeq seq)
     SmartPtr<Item> do_not_delete_this_until_returning{this};
 
     LabelsContainer lbls{std::move(labels)};
-    auto& list = GetParent()->GetChildren();
-    auto it = Iterator();
-    it = list.erase(it);
-
     auto ctx = GetContext();
     auto& pmap = ctx->pmap;
     auto empty = pmap.empty();
-    // remove this from pmap
-    if (!empty)
-    {
-        auto iter = pmap.find(position);
-        if (iter != pmap.end() && iter->second == this)
-            pmap.erase(iter);
-    }
+
+    auto& list = GetParent()->GetChildren();
+    auto it = Iterator();
+    it = list.erase(it);
 
     FilePosition offset = 0;
     auto base_pos = position;
@@ -187,6 +189,12 @@ void ItemWithChildren::Dispose() noexcept
 {
     GetChildren().clear();
     Item::Dispose();
+}
+
+void ItemWithChildren::Removed()
+{
+    Item::Removed();
+    for (auto& ch : GetChildren()) ch.Removed();
 }
 
 }
