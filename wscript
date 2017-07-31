@@ -162,6 +162,7 @@ def configure(cfg):
         cfg.env.append_value('CXXFLAGS', ['-std=c++1z'])
 
         cfg.filter_flags(['CFLAGS', 'CXXFLAGS'], ['-fvisibility=hidden'])
+        cfg.env.append_value('LINKFLAGS', '-rdynamic')
         if cfg.options.optimize:
             cfg.filter_flags(['CFLAGS', 'CXXFLAGS', 'LINKFLAGS'], [
                 '-Ofast', '-flto', '-fno-fat-lto-objects',
