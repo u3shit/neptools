@@ -145,7 +145,7 @@ def configure_ljx(ctx, variant, host_variant, suf):
     ctx.setenv(variant)
 
     ctx.env.append_value('DEFINES_LJX',
-                         ['LJ_ABIVER=51', 'LUAJIT_ENABLE_LUA53COMPAT'])
+                         ['LJ_ABIVER=53', 'LUAJIT_ENABLE_LUA53COMPAT'])
     if not ctx.options.release:
         ctx.env.append_value('DEFINES_LJX', 'LUA_USE_APICHECK')
 
