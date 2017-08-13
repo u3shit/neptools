@@ -4,6 +4,8 @@ def options(ctx):
     grp = ctx.get_option_group('configure options')
     grp.add_option('--host-lua', action='store', default=None,
                    help='System lua 5.1/5.2 + bitop or luajit or ljx')
+    grp.add_option('--lua-dll', action='store_true', default=None,
+                   help='Compile lua as dll (Windows only)')
     ctx.load('gas')
 
 def configure(ctx):
@@ -13,6 +15,8 @@ def configure(ctx):
 
     if ctx.env['COMPILER_CXX'] != 'msvc':
         ctx.env.append_value('CFLAGS_LJX', '-fexceptions')
+    else:
+        ctx.env.LUA_DLL = ctx.options.lua_dll
 
     if ctx.options.host_lua:
         ctx.find_program(ctx.options.host_lua,
@@ -150,6 +154,8 @@ def configure_ljx(ctx, variant, host_variant, suf):
         ctx.env.append_value(
             'DEFINES_LJX',
             ['LUA_API=extern __attribute((visibility("default")))'])
+    elif ctx.env.LUA_DLL:
+        ctx.env.append_value('DEFINES_LJX', ['LUA_BUILD_AS_DLL'])
     if not ctx.options.release:
         ctx.env.append_value('DEFINES_LJX', 'LUA_USE_APICHECK')
 
@@ -265,13 +271,21 @@ def build_ljx(ctx, minilua, host_env, pref, suf):
 
 
     ver = 'LJX_VERSION="%s"' % ctx.path.find_node('ljx/.version').read().strip()
-    ctx.stlib(source          = ['ljx/src/ljamalg.c', tgt],
-              includes        = pref+'.',
-              export_includes = 'ljx/src',
-              defines         = ver,
-              uselib          = 'EXT',
-              use             = 'LJX DL M',
-              target          = pref+'ljx')
+    ctx(features        = ctx.env.LUA_DLL and 'c cshlib' or 'c cstlib',
+        source          = ['ljx/src/ljamalg.c', tgt],
+        includes        = pref+'.',
+        export_includes = 'ljx/src',
+        defines         = ver,
+        uselib          = 'EXT',
+        use             = 'LJX DL M',
+        target          = pref+'lua53',
+        name            = pref+'ljx')
+
+    if ctx.env.LUA_DLL:
+        ctx(rule   = 'cp ${SRC} ${TGT}',
+            cls_keyword = lambda x: 'cp',
+            source = pref+'lua53.dll',
+            target = '../lua53.dll')
 
     # todo: maybe integrate into stcm-editor
     # only really needed for host

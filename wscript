@@ -144,7 +144,7 @@ def configure(cfg):
             '-Xclang', '-std=c++1z',
             '-Xclang', '-fdiagnostics-format', '-Xclang', 'clang',
             '-EHsa', '-MD'])
-        cfg.env.append_value('CFLAGS_EXT', '-EHsa')
+        cfg.env.append_value('CFLAGS_EXT', ['-EHsa', '-MD'])
         inc = '-I' + cfg.path.find_node('msvc_include').abspath()
         cfg.env.prepend_value('CFLAGS', inc)
         cfg.env.prepend_value('CXXFLAGS', inc)
