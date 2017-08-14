@@ -1,6 +1,6 @@
 #! /bin/bash
 
-if [[ $# -ne 2 ]]; then
+if [[ $# -lt 2 ]]; then
     echo "Usage: $0 vm.opts files" >&2
     exit 1
 fi
