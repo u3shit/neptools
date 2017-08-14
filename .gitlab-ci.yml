@@ -81,10 +81,11 @@ stages:
 .win-artifacts: &win_artifacts
   artifacts:
     paths:
-      - build/stcm-editor.exe
       - build/launcher.exe
+      - build/lua53.dll
       - build/neptools-server.dll
       - build/run-tests.exe
+      - build/stcm-editor.exe
 
 .linux-artifacts: &linux_artifacts
   artifacts:
@@ -107,7 +108,7 @@ stages:
 .win7-test: &win7_test
   <<: *test_common
   script:
-    - tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe
+    - tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe build/lua53.dll
 
 .test: &test
   <<: *test_common

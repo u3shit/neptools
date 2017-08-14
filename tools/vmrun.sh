@@ -1,7 +1,7 @@
 #! /bin/bash
 
 if [[ $# -ne 2 ]]; then
-    echo "Usage: $0 vm.opts run-tests.exe" >&2
+    echo "Usage: $0 vm.opts files" >&2
     exit 1
 fi
 
@@ -18,6 +18,7 @@ fifo=fifo
 #  -drive (with file=$temp_img), -netdev user, -loadvm
 # you have to modify this script if you don't want to use user networking
 source "$1"
+shift
 
 set -eEx
 function cleanup() {
@@ -40,7 +41,7 @@ for i in $(seq 0 4); do
     if [[ -z $fwd ]]; then break; fi
 done
 
-scp -o StrictHostKeyChecking=no -P $port "$2" "$username@localhost:$tmp_dir/"
+scp -o StrictHostKeyChecking=no -P $port "$@" "$username@localhost:$tmp_dir/"
 
 # the braindead windows server closes connection on EOF, so fake something
 rm -f "$fifo" && mkfifo "$fifo"
@@ -49,3 +50,5 @@ ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
               "cd $tmp_dir && run-tests" < "$fifo"
 
 "$dir/qmp" --path=qemu.sock quit
+
+rm "$temp_img"
