@@ -2,9 +2,10 @@
 #define UUID_907F2DFB_AA53_4295_B41F_9AAA950AEEB4
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
 #include "gbnl.hpp"
 #include "../dynamic_struct.lua.hpp"
+
+#ifndef NEPTOOLS_WITHOUT_LUA
 
 namespace Neptools
 {

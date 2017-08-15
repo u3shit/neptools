@@ -515,6 +515,7 @@ void Instruction1eItem::PostInsert()
 }
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 namespace Neptools::Lua
 {
 
@@ -603,3 +604,5 @@ NEPTOOLS_STD_VECTOR_LUAGEN(
     stsc_instruction1e_item_expression,
     Neptools::Stsc::Instruction1eItem::Expression);
 #include "instruction.binding.hpp"
+
+#endif

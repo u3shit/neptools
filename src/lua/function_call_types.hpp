@@ -40,24 +40,25 @@ private:
     int idx;
 };
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 // ensure type but do not parse
 template <int Type>
 class Raw : public Any
 {
 public:
-#ifndef NEPTOOLS_WITHOUT_LUA
     static_assert(
         Type == LUA_TNIL || Type == LUA_TNUMBER || Type == LUA_TBOOLEAN ||
         Type == LUA_TSTRING || Type == LUA_TTABLE || Type == LUA_TFUNCTION ||
         Type == LUA_TUSERDATA || Type == LUA_TTHREAD || Type == LUA_TLIGHTUSERDATA,
         "Type is not a lua type constant");
-#endif
+
     static constexpr int TYPE = Type;
     using Any::Any;
 };
 
 using RawString = Raw<LUA_TSTRING>;
 using RawTable = Raw<LUA_TTABLE>;
+#endif
 
 template <typename T, typename Enable = void> struct TupleLike;
 

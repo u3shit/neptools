@@ -191,6 +191,7 @@ void DoAutoTxt(const boost::filesystem::path& p)
         st.txt->WriteTxt(OpenOut(txt));
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 void DoAutoLua(const boost::filesystem::path& p)
 {
     auto [import, bin, lua] = BaseDoAutoFun(p, ".lua");
@@ -228,6 +229,7 @@ void DoAutoLua(const boost::filesystem::path& p)
         OpenOut(lua) << "return " << *(st.stcm ? st.stcm : st.dump.get()) << '\n';
     }
 }
+#endif
 
 void DoAutoCl3(const boost::filesystem::path& p)
 {
@@ -275,6 +277,7 @@ bool IsTxt(const boost::filesystem::path& p, bool = false)
         boost::iends_with(p.native(), ".bin.txt"));
 }
 
+#ifndef NEPTOOLS_WITHOUT_LUA
 bool IsLua(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
@@ -283,6 +286,7 @@ bool IsLua(const boost::filesystem::path& p, bool = false)
         boost::iends_with(p.native(), ".gstr.lua") ||
         boost::iends_with(p.native(), ".bin.lua"));
 }
+#endif
 
 bool IsCl3(const boost::filesystem::path& p, bool = false)
 {
@@ -350,6 +354,7 @@ void DoAuto(const boost::filesystem::path& path)
         fun = DoAutoCl3;
         break;
 
+#ifndef NEPTOOLS_WITHOUT_LUA
     case Mode::AUTO_LUA:
         pred = [](auto& p, bool rec)
         {
@@ -375,6 +380,7 @@ void DoAuto(const boost::filesystem::path& path)
         pred = IsLua;
         fun = DoAutoLua;
         break;
+#endif
 
     case Mode::MANUAL:
         throw InvalidParam{"Can't use auto files in manual mode"};
