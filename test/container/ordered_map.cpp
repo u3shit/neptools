@@ -3,13 +3,14 @@
 #include <catch.hpp>
 
 using namespace Neptools;
-using namespace Neptools::Lua;
+using namespace Libshit;
+using namespace Libshit::Lua;
 
 namespace Neptools::Test
 {
-struct OMItemTest final : public OrderedMapItem, public Lua::DynamicObject
+struct OMItemTest final : public OrderedMapItem, public DynamicObject
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     OMItemTest(std::string k, int v) : k{std::move(k)}, v{v} { ++count; }
     ~OMItemTest() { --count; }

@@ -17,7 +17,7 @@ namespace Neptools
 
 void Gbnl::Header::Validate(size_t chunk_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Gbnl::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Gbnl::Header", x)
     VALIDATE(field_04 == 1 && field_08 == 16 && field_0c == 4);
     VALIDATE(descr_offset + msg_descr_size * count_msgs < chunk_size);
     VALIDATE(field_22 == 0);
@@ -45,17 +45,17 @@ static size_t GetSize(uint16_t type)
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
     }
-    NEPTOOLS_THROW(DecodeError{"Gbnl: invalid type"});
+    LIBSHIT_THROW(Libshit::DecodeError{"Gbnl: invalid type"});
 }
 
 Gbnl::Gbnl(Source src)
 {
-    AddInfo(&Gbnl::Parse_, ADD_SOURCE(src), this, src);
+    Libshit::AddInfo(&Gbnl::Parse_, ADD_SOURCE(src), this, src);
 }
 
 void Gbnl::Parse_(Source& src)
 {
-#define VALIDATE(msg, x) NEPTOOLS_VALIDATE_FIELD("Gbnl" msg, x)
+#define VALIDATE(msg, x) LIBSHIT_VALIDATE_FIELD("Gbnl" msg, x)
 
     src.CheckSize(sizeof(Header));
     auto foot = src.PreadGen<Header>(0);
@@ -93,7 +93,7 @@ void Gbnl::Parse_(Source& src)
         switch (type.type)
         {
         case TypeDescriptor::INT8:
-            NEPTOOLS_ASSERT(!int8_in_progress);
+            LIBSHIT_ASSERT(!int8_in_progress);
             int8_in_progress = true;
             break;
         case TypeDescriptor::INT16:
@@ -112,7 +112,7 @@ void Gbnl::Parse_(Source& src)
             bld.Add<OffsetString>();
             break;
         default:
-            NEPTOOLS_THROW(DecodeError{"GBNL: invalid type"});
+            LIBSHIT_THROW(Libshit::DecodeError{"GBNL: invalid type"});
         }
     }
     Pad(msg_descr_size - calc_offs, bld, int8_in_progress);
@@ -181,9 +181,10 @@ void Gbnl::Parse_(Source& src)
 #undef VALIDATE
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-Gbnl::Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
-           uint32_t field_30, AT<Struct::TypePtr> type, Lua::RawTable msgs)
+#ifndef LIBSHIT_WITHOUT_LUA
+Gbnl::Gbnl(Libshit::Lua::StateRef vm, bool is_gstl, uint32_t flags,
+           uint32_t field_28, uint32_t field_30,
+           Libshit::AT<Struct::TypePtr> type, Libshit::Lua::RawTable msgs)
     : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
       type{std::move(type.Get())}
 {
@@ -350,13 +351,13 @@ void Gbnl::Dump_(Sink& sink) const
                 }
             }
 
-    NEPTOOLS_ASSERT(offset == msgs_size);
+    LIBSHIT_ASSERT(offset == msgs_size);
     auto offset_round = Align(offset);
     sink.Pad(offset_round - offset);
 
     // sanity checks
-    NEPTOOLS_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
-    NEPTOOLS_ASSERT(control_end_round == Align(msgs_end_round +
+    LIBSHIT_ASSERT(msgs_end_round == Align(msg_descr_size * messages.size()));
+    LIBSHIT_ASSERT(control_end_round == Align(msgs_end_round +
         sizeof(TypeDescriptor) * real_item_count));
     if (!is_gstl) DumpHeader(sink);
 }
@@ -477,7 +478,7 @@ void Gbnl::RecalcSize()
     size_t offset = 0;
     for (auto& m : messages)
     {
-        NEPTOOLS_ASSERT(m->GetType() == type);
+        LIBSHIT_ASSERT(m->GetType() == type);
         for (size_t i = 0; i < m->GetSize(); ++i)
             if (m->Is<OffsetString>(i))
             {
@@ -512,7 +513,7 @@ static const char SEP_DASH_DATA[] = {
 #undef REP_MACRO
     ' '
 };
-static const StringView SEP_DASH{SEP_DASH_DATA, sizeof(SEP_DASH_DATA)};
+static const Libshit::StringView SEP_DASH{SEP_DASH_DATA, sizeof(SEP_DASH_DATA)};
 
 static const char SEP_DASH_UTF8_DATA[] = {
 #define REP_MACRO(x,y,z) char(0xe2), char(0x80), char(0x95),
@@ -520,7 +521,7 @@ static const char SEP_DASH_UTF8_DATA[] = {
 #undef REP_MACRO
     ' '
 };
-static const StringView SEP_DASH_UTF8{
+static const Libshit::StringView SEP_DASH_UTF8{
     SEP_DASH_UTF8_DATA, sizeof(SEP_DASH_UTF8_DATA)};
 
 
@@ -626,7 +627,7 @@ void Gbnl::ReadTxt_(std::istream& is)
         {
             if (pos != static_cast<size_t>(-1))
             {
-                NEPTOOLS_ASSERT(msg.empty() || msg.back() == '\n');
+                LIBSHIT_ASSERT(msg.empty() || msg.back() == '\n');
                 if (!msg.empty()) msg.pop_back();
                 auto& m = messages[last_index];
                 if (m->Is<OffsetString>(pos))
@@ -646,31 +647,33 @@ void Gbnl::ReadTxt_(std::istream& is)
             pos = FindDst(id, messages, last_index);
             if (pos == static_cast<size_t>(-1))
             {
-                NEPTOOLS_THROW(DecodeError{"GbnlTxt: invalid id in input"} <<
+                LIBSHIT_THROW(
+                    Libshit::DecodeError{"GbnlTxt: invalid id in input"} <<
                       FailedId{id});
             }
         }
         else
         {
             if (pos == static_cast<size_t>(-1))
-                NEPTOOLS_THROW(DecodeError{"GbnlTxt: data before separator"});
+                LIBSHIT_THROW(
+                    Libshit::DecodeError{"GbnlTxt: data before separator"});
             if (!line.empty() && line.back() == '\r') line.pop_back();
             msg.append(line).append(1, '\n');
         }
     }
-    NEPTOOLS_THROW(DecodeError{"GbnlTxt: EOF"});
+    LIBSHIT_THROW(Libshit::DecodeError{"GbnlTxt: EOF"});
 }
 
-static OpenFactory gbnl_open{[](Source src) -> SmartPtr<Dumpable>
+static OpenFactory gbnl_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(Gbnl::Header)) return nullptr;
     char buf[4];
     src.PreadGen(0, buf);
     if (memcmp(buf, "STSC", 4) == 0)
-        return MakeSmart<Gbnl>(src);
+        return Libshit::MakeSmart<Gbnl>(src);
     src.PreadGen(src.GetSize() - sizeof(Gbnl::Header), buf);
     if (memcmp(buf, "STSC", 4) == 0)
-        return MakeSmart<Gbnl>(src);
+        return Libshit::MakeSmart<Gbnl>(src);
 
     return nullptr;
 }};

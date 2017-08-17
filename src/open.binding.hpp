@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::OpenFactory::TYPE_NAME[] = "neptools.open_factory";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.open_factory
@@ -14,8 +14,8 @@ void TypeRegisterTraits<::Neptools::OpenFactory>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        static_cast<::Neptools::NotNull<::Neptools::OpenFactory::Ret> (*)(::Neptools::Source)>(::Neptools::OpenFactory::Open),
-        static_cast<::Neptools::NotNull<::Neptools::OpenFactory::Ret> (*)(const ::boost::filesystem::path &)>(::Neptools::OpenFactory::Open)
+        static_cast<::Libshit::NotNull<::Neptools::OpenFactory::Ret> (*)(::Neptools::Source)>(::Neptools::OpenFactory::Open),
+        static_cast<::Libshit::NotNull<::Neptools::OpenFactory::Ret> (*)(const ::boost::filesystem::path &)>(::Neptools::OpenFactory::Open)
     >("open");
 
 }

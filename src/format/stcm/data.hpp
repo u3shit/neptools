@@ -13,7 +13,7 @@ namespace Stcm
 
 class DataItem final : public ItemWithChildren
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -30,7 +30,7 @@ public:
              uint32_t field_8)
         : ItemWithChildren{k, ctx}, type{type}, offset_unit{offset_unit},
           field_8{field_8} {}
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     DataItem(Key k, Context& ctx, const Header& hdr, size_t chunk_size);
     static DataItem& CreateAndInsert(ItemPointer ptr);
 

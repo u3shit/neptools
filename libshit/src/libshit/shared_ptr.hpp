@@ -6,7 +6,7 @@
 
 #include <atomic>
 
-namespace Neptools
+namespace Libshit
 {
 
 class RefCounted
@@ -26,16 +26,16 @@ public:
 
     void AddRef()
     {
-        NEPTOOLS_ASSERT(use_count() >= 1);
+        LIBSHIT_ASSERT(use_count() >= 1);
         strong_count.fetch_add(1, std::memory_order_relaxed);
     }
     void RemoveRef()
     {
         if (strong_count.fetch_sub(1, std::memory_order_acq_rel) == 1)
         {
-            NEPTOOLS_ASSERT(weak_use_count() > 0);
+            LIBSHIT_ASSERT(weak_use_count() > 0);
             Dispose();
-            NEPTOOLS_ASSERT(weak_use_count() > 0);
+            LIBSHIT_ASSERT(weak_use_count() > 0);
             RemoveWeakRef();
         }
     }
@@ -100,7 +100,7 @@ struct SharedPtrStorageRefCounted
     {
         (void) ctrl;
         static_assert(IS_REFCOUNTED<T>);
-        NEPTOOLS_ASSERT(ctrl == ptr);
+        LIBSHIT_ASSERT(ctrl == ptr);
     }
 
     RefCounted* GetCtrl() const noexcept
@@ -202,15 +202,15 @@ public:
     explicit operator bool() const noexcept { return s.GetPtr(); }
 
     // casts
-#define NEPTOOLS_GEN(camel, snake)                              \
+#define LIBSHIT_GEN(camel, snake)                              \
     template <typename U>                                       \
     friend SharedPtrBase<U, Storage> camel##PointerCast(        \
         const SharedPtrBase& p) noexcept                        \
     { return {p.GetCtrl(), snake##_cast<U*>(p.get()), true}; }
-    NEPTOOLS_GEN(Static, static)
-    NEPTOOLS_GEN(Dynamic, dynamic)
-    NEPTOOLS_GEN(Const, const)
-#undef NEPTOOLS_GEN
+    LIBSHIT_GEN(Static, static)
+    LIBSHIT_GEN(Dynamic, dynamic)
+    LIBSHIT_GEN(Const, const)
+#undef LIBSHIT_GEN
 
     // low level stuff
     SharedPtrBase(RefCounted* ctrl, T* ptr, bool incr) noexcept
@@ -231,7 +231,7 @@ inline void swap(SharedPtrBase<T, Storage>& a, SharedPtrBase<T, Storage>& b) noe
 { a.swap(b); }
 
 // comparison operators
-#define NEPTOOLS_GEN(type, get, op)                                     \
+#define LIBSHIT_GEN(type, get, op)                                     \
     template <typename T, template<typename> class TStorage,            \
               typename U, template<typename> class UStorage>            \
     inline bool operator op(                                            \
@@ -246,11 +246,11 @@ inline void swap(SharedPtrBase<T, Storage>& a, SharedPtrBase<T, Storage>& b) noe
     inline bool operator op(                                            \
         std::nullptr_t, const type##PtrBase<T, Storage>& p) noexcept    \
     { return nullptr op p.get(); }
-#define NEPTOOLS_GEN2(type, get)                            \
-    NEPTOOLS_GEN(type, get, ==) NEPTOOLS_GEN(type, get, !=) \
-    NEPTOOLS_GEN(type, get, <)  NEPTOOLS_GEN(type, get, <=) \
-    NEPTOOLS_GEN(type, get, >)  NEPTOOLS_GEN(type, get, >=)
-NEPTOOLS_GEN2(Shared, get)
+#define LIBSHIT_GEN2(type, get)                            \
+    LIBSHIT_GEN(type, get, ==) LIBSHIT_GEN(type, get, !=) \
+    LIBSHIT_GEN(type, get, <)  LIBSHIT_GEN(type, get, <=) \
+    LIBSHIT_GEN(type, get, >)  LIBSHIT_GEN(type, get, >=)
+LIBSHIT_GEN2(Shared, get)
 
 // use these types. usually SmartPtr; use SharedPtr when you need aliasing with
 // an otherwise RefCounted type
@@ -352,13 +352,13 @@ public:
     SharedPtrBase<T, Storage> unsafe_lock() const noexcept
     {
         // not bulletproof, but should catch most problems
-        NEPTOOLS_ASSERT(!expired());
+        LIBSHIT_ASSERT(!expired());
         return {s.GetCtrl(), s.GetPtr(), true};
     }
 
     T* unsafe_get() const noexcept
     {
-        NEPTOOLS_ASSERT(!expired());
+        LIBSHIT_ASSERT(!expired());
         return s.GetPtr();
     }
 
@@ -377,9 +377,9 @@ private:
     friend class WeakPtrBase;
 };
 
-NEPTOOLS_GEN2(Weak, GetPtr)
-#undef NEPTOOLS_GEN2
-#undef NEPTOOLS_GEN
+LIBSHIT_GEN2(Weak, GetPtr)
+#undef LIBSHIT_GEN2
+#undef LIBSHIT_GEN
 
 template <typename T, template<typename> class Storage>
 inline void swap(
@@ -404,7 +404,7 @@ inline SharedPtrBase<T, Storage>::SharedPtrBase(const WeakPtrBase<U, Storage>& o
     : s{o.GetCtrl(), o.unsafe_get()}
 {
     if (!s.GetCtrl() || !s.GetCtrl()->LockWeak())
-        NEPTOOLS_THROW(std::bad_weak_ptr{});
+        LIBSHIT_THROW(std::bad_weak_ptr{});
 }
 
 // make_shared like helper
@@ -441,15 +441,15 @@ struct MakeSharedHelper<T, RefCountedPtr<T>>
 };
 
 
-#define NEPTOOLS_GEN(variant)                               \
+#define LIBSHIT_GEN(variant)                               \
     template <typename T, typename... Args>                 \
     NotNull<variant##Ptr<T>> Make##variant(Args&&... args)  \
     {                                                       \
         return MakeSharedHelper<T, variant##Ptr<T>>::Make(  \
             std::forward<Args>(args)...);                   \
     }
-NEPTOOLS_GEN(Shared) NEPTOOLS_GEN(RefCounted) NEPTOOLS_GEN(Smart)
-#undef NEPTOOLS_GEN
+LIBSHIT_GEN(Shared) LIBSHIT_GEN(RefCounted) LIBSHIT_GEN(Smart)
+#undef LIBSHIT_GEN
 
 }
 

@@ -13,7 +13,7 @@ namespace Neptools
 
 void Cl3::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::Header", x)
     VALIDATE(memcmp(magic, "CL3L", 4) == 0);
     VALIDATE(field_04 == 0);
     VALIDATE(field_08 == 3);
@@ -23,7 +23,7 @@ void Cl3::Header::Validate(FilePosition file_size) const
 
 void Cl3::Section::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::Section", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::Section", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= file_size);
     VALIDATE(data_offset + data_size <= file_size);
@@ -35,7 +35,7 @@ void Cl3::Section::Validate(FilePosition file_size) const
 
 void Cl3::FileEntry::Validate(uint32_t block_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::FileEntry", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::FileEntry", x)
     VALIDATE(name.is_valid());
     VALIDATE(data_offset <= block_size);
     VALIDATE(data_offset + data_size <= block_size);
@@ -46,7 +46,7 @@ void Cl3::FileEntry::Validate(uint32_t block_size) const
 
 void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Cl3::LinkEntry", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::LinkEntry", x)
     VALIDATE(field_00 == 0);
     VALIDATE(linked_file_id < file_count);
     VALIDATE(link_id == i);
@@ -66,8 +66,8 @@ Cl3::Cl3(Source src)
     AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
+#ifndef LIBSHIT_WITHOUT_LUA
+Cl3::Cl3(Libshit::Lua::StateRef vm, uint32_t field_14, Libshit::Lua::RawTable tbl)
     : field_14{field_14}
 {
     auto [len, one] = vm.RawLen01(tbl);
@@ -90,13 +90,14 @@ Cl3::Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable tbl)
                 entries.emplace_back(
                     vm.Get<std::string>(-3),
                     vm.Get<uint32_t>(-2),
-                    vm.Get<SmartPtr<Dumpable>>(-1));
+                    vm.Get<Libshit::SmartPtr<Dumpable>>(-1));
                 lua_pop(vm, 3);
                 return;
             }
         }
         // probably unlikely: try the 3-param ctor, or use existing entry
-        entries.push_back(vm.Get<Lua::AutoTable<NotNull<SmartPtr<Entry>>>>());
+        entries.push_back(vm.Get<
+            Libshit::Lua::AutoTable<Libshit::NotNull<Libshit::SmartPtr<Entry>>>>());
     });
 
     if (do_links)
@@ -160,7 +161,7 @@ void Cl3::Parse_(Source& src)
         {
             link_offset = sec.data_offset;
             link_count = sec.count;
-            NEPTOOLS_VALIDATE_FIELD(
+            LIBSHIT_VALIDATE_FIELD(
                 "Cl3::Section",
                 sec.data_size == link_count * sizeof(LinkEntry));
         }
@@ -175,7 +176,7 @@ void Cl3::Parse_(Source& src)
 
         entries.emplace_back(
             e.name.c_str(), e.field_200,
-            MakeSmart<DumpableSource>(
+            Libshit::MakeSmart<DumpableSource>(
                 src, file_offset+e.data_offset, e.data_size));
     }
 
@@ -223,7 +224,7 @@ FilePosition Cl3::GetSize() const
     return ret;
 }
 
-Cl3::Entry& Cl3::GetOrCreateFile(StringView fname)
+Cl3::Entry& Cl3::GetOrCreateFile(Libshit::StringView fname)
 {
     auto it = entries.find(fname, std::less<>{});
     if (it == entries.end())
@@ -251,7 +252,7 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
 {
     for (auto& e : boost::filesystem::directory_iterator(dir))
         GetOrCreateFile(e.path().filename().string()).src =
-            MakeSmart<DumpableSource>(Source::FromFile(e));
+            Libshit::MakeSmart<DumpableSource>(Source::FromFile(e));
 
     for (auto it = entries.begin(); it != entries.end(); )
         if (!boost::filesystem::exists(dir / it->name))
@@ -260,7 +261,7 @@ void Cl3::UpdateFromDir(const boost::filesystem::path& dir)
             ++it;
 }
 
-uint32_t Cl3::IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept
+uint32_t Cl3::IndexOf(const Libshit::WeakSmartPtr<Entry>& ptr) const noexcept
 {
     auto sptr = ptr.lock();
     if (!sptr) return -1;
@@ -367,7 +368,7 @@ void Cl3::Dump_(Sink& sink) const
         {
             le.linked_file_id = IndexOf(l);
             if (le.linked_file_id == uint32_t(-1))
-                NEPTOOLS_THROW(std::runtime_error{"Invalid file link"});
+                LIBSHIT_THROW(std::runtime_error{"Invalid file link"});
             le.link_id = i++;
             sink.WriteGen(le);
         }
@@ -378,25 +379,25 @@ Stcm::File& Cl3::GetStcm()
 {
     auto dat = entries.find("main.DAT", std::less<>{});
     if (dat == entries.end() || !dat->src)
-        NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+        LIBSHIT_THROW(Libshit::DecodeError{"Invalid CL3 file: no main.DAT"});
 
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
     if (stcm) return *stcm;
 
     auto src = asserted_cast<DumpableSource*>(dat->src.get());
-    auto nstcm = MakeSmart<Stcm::File>(src->GetSource());
+    auto nstcm = Libshit::MakeSmart<Stcm::File>(src->GetSource());
     auto ret = nstcm.get();
     dat->src = std::move(nstcm);
     return *ret;
 }
 
-static OpenFactory cl3_open{[](Source src) -> SmartPtr<Dumpable>
+static OpenFactory cl3_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(Cl3::Header)) return nullptr;
     char buf[3];
     src.PreadGen(0, buf);
     if (memcmp(buf, "CL3", 3) == 0)
-        return MakeSmart<Cl3>(src);
+        return Libshit::MakeSmart<Cl3>(src);
     else
         return nullptr;
 }};
@@ -406,5 +407,5 @@ static OpenFactory cl3_open{[](Source src) -> SmartPtr<Dumpable>
 NEPTOOLS_ORDERED_MAP_LUAGEN(
     cl3_entry, Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue);
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    cl3_entry, Neptools::WeakRefCountedPtr<Neptools::Cl3::Entry>);
+    cl3_entry, Libshit::WeakRefCountedPtr<Neptools::Cl3::Entry>);
 #include "cl3.binding.hpp"

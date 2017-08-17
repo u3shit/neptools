@@ -5,12 +5,12 @@
 #include "type_traits.hpp"
 #include "../meta.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
-struct NEPTOOLS_LUAGEN(no_inherit=true) StaticClass {};
+struct LIBSHIT_LUAGEN(no_inherit=true) StaticClass {};
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 template<typename T>
 struct TypeTraits<T, std::enable_if_t<std::is_base_of_v<StaticClass, T>>>

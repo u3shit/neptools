@@ -9,46 +9,46 @@
 #endif
 
 #if __has_builtin(__builtin_unreachable) || defined(__GNUC__)
-#  define NEPTOOLS_BUILTIN_UNREACHABLE() __builtin_unreachable()
+#  define LIBSHIT_BUILTIN_UNREACHABLE() __builtin_unreachable()
 #else
-#  define NEPTOOLS_BUILTIN_UNREACHABLE() abort()
+#  define LIBSHIT_BUILTIN_UNREACHABLE() abort()
 #endif
 
 #if __has_builtin(__builtin_assume)
-#  define NEPTOOLS_ASSUME(expr) __builtin_assume(!!(expr))
+#  define LIBSHIT_ASSUME(expr) __builtin_assume(!!(expr))
 #else
-#  define NEPTOOLS_ASSUME(expr) ((void) 0)
+#  define LIBSHIT_ASSUME(expr) ((void) 0)
 #endif
 
 #ifdef NDEBUG
-#  define NEPTOOLS_ASSERT(expr) NEPTOOLS_ASSUME(expr)
-#  define NEPTOOLS_ASSERT_MSG(expr, msg) NEPTOOLS_ASSUME(expr)
-#  define NEPTOOLS_UNREACHABLE(x) NEPTOOLS_BUILTIN_UNREACHABLE()
+#  define LIBSHIT_ASSERT(expr) LIBSHIT_ASSUME(expr)
+#  define LIBSHIT_ASSERT_MSG(expr, msg) LIBSHIT_ASSUME(expr)
+#  define LIBSHIT_UNREACHABLE(x) LIBSHIT_BUILTIN_UNREACHABLE()
 
 #else
 
 #  include "file.hpp"
 
-#  define NEPTOOLS_ASSERT(expr) \
-    (BOOST_LIKELY(!!(expr)) ? ((void)0) : NEPTOOLS_ASSERT_FAILED(#expr, nullptr))
+#  define LIBSHIT_ASSERT(expr) \
+    (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, nullptr))
 
-#  define NEPTOOLS_ASSERT_MSG(expr, msg) \
-    (BOOST_LIKELY(!!(expr)) ? ((void)0) : NEPTOOLS_ASSERT_FAILED(#expr, msg))
+#  define LIBSHIT_ASSERT_MSG(expr, msg) \
+    (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, msg))
 
-#  define NEPTOOLS_ASSERT_FAILED(expr, msg)                      \
-    ::Neptools::AssertFailed(expr, msg, NEPTOOLS_FILE, __LINE__, \
-                             NEPTOOLS_FUNCTION)
+#  define LIBSHIT_ASSERT_FAILED(expr, msg)                      \
+    ::Libshit::AssertFailed(expr, msg, LIBSHIT_FILE, __LINE__, \
+                             LIBSHIT_FUNCTION)
 
-#  define NEPTOOLS_UNREACHABLE(x)                   \
+#  define LIBSHIT_UNREACHABLE(x)                   \
     do                                              \
     {                                               \
-        NEPTOOLS_ASSERT_FAILED("unreachable", x);   \
+        LIBSHIT_ASSERT_FAILED("unreachable", x);   \
         /* click on ignore -> you're toasted */     \
-        NEPTOOLS_BUILTIN_UNREACHABLE();             \
+        LIBSHIT_BUILTIN_UNREACHABLE();             \
     } while (false)
 #endif
 
-namespace Neptools
+namespace Libshit
 {
 #ifndef WINDOWS
 BOOST_NORETURN

@@ -2,9 +2,9 @@
 #define UUID_6B456DF2_313B_4FCC_9019_6A38BC7878A3
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 struct IntrusiveObject {};
@@ -19,10 +19,10 @@ struct IntrusiveObject {};
 
 #include <boost/intrusive_ptr.hpp>
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
-class NEPTOOLS_LUAGEN(no_inherit=true) IntrusiveObject {};
+class LIBSHIT_LUAGEN(no_inherit=true) IntrusiveObject {};
 
 template <typename T>
 constexpr bool IS_INTRUSIVE_OBJECT = std::is_base_of_v<IntrusiveObject, T>;

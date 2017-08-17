@@ -28,10 +28,11 @@
 #include <io.h>
 #endif
 
-#define NEPTOOLS_LOG_NAME "stcm-editor"
+#define LIBSHIT_LOG_NAME "stcm-editor"
 #include <libshit/logger_helper.hpp>
 
 using namespace Neptools;
+using namespace Libshit;
 
 namespace
 {
@@ -106,7 +107,7 @@ void EnsureTxt(State& st)
     if (st.txt) return;
     EnsureStcm(st);
     if (st.stcm->FindGbnl().empty())
-        NEPTOOLS_THROW(DecodeError{"No GBNL found in STCM"});
+        LIBSHIT_THROW(DecodeError{"No GBNL found in STCM"});
     st.txt = st.stcm;
 }
 
@@ -145,7 +146,7 @@ enum class Mode
     X(IMPORT_LUA,     "import-lua",      "import lua")
 #define MODE_PARS_POST(X)                                                       \
     X(MANUAL,         "manual",         "manual processing (set automatically)")
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 #   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_POST(X)
 #else
 #   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_LUA(X) MODE_PARS_POST(X)
@@ -193,7 +194,7 @@ void DoAutoTxt(const boost::filesystem::path& p)
         st.txt->WriteTxt(OpenOut(txt));
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 void DoAutoLua(const boost::filesystem::path& p)
 {
     auto [import, bin, lua] = BaseDoAutoFun(p, ".lua");
@@ -217,7 +218,7 @@ void DoAutoLua(const boost::filesystem::path& p)
             auto cl3 = MakeSmart<Cl3>(Source::FromFile(bin));
             auto stcme = cl3->entries.find("main.DAT", std::less<>{});
             if (stcme == cl3->entries.end())
-                NEPTOOLS_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+                LIBSHIT_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
             stcme->src = dmp;
             cl3->Fixup();
             dmp = cl3;
@@ -279,7 +280,7 @@ bool IsTxt(const boost::filesystem::path& p, bool = false)
         boost::iends_with(p.native(), ".bin.txt"));
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 bool IsLua(const boost::filesystem::path& p, bool = false)
 {
     return is_file(p) && (
@@ -356,7 +357,7 @@ void DoAuto(const boost::filesystem::path& path)
         fun = DoAutoCl3;
         break;
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
     case Mode::AUTO_LUA:
         pred = [](auto& p, bool rec)
         {
@@ -588,7 +589,7 @@ int main(int argc, char** argv)
             if (st.stcm) st.stcm->Fixup();
         }};
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
     Option lua{
         lgrp, "lua", 'i', 0, nullptr, "Interactive lua prompt",
         [&](auto&&)

@@ -18,9 +18,9 @@ namespace Neptools
 
 namespace Stcm { class File; }
 
-class Cl3 final : public RefCounted, public Dumpable
+class Cl3 final : public Libshit::RefCounted, public Dumpable
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -37,7 +37,7 @@ public:
 
     struct Section
     {
-        FixedString<0x20> name;
+        Libshit::FixedString<0x20> name;
         boost::endian::little_uint32_t count;
         boost::endian::little_uint32_t data_size;
         boost::endian::little_uint32_t data_offset;
@@ -57,7 +57,7 @@ public:
 
     struct FileEntry
     {
-        FixedString<0x200> name;
+        Libshit::FixedString<0x200> name;
         boost::endian::little_uint32_t field_200;
         boost::endian::little_uint32_t data_offset;
         boost::endian::little_uint32_t data_size;
@@ -90,21 +90,22 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(LinkEntry) == 0x20);
 
-    struct Entry : public OrderedMapItem, public Lua::DynamicObject
+    struct Entry : public OrderedMapItem, public Libshit::Lua::DynamicObject
     {
-        NEPTOOLS_DYNAMIC_OBJECT;
+        LIBSHIT_DYNAMIC_OBJECT;
     public:
         std::string name;
         uint32_t field_200 = 0;
 
-        using Links = std::vector<WeakRefCountedPtr<Cl3::Entry>>;
+        using Links = std::vector<Libshit::WeakRefCountedPtr<Cl3::Entry>>;
         // no setter - it doesn't work how you expect in lua
-        NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
+        LIBSHIT_LUAGEN(get="::Libshit::Lua::GetRefCountedOwnedMember")
         Links links;
 
-        SmartPtr<Dumpable> src;
+        Libshit::SmartPtr<Dumpable> src;
 
-        Entry(std::string name, uint32_t field_200, SmartPtr<Dumpable> src)
+        Entry(std::string name, uint32_t field_200,
+              Libshit::SmartPtr<Dumpable> src)
             : name{std::move(name)}, field_200{field_200}, src{std::move(src)} {}
         explicit Entry(std::string name) : name{std::move(name)} {}
 
@@ -120,8 +121,9 @@ public:
 
     Cl3(Source src);
     Cl3() : field_14{0} {}
-#ifndef NEPTOOLS_WITHOUT_LUA
-    Cl3(Lua::StateRef vm, uint32_t field_14, Lua::RawTable entries);
+#ifndef LIBSHIT_WITHOUT_LUA
+    Cl3(Libshit::Lua::StateRef vm, uint32_t field_14,
+        Libshit::Lua::RawTable entries);
 #endif
 
     void Fixup() override;
@@ -130,11 +132,11 @@ public:
     uint32_t field_14;
 
     // no setter - it doesn't work how you expect in lua
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetRefCountedOwnedMember")
     Entries entries;
-    uint32_t IndexOf(const WeakSmartPtr<Entry>& ptr) const noexcept;
+    uint32_t IndexOf(const Libshit::WeakSmartPtr<Entry>& ptr) const noexcept;
 
-    Entry& GetOrCreateFile(StringView fname);
+    Entry& GetOrCreateFile(Libshit::StringView fname);
 
     void ExtractTo(const boost::filesystem::path& dir) const;
     void UpdateFromDir(const boost::filesystem::path& dir);

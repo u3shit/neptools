@@ -7,17 +7,17 @@
 #include <boost/exception/info.hpp>
 
 #ifdef NDEBUG
-#  define NEPTOOLS_THROW(...) (throw ::boost::enable_error_info(__VA_ARGS__))
+#  define LIBSHIT_THROW(...) (throw ::boost::enable_error_info(__VA_ARGS__))
 #else
 #  include "file.hpp"
-#  define NEPTOOLS_THROW(...)                               \
+#  define LIBSHIT_THROW(...)                               \
     (throw ::boost::enable_error_info(__VA_ARGS__) <<       \
-     ::boost::throw_file(NEPTOOLS_FILE) <<                  \
+     ::boost::throw_file(LIBSHIT_FILE) <<                  \
      ::boost::throw_line(__LINE__) <<                       \
-     ::boost::throw_function(NEPTOOLS_FUNCTION))
+     ::boost::throw_function(LIBSHIT_FUNCTION))
 #endif
 
-namespace Neptools
+namespace Libshit
 {
 
 BOOST_NORETURN void RethrowBoostException();
@@ -28,30 +28,30 @@ std::string ExceptionToString();
 // will mangle them to the same name, causing assembler (!) errors due to
 // duplicate identifiers (I don't want to imagine what happens if the two
 // overloads end up in different compilation units...)
-#define NEPTOOLS_INVOKE_ALWAYS_INLINE __attribute__((always_inline))
+#define LIBSHIT_INVOKE_ALWAYS_INLINE __attribute__((always_inline))
 #else
-#define NEPTOOLS_INVOKE_ALWAYS_INLINE
+#define LIBSHIT_INVOKE_ALWAYS_INLINE
 #endif
 
 template <typename Base, typename T, typename Derived, typename... Args>
-NEPTOOLS_INVOKE_ALWAYS_INLINE
+LIBSHIT_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(T Base::*fun, Derived* thiz, Args&&... args)
     noexcept(noexcept((*thiz.*fun)(std::forward<Args>(args)...)))
 { return (*thiz.*fun)(std::forward<Args>(args)...); }
 
 template <typename Base, typename T, typename Derived, typename... Args>
-NEPTOOLS_INVOKE_ALWAYS_INLINE
+LIBSHIT_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(T Base::*fun, Derived& thiz, Args&&... args)
     noexcept(noexcept((thiz.*fun)(std::forward<Args>(args)...)))
 { return (thiz.*fun)(std::forward<Args>(args)...); }
 
 template <typename Fun, typename... Args>
-NEPTOOLS_INVOKE_ALWAYS_INLINE
+LIBSHIT_INVOKE_ALWAYS_INLINE
 inline decltype(auto) Invoke(Fun&& f, Args&&... args)
     noexcept(noexcept(std::forward<Fun>(f)(std::forward<Args>(args)...)))
 { return std::forward<Fun>(f)(std::forward<Args>(args)...); }
 
-#undef NEPTOOLS_INOKE_ALWAYS_INLINE
+#undef LIBSHIT_INOKE_ALWAYS_INLINE
 
 template <typename Fun, typename Info, typename... Args>
 inline auto AddInfo(Fun fun, Info info_adder, Args&&... args)
@@ -70,20 +70,20 @@ inline auto AddInfo(Fun fun, Info info_adder, Args&&... args)
 }
 // AddInfo([&](){ ...; }, [&](auto& e) { e << foo; });
 
-#define NEPTOOLS_GEN_EXCEPTION_TYPE(name, base)  \
+#define LIBSHIT_GEN_EXCEPTION_TYPE(name, base)  \
     struct name : base, virtual boost::exception \
     {                                            \
         using BaseType = base;                   \
         using BaseType::BaseType;                \
     }
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(DecodeError, std::runtime_error);
-NEPTOOLS_GEN_EXCEPTION_TYPE(OutOfRange,  std::out_of_range);
-NEPTOOLS_GEN_EXCEPTION_TYPE(SystemError, std::system_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(DecodeError, std::runtime_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(OutOfRange,  std::out_of_range);
+LIBSHIT_GEN_EXCEPTION_TYPE(SystemError, std::system_error);
 
-#define NEPTOOLS_VALIDATE_FIELD(msg, x)                           \
-    while (!(x)) NEPTOOLS_THROW(DecodeError{msg": invalid data"}  \
-                                << FailedExpression{#x})
+#define LIBSHIT_VALIDATE_FIELD(msg, x)                                      \
+    while (!(x)) LIBSHIT_THROW(::Libshit::DecodeError{msg": invalid data"}  \
+                               << ::Libshit::FailedExpression{#x})
 
 using FailedExpression = boost::error_info<struct FailedExpressionTag, const char*>;
 using RethrownType = boost::error_info<struct RethrownTypeTag, std::type_index>;

@@ -45,7 +45,7 @@ static void DumpByte(std::ostream& os, char c)
         os << "\\x" << std::setw(2) << unsigned(static_cast<unsigned char>(c));
 }
 
-void DumpBytes(std::ostream& os, StringView data)
+void DumpBytes(std::ostream& os, Libshit::StringView data)
 {
     auto flags = os.flags();
     os << std::hex << std::setfill('0') << '"';

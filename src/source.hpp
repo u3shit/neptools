@@ -20,7 +20,7 @@
 namespace Neptools
 {
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(SourceOverflow, std::logic_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(SourceOverflow, std::logic_error);
 
 class Source;
 using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
@@ -29,9 +29,9 @@ using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
 std::string to_string(const UsedSource& src);
 
 /// A fixed size, read-only, seekable data source (or something that emulates it)
-class NEPTOOLS_LUAGEN(const=false) Source final : public Lua::ValueObject
+class LIBSHIT_LUAGEN(const=false) Source final : public Libshit::Lua::ValueObject
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
     struct BufEntry
     {
@@ -49,10 +49,10 @@ public:
     static Source FromMemory(
         const boost::filesystem::path& fname, std::string data);
 
-    template <typename Checker = Check::Assert>
+    template <typename Checker = Libshit::Check::Assert>
     void Slice(FilePosition offset, FilePosition size) noexcept
     {
-        NEPTOOLS_CHECK(SourceOverflow, offset <= this->size &&
+        LIBSHIT_CHECK(SourceOverflow, offset <= this->size &&
                        offset + size <= this->size, "Slice: invalid sizes");
         this->offset += offset;
         this->get -= offset;
@@ -66,10 +66,10 @@ public:
 
     FilePosition GetSize() const noexcept { return size; }
 
-    template <typename Checker = Check::Assert>
+    template <typename Checker = Libshit::Check::Assert>
     void Seek(FilePosition pos) noexcept
     {
-        NEPTOOLS_CHECK(SourceOverflow, pos <= size, "Seek past end of source");
+        LIBSHIT_CHECK(SourceOverflow, pos <= size, "Seek past end of source");
         get = pos;
     }
     FilePosition Tell() const noexcept { return get; }
@@ -79,43 +79,43 @@ public:
     void CheckSize(FilePosition size) const
     {
         if (p->size < size)
-            NEPTOOLS_THROW(
-                DecodeError{"Premature end of data"} <<
+            LIBSHIT_THROW(
+                Libshit::DecodeError{"Premature end of data"} <<
                 UsedSource(*this));
     }
     void CheckRemainingSize(FilePosition size) const { CheckSize(get + size); }
 
-    template <typename Checker = Check::Assert, typename T>
-    NEPTOOLS_NOLUA void ReadGen(T& x)
-    { Read<Checker>(reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+    template <typename Checker = Libshit::Check::Assert, typename T>
+    LIBSHIT_NOLUA void ReadGen(T& x)
+    { Read<Checker>(reinterpret_cast<Byte*>(&x), Libshit::EmptySizeof<T>); }
 
-    template <typename T, typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA T ReadGen() { T ret; ReadGen<Checker>(ret); return ret; }
+    template <typename T, typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA T ReadGen() { T ret; ReadGen<Checker>(ret); return ret; }
 
 
-    template <typename Checker = Check::Assert, typename T>
-    NEPTOOLS_NOLUA void PreadGen(FilePosition offs, T& x) const
-    { Pread<Checker>(offs, reinterpret_cast<Byte*>(&x), EmptySizeof<T>); }
+    template <typename Checker = Libshit::Check::Assert, typename T>
+    LIBSHIT_NOLUA void PreadGen(FilePosition offs, T& x) const
+    { Pread<Checker>(offs, reinterpret_cast<Byte*>(&x), Libshit::EmptySizeof<T>); }
 
-    template <typename T, typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA T PreadGen(FilePosition offs) const
+    template <typename T, typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA T PreadGen(FilePosition offs) const
     { T ret; PreadGen<Checker>(offs, ret); return ret; }
 
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA void Read(Byte* buf, FileMemSize len)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA void Read(Byte* buf, FileMemSize len)
     { Pread<Checker>(get, buf, len); get += len; }
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA void Read(char* buf, FileMemSize len)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA void Read(char* buf, FileMemSize len)
     { Pread<Checker>(get, buf, len); get += len; }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA
     void Pread(FilePosition offs, Byte* buf, FileMemSize len) const
     {
-        AddInfo([&]
+        Libshit::AddInfo([&]
         {
-            NEPTOOLS_CHECK(SourceOverflow, offs <= size && offs+len <= size,
+            LIBSHIT_CHECK(SourceOverflow, offs <= size && offs+len <= size,
                            "Source overflow");
             Pread_(offs, buf, len);
         },
@@ -125,17 +125,17 @@ public:
         });
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA
     void Pread(FilePosition offs, char* buf, FileMemSize len) const
     { Pread<Checker>(offs, reinterpret_cast<Byte*>(buf), len); }
 
     // helper
 #define NEPTOOLS_GEN_HLP(bits)                                              \
-    template <typename Checker = Check::Assert>                             \
+    template <typename Checker = Libshit::Check::Assert>                             \
     uint##bits##_t ReadLittleUint##bits()                                   \
     { return ReadGen<boost::endian::little_uint##bits##_t, Checker>(); }    \
-    template <typename Checker = Check::Assert>                             \
+    template <typename Checker = Libshit::Check::Assert>                             \
     uint##bits##_t PreadLittleUint##bits(FilePosition offs) const           \
     { return PreadGen<boost::endian::little_uint##bits##_t, Checker>(offs); }
 
@@ -153,7 +153,7 @@ public:
     }
     std::string PreadCString(FilePosition offs) const;
 
-    struct Provider : public RefCounted
+    struct Provider : public Libshit::RefCounted
     {
         Provider(boost::filesystem::path file_name, FilePosition size)
             : file_name{std::move(file_name)}, size{size} {}
@@ -170,17 +170,17 @@ public:
         boost::filesystem::path file_name;
         FilePosition size;
     };
-    NEPTOOLS_NOLUA
-    Source(NotNull<SmartPtr<Provider>> p, FilePosition size)
+    LIBSHIT_NOLUA
+    Source(Libshit::NotNull<Libshit::SmartPtr<Provider>> p, FilePosition size)
         : size{size}, p{std::move(p)} {}
 
     void Dump(Sink& sink) const;
-    NEPTOOLS_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
-    NEPTOOLS_NOLUA void Inspect(std::ostream& os) const;
-    NEPTOOLS_NOLUA void Inspect(std::ostream&& os) const { Inspect(os); }
+    LIBSHIT_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
+    LIBSHIT_NOLUA void Inspect(std::ostream& os) const;
+    LIBSHIT_NOLUA void Inspect(std::ostream&& os) const { Inspect(os); }
     std::string Inspect() const;
 
-    NEPTOOLS_NOLUA StringView GetChunk(FilePosition offs) const;
+    LIBSHIT_NOLUA Libshit::StringView GetChunk(FilePosition offs) const;
 
 private:
     // offset: in original file!
@@ -191,7 +191,7 @@ private:
 
     FilePosition offset = 0, size, get = 0;
 
-    NotNull<SmartPtr<Provider>> p;
+    Libshit::NotNull<Libshit::SmartPtr<Provider>> p;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Source s)
@@ -199,9 +199,9 @@ inline std::ostream& operator<<(std::ostream& os, const Source s)
 
 class DumpableSource final : public Dumpable
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     DumpableSource(Source&& s) noexcept : src{std::move(s)} {}
     DumpableSource(const Source& s, FilePosition offset, FilePosition size) noexcept
         : src{s, offset, size} {}

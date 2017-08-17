@@ -2,7 +2,7 @@
 #define UUID_E374ABCE_6BEB_482C_9506_4E4AE9174D22
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)
 #define NEPTOOLS_STD_VECTOR_FWD(...)
 #else
@@ -13,11 +13,11 @@
 #include <libshit/lua/dynamic_object.hpp>
 #include <libshit/lua/user_type.hpp>
 
+template <typename T, typename Allocator>
+struct Libshit::Lua::IsSmartObject<std::vector<T, Allocator>> : std::true_type {};
+
 namespace Neptools::Lua
 {
-
-template <typename T, typename Allocator>
-struct IsSmartObject<std::vector<T, Allocator>> : std::true_type {};
 
 namespace Detail
 {
@@ -44,16 +44,18 @@ struct Vector
 
     static void Assign(Vect& v, const Vect& o) { v = o; }
 
-    static RetNum Get0(StateRef vm, const Vect& v, size_type i) noexcept
+    static Libshit::Lua::RetNum Get0(
+        Libshit::Lua::StateRef vm, const Vect& v, size_type i) noexcept
     {
         if (i < v.size()) vm.Push(v[i]);
         else lua_pushnil(vm);
         return 1;
     }
 
-    static void Get1(const Vect&, Lua::VarArg) noexcept {}
+    static void Get1(const Vect&, Libshit::Lua::VarArg) noexcept {}
 
-    static void Set(StateRef vm, Vect& v, size_type i, const T& val)
+    static void Set(
+        Libshit::Lua::StateRef vm, Vect& v, size_type i, const T& val)
     {
         if (BOOST_UNLIKELY(i == std::numeric_limits<size_type>::max()))
             luaL_error(vm, "vector size overflow");
@@ -73,7 +75,7 @@ struct Vector
     static auto CheckedNthEnd(Vect& v, size_type i)
     {
         if (i <= v.size()) return v.begin() + i;
-        else NEPTOOLS_THROW(std::out_of_range{"VectorBinding::CheckedNthEnd"});
+        else LIBSHIT_THROW(std::out_of_range{"VectorBinding::CheckedNthEnd"});
     }
 
     static auto IndexOf(Vect& v, typename Vect::iterator it) noexcept
@@ -86,7 +88,8 @@ struct Vector
     { return IndexOf(v, v.insert(CheckedNthEnd(v, pos), val)); }
 
 
-    static auto Erase0(StateRef vm, Vect& v, size_type s, size_type e)
+    static auto Erase0(
+        Libshit::Lua::StateRef vm, Vect& v, size_type s, size_type e)
     {
         if (s > e) luaL_error(vm, "Invalid range");
         return IndexOf(v, v.erase(CheckedNthEnd(v, s), CheckedNthEnd(v, e)));
@@ -106,7 +109,7 @@ struct Vector
     static void PopBack(Vect& v) noexcept
     { if (!v.empty()) v.pop_back(); }
 
-    static Lua::RetNum ToTable(Lua::StateRef vm, Vect& v)
+    static Libshit::Lua::RetNum ToTable(Libshit::Lua::StateRef vm, Vect& v)
     {
         auto size = v.size();
         lua_createtable(vm, size ? size-1 : size, 0);
@@ -119,45 +122,46 @@ struct Vector
     }
 
     // not exposed directly to lua
-    static void FillFromTable(Lua::StateRef vm, Vect& v, Lua::RawTable tbl)
+    static void FillFromTable(
+        Libshit::Lua::StateRef vm, Vect& v, Libshit::Lua::RawTable tbl)
     {
         auto [len, one] = vm.RawLen01(tbl);
         v.reserve(v.size() + len);
         vm.Fori(tbl, one, len, [&](size_t, int)
         {
-            v.push_back(vm.Get<Lua::AutoTable<T>>(-1));
+            v.push_back(vm.Get<Libshit::Lua::AutoTable<T>>(-1));
         });
     }
 
-    static auto FromTable(Lua::StateRef vm, Lua::RawTable tbl)
+    static auto FromTable(Libshit::Lua::StateRef vm, Libshit::Lua::RawTable tbl)
     {
-        auto v = MakeShared<Vect>();
+        auto v = Libshit::MakeShared<Vect>();
         FillFromTable(vm, *v, tbl);
         return v;
     }
 
-    static Vect TableCtor(Lua::StateRef vm, Lua::RawTable tbl)
+    static Vect TableCtor(Libshit::Lua::StateRef vm, Libshit::Lua::RawTable tbl)
     {
         Vect v;
         FillFromTable(vm, v, tbl);
         return v;
     }
 
-    static void Register(TypeBuilder& bld)
+    static void Register(Libshit::Lua::TypeBuilder& bld)
     {
         if constexpr (std::is_default_constructible_v<T>)
             bld.AddFunction<
-                &MakeShared<Vect, size_type, const T&>,
-                &MakeShared<Vect, size_type>,
-                &MakeShared<Vect, const Vect&>,
-                &MakeShared<Vect>,
+                &Libshit::MakeShared<Vect, size_type, const T&>,
+                &Libshit::MakeShared<Vect, size_type>,
+                &Libshit::MakeShared<Vect, const Vect&>,
+                &Libshit::MakeShared<Vect>,
                 &FromTable
             >("new");
         else
             bld.AddFunction<
-                &MakeShared<Vect, size_type, const T&>,
-                &MakeShared<Vect, const Vect&>,
-                &MakeShared<Vect>,
+                &Libshit::MakeShared<Vect, size_type, const T&>,
+                &Libshit::MakeShared<Vect, const Vect&>,
+                &Libshit::MakeShared<Vect>,
                 &FromTable
             >("new");
 
@@ -211,24 +215,26 @@ struct Vector
     }
 };
 
-template <typename T, typename Allocator>
-struct TypeRegisterTraits<std::vector<T, Allocator>>
-    : Vector<T, Allocator> {};
-
-template <typename T, typename Allocator>
-struct GetTableCtor<std::vector<T, Allocator>>
-    : std::integral_constant<TableCtorPtr<std::vector<T, Allocator>>,
-                             Vector<T, Allocator>::TableCtor> {};
-
 }
 
+template <typename T, typename Allocator>
+struct Libshit::Lua::TypeRegisterTraits<std::vector<T, Allocator>>
+    : Neptools::Lua::Vector<T, Allocator> {};
+
+template <typename T, typename Allocator>
+struct Libshit::Lua::GetTableCtor<std::vector<T, Allocator>>
+    : std::integral_constant<
+        TableCtorPtr<std::vector<T, Allocator>>,
+        Neptools::Lua::Vector<T, Allocator>::TableCtor> {};
+
+
 #define NEPTOOLS_STD_VECTOR_LUAGEN(name, ...)                               \
-    static ::Neptools::Lua::TypeRegister::StateRegister<                    \
+    static ::Libshit::Lua::TypeRegister::StateRegister<                     \
         ::std::vector<__VA_ARGS__>> reg_std_vector_##name;                  \
-    template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>>     \
+    template<> struct Libshit::Lua::TypeName<std::vector<__VA_ARGS__>>      \
     { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
-#define NEPTOOLS_STD_VECTOR_FWD(name, ...)                              \
-    template<> struct Neptools::Lua::TypeName<std::vector<__VA_ARGS__>> \
+#define NEPTOOLS_STD_VECTOR_FWD(name, ...)                                  \
+    template<> struct Libshit::Lua::TypeName<std::vector<__VA_ARGS__>>      \
     { static constexpr const char* TYPE_NAME = "neptools.vector_" #name; }
 
 #endif

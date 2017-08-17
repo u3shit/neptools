@@ -16,19 +16,20 @@ void RawItem::Inspect_(std::ostream& os, unsigned indent) const
     os << "raw(" << Quoted(src) << ")";
 }
 
-NotNull<RefCountedPtr<RawItem>> RawItem::InternalSlice(
+Libshit::NotNull<Libshit::RefCountedPtr<RawItem>> RawItem::InternalSlice(
     FilePosition spos, FilePosition slen)
 {
-    NEPTOOLS_ASSERT(spos+slen <= GetSize());
+    LIBSHIT_ASSERT(spos+slen <= GetSize());
     auto ctx = GetContext();
     return ctx->Create<RawItem>(Source{src, spos, slen}, position+spos);
 }
 
 // split into 3 parts: 0...pos, pos...pos+nitem size, pos+nitem size...this size
-void RawItem::Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem)
+void RawItem::Split2(
+    FilePosition pos, Libshit::NotNull<Libshit::SmartPtr<Item>> nitem)
 {
     auto len = nitem->GetSize();
-    NEPTOOLS_ASSERT(pos <= GetSize() && pos+len <= GetSize());
+    LIBSHIT_ASSERT(pos <= GetSize() && pos+len <= GetSize());
     auto rem_len = GetSize() - len - pos;
 
     if (pos == 0 && rem_len == 0)
@@ -49,7 +50,7 @@ void RawItem::Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem)
     Item::Slice(std::move(seq));
     if (pos == 0)
     {
-        NEPTOOLS_ASSERT(rem_len > 0);
+        LIBSHIT_ASSERT(rem_len > 0);
         src.Slice(len, rem_len);
     }
     else

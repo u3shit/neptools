@@ -14,7 +14,7 @@ namespace Stcm
 
 void ExportsItem::Entry::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::ExportsItem::Entry", x)
     VALIDATE(type == Type::CODE || type == Type::DATA);
     VALIDATE(name.is_valid());
     VALIDATE(offset < file_size);
@@ -35,7 +35,7 @@ void ExportsItem::Parse_(Context& ctx, Source& src, uint32_t export_count)
     {
         auto e = src.ReadGen<Entry>();
         e.Validate(size);
-        entries.push_back(MakeSmart<EntryType>(
+        entries.push_back(Libshit::MakeSmart<EntryType>(
             static_cast<Type>(static_cast<uint32_t>(e.type)),
             e.name,
             ctx.CreateLabelFallback(e.name.c_str(), e.offset)));
@@ -98,6 +98,6 @@ void ExportsItem::Inspect_(std::ostream& os, unsigned indent) const
 }
 
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    stcm_exports_item_entry_type, Neptools::NotNull<Neptools::RefCountedPtr<
+    stcm_exports_item_entry_type, Libshit::NotNull<Libshit::RefCountedPtr<
         Neptools::Stcm::ExportsItem::EntryType>>);
 #include "exports.binding.hpp"

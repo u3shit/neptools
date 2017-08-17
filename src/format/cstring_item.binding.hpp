@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::CStringItem::TYPE_NAME[] = "neptools.c_string_item";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.c_string_item
@@ -15,8 +15,8 @@ void TypeRegisterTraits<::Neptools::CStringItem>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::CStringItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::CStringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<std::string>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::CStringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Source &>>
+        &::Libshit::Lua::TypeTraits<::Neptools::CStringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<std::string>>,
+        &::Libshit::Lua::TypeTraits<::Neptools::CStringItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Source &>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::CStringItem & (*)(::Neptools::ItemPointer)>(::Neptools::CStringItem::CreateAndInsert)
@@ -26,10 +26,10 @@ void TypeRegisterTraits<::Neptools::CStringItem>::Register(TypeBuilder& bld)
         static_cast<std::string (::Neptools::CStringItem::*)() const>(&::Neptools::CStringItem::GetLabelName)
     >("get_label_name");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::CStringItem, std::string, &::Neptools::CStringItem::string>
+        &::Libshit::Lua::GetMember<::Neptools::CStringItem, std::string, &::Neptools::CStringItem::string>
     >("get_string");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::CStringItem, std::string, &::Neptools::CStringItem::string>
+        &::Libshit::Lua::SetMember<::Neptools::CStringItem, std::string, &::Neptools::CStringItem::string>
     >("set_string");
 
 }

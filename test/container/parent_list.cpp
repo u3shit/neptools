@@ -3,7 +3,8 @@
 #include <catch.hpp>
 
 using namespace Neptools;
-using namespace Neptools::Lua;
+using namespace Libshit;
+using namespace Libshit::Lua;
 
 static int count;
 
@@ -14,7 +15,7 @@ using XList = ParentList<struct ParentListItem, struct ParentListItemTraits>;
 
 struct ParentListItem : RefCounted, ParentListBaseHook<>, Lua::DynamicObject
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     ParentListItem() = default;
     ParentListItem(int data) : data{data} {}

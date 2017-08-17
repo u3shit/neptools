@@ -7,7 +7,7 @@
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
-#define NEPTOOLS_LOG_NAME "source"
+#define LIBSHIT_LOG_NAME "source"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
@@ -62,7 +62,7 @@ struct StringProvider final : public Source::Provider
     }
 
     void Pread(FilePosition, Byte*, FileMemSize) override
-    { NEPTOOLS_UNREACHABLE("StringProvider Pread"); }
+    { LIBSHIT_UNREACHABLE("StringProvider Pread"); }
 
     std::string str;
 };
@@ -72,7 +72,7 @@ struct StringProvider final : public Source::Provider
 
 Source Source::FromFile(const boost::filesystem::path& fname)
 {
-    return AddInfo(
+    return Libshit::AddInfo(
         &FromFile_,
         [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
         fname);
@@ -84,13 +84,13 @@ Source Source::FromFile_(const boost::filesystem::path& fname)
 
     FilePosition size = io.GetSize();
 
-    SmartPtr<Provider> p;
-    try { p = MakeSmart<MmapProvider>(std::move(io), fname, size); }
+    Libshit::SmartPtr<Provider> p;
+    try { p = Libshit::MakeSmart<MmapProvider>(std::move(io), fname, size); }
     catch (const std::system_error& e)
     {
         WARN << "Mmap failed, falling back to normal reading: "
-             << ExceptionToString() << std::endl;
-        p = MakeSmart<UnixProvider>(std::move(io), fname, size);
+             << Libshit::ExceptionToString() << std::endl;
+        p = Libshit::MakeSmart<UnixProvider>(std::move(io), fname, size);
     }
     return {MakeNotNull(std::move(p)), size};
 }
@@ -98,7 +98,8 @@ Source Source::FromFile_(const boost::filesystem::path& fname)
 Source Source::FromMemory(const boost::filesystem::path& fname, std::string str)
 {
     FilePosition len = str.length();
-    return {MakeSmart<StringProvider>(std::move(fname), std::move(str)), len};
+    return {Libshit::MakeSmart<StringProvider>(
+                std::move(fname), std::move(str)), len};
 }
 
 void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
@@ -124,7 +125,7 @@ void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
 std::string Source::PreadCString(FilePosition offs) const
 {
     std::string ret;
-    StringView e;
+    Libshit::StringView e;
     size_t len;
     do
     {
@@ -140,14 +141,14 @@ Source::BufEntry Source::GetTemporaryEntry(FilePosition offs) const
 {
     if (p->LruGet(offs)) return p->lru[0];
     p->Pread(offs, nullptr, 0);
-    NEPTOOLS_ASSERT(p->lru[0].offset <= offs &&
+    LIBSHIT_ASSERT(p->lru[0].offset <= offs &&
                     p->lru[0].offset + p->lru[0].size > offs);
     return p->lru[0];
 }
 
-StringView Source::GetChunk(FilePosition offs) const
+Libshit::StringView Source::GetChunk(FilePosition offs) const
 {
-    NEPTOOLS_ASSERT(offs < size);
+    LIBSHIT_ASSERT(offs < size);
     auto e = GetTemporaryEntry(offs + offset);
     auto eoffs = offs + offset - e.offset;
     auto size = std::min(e.size - eoffs, GetSize() - offs);
@@ -190,7 +191,7 @@ UnixLike<T>::~UnixLike()
 template <typename T>
 void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
 {
-    NEPTOOLS_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
+    LIBSHIT_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
         return io.Pread(buf, len, offs);
 
@@ -309,23 +310,24 @@ std::string to_string(const UsedSource& src)
     return ss.str();
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
-NEPTOOLS_LUAGEN(name="read")
-static Lua::RetNum LuaRead(Lua::StateRef vm, Source& src, FileMemSize len)
+LIBSHIT_LUAGEN(name="read")
+static Libshit::Lua::RetNum LuaRead(
+    Libshit::Lua::StateRef vm, Source& src, FileMemSize len)
 {
     std::unique_ptr<char[]> ptr{new char[len]};
-    src.Read<Check::Throw>(ptr.get(), len);
+    src.Read<Libshit::Check::Throw>(ptr.get(), len);
     lua_pushlstring(vm, ptr.get(), len);
     return {1};
 }
 
-NEPTOOLS_LUAGEN(name="pread")
-static Lua::RetNum LuaPread(
-    Lua::StateRef vm, Source& src, FilePosition offs, FileMemSize len)
+LIBSHIT_LUAGEN(name="pread")
+static Libshit::Lua::RetNum LuaPread(
+    Libshit::Lua::StateRef vm, Source& src, FilePosition offs, FileMemSize len)
 {
     std::unique_ptr<char[]> ptr{new char[len]};
-    src.Pread<Check::Throw>(offs, ptr.get(), len);
+    src.Pread<Libshit::Check::Throw>(offs, ptr.get(), len);
     lua_pushlstring(vm, ptr.get(), len);
     return {1};
 }

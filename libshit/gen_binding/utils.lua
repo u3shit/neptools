@@ -86,7 +86,7 @@ end
 --
 -- the latter is required in case of templates:
 -- void foo(const typename Bar<T, Asd>::InnerStuff&)
--- we need to turn Bar<...>::InnerStuff into Neptools::Bar...
+-- we need to turn Bar<...>::InnerStuff into Libshit::Bar...
 -- but we only get the InnerStuff type, it's path won't match the template hell
 -- calling :canonical() on it will resolve the typedef so it won't work
 --

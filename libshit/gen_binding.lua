@@ -15,7 +15,7 @@ local vr = cl.ChildVisitResult
 
 -- add general options
 local args = {
-  "-DNEPTOOLS_BINDING_GENERATOR",
+  "-DLIBSHIT_BINDING_GENERATOR",
   "-Isrc",
   "-Ilibshit/src",
   "-Ilibshit/ext/boost",

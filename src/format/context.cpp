@@ -39,16 +39,17 @@ void Context::Fixup()
 }
 
 
-NotNull<LabelPtr> Context::GetLabel(const std::string& name) const
+Libshit::NotNull<LabelPtr> Context::GetLabel(const std::string& name) const
 {
     auto it = labels.find(name);
     if (it == labels.end())
-        NEPTOOLS_THROW(OutOfRange{"Context::GetLabel"}
+        LIBSHIT_THROW(Libshit::OutOfRange{"Context::GetLabel"}
                        << AffectedLabel{name});
     return MakeNotNull(const_cast<Label*>(&*it));
 }
 
-NotNull<LabelPtr> Context::CreateLabel(std::string name, ItemPointer ptr)
+Libshit::NotNull<LabelPtr> Context::CreateLabel(
+    std::string name, ItemPointer ptr)
 {
     auto lbl = new Label{std::move(name), ptr};
     auto pair = labels.insert(*lbl);
@@ -56,7 +57,7 @@ NotNull<LabelPtr> Context::CreateLabel(std::string name, ItemPointer ptr)
     {
         name = std::move(lbl->name);
         delete lbl;
-        NEPTOOLS_THROW(OutOfRange{"label already exists"}
+        LIBSHIT_THROW(Libshit::OutOfRange{"label already exists"}
                        << AffectedLabel{std::move(name)});
     }
 
@@ -64,7 +65,7 @@ NotNull<LabelPtr> Context::CreateLabel(std::string name, ItemPointer ptr)
     return MakeNotNull(&*pair.first);
 }
 
-NotNull<LabelPtr> Context::CreateLabelFallback(
+Libshit::NotNull<LabelPtr> Context::CreateLabelFallback(
     const std::string& name, ItemPointer ptr)
 {
     LabelsMap::insert_commit_data commit;
@@ -85,7 +86,8 @@ NotNull<LabelPtr> Context::CreateLabelFallback(
     return MakeNotNull(&*it);
 }
 
-NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
+Libshit::NotNull<LabelPtr> Context::CreateOrSetLabel(
+    std::string name, ItemPointer ptr)
 {
     LabelsMap::insert_commit_data commit;
     auto [it, insertable] = labels.insert_check(name, commit);
@@ -105,7 +107,7 @@ NotNull<LabelPtr> Context::CreateOrSetLabel(std::string name, ItemPointer ptr)
     }
 }
 
-NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
+Libshit::NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
 {
     LabelsMap::insert_commit_data commit;
     auto [it, insertable] = labels.insert_check(name, commit);
@@ -116,7 +118,7 @@ NotNull<LabelPtr> Context::GetOrCreateDummyLabel(std::string name)
     return MakeNotNull(const_cast<Label*>(&*it));
 }
 
-NotNull<LabelPtr> Context::GetLabelTo(ItemPointer ptr)
+Libshit::NotNull<LabelPtr> Context::GetLabelTo(ItemPointer ptr)
 {
     auto& lctr = ptr.item->labels;
     auto it = lctr.find(ptr.offset);
@@ -128,7 +130,8 @@ NotNull<LabelPtr> Context::GetLabelTo(ItemPointer ptr)
     return CreateLabelFallback(ss.str(), ptr);
 }
 
-NotNull<LabelPtr> Context::GetLabelTo(FilePosition pos, std::string name)
+Libshit::NotNull<LabelPtr> Context::GetLabelTo(
+    FilePosition pos, std::string name)
 {
     auto ptr = GetPointer(pos);
     auto& lctr = ptr.item->labels;
@@ -141,9 +144,9 @@ NotNull<LabelPtr> Context::GetLabelTo(FilePosition pos, std::string name)
 ItemPointer Context::GetPointer(FilePosition pos) const noexcept
 {
     auto it = pmap.upper_bound(pos);
-    NEPTOOLS_ASSERT_MSG(it != pmap.begin(), "file position out of range");
+    LIBSHIT_ASSERT_MSG(it != pmap.begin(), "file position out of range");
     --it;
-    NEPTOOLS_ASSERT(it->first == it->second->GetPosition());
+    LIBSHIT_ASSERT(it->first == it->second->GetPosition());
     return {it->second, pos - it->first};
 }
 

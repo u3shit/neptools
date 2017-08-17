@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::Stcm::StringDataItem::TYPE_NAME[] = "neptools.stcm.string_data_item";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.stcm.string_data_item
@@ -15,16 +15,16 @@ void TypeRegisterTraits<::Neptools::Stcm::StringDataItem>::Register(TypeBuilder&
     bld.Inherit<::Neptools::Stcm::StringDataItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::StringDataItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<std::string>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::StringDataItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<std::string>>
     >("new");
     bld.AddFunction<
-        static_cast<RefCountedPtr<::Neptools::Stcm::StringDataItem> (*)(::Neptools::Stcm::DataItem &)>(::Neptools::Stcm::StringDataItem::MaybeCreateAndReplace)
+        static_cast<Libshit::RefCountedPtr<::Neptools::Stcm::StringDataItem> (*)(::Neptools::Stcm::DataItem &)>(::Neptools::Stcm::StringDataItem::MaybeCreateAndReplace)
     >("maybe_create_and_replace");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stcm::StringDataItem, std::string, &::Neptools::Stcm::StringDataItem::string>
+        &::Libshit::Lua::GetMember<::Neptools::Stcm::StringDataItem, std::string, &::Neptools::Stcm::StringDataItem::string>
     >("get_string");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Stcm::StringDataItem, std::string, &::Neptools::Stcm::StringDataItem::string>
+        &::Libshit::Lua::SetMember<::Neptools::Stcm::StringDataItem, std::string, &::Neptools::Stcm::StringDataItem::string>
     >("set_string");
 
 }

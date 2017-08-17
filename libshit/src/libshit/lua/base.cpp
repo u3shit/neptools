@@ -4,7 +4,7 @@
 
 #include <cstring>
 
-namespace Neptools
+namespace Libshit
 {
 namespace Lua
 {
@@ -13,7 +13,7 @@ char reftbl;
 
 State::State(int) : StateRef{luaL_newstate()}
 {
-    if (!vm) NEPTOOLS_THROW(std::bad_alloc{});
+    if (!vm) LIBSHIT_THROW(std::bad_alloc{});
 }
 
 // todo: do we need it?
@@ -21,23 +21,23 @@ static int panic(lua_State* vm)
 {
     size_t len;
     auto msg = lua_tolstring(vm, -1, &len);
-    if (msg) NEPTOOLS_THROW(Error{{msg, len}});
-    else NEPTOOLS_THROW(Error{"Lua PANIC"});
+    if (msg) LIBSHIT_THROW(Error{{msg, len}});
+    else LIBSHIT_THROW(Error{"Lua PANIC"});
 }
 
 const char* StateRef::TypeName(int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
     if (!luaL_getmetafield(vm, idx, "__name")) // 0/+1
     {
-        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        LIBSHIT_LUA_CHECKTOP(vm, top);
         return luaL_typename(vm, idx);
     }
 
     auto ret = lua_tostring(vm, -1); // +1
-    NEPTOOLS_ASSERT_MSG(ret, "invalid __name");
+    LIBSHIT_ASSERT_MSG(ret, "invalid __name");
     lua_pop(vm, 1); // 0
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    LIBSHIT_LUA_CHECKTOP(vm, top);
     return ret;
 }
 
@@ -46,7 +46,7 @@ State::State() : State(0)
     Catch(
         [](StateRef vm)
         {
-            NEPTOOLS_LUA_GETTOP(vm, top);
+            LIBSHIT_LUA_GETTOP(vm, top);
 
             lua_atpanic(vm, panic);
             luaL_openlibs(vm);
@@ -60,12 +60,12 @@ State::State() : State(0)
             lua_rawsetp(vm, LUA_REGISTRYINDEX, &reftbl); // 0
 
             // helper funs
-            NEPTOOLS_LUA_RUNBC(vm, base_funcs, 0);
+            LIBSHIT_LUA_RUNBC(vm, base_funcs, 0);
 
             for (auto r : Registers())
                 r(vm);
 
-            NEPTOOLS_LUA_CHECKTOP(vm, top);
+            LIBSHIT_LUA_CHECKTOP(vm, top);
         }, *this);
 }
 
@@ -83,7 +83,7 @@ int StateRef::SEHFilter(lua_State* vm, unsigned code)
         return EXCEPTION_CONTINUE_SEARCH;
 
     error_msg = lua_tolstring(vm, -1, &error_len);
-    NEPTOOLS_ASSERT(error_msg);
+    LIBSHIT_ASSERT(error_msg);
     return EXCEPTION_EXECUTE_HANDLER;
 }
 #else
@@ -109,17 +109,17 @@ void StateRef::GetError(bool arg, int idx, const char* msg)
 {
     if (arg) luaL_argerror(vm, idx, msg);
     else luaL_error(vm, "invalid lua value: %s", msg);
-    NEPTOOLS_UNREACHABLE("lua_error returned");
+    LIBSHIT_UNREACHABLE("lua_error returned");
 }
 
 StateRef::RawLen01Ret StateRef::RawLen01(int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
-    NEPTOOLS_ASSERT(lua_type(vm, idx) == LUA_TTABLE);
+    LIBSHIT_LUA_GETTOP(vm, top);
+    LIBSHIT_ASSERT(lua_type(vm, idx) == LUA_TTABLE);
     auto len = lua_rawlen(vm, idx);
     auto type = lua_rawgeti(vm, idx, 0); // +1
     lua_pop(vm, 1); // 0
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    LIBSHIT_LUA_CHECKTOP(vm, top);
     return {len + !IsNoneOrNil(type), IsNoneOrNil(type)};
 }
 
@@ -137,8 +137,8 @@ std::pair<size_t, int> StateRef::Ipairs01Prep(int idx)
 
 size_t StateRef::Unpack01(int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
-    NEPTOOLS_ASSERT(idx > 0);
+    LIBSHIT_LUA_GETTOP(vm, top);
+    LIBSHIT_ASSERT(idx > 0);
 
     auto [len,one] = RawLen01(idx);
     if (len > INT_MAX || !lua_checkstack(vm, len))
@@ -147,14 +147,14 @@ size_t StateRef::Unpack01(int idx)
     for (size_t i = 0; i < len; ++i)
         lua_rawgeti(vm, idx, i + one);
 
-    NEPTOOLS_LUA_CHECKTOP(vm, int(top+len));
+    LIBSHIT_LUA_CHECKTOP(vm, int(top+len));
     return len;
 }
 
 
 void StateRef::SetRecTable(const char* name, int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
 
     const char* dot;
     while (dot = strchr(name, '.'))
@@ -185,13 +185,13 @@ void StateRef::SetRecTable(const char* name, int idx)
     lua_setfield(vm, -2, name); // 0
     lua_pop(vm, 1); // -1
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
+    LIBSHIT_LUA_CHECKTOP(vm, top-1);
 }
 
 void StateRef::DoString(const char* str)
 {
     if (luaL_dostring(vm, str))
-        NEPTOOLS_THROW(std::runtime_error{lua_tostring(vm, -1)});
+        LIBSHIT_THROW(std::runtime_error{lua_tostring(vm, -1)});
 }
 
 thread_local const char* StateRef::error_msg;

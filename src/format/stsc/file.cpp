@@ -25,7 +25,7 @@ void File::Parse_(Source& src)
 
 void File::Inspect_(std::ostream& os, unsigned indent) const
 {
-    NEPTOOLS_ASSERT(GetLabels().empty());
+    LIBSHIT_ASSERT(GetLabels().empty());
     os << "neptools.stsc.file()";
     InspectChildren(os, indent);
 }
@@ -62,9 +62,9 @@ void File::ReadTxt_(std::istream& is)
         if (line == SEP_DASH)
         {
             if (it == end)
-                NEPTOOLS_THROW(DecodeError{"StscTxt: too many strings"});
+                LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: too many strings"});
 
-            NEPTOOLS_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
+            LIBSHIT_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
             if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
             static_cast<CStringItem&>(*it).string = std::move(msg);
 
@@ -81,16 +81,16 @@ void File::ReadTxt_(std::istream& is)
     }
 
     if (it != end)
-        NEPTOOLS_THROW(DecodeError{"StscTxt: not enough strings"});
+        LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: not enough strings"});
 }
 
-static OpenFactory stsc_open{[](Source src) -> SmartPtr<Dumpable>
+static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];
     src.PreadGen(0, buf);
     if (memcmp(buf, "STSC", 4) == 0)
-        return MakeSmart<File>(src);
+        return Libshit::MakeSmart<File>(src);
     else
         return nullptr;
 }};

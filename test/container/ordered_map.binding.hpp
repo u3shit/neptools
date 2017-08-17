@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
@@ -7,7 +7,7 @@ const char ::Neptools::Test::OMItemTest::TYPE_NAME[] = "neptools.test.om_item_te
 template <>
 const char ::om_item_test::TYPE_NAME[] = "neptools.ordered_map_om_item_test";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.test.om_item_test
@@ -16,19 +16,19 @@ void TypeRegisterTraits<::Neptools::Test::OMItemTest>::Register(TypeBuilder& bld
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Test::OMItemTest>::Make<LuaGetRef<std::string>, LuaGetRef<int>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Test::OMItemTest>::Make<LuaGetRef<std::string>, LuaGetRef<int>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Test::OMItemTest, std::string, &::Neptools::Test::OMItemTest::k>
+        &::Libshit::Lua::GetMember<::Neptools::Test::OMItemTest, std::string, &::Neptools::Test::OMItemTest::k>
     >("get_k");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Test::OMItemTest, std::string, &::Neptools::Test::OMItemTest::k>
+        &::Libshit::Lua::SetMember<::Neptools::Test::OMItemTest, std::string, &::Neptools::Test::OMItemTest::k>
     >("set_k");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Test::OMItemTest, int, &::Neptools::Test::OMItemTest::v>
+        &::Libshit::Lua::GetMember<::Neptools::Test::OMItemTest, int, &::Neptools::Test::OMItemTest::v>
     >("get_v");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Test::OMItemTest, int, &::Neptools::Test::OMItemTest::v>
+        &::Libshit::Lua::SetMember<::Neptools::Test::OMItemTest, int, &::Neptools::Test::OMItemTest::v>
     >("set_v");
 
 }
@@ -40,7 +40,7 @@ void TypeRegisterTraits<::om_item_test>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::om_item_test>::Make<>
+        &::Libshit::Lua::TypeTraits<::om_item_test>::Make<>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Test::OMItemTest & (::om_item_test::*)(::size_t)>(&::om_item_test::at)
@@ -88,28 +88,28 @@ void TypeRegisterTraits<::om_item_test>::Register(TypeBuilder& bld)
         static_cast<::size_t (::om_item_test::*)(const ::om_item_test::key_type &) const>(&::om_item_test::count)
     >("count");
     bld.AddFunction<
-        static_cast<SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, ::size_t) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
-        static_cast<SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
-        static_cast<void (*)(::om_item_test &, ::Neptools::Lua::Skip) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get)
+        static_cast<Libshit::SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, ::size_t) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
+        static_cast<Libshit::SmartPtr<::Neptools::Test::OMItemTest> (*)(::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get),
+        static_cast<void (*)(::om_item_test &, ::Libshit::Lua::Skip) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get)
     >("get");
     bld.AddFunction<
-        static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::size_t, ::Neptools::NotNull<SmartPtr<::Neptools::Test::OMItemTest> > &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::insert)
+        static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::size_t, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::insert)
     >("insert");
     bld.AddFunction<
         static_cast<::size_t (*)(::om_item_test &, ::size_t, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::erase),
         static_cast<::size_t (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::erase)
     >("erase");
     bld.AddFunction<
-        static_cast<::Neptools::NotNull<SmartPtr<::Neptools::Test::OMItemTest> > (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::remove)
+        static_cast<::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::remove)
     >("remove");
     bld.AddFunction<
-        static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::Neptools::NotNull<SmartPtr<::Neptools::Test::OMItemTest> > &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::push_back)
+        static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::push_back)
     >("push_back");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::find)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::find)
     >("find");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::om_item_test &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::to_table)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::om_item_test &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::to_table)
     >("to_table");
   luaL_getmetatable(bld, "neptools_ipairs");  bld.SetField("__ipairs");
 }

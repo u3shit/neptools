@@ -4,16 +4,16 @@
 #include "except.hpp"
 
 #ifdef NDEBUG
-#define NEPTOOLS_CHECK_ARGS nullptr, 0, nullptr
+#define LIBSHIT_CHECK_ARGS nullptr, 0, nullptr
 #else
-#define NEPTOOLS_CHECK_ARGS NEPTOOLS_FILE, __LINE__, NEPTOOLS_FUNCTION
+#define LIBSHIT_CHECK_ARGS LIBSHIT_FILE, __LINE__, LIBSHIT_FUNCTION
 #endif
 
-#define NEPTOOLS_CHECK(except_type, x, msg)                     \
+#define LIBSHIT_CHECK(except_type, x, msg)                     \
     Checker{}.template Check<except_type>(                      \
-        [&]() { return (x); }, #x, msg, NEPTOOLS_CHECK_ARGS)
+        [&]() { return (x); }, #x, msg, LIBSHIT_CHECK_ARGS)
 
-namespace Neptools
+namespace Libshit
 {
 namespace Check
 {
@@ -23,7 +23,7 @@ struct No
     template <typename ExceptT, typename Fun>
     void Check(Fun f, const char*, const char*, const char*, unsigned,
                const char*) noexcept
-    { NEPTOOLS_ASSUME(f()); (void) f; }
+    { LIBSHIT_ASSUME(f()); (void) f; }
 
     static constexpr bool IS_NOP = true;
     static constexpr bool IS_NOEXCEPT = true;

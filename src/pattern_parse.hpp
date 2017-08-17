@@ -123,7 +123,7 @@ DoPatternParse<X::Get(Idx)...> ToPattern(std::index_sequence<Idx...>)
 }
 
 #define NEPTOOLS_PATTERN(str) \
-    NEPTOOLS_LITERAL_CHARPACK(::Neptools::PatternParse::DoPatternParse, str)
+    LIBSHIT_LITERAL_CHARPACK(::Neptools::PatternParse::DoPatternParse, str)
 
 }
 #endif

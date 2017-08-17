@@ -1,7 +1,7 @@
 #include <libshit/lua/type_traits.hpp>
 #include <catch.hpp>
 
-using namespace Neptools::Lua;
+using namespace Libshit::Lua;
 
 TEST_CASE("state creation", "[lua]")
 {

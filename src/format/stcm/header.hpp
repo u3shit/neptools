@@ -13,9 +13,9 @@ namespace Stcm
 
 class HeaderItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
-    using MsgType = FixedString<0x20-5-1>;
+    using MsgType = Libshit::FixedString<0x20-5-1>;
     struct Header
     {
         char magic[5];
@@ -32,19 +32,20 @@ public:
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x30);
 
     HeaderItem(
-        Key k, Context& ctx, const MsgType& msg, NotNull<LabelPtr> export_sec,
-        NotNull<LabelPtr> collection_link, uint32_t field_28)
+        Key k, Context& ctx, const MsgType& msg,
+        Libshit::NotNull<LabelPtr> export_sec,
+        Libshit::NotNull<LabelPtr> collection_link, uint32_t field_28)
         : Item{k, ctx}, msg{msg}, export_sec{std::move(export_sec)},
           collection_link{std::move(collection_link)}, field_28{field_28} {}
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     HeaderItem(Key k, Context& ctx, const Header& hdr);
     static HeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override { return sizeof(Header); }
 
     MsgType msg;
-    NotNull<LabelPtr> export_sec;
-    NotNull<LabelPtr> collection_link;
+    Libshit::NotNull<LabelPtr> export_sec;
+    Libshit::NotNull<LabelPtr> collection_link;
     uint32_t field_28;
 
 private:

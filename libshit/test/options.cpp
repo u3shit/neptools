@@ -4,7 +4,7 @@
 
 #pragma GCC diagnostic ignored "-Waddress"
 
-using namespace Neptools;
+using namespace Libshit;
 
 static void Run(OptionParser& parser, int& argc, const char** argv, bool val)
 {

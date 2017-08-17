@@ -2,7 +2,7 @@
 #define UUID_2DF4B391_2856_41E2_995A_53CABE00D614
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 #define NEPTOOLS_ORDERED_MAP_LUAGEN(name, ...)
 #else
 
@@ -18,14 +18,17 @@ template <typename T, typename Traits,
 struct OrderedMapLua
 {
     using FakeClass = OrderedMap<T, Traits, Compare>;
+    using NotNullPtr = Libshit::NotNull<Libshit::SmartPtr<T>>;
+    using Throw = Libshit::Check::Throw;
 
-    static SmartPtr<T> get(OrderedMap<T, Traits, Compare>& om, size_t i) noexcept
+    static Libshit::SmartPtr<T> get(
+        OrderedMap<T, Traits, Compare>& om, size_t i) noexcept
     {
         if (i < om.size()) return &om[i];
         else return nullptr;
     }
 
-    static SmartPtr<T> get(
+    static Libshit::SmartPtr<T> get(
         OrderedMap<T, Traits, Compare>& om,
         const typename OrderedMap<T, Traits, Compare>::key_type& key)
     {
@@ -35,54 +38,52 @@ struct OrderedMapLua
     }
 
     // ignore non-int/string keys
-    static void get(OrderedMap<T, Traits, Compare>&, Lua::Skip) noexcept {}
+    static void get(
+        OrderedMap<T, Traits, Compare>&, Libshit::Lua::Skip) noexcept {}
 
     // todo: newindex -- what happens on key collission??
     // todo __ipairs: since lua 5.3, built-in ipairs calls metamethods
 
     // warning: return values swapped
     static std::tuple<bool, size_t> insert(
-        OrderedMap<T, Traits, Compare>& om, size_t i,
-        NotNull<SmartPtr<T>>&& t)
+        OrderedMap<T, Traits, Compare>& om, size_t i, NotNullPtr&& t)
     {
-        auto r = om.template insert<Check::Throw>(om.nth(i), std::move(t));
+        auto r = om.template insert<Throw>(om.nth(i), std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 
     static size_t erase(OrderedMap<T, Traits, Compare>& om, size_t i, size_t e)
     {
-        return om.index_of(om.template erase<Check::Throw>(om.nth(i), om.nth(e)));
+        return om.index_of(om.template erase<Throw>(om.nth(i), om.nth(e)));
     }
 
     static size_t erase(
         OrderedMap<T, Traits, Compare>& om, size_t i)
     {
-        return om.index_of(om.template erase<Check::Throw>(om.nth(i)));
+        return om.index_of(om.template erase<Throw>(om.nth(i)));
     }
 
     // lua-compat: returns the erased value
-    static NotNull<SmartPtr<T>> remove(
-        OrderedMap<T, Traits, Compare>& om, size_t i)
+    static NotNullPtr remove(OrderedMap<T, Traits, Compare>& om, size_t i)
     {
         auto it = om.checked_nth(i);
-        NotNull<SmartPtr<T>> ret{&*it};
-        om.template erase<Check::Throw>(it);
+        NotNullPtr ret{&*it};
+        om.template erase<Throw>(it);
         return ret;
     }
 
     // ret: pushed_back, index of old/new item
     static std::tuple<bool, size_t> push_back(
-        OrderedMap<T, Traits, Compare>& om,
-        NotNull<SmartPtr<T>>&& t)
+        OrderedMap<T, Traits, Compare>& om, NotNullPtr&& t)
     {
-        auto r = om.template push_back<Check::Throw>(std::move(t));
+        auto r = om.template push_back<Throw>(std::move(t));
         return {r.second, om.index_of(r.first)};
     }
 
     // ret nil if not found
     // ret index, value if found
-    static Lua::RetNum find(
-        Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om,
+    static Libshit::Lua::RetNum find(
+        Libshit::Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om,
         const typename OrderedMap<T, Traits, Compare>::key_type& val)
     {
         auto r = om.find(val);
@@ -99,11 +100,12 @@ struct OrderedMapLua
         }
     }
 
-    NEPTOOLS_NOLUA static void FillFromTable(
-        Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om, Lua::RawTable tbl)
+    LIBSHIT_NOLUA static void FillFromTable(
+        Libshit::Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om,
+        Libshit::Lua::RawTable tbl)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
-        lua_rawgetp(vm, LUA_REGISTRYINDEX, Lua::TypeTraits<T>::TAG + 1); // +1
+        LIBSHIT_LUA_GETTOP(vm, top);
+        lua_rawgetp(vm, LUA_REGISTRYINDEX, Libshit::Lua::TypeTraits<T>::TAG + 1); // +1
         auto newidx = lua_absindex(vm, -1);
         vm.Ipairs01(tbl, [&](size_t, int type)
         {
@@ -112,18 +114,18 @@ struct OrderedMapLua
                 lua_pushvalue(vm, newidx);  // +1
                 auto n = vm.Unpack01(lua_absindex(vm, -2)); // +1+n
                 lua_call(vm, n, 1); // +1
-                om.push_back(vm.Get<NotNull<SmartPtr<T>>>(-1));
+                om.push_back(vm.Get<NotNullPtr>(-1));
                 lua_pop(vm, 1); // 0
             }
             else
-                om.push_back(vm.Get<NotNull<SmartPtr<T>>>(-1));
+                om.push_back(vm.Get<NotNullPtr>(-1));
         });
         lua_pop(vm, 1);
-        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        LIBSHIT_LUA_CHECKTOP(vm, top);
     }
 
-    static Lua::RetNum to_table(
-        Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om)
+    static Libshit::Lua::RetNum to_table(
+        Libshit::Lua::StateRef vm, OrderedMap<T, Traits, Compare>& om)
     {
         auto size = om.size();
         lua_createtable(vm, size ? size-1 : size, 0);
@@ -136,19 +138,22 @@ struct OrderedMapLua
     }
 };
 
+}
+
 // Can't copy an OrderedMap, so AutoTable<OrderedMap<...>> will only work with
 // tables...
 template <typename T, typename Traits, typename Compare>
-struct Lua::TypeTraits<AT<OrderedMap<T, Traits, Compare>>>
+struct Libshit::Lua::TypeTraits<
+    Libshit::AT<Neptools::OrderedMap<T, Traits, Compare>>>
 {
-    using RawType = OrderedMap<T, Traits, Compare>;
+    using RawType = Neptools::OrderedMap<T, Traits, Compare>;
     template <bool Unsafe>
     static AT<RawType> Get(StateRef vm, bool arg, int idx)
     {
         if (!Unsafe && !Is(vm, idx))
             vm.TypeError(arg, "table", idx);
         AT<RawType> ret;
-        OrderedMapLua<T, Traits, Compare>::FillFromTable(vm, ret, idx);
+        Neptools::OrderedMapLua<T, Traits, Compare>::FillFromTable(vm, ret, idx);
         return ret;
     }
 
@@ -159,11 +164,9 @@ struct Lua::TypeTraits<AT<OrderedMap<T, Traits, Compare>>>
     static constexpr const char* TAG = TYPE_NAME<RawType>;
 };
 
-}
-
 #define NEPTOOLS_ORDERED_MAP_LUAGEN(name, ...)                          \
     template struct ::Neptools::OrderedMapLua<__VA_ARGS__>;             \
-    NEPTOOLS_LUA_TEMPLATE(name, (), ::Neptools::OrderedMap<__VA_ARGS__>)
+    LIBSHIT_LUA_TEMPLATE(name, (), ::Neptools::OrderedMap<__VA_ARGS__>)
 
 #endif
 #endif

@@ -34,11 +34,11 @@ constexpr auto IndexOfV = IndexOf<Item, Args...>::value;
 NEPTOOLS_STATIC_ASSERT(IndexOfV<int, float, double, int> == 2);
 
 template <typename... Args>
-class NEPTOOLS_LUAGEN(
+class LIBSHIT_LUAGEN(
     post_register = "::Neptools::DynamicStructLua</*$= template_args */>::Register(bld);")
-DynamicStruct final : public Lua::IntrusiveObject
+DynamicStruct final : public Libshit::Lua::IntrusiveObject
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 private:
     template <typename Ret, size_t I, typename T, typename... TRest,
               typename Thiz, typename Fun, typename... FunArgs>
@@ -58,31 +58,31 @@ private:
 
 public:
     template <typename T>
-    NEPTOOLS_NOLUA static constexpr size_t GetIndexFromType()
+    LIBSHIT_NOLUA static constexpr size_t GetIndexFromType()
     { return IndexOfV<T, Args...>; }
 
     static constexpr const size_t SIZE_OF[] = { sizeof(Args)... };
     static constexpr const size_t ALIGN_OF[] = { alignof(Args)... };
 
-    struct Type final : public Lua::IntrusiveObject
+    struct Type final : public Libshit::Lua::IntrusiveObject
     {
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     public:
         Type(const Type&) = delete;
         void operator=(const Type&) = delete;
         ~Type() = delete;
 
-        NEPTOOLS_NOLUA mutable std::atomic<size_t> refcount;
-        NEPTOOLS_LUAGEN(get=true) NEPTOOLS_LUAGEN(get=true,name="__len")
+        LIBSHIT_NOLUA mutable std::atomic<size_t> refcount;
+        LIBSHIT_LUAGEN(get=true) LIBSHIT_LUAGEN(get=true,name="__len")
         size_t item_count;
-        NEPTOOLS_LUAGEN(get=true) size_t byte_size;
+        LIBSHIT_LUAGEN(get=true) size_t byte_size;
         struct Item
         {
             size_t idx;
             size_t size;
             size_t offset;
         };
-        NEPTOOLS_NOLUA Item items[1];
+        LIBSHIT_NOLUA Item items[1];
     };
     static_assert(std::is_standard_layout_v<Type>);
     using TypePtr = boost::intrusive_ptr<const Type>;
@@ -96,24 +96,24 @@ public:
             ::operator delete(const_cast<Type*>(t));
     }
 
-    class TypeBuilder final : public Lua::ValueObject
+    class TypeBuilder final : public Libshit::Lua::ValueObject
     {
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     public:
         TypeBuilder() = default; // force lua ctor
 
-        NEPTOOLS_NOLUA auto& GetDesc() { return desc; }
-        NEPTOOLS_NOLUA const auto& GetDesc() const { return desc; }
+        LIBSHIT_NOLUA auto& GetDesc() { return desc; }
+        LIBSHIT_NOLUA const auto& GetDesc() const { return desc; }
 
         void Reserve(size_t size) { desc.reserve(size); }
 
         template <typename T>
-        NEPTOOLS_NOLUA void Add(size_t size = sizeof(T))
+        LIBSHIT_NOLUA void Add(size_t size = sizeof(T))
         { desc.emplace_back(IndexOfV<T, Args...>, size); }
 
-        NEPTOOLS_NOLUA void Add(size_t i, size_t size)
+        LIBSHIT_NOLUA void Add(size_t i, size_t size)
         {
-            NEPTOOLS_ASSERT_MSG(i < sizeof...(Args), "index out of range");
+            LIBSHIT_ASSERT_MSG(i < sizeof...(Args), "index out of range");
             desc.push_back({i, size});
         }
 
@@ -146,7 +146,7 @@ public:
     };
 
     // actual class begin
-    NEPTOOLS_LUAGEN(result_type=
+    LIBSHIT_LUAGEN(result_type=
         "::boost::intrusive_ptr<::Neptools::DynamicStruct</*$= cls.template_args */>>")
     static boost::intrusive_ptr<DynamicStruct> New(TypePtr type)
     {
@@ -171,60 +171,60 @@ public:
             ForEach(Destroy{});
     }
 
-    NEPTOOLS_LUAGEN() NEPTOOLS_LUAGEN(name="__len")
+    LIBSHIT_LUAGEN() LIBSHIT_LUAGEN(name="__len")
     size_t GetSize() const noexcept { return type->item_count; }
-    NEPTOOLS_NOLUA size_t GetSize(size_t i) const noexcept
+    LIBSHIT_NOLUA size_t GetSize(size_t i) const noexcept
     {
-        NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
+        LIBSHIT_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].size;
     }
-    NEPTOOLS_NOLUA size_t GetTypeIndex(size_t i) const noexcept
+    LIBSHIT_NOLUA size_t GetTypeIndex(size_t i) const noexcept
     {
-        NEPTOOLS_ASSERT_MSG(i < GetSize(), "index out of range");
+        LIBSHIT_ASSERT_MSG(i < GetSize(), "index out of range");
         return type->items[i].idx;
     }
 
     template <typename T>
-    NEPTOOLS_NOLUA bool Is(size_t i) const noexcept
+    LIBSHIT_NOLUA bool Is(size_t i) const noexcept
     {
         return GetTypeIndex(i) == GetIndexFromType<T>();
     }
 
     const TypePtr& GetType() const noexcept { return type; }
-    NEPTOOLS_NOLUA void* GetData() noexcept { return data; }
-    NEPTOOLS_NOLUA const void* GetData() const noexcept { return data; }
+    LIBSHIT_NOLUA void* GetData() noexcept { return data; }
+    LIBSHIT_NOLUA const void* GetData() const noexcept { return data; }
 
-    NEPTOOLS_NOLUA void* GetData(size_t i) noexcept
+    LIBSHIT_NOLUA void* GetData(size_t i) noexcept
     {
-        NEPTOOLS_ASSERT_MSG(i <= GetSize(), "index out of range");
+        LIBSHIT_ASSERT_MSG(i <= GetSize(), "index out of range");
         return &data[type->items[i].offset];
     }
-    NEPTOOLS_NOLUA const void* GetData(size_t i) const noexcept
+    LIBSHIT_NOLUA const void* GetData(size_t i) const noexcept
     {
-        NEPTOOLS_ASSERT_MSG(i <= GetSize(), "index out of range");
+        LIBSHIT_ASSERT_MSG(i <= GetSize(), "index out of range");
         return &data[type->items[i].offset];
     }
 
     template <typename T>
-    NEPTOOLS_NOLUA T& Get(size_t i) noexcept
+    LIBSHIT_NOLUA T& Get(size_t i) noexcept
     {
-        NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
+        LIBSHIT_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<T*>(data + type->items[i].offset);
     }
 
     template <typename T>
-    NEPTOOLS_NOLUA const T& Get(size_t i) const noexcept
+    LIBSHIT_NOLUA const T& Get(size_t i) const noexcept
     {
-        NEPTOOLS_ASSERT_MSG(Is<T>(i), "specified item is not T");
+        LIBSHIT_ASSERT_MSG(Is<T>(i), "specified item is not T");
         return *reinterpret_cast<const T*>(data + type->items[i].offset);
     }
 
     template <typename Ret = void, typename... FunArgs>
-    NEPTOOLS_NOLUA Ret Visit(size_t i, FunArgs&&... f)
+    LIBSHIT_NOLUA Ret Visit(size_t i, FunArgs&&... f)
     { return VisitHlp<Ret, 0, Args...>(this, i, std::forward<FunArgs>(f)...); }
 
     template <typename... FunArgs>
-    NEPTOOLS_NOLUA void ForEach(FunArgs&&... f)
+    LIBSHIT_NOLUA void ForEach(FunArgs&&... f)
     {
         for (size_t i = 0; i < type->item_count; ++i)
             Visit(i, std::forward<FunArgs>(f)...);
@@ -232,11 +232,11 @@ public:
 
     // const version
     template <typename Ret = void, typename... FunArgs>
-    NEPTOOLS_NOLUA Ret Visit(size_t i, FunArgs&&... f) const
+    LIBSHIT_NOLUA Ret Visit(size_t i, FunArgs&&... f) const
     { return VisitHlp<Ret, 0, Args...>(this, i, std::forward<FunArgs>(f)...); }
 
     template <typename... FunArgs>
-    NEPTOOLS_NOLUA void ForEach(FunArgs&&... args) const
+    LIBSHIT_NOLUA void ForEach(FunArgs&&... args) const
     {
         for (size_t i = 0; i < type->item_count; ++i)
             Visit(i, std::forward<FunArgs>(args)...);

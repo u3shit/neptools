@@ -12,14 +12,21 @@ namespace Neptools::Stcm
 
 class File final : public Context, public TxtSerializable
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
+
+    template <typename T>
+    using GbnlVectG = std::vector<Libshit::NotNull<Libshit::SmartPtr<T>>>;
 public:
+    using GbnlVect = GbnlVectG<GbnlItem>;
+    using ConstGbnlVect = GbnlVectG<const GbnlItem>;
+
     File() = default;
     File(Source src);
-    NEPTOOLS_NOLUA
-    std::vector<NotNull<SmartPtr<const GbnlItem>>> FindGbnl() const;
-    NEPTOOLS_LUAGEN(wrap="TableRetWrap")
-    std::vector<NotNull<SmartPtr<GbnlItem>>> FindGbnl();
+
+    LIBSHIT_NOLUA ConstGbnlVect FindGbnl() const;
+
+    LIBSHIT_LUAGEN(wrap="TableRetWrap")
+    GbnlVect FindGbnl();
 
 protected:
     void Inspect_(std::ostream& os, unsigned indent) const override;
@@ -28,8 +35,7 @@ private:
     void Parse_(Source& src);
 
     template <typename ItemT, typename GbnlT>
-    void FindGbnl_(
-        ItemT& root, std::vector<NotNull<SmartPtr<GbnlT>>>& vect) const;
+    void FindGbnl_(ItemT& root, GbnlVectG<GbnlT>& vect) const;
 
     void WriteTxt_(std::ostream& os) const override;
     void ReadTxt_(std::istream& is) override;

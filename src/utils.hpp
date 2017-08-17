@@ -24,7 +24,7 @@ using FileMemSize = uint32_t; // min(FilePos, size_t)
 template <typename T, typename U>
 T asserted_cast(U* ptr)
 {
-    NEPTOOLS_ASSERT_MSG(
+    LIBSHIT_ASSERT_MSG(
         dynamic_cast<T>(ptr) == static_cast<T>(ptr), "U is not T");
     return static_cast<T>(ptr);
 }
@@ -34,7 +34,7 @@ T asserted_cast(U& ref)
 {
 #ifndef NDEBUG // gcc shut up about unused typedef
     using raw_t = std::remove_reference_t<T>;
-    NEPTOOLS_ASSERT_MSG(
+    LIBSHIT_ASSERT_MSG(
         dynamic_cast<raw_t*>(&ref) == static_cast<raw_t*>(&ref), "U is not T");
 #endif
     return static_cast<T>(ref);
@@ -52,13 +52,13 @@ inline T implicit_const_cast(typename AddConst<T>::Type x)
 std::ofstream OpenOut(const boost::filesystem::path& pth);
 std::ifstream OpenIn(const boost::filesystem::path& pth);
 
-void DumpBytes(std::ostream& os, StringView data);
+void DumpBytes(std::ostream& os, Libshit::StringView data);
 void DumpBytes(std::ostream& os, Source data);
 
-struct QuotedString { StringView view; };
+struct QuotedString { Libshit::StringView view; };
 inline std::ostream& operator<<(std::ostream& os, QuotedString q)
 { DumpBytes(os, q.view); return os; }
-inline QuotedString Quoted(StringView view) { return {view}; }
+inline QuotedString Quoted(Libshit::StringView view) { return {view}; }
 
 #define NEPTOOLS_STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
 

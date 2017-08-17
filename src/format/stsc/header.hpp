@@ -13,7 +13,7 @@ namespace Stsc
 
 class HeaderItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -43,7 +43,7 @@ public:
 
     FilePosition GetSize() const noexcept override;
 
-    NotNull<LabelPtr> entry_point;
+    Libshit::NotNull<LabelPtr> entry_point;
     uint32_t flags = 0;
 
     std::array<uint8_t, 32> extra_headers_1;

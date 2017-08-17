@@ -2,7 +2,7 @@
 #define UUID_04CE9898_AACA_4B50_AC3F_FED6669C33C6
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "../assert.hpp"
 #include "../except.hpp"
@@ -19,14 +19,14 @@ using std::is_assignable;
 #include <boost/optional.hpp>
 
 #ifdef NDEBUG
-#define NEPTOOLS_LUA_GETTOP(vm, name) ((void) 0)
-#define NEPTOOLS_LUA_CHECKTOP(vm, val) ((void) 0)
+#define LIBSHIT_LUA_GETTOP(vm, name) ((void) 0)
+#define LIBSHIT_LUA_CHECKTOP(vm, val) ((void) 0)
 #else
-#define NEPTOOLS_LUA_GETTOP(vm, name) auto name = lua_gettop(vm)
-#define NEPTOOLS_LUA_CHECKTOP(vm, val) NEPTOOLS_ASSERT(lua_gettop(vm) == val)
+#define LIBSHIT_LUA_GETTOP(vm, name) auto name = lua_gettop(vm)
+#define LIBSHIT_LUA_CHECKTOP(vm, val) LIBSHIT_ASSERT(lua_gettop(vm) == val)
 #endif
 
-namespace Neptools
+namespace Libshit
 {
 namespace Lua
 {
@@ -34,7 +34,7 @@ namespace Lua
 template <typename T, typename Enable = void> struct TypeTraits;
 extern char reftbl;
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(Error, std::runtime_error);
 
 inline bool IsNoneOrNil(int v) { return v <= 0; }
 
@@ -61,9 +61,9 @@ public:
 
     template <typename T> void Push(T&& t)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         TypeTraits<std::decay_t<T>>::Push(*this, std::forward<T>(t));
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
     }
 
     template <auto... Funs> void PushFunction();
@@ -110,9 +110,9 @@ public:
         auto [i, type] = Ipairs01Prep(idx);
         while (!IsNoneOrNil(type))
         {
-            NEPTOOLS_LUA_GETTOP(vm, top);
+            LIBSHIT_LUA_GETTOP(vm, top);
             f(i, type);
-            NEPTOOLS_LUA_CHECKTOP(vm, top);
+            LIBSHIT_LUA_CHECKTOP(vm, top);
 
             lua_pop(vm, 1); // 0
             type = lua_rawgeti(vm, idx, ++i); // +1
@@ -124,10 +124,10 @@ public:
     {
         for (size_t i = 0; i < len; ++i)
         {
-            NEPTOOLS_LUA_GETTOP(vm, top);
+            LIBSHIT_LUA_GETTOP(vm, top);
             f(i, lua_rawgeti(vm, idx, i + offset));
             lua_pop(vm, 1);
-            NEPTOOLS_LUA_CHECKTOP(vm, top);
+            LIBSHIT_LUA_CHECKTOP(vm, top);
         }
     }
     size_t Unpack01(int idx); // +ret
@@ -147,12 +147,12 @@ private:
     static thread_local size_t error_len;
 };
 
-#define NEPTOOLS_LUA_RUNBC(vm, name, retnum)                            \
+#define LIBSHIT_LUA_RUNBC(vm, name, retnum)                            \
     do                                                                  \
     {                                                                   \
         auto runbc_ret = luaL_loadbuffer(                               \
             vm, luaJIT_BC_##name, luaJIT_BC_##name##_SIZE, #name);      \
-        NEPTOOLS_ASSERT(runbc_ret == 0); (void) runbc_ret;              \
+        LIBSHIT_ASSERT(runbc_ret == 0); (void) runbc_ret;              \
         lua_call(vm, 0, retnum);                                        \
     } while (false)
 

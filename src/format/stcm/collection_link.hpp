@@ -16,7 +16,7 @@ namespace Stcm
 
 class CollectionLinkHeaderItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -41,17 +41,17 @@ public:
     };
     NEPTOOLS_STATIC_ASSERT(sizeof(Header) == 0x40);
 
-    CollectionLinkHeaderItem(Key k, Context& ctx, NotNull<LabelPtr> data)
+    CollectionLinkHeaderItem(Key k, Context& ctx, Libshit::NotNull<LabelPtr> data)
         : Item{k, ctx}, data{std::move(data)} {}
 
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     CollectionLinkHeaderItem(Key k, Context& ctx, const Header& s);
     static CollectionLinkHeaderItem& CreateAndInsert(ItemPointer ptr);
 
     FilePosition GetSize() const noexcept override
     { return sizeof(Header); }
 
-    NotNull<LabelPtr> data;
+    Libshit::NotNull<LabelPtr> data;
 
 private:
     void Dump_(Sink& sink) const override;
@@ -60,7 +60,7 @@ private:
 
 class CollectionLinkItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Entry
     {
@@ -80,22 +80,24 @@ public:
     struct LinkEntry;
     CollectionLinkItem(Key k, Context& ctx) : Item{k, ctx} {}
     CollectionLinkItem(Key k, Context& ctx, Source src, uint32_t count);
-    CollectionLinkItem(Key k, Context& ctx, AT<std::vector<LinkEntry>> entries)
+    CollectionLinkItem(
+        Key k, Context& ctx, Libshit::AT<std::vector<LinkEntry>> entries)
         : Item{k, ctx}, entries{std::move(entries.Get())} {}
 
     FilePosition GetSize() const noexcept override
     { return entries.size() * sizeof(Entry); }
 
-    struct LinkEntry : public Lua::ValueObject
+    struct LinkEntry : public Libshit::Lua::ValueObject
     {
-        NotNull<LabelPtr> name_0;
-        NotNull<LabelPtr> name_1;
+        Libshit::NotNull<LabelPtr> name_0;
+        Libshit::NotNull<LabelPtr> name_1;
 
-        LinkEntry(NotNull<LabelPtr> name_0, NotNull<LabelPtr> name_1)
+        LinkEntry(Libshit::NotNull<LabelPtr> name_0,
+                  Libshit::NotNull<LabelPtr> name_1)
             : name_0{std::move(name_0)}, name_1{std::move(name_1)} {}
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     };
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
     std::vector<LinkEntry> entries;
 
     void Dispose() noexcept override;

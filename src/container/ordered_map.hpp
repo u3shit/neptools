@@ -25,7 +25,7 @@ using OrderedMapItemHook = boost::intrusive::set_base_hook<
     boost::intrusive::optimize_size<true>,
     LinkMode>;
 
-struct OrderedMapItem : public RefCounted, public OrderedMapItemHook
+struct OrderedMapItem : public Libshit::RefCounted, public OrderedMapItemHook
 {
 private:
     size_t vector_index = -1;
@@ -87,15 +87,16 @@ private:
 };
 
 template <typename T, typename Traits, typename Compare>
-class NEPTOOLS_LUAGEN(post_register="\
+class LIBSHIT_LUAGEN(post_register="\
   luaL_getmetatable(bld, \"neptools_ipairs\");\
   bld.SetField(\"__ipairs\");\
-") OrderedMap : public Lua::SmartObject
+") OrderedMap : public Libshit::Lua::SmartObject
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 private:
     static_assert(std::is_base_of_v<OrderedMapItem, T>);
-    using VectorType = std::vector<NotNull<SmartPtr<T>>>;
+    using ElemType = Libshit::NotNull<Libshit::SmartPtr<T>>;
+    using VectorType = std::vector<ElemType>;
     using VectorPtr = typename VectorType::pointer;
     using ConstVectorPtr = typename VectorType::const_pointer;
     using SetType = boost::intrusive::set<
@@ -108,8 +109,8 @@ public:
     using value_type = T;
     using reference = T&;
     using const_reference = const T&;
-    using iterator = OrderedMapIterator<NotNull<SmartPtr<T>>, T>;
-    using const_iterator = OrderedMapIterator<NotNull<SmartPtr<T>>, const T>;
+    using iterator = OrderedMapIterator<ElemType, T>;
+    using const_iterator = OrderedMapIterator<ElemType, const T>;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
     using difference_type = std::size_t;
@@ -117,43 +118,43 @@ public:
     using key_type = typename SetType::key_type;
 
     OrderedMap() = default;
-    NEPTOOLS_NOLUA OrderedMap(OrderedMap&&) = default;
+    LIBSHIT_NOLUA OrderedMap(OrderedMap&&) = default;
     ~OrderedMap() noexcept { for (auto& x : vect) RemoveItem(*x); }
     // set should have a move ctor but no copy ctor
 
     T& at(size_t i)
     {
-        NEPTOOLS_ASSERT(VectorIndex(*vect.at(i)) == i);
+        LIBSHIT_ASSERT(VectorIndex(*vect.at(i)) == i);
         return *vect.at(i);
     }
-    NEPTOOLS_NOLUA const T& at(size_t i) const
+    LIBSHIT_NOLUA const T& at(size_t i) const
     {
-        NEPTOOLS_ASSERT(VectorIndex(*vect.at(i)) == i);
+        LIBSHIT_ASSERT(VectorIndex(*vect.at(i)) == i);
         return *vect.at(i);
     }
 
     T& operator[](size_t i) noexcept
     {
-        NEPTOOLS_ASSERT(i < size() && VectorIndex(*vect[i]) == i);
+        LIBSHIT_ASSERT(i < size() && VectorIndex(*vect[i]) == i);
         return *vect[i];
     }
     const T& operator[](size_t i) const noexcept
     {
-        NEPTOOLS_ASSERT(i < size() && VectorIndex(*vect[i]) == i);
+        LIBSHIT_ASSERT(i < size() && VectorIndex(*vect[i]) == i);
         return *vect[i];
     }
 
 #define NEPTOOLS_GEN(name, pre, post, val)                                  \
-    template <typename Checker = Check::Assert>                             \
+    template <typename Checker = Libshit::Check::Assert>                    \
     pre T& name() post noexcept(Checker::IS_NOEXCEPT)                       \
     {                                                                       \
-        NEPTOOLS_CHECK(std::out_of_range, !empty(), "OrderedMap::" #name);  \
-        NEPTOOLS_ASSERT(VectorIndex(*vect.name()) == (val));                \
+        LIBSHIT_CHECK(std::out_of_range, !empty(), "OrderedMap::" #name);   \
+        LIBSHIT_ASSERT(VectorIndex(*vect.name()) == (val));                 \
         return *vect.name();                                                \
     }
 #define NEPTOOLS_GEN2(name, val)                            \
     NEPTOOLS_GEN(name, , , val)                             \
-    NEPTOOLS_GEN(name, NEPTOOLS_NOLUA const, const, val)
+    NEPTOOLS_GEN(name, LIBSHIT_NOLUA const, const, val)
 
     NEPTOOLS_GEN2(front, 0)
     NEPTOOLS_GEN2(back, vect.size()-1)
@@ -161,11 +162,11 @@ public:
 #undef NEPTOOLS_GEN
 
 #define NEPTOOLS_GEN(dir, typ)                                      \
-    NEPTOOLS_NOLUA typ##iterator dir() noexcept                     \
+    LIBSHIT_NOLUA typ##iterator dir() noexcept                     \
     { return typ##iterator{ToPtr(vect.dir())}; }                    \
-    NEPTOOLS_NOLUA const_##typ##iterator c##dir() const noexcept    \
+    LIBSHIT_NOLUA const_##typ##iterator c##dir() const noexcept    \
     { return const_##typ##iterator{ToPtr(vect.c##dir())}; }         \
-    NEPTOOLS_NOLUA const_##typ##iterator dir() const noexcept       \
+    LIBSHIT_NOLUA const_##typ##iterator dir() const noexcept       \
     { return const_##typ##iterator{ToPtr(vect.c##dir())}; }
 
     NEPTOOLS_GEN(begin,) NEPTOOLS_GEN(end,)
@@ -174,10 +175,10 @@ public:
 
     bool empty() const noexcept
     {
-        NEPTOOLS_ASSERT(vect.empty() == set.empty());
+        LIBSHIT_ASSERT(vect.empty() == set.empty());
         return vect.empty();
     }
-    NEPTOOLS_LUAGEN() NEPTOOLS_LUAGEN(name="__len") // alias as # operator
+    LIBSHIT_LUAGEN() LIBSHIT_LUAGEN(name="__len") // alias as # operator
     size_t size() const noexcept { return vect.size(); }
     // boost::intrusive doesn't have max size
     size_t max_size() const noexcept { return vect.max_size(); }
@@ -194,31 +195,32 @@ public:
         set.clear(); vect.clear();
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> insert(
-        const_iterator p, const NotNull<SmartPtr<T>>& t)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA std::pair<iterator, bool> insert(
+        const_iterator p, const ElemType& t)
     {
         CheckPtrEnd<Checker>(ToPtr(p));
         return InsertGen<Checker>(p, t);
     }
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> insert(
-        const_iterator p, NotNull<SmartPtr<T>>&& t)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA std::pair<iterator, bool> insert(
+        const_iterator p, ElemType&& t)
     {
         CheckPtrEnd<Checker>(ToPtr(p));
         return InsertGen<Checker>(p, std::move(t));
     }
 
-    template <typename Checker = Check::Assert, typename... Args>
-    NEPTOOLS_NOLUA std::pair<iterator, bool>
+    template <typename Checker = Libshit::Check::Assert, typename... Args>
+    LIBSHIT_NOLUA std::pair<iterator, bool>
     emplace(const_iterator p, Args&&... args)
     {
         CheckPtrEnd<Checker>(ToPtr(p));
-        return InsertGen<Checker>(p, MakeSmart<T>(std::forward<Args>(args)...));
+        return InsertGen<Checker>(
+            p, Libshit::MakeSmart<T>(std::forward<Args>(args)...));
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA iterator erase(const_iterator it) noexcept
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA iterator erase(const_iterator it) noexcept
     {
         auto ptr = ToPtr(it);
         CheckPtr<Checker>(ptr);
@@ -226,13 +228,13 @@ public:
         return VectErase(ptr);
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA iterator erase(const_iterator b, const_iterator e)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA iterator erase(const_iterator b, const_iterator e)
         noexcept(Checker::IS_NOEXCEPT)
     {
         auto bptr = ToPtr(b), eptr = ToPtr(e);
         CheckPtrEnd<Checker>(bptr); CheckPtrEnd<Checker>(eptr);
-        NEPTOOLS_CHECK(ItemNotInContainer, bptr <= eptr, "Invalid range");
+        LIBSHIT_CHECK(ItemNotInContainer, bptr <= eptr, "Invalid range");
 
         auto bi = ToVectIt(bptr), ei = ToVectIt(eptr);
         for (auto it = b; it != e; ++it)
@@ -245,23 +247,25 @@ public:
         return iterator{ToPtr(ret)};
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> push_back(
-        const NotNull<SmartPtr<T>>& t)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA std::pair<iterator, bool> push_back(const ElemType& t)
     { return InsertGen<Checker>(end(), t); }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> push_back(NotNull<SmartPtr<T>>&& t)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA std::pair<iterator, bool> push_back(ElemType&& t)
     { return InsertGen<Checker>(end(), std::move(t)); }
 
-    template <typename Checker = Check::Assert, typename... Args>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> emplace_back(Args&&... args)
-    { return InsertGen<Checker>(end(), MakeSmart<T>(std::forward<Args>(args)...)); }
+    template <typename Checker = Libshit::Check::Assert, typename... Args>
+    LIBSHIT_NOLUA std::pair<iterator, bool> emplace_back(Args&&... args)
+    {
+        return InsertGen<Checker>(
+            end(), Libshit::MakeSmart<T>(std::forward<Args>(args)...));
+    }
 
-    template <typename Checker = Check::Assert>
+    template <typename Checker = Libshit::Check::Assert>
     void pop_back() noexcept
     {
-        NEPTOOLS_CHECK(std::out_of_range, !empty(), "pop_back");
+        LIBSHIT_CHECK(std::out_of_range, !empty(), "pop_back");
         auto& back = *vect.back();
         RemoveItem(back);
         set.erase(Traits{}(back));
@@ -276,34 +280,34 @@ public:
 
     // boost extensions
     // not template checker -> we need 2 different checks...
-    NEPTOOLS_NOLUA iterator nth(size_t i) noexcept
+    LIBSHIT_NOLUA iterator nth(size_t i) noexcept
     { return iterator{&vect[i]}; }
-    NEPTOOLS_NOLUA iterator checked_nth(size_t i)
+    LIBSHIT_NOLUA iterator checked_nth(size_t i)
     {
         if (i < size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+        else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth"});
     }
-    NEPTOOLS_NOLUA iterator checked_nth_end(size_t i)
+    LIBSHIT_NOLUA iterator checked_nth_end(size_t i)
     {
         if (i <= size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
+        else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
     }
 
-    NEPTOOLS_NOLUA const_iterator nth(size_t i) const noexcept
+    LIBSHIT_NOLUA const_iterator nth(size_t i) const noexcept
     { return const_iterator{&vect[i]}; }
-    NEPTOOLS_NOLUA const_iterator checked_nth(size_t i) const
+    LIBSHIT_NOLUA const_iterator checked_nth(size_t i) const
     {
         if (i < size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+        else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth"});
     }
-    NEPTOOLS_NOLUA const_iterator checked_nth_end(size_t i) const
+    LIBSHIT_NOLUA const_iterator checked_nth_end(size_t i) const
     {
         if (i <= size()) return nth(i);
-        else NEPTOOLS_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
+        else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
     }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA size_t index_of(const_iterator it) const noexcept(Checker::IS_NOEXCEPT)
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA size_t index_of(const_iterator it) const noexcept(Checker::IS_NOEXCEPT)
     {
         if (it == end()) return size();
 
@@ -311,7 +315,7 @@ public:
         return VectorIndex(**ToPtr(it));
     }
 
-    template <typename Checker = Check::Assert>
+    template <typename Checker = Libshit::Check::Assert>
     size_t index_of(const T& t) const noexcept(Checker::IS_NOEXCEPT)
     {
         CheckPtr<Checker>(ToPtr(t));
@@ -322,37 +326,37 @@ public:
     size_t count(const key_type& key) const { return set.count(key); }
     // comp must yield the same ordering as the used comparator in the tree...
     template <typename Key, typename Comp>
-    NEPTOOLS_NOLUA size_t count(const Key& key, Comp comp) const
+    LIBSHIT_NOLUA size_t count(const Key& key, Comp comp) const
     { return set.count(key, comp); }
 
-    NEPTOOLS_NOLUA iterator find(const key_type& key)
+    LIBSHIT_NOLUA iterator find(const key_type& key)
     { return ToMaybeEndIt(set.find(key)); }
     template <typename Key, typename Comp>
-    NEPTOOLS_NOLUA iterator find(const Key& key, Comp comp)
+    LIBSHIT_NOLUA iterator find(const Key& key, Comp comp)
     { return ToMaybeEndIt(set.find(key, comp)); }
 
-    NEPTOOLS_NOLUA const_iterator find(const key_type& key) const
+    LIBSHIT_NOLUA const_iterator find(const key_type& key) const
     { return ToMaybeEndIt(set.find(key)); }
     template <typename Key, typename Comp>
-    NEPTOOLS_NOLUA const_iterator find(const Key& key, Comp comp) const
+    LIBSHIT_NOLUA const_iterator find(const Key& key, Comp comp) const
     { return ToMaybeEndIt(set.find(key, comp)); }
 
     // misc intrusive
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA iterator iterator_to(T& t) noexcept
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA iterator iterator_to(T& t) noexcept
     { return iterator{ToPtr(t)}; }
-    NEPTOOLS_NOLUA const_iterator iterator_to(const T& t) const noexcept
+    LIBSHIT_NOLUA const_iterator iterator_to(const T& t) const noexcept
     { return const_iterator{ToPtr(t)}; }
 
     // return end() on invalid ptr
-    NEPTOOLS_NOLUA iterator checked_iterator_to(T& t) noexcept
+    LIBSHIT_NOLUA iterator checked_iterator_to(T& t) noexcept
     {
         if (VectorIndex(t) < size() && vect[VectorIndex(t)].get() == &t)
             return iterator{ToPtr(t)};
         else
             return end();
     }
-    NEPTOOLS_NOLUA const_iterator checked_iterator_to(const T& t) const noexcept
+    LIBSHIT_NOLUA const_iterator checked_iterator_to(const T& t) const noexcept
     {
         if (VectorIndex(t) < size() & vect[VectorIndex(t)].get() == &t)
             return const_iterator{ToPtr(t)};
@@ -365,8 +369,8 @@ public:
     // static const_iterator s_iterator_to(const T& t) noexcept
     // { return const_iterator{t}; }
 
-    template <typename Checker = Check::Assert>
-    NEPTOOLS_NOLUA std::pair<iterator, bool> key_change(iterator it) noexcept
+    template <typename Checker = Libshit::Check::Assert>
+    LIBSHIT_NOLUA std::pair<iterator, bool> key_change(iterator it) noexcept
     {
         CheckPtr<Checker>(ToPtr(it));
         set.erase(ToSetIt(ToPtr(it)));
@@ -394,7 +398,7 @@ private:
     template <typename Checker, typename U>
     std::pair<iterator, bool> InsertGen(const_iterator p, U&& t)
     {
-        NEPTOOLS_CHECK(ItemAlreadyAdded, VectorIndex(*t) == size_t(-1),
+        LIBSHIT_CHECK(ItemAlreadyAdded, VectorIndex(*t) == size_t(-1),
                        "Item alread added to an OrderedMap");
 
         typename SetType::insert_commit_data data{};
@@ -424,20 +428,20 @@ private:
     template <typename Checker>
     void CheckPtr(ConstVectorPtr ptr) const noexcept(Checker::IS_NOEXCEPT)
     {
-        NEPTOOLS_CHECK(
+        LIBSHIT_CHECK(
             ItemNotInContainer, ptr >= &vect.front() && ptr <= &vect.back(),
             "Item not in this OrderedMap");
-        NEPTOOLS_ASSERT(VectorIndex(**ptr) < size() &&
+        LIBSHIT_ASSERT(VectorIndex(**ptr) < size() &&
                         &vect[VectorIndex(**ptr)] == ptr);
     }
 
     template <typename Checker>
     void CheckPtrEnd(ConstVectorPtr ptr) const noexcept(Checker::IS_NOEXCEPT)
     {
-        NEPTOOLS_CHECK(
+        LIBSHIT_CHECK(
             ItemNotInContainer, ptr >= &*vect.begin() && ptr <= &*vect.end(),
             "Item not in this OrderedMap");
-        NEPTOOLS_ASSERT(
+        LIBSHIT_ASSERT(
             ptr == &*vect.end() ||
             (VectorIndex(**ptr) < size() && &vect[VectorIndex(**ptr)] == ptr));
     }

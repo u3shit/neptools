@@ -8,7 +8,7 @@
 #include <cstring>
 #include <boost/operators.hpp>
 
-namespace Neptools
+namespace Libshit
 {
 
 // like string_view, except it CString=true, it must be zero terminated if
@@ -51,8 +51,8 @@ public:
     constexpr BaseBasicNonowningString(const_pointer str, size_type len) noexcept
         : str{str}, len{len}
     {
-        NEPTOOLS_ASSERT(str != nullptr || len == 0);
-        if (CString && str) NEPTOOLS_ASSERT(str[len] == '\0');
+        LIBSHIT_ASSERT(str != nullptr || len == 0);
+        if (CString && str) LIBSHIT_ASSERT(str[len] == '\0');
     }
 
     constexpr BaseBasicNonowningString(
@@ -84,7 +84,7 @@ public:
     constexpr const_reference at(size_type i) const
     {
         if (CString ? (i > len) : (i >= len))
-            NEPTOOLS_THROW(std::out_of_range{"NonowningString"});
+            LIBSHIT_THROW(std::out_of_range{"NonowningString"});
         return str[i];
     }
 

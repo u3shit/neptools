@@ -46,12 +46,12 @@ end
 
 local template_str = [=[
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 //$ for i,cls in ipairs(classes) do
 //$   if cls.is_enum then
-const char ::Neptools::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
+const char ::Libshit::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
     "/*$= cls.name */";
 //$   else
 /*$ if cls.template then */template <>/*$ end */
@@ -59,7 +59,7 @@ const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
 //$   end
 //$ end
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 //$ for i,cls in ipairs(classes) do
 

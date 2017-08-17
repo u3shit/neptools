@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
@@ -7,7 +7,7 @@ const char ::Neptools::Source::TYPE_NAME[] = "neptools.source";
 
 const char ::Neptools::DumpableSource::TYPE_NAME[] = "neptools.dumpable_source";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.source
@@ -16,7 +16,7 @@ void TypeRegisterTraits<::Neptools::Source>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Source>::Make<LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Source>::Make<LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &)>(::Neptools::Source::FromFile)
@@ -95,10 +95,10 @@ void TypeRegisterTraits<::Neptools::Source>::Register(TypeBuilder& bld)
         static_cast<std::string (::Neptools::Source::*)() const>(&::Neptools::Source::Inspect)
     >("inspect");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::Source &, ::Neptools::FileMemSize)>(&Neptools::LuaRead)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::Source &, ::Neptools::FileMemSize)>(&Neptools::LuaRead)
     >("read");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::Source &, ::Neptools::FilePosition, ::Neptools::FileMemSize)>(&Neptools::LuaPread)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::Source &, ::Neptools::FilePosition, ::Neptools::FileMemSize)>(&Neptools::LuaPread)
     >("pread");
 
 }
@@ -111,8 +111,8 @@ void TypeRegisterTraits<::Neptools::DumpableSource>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::DumpableSource, ::Neptools::Dumpable>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>
+        &::Libshit::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>, LuaGetRef<::Neptools::FilePosition>, LuaGetRef<::Neptools::FilePosition>>,
+        &::Libshit::Lua::TypeTraits<::Neptools::DumpableSource>::Make<LuaGetRef<const ::Neptools::Source &>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Source (::Neptools::DumpableSource::*)() const noexcept>(&::Neptools::DumpableSource::GetSource)

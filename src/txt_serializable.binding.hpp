@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::TxtSerializable::TYPE_NAME[] = "neptools.txt_serializable";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.txt_serializable

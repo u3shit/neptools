@@ -1,4 +1,4 @@
-local log = neptools.log
+local log = libshit.log
 local type, select, concat, tostring = type, select, table.concat, tostring
 
 local function pack(...)
@@ -56,4 +56,4 @@ function log.new(name)
   return setmetatable({name=name}, log)
 end
 
-setmetatable(log, debug.getregistry().neptools_new_mt)
+setmetatable(log, debug.getregistry().libshit_new_mt)

@@ -1,7 +1,7 @@
 #include <libshit/lua/function_call.hpp>
 #include <catch.hpp>
 
-using namespace Neptools::Lua;
+using namespace Libshit::Lua;
 
 static int global;
 

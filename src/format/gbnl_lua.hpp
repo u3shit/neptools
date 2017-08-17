@@ -5,7 +5,7 @@
 #include "gbnl.hpp"
 #include "../dynamic_struct.lua.hpp"
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 namespace Neptools
 {
@@ -13,9 +13,9 @@ namespace Neptools
 template <>
 struct DynamicStructTypeTraits<Gbnl::OffsetString>
 {
-    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    static void Push(Libshit::Lua::StateRef vm, const void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
+        LIBSHIT_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
         auto ofs = static_cast<const Gbnl::OffsetString*>(ptr);
         if (ofs->offset == static_cast<uint32_t>(-1))
             lua_pushnil(vm);
@@ -23,12 +23,12 @@ struct DynamicStructTypeTraits<Gbnl::OffsetString>
             vm.Push(ofs->str);
     }
 
-    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
+        LIBSHIT_ASSERT(size == sizeof(Gbnl::OffsetString)); (void) size;
         auto ofs = static_cast<Gbnl::OffsetString*>(ptr);
 
-        if (Lua::IsNoneOrNil(lua_type(vm, idx)))
+        if (Libshit::Lua::IsNoneOrNil(lua_type(vm, idx)))
         {
             ofs->offset = static_cast<uint32_t>(-1);
             ofs->str.clear();
@@ -48,15 +48,15 @@ struct DynamicStructTypeTraits<Gbnl::OffsetString>
 template <>
 struct DynamicStructTypeTraits<Gbnl::FixStringTag>
 {
-    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    static void Push(Libshit::Lua::StateRef vm, const void* ptr, size_t size)
     {
         auto str = static_cast<const char*>(ptr);
         lua_pushlstring(vm, str, strnlen(str, size));
     }
 
-    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        auto str = vm.Check<StringView>(idx);
+        auto str = vm.Check<Libshit::StringView>(idx);
         auto dst = static_cast<char*>(ptr);
 
         auto n = std::min(size-1, str.length());
@@ -71,15 +71,15 @@ struct DynamicStructTypeTraits<Gbnl::FixStringTag>
 template<>
 struct DynamicStructTypeTraits<Gbnl::PaddingTag>
 {
-    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    static void Push(Libshit::Lua::StateRef vm, const void* ptr, size_t size)
     {
         auto str = static_cast<const char*>(ptr);
         lua_pushlstring(vm, str, size);
     }
 
-    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        auto str = vm.Check<StringView>(idx);
+        auto str = vm.Check<Libshit::StringView>(idx);
         auto dst = static_cast<char*>(ptr);
 
         auto n = std::min(size, str.length());

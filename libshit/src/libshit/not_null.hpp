@@ -5,7 +5,7 @@
 #include "assert.hpp"
 #include <utility>
 
-namespace Neptools
+namespace Libshit
 {
 
 // construct a null notnull...
@@ -24,7 +24,7 @@ public:
 
     template <typename... Args>
     constexpr explicit NotNull(Args&&... args) : t{std::forward<Args>(args)...}
-    { NEPTOOLS_ASSERT(t); }
+    { LIBSHIT_ASSERT(t); }
 
     template <typename U>
     NotNull(NotNull<U> o) noexcept(noexcept(T{std::move(o.t)}))
@@ -34,19 +34,19 @@ public:
     NotNull& operator=(NotNull&&) = default; // NOLINT
 
     // recheck because moving still can break it
-    operator T() const { NEPTOOLS_ASSERT(t); return t; }
-    const T& Get() const noexcept { NEPTOOLS_ASSERT(t); return t; }
+    operator T() const { LIBSHIT_ASSERT(t); return t; }
+    const T& Get() const noexcept { LIBSHIT_ASSERT(t); return t; }
     decltype(*std::declval<T>()) operator*() const noexcept
-    { NEPTOOLS_ASSERT(t); return *t; }
+    { LIBSHIT_ASSERT(t); return *t; }
     decltype(&*std::declval<T>()) operator->() const noexcept
-    { NEPTOOLS_ASSERT(t); return &*t; }
+    { LIBSHIT_ASSERT(t); return &*t; }
 
     bool operator==(const NotNull& o) const noexcept { return t == o.t; }
     bool operator!=(const NotNull& o) const noexcept { return t != o.t; }
 
     decltype(auto) get() const { return t.get(); }
     template <typename U, typename = std::enable_if_t<std::is_convertible<T, U>::value>>
-    operator U() const { NEPTOOLS_ASSERT(t); return static_cast<U>(t); }
+    operator U() const { LIBSHIT_ASSERT(t); return static_cast<U>(t); }
 private:
     T t;
 

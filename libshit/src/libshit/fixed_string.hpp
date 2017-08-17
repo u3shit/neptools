@@ -9,7 +9,7 @@
 
 #include "lua/type_traits.hpp"
 
-namespace Neptools
+namespace Libshit
 {
 
 template <size_t N>
@@ -80,7 +80,7 @@ inline std::istream& operator>>(std::istream& is, FixedString<N>& str)
 { is.width(N-1); return is >> &str[0]; }
 */
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 template <size_t N>
 struct Lua::TypeTraits<FixedString<N>>
 {

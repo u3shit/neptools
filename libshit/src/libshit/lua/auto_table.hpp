@@ -5,7 +5,7 @@
 #include "type_traits.hpp"
 #include <utility>
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 template <typename T>
@@ -28,7 +28,7 @@ private:
     T t;
 };
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 template <typename T>
 using TableCtorPtr = T (*)(StateRef, RawTable);
@@ -52,7 +52,7 @@ struct TypeTraits<AutoTable<T>>
             else
             {
                 auto t = lua_rawgetp(vm, LUA_REGISTRYINDEX, TypeTraits<T>::TAG + 1); // +1
-                NEPTOOLS_ASSERT(t == LUA_TTABLE); (void) t;
+                LIBSHIT_ASSERT(t == LUA_TTABLE); (void) t;
                 auto n = vm.Unpack01(aidx); // +1+n
                 lua_call(vm, n, 1); // +1
                 auto ret = TypeTraits<T>::template Get<false>(vm, arg, -1);
@@ -78,7 +78,7 @@ struct TypeTraits<AutoTable<T>>
 
 }
 
-namespace Neptools
+namespace Libshit
 {
 template <typename T> using AT = Lua::AutoTable<T>;
 }

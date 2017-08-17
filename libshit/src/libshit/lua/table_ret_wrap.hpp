@@ -2,13 +2,13 @@
 #define UUID_2BA17F45_80C0_4F6E_A84A_1BEAC95A48DC
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "base.hpp"
 #include "function_call_types.hpp"
 #include "../meta_utils.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // fuck you, std::remove_const
@@ -25,7 +25,7 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
 {
     static RetNum Wrap(StateRef vm, Args&&... args)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         const auto& ret = Invoke(Fun, std::forward<Args>(args)...);
         auto size = ret.size();
 
@@ -38,7 +38,7 @@ struct TableRetWrap<Fun, brigand::list<Args...>>
             lua_rawseti(vm, -2, i++); // +1
         }
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 };

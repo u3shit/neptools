@@ -14,7 +14,7 @@ namespace Stcm
 
 void HeaderItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::HeaderItem::Header", x)
     VALIDATE(memcmp(magic, "STCM2", 5) == 0);
     VALIDATE(endian == 'L');
     VALIDATE(msg.is_valid());
@@ -24,7 +24,8 @@ void HeaderItem::Header::Validate(FilePosition file_size) const
 }
 
 HeaderItem::HeaderItem(Key k, Context& ctx, const Header& hdr)
-    : Item{k, ctx}, export_sec{EmptyNotNull{}}, collection_link{EmptyNotNull{}}
+    : Item{k, ctx}, export_sec{Libshit::EmptyNotNull{}},
+      collection_link{Libshit::EmptyNotNull{}}
 {
     hdr.Validate(ctx.GetSize());
 

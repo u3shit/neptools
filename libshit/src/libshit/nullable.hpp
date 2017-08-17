@@ -5,7 +5,7 @@
 #include <utility>
 
 namespace boost { template <typename T> class intrusive_ptr; }
-namespace Neptools
+namespace Libshit
 {
 
 template <typename T> class NotNull;

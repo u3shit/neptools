@@ -4,14 +4,14 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <iostream>
 
-#define NEPTOOLS_LOG_NAME "except"
+#define LIBSHIT_LOG_NAME "except"
 #include "logger_helper.hpp"
 
 #ifdef WINDOWS
 extern "C" void _assert(const char* msg, const char* file, unsigned line);
 #endif
 
-namespace Neptools
+namespace Libshit
 {
 
 void RethrowBoostException()

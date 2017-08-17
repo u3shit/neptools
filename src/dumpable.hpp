@@ -14,9 +14,9 @@ namespace Neptools
 
 class Sink;
 
-class Dumpable : public Lua::DynamicObject
+class Dumpable : public Libshit::Lua::DynamicObject
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
     Dumpable() = default;
     Dumpable(const Dumpable&) = delete;
@@ -27,14 +27,14 @@ public:
     virtual FilePosition GetSize() const = 0;
 
     void Dump(Sink& os) const { return Dump_(os); }
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     void Dump(Sink&& os) const { return Dump_(os); }
     void Dump(const boost::filesystem::path& path) const;
 
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     void Inspect(std::ostream& os, unsigned indent = 0) const
     { return Inspect_(os, indent); }
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     void Inspect(std::ostream&& os, unsigned indent = 0) const
     { return Inspect_(os, indent); }
     void Inspect(const boost::filesystem::path& path) const;
@@ -50,7 +50,7 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
 
-inline Lua::DynamicObject& GetDynamicObject(Dumpable& d) { return d; }
+inline Libshit::Lua::DynamicObject& GetDynamicObject(Dumpable& d) { return d; }
 
 }
 #endif

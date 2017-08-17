@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <iostream>
 
-#if !defined(NEPTOOLS_WITHOUT_LUA) && !defined(NEPTOOLS_BINDING_GENERATOR)
+#if !defined(LIBSHIT_WITHOUT_LUA) && !defined(LIBSHIT_BINDING_GENERATOR)
 #include "format/builder.lua.h"
 #endif
 
-#define NEPTOOLS_LOG_NAME "item"
+#define LIBSHIT_LOG_NAME "item"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
@@ -38,7 +38,7 @@ void Item::UpdatePosition(FilePosition npos)
     Fixup();
 }
 
-void Item::Replace_(const NotNull<SmartPtr<Item>>& nitem)
+void Item::Replace_(const Libshit::NotNull<Libshit::SmartPtr<Item>>& nitem)
 {
     auto ctx = GetContext();
     // move labels
@@ -70,10 +70,10 @@ void Item::Removed()
 
 void Item::Slice(SliceSeq seq)
 {
-    NEPTOOLS_ASSERT(std::is_sorted(seq.begin(), seq.end(),
+    LIBSHIT_ASSERT(std::is_sorted(seq.begin(), seq.end(),
         [](const auto& a, const auto& b) { return a.second < b.second; }));
 
-    SmartPtr<Item> do_not_delete_this_until_returning{this};
+    Libshit::SmartPtr<Item> do_not_delete_this_until_returning{this};
 
     LabelsContainer lbls{std::move(labels)};
     auto ctx = GetContext();
@@ -90,7 +90,7 @@ void Item::Slice(SliceSeq seq)
     auto label = lbls.unlink_leftmost_without_rebalance();
     for (auto& el : seq)
     {
-        NEPTOOLS_ASSERT(el.first->labels.empty());
+        LIBSHIT_ASSERT(el.first->labels.empty());
         while (label && label->ptr.offset < el.second)
         {
             label->ptr.item = el.first.get();
@@ -112,12 +112,12 @@ void Item::Slice(SliceSeq seq)
 
         offset = el.second;
     }
-    NEPTOOLS_ASSERT(label == nullptr);
+    LIBSHIT_ASSERT(label == nullptr);
 }
 
 void Item::Dispose() noexcept
 {
-    NEPTOOLS_ASSERT(labels.empty() && !GetParent());
+    LIBSHIT_ASSERT(labels.empty() && !GetParent());
     if (auto ctx = GetContextMaybe())
     {
         auto it = ctx->pmap.find(position);
@@ -179,7 +179,7 @@ void ItemWithChildren::MoveNextToChild(size_t size) noexcept
 {
     auto& list = GetParent()->GetChildren();
     // make sure we have a ref when erasing...
-    SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
+    Libshit::SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
         *++Iterator()).Split(0, size);
     list.erase(nchild->Iterator());
     GetChildren().push_back(*nchild);

@@ -1,7 +1,7 @@
 #include "user_type.hpp"
 #include <cstring>
 
-namespace Neptools
+namespace Libshit
 {
 namespace Lua
 {
@@ -9,7 +9,7 @@ namespace Lua
 TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     : vm{vm}, instantiable{instantiable}
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
 
     // type table
     lua_createtable(vm, 0, 0); // +1
@@ -18,8 +18,8 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
 
     if (instantiable)
     {
-        lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_new_mt"); // +2
-        NEPTOOLS_ASSERT(lua_istable(vm, -1));
+        lua_getfield(vm, LUA_REGISTRYINDEX, "libshit_new_mt"); // +2
+        LIBSHIT_ASSERT(lua_istable(vm, -1));
         lua_setmetatable(vm, -2); // +1
 
         // metatable
@@ -55,22 +55,22 @@ TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
     lua_pushglobaltable(vm); // +3
     vm.SetRecTable(name, -3); // +2
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top+2);
+    LIBSHIT_LUA_CHECKTOP(vm, top+2);
 }
 
 void TypeBuilder::TaggedNew()
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
-    auto t = lua_getfield(vm, LUA_REGISTRYINDEX, "neptools_tagged_new_mt"); // +1
-    NEPTOOLS_ASSERT(t == LUA_TTABLE); (void) t;
+    LIBSHIT_LUA_GETTOP(vm, top);
+    auto t = lua_getfield(vm, LUA_REGISTRYINDEX, "libshit_tagged_new_mt"); // +1
+    LIBSHIT_ASSERT(t == LUA_TTABLE); (void) t;
     lua_setmetatable(vm, -3); // 0
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    LIBSHIT_LUA_CHECKTOP(vm, top);
 }
 
 static void SetMt(StateRef vm, const char* dst, const char* mt)
 {
     lua_getfield(vm, LUA_REGISTRYINDEX, mt);
-    NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
+    LIBSHIT_ASSERT(lua_isfunction(vm, -1));
     lua_pushvalue(vm, -2); // +2
     lua_call(vm, 1, 1); // +1
     lua_setfield(vm, -2, dst); // +0
@@ -78,7 +78,7 @@ static void SetMt(StateRef vm, const char* dst, const char* mt)
 
 void TypeBuilder::Done()
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
 
     if (instantiable)
     {
@@ -108,31 +108,31 @@ void TypeBuilder::Done()
         if (has_get_ || has_get)
             SetMt(
                 vm, "__index",
-                has_get_ ? "neptools_mt_index" : "neptools_mt_index_light");
+                has_get_ ? "libshit_mt_index" : "libshit_mt_index_light");
 
-        if (has_set_) SetMt(vm, "__newindex", "neptools_mt_newindex");
+        if (has_set_) SetMt(vm, "__newindex", "libshit_mt_newindex");
         else if (has_set)
         {
             lua_getfield(vm, -1, "set"); // +1
-            NEPTOOLS_ASSERT(lua_isfunction(vm, -1));
+            LIBSHIT_ASSERT(lua_isfunction(vm, -1));
             lua_setfield(vm, -2, "__newindex"); // +0
         }
     }
 
     lua_remove(vm, -2);
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
+    LIBSHIT_LUA_CHECKTOP(vm, top-1);
 }
 
 void TypeBuilder::DoInherit(ptrdiff_t offs)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
     // -1: base class meta
     // -2: this meta
 
-    NEPTOOLS_ASSERT(instantiable);
-    NEPTOOLS_ASSERT(lua_type(vm, -1) == LUA_TTABLE);
-    NEPTOOLS_ASSERT(lua_type(vm, -2) == LUA_TTABLE);
+    LIBSHIT_ASSERT(instantiable);
+    LIBSHIT_ASSERT(lua_type(vm, -1) == LUA_TTABLE);
+    LIBSHIT_ASSERT(lua_type(vm, -2) == LUA_TTABLE);
 
     // for k,v in pairs(base_mt) do
     lua_pushnil(vm); // +1
@@ -160,7 +160,7 @@ void TypeBuilder::DoInherit(ptrdiff_t offs)
     }
     lua_pop(vm, 1); // -1
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top-1);
+    LIBSHIT_LUA_CHECKTOP(vm, top-1);
 }
 
 int TypeBuilder::IsFunc(lua_State* vm) noexcept
@@ -172,7 +172,7 @@ int TypeBuilder::IsFunc(lua_State* vm) noexcept
     }
 
     lua_pushvalue(vm, lua_upvalueindex(1));
-    NEPTOOLS_ASSERT(lua_islightuserdata(vm, -1));
+    LIBSHIT_ASSERT(lua_islightuserdata(vm, -1));
 
     auto type = lua_rawget(vm, -2);
     lua_pushboolean(vm, type == LUA_TNUMBER);

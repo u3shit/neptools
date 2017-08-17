@@ -20,7 +20,7 @@ namespace Stcm
 
 class InstructionItem final : public ItemWithChildren
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header
     {
@@ -92,17 +92,17 @@ public:
     class Param;
     InstructionItem(Key k, Context& ctx) : ItemWithChildren{k, ctx} {}
     InstructionItem(Key k, Context& ctx, Source src);
-    InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt)
+    InstructionItem(Key k, Context& ctx, Libshit::NotNull<LabelPtr> tgt)
         : ItemWithChildren{k, ctx}, opcode_target{std::move(tgt)} {}
-    InstructionItem(Key k, Context& ctx, NotNull<LabelPtr> tgt,
-                    AT<std::vector<Param>> params)
+    InstructionItem(Key k, Context& ctx, Libshit::NotNull<LabelPtr> tgt,
+                    Libshit::AT<std::vector<Param>> params)
         : ItemWithChildren{k, ctx}, params{std::move(params.Get())},
           opcode_target{std::move(tgt)} {}
 
     InstructionItem(Key k, Context& ctx, uint32_t opcode)
         : ItemWithChildren{k, ctx}, opcode_target{opcode} {}
     InstructionItem(Key k, Context& ctx, uint32_t opcode,
-                    AT<std::vector<Param>> params)
+                    Libshit::AT<std::vector<Param>> params)
         : ItemWithChildren{k, ctx}, params{std::move(params.Get())},
           opcode_target{opcode} {}
     static InstructionItem& CreateAndInsert(ItemPointer ptr);
@@ -113,16 +113,21 @@ public:
 
     bool IsCall() const noexcept
     { return !std::holds_alternative<uint32_t>(opcode_target); }
-    uint32_t GetOpcode() const { return std::get<0>(opcode_target); }
-    void SetOpcode(uint32_t oc) noexcept { opcode_target = oc; }
-    NotNull<LabelPtr> GetTarget() const { return std::get<1>(opcode_target); }
-    void SetTarget(NotNull<LabelPtr> label) noexcept { opcode_target = label; }
 
-    class Param48 : public Lua::ValueObject
+    uint32_t GetOpcode() const { return std::get<0>(opcode_target); }
+
+    void SetOpcode(uint32_t oc) noexcept { opcode_target = oc; }
+    Libshit::NotNull<LabelPtr> GetTarget() const
+    { return std::get<1>(opcode_target); }
+
+    void SetTarget(Libshit::NotNull<LabelPtr> label) noexcept
+    { opcode_target = label; }
+
+    class Param48 : public Libshit::Lua::ValueObject
     {
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     public:
-        enum class NEPTOOLS_LUAGEN() Type
+        enum class LIBSHIT_LUAGEN() Type
         {
 #define NEPTOOLS_GEN_TYPES(x, ...)         \
             x(MEM_OFFSET, __VA_ARGS__)     \
@@ -134,26 +139,26 @@ public:
             NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
         };
         using Variant = std::variant<
-            NotNull<LabelPtr>, uint32_t, uint32_t, uint32_t, uint32_t>;
+            Libshit::NotNull<LabelPtr>, uint32_t, uint32_t, uint32_t, uint32_t>;
 
         Param48(Context& ctx, uint32_t val) : val{GetVariant(ctx, val)} {}
-        template <size_t type, typename T> NEPTOOLS_NOLUA
+        template <size_t type, typename T> LIBSHIT_NOLUA
         Param48(std::in_place_index_t<type> x, T val) : val{x, std::move(val)} {}
 
         uint32_t Dump() const noexcept;
 
         Type GetType() const noexcept { return static_cast<Type>(val.index()); }
 
-        template <typename Visitor> NEPTOOLS_NOLUA
+        template <typename Visitor> LIBSHIT_NOLUA
         auto Visit(Visitor&& v) const
         { return std::visit(std::forward<Visitor>(v), val); }
 
-#define NEPTOOLS_GEN_TMPL(x,xname) NEPTOOLS_LUAGEN(                     \
+#define NEPTOOLS_GEN_TMPL(x,xname) LIBSHIT_LUAGEN(                     \
             name=xname..string.lower(#x), template_params={             \
                 "Neptools::Stcm::InstructionItem::Param48::Type::"..#x})
         template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "get_")
         auto Get() const { return std::get<static_cast<size_t>(type)>(val); }
-        template <Type type> NEPTOOLS_NOLUA
+        template <Type type> LIBSHIT_NOLUA
         void Set(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
         { val.emplace(std::in_place_index<type>(std::move(nval))); }
 
@@ -172,33 +177,34 @@ public:
     private:
         Variant val;
         static Variant GetVariant(Context& ctx, uint32_t val);
-    } NEPTOOLS_LUAGEN(post_register="bld.TaggedNew();");
+    } LIBSHIT_LUAGEN(post_register="bld.TaggedNew();");
 
-    class Param : public Lua::ValueObject
+    class Param : public Libshit::Lua::ValueObject
     {
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     public:
-        struct MemOffset : Lua::ValueObject
+        struct MemOffset : Libshit::Lua::ValueObject
         {
-            NotNull<LabelPtr> target;
+            Libshit::NotNull<LabelPtr> target;
             Param48 param_4;
             Param48 param_8;
 
-            MemOffset(NotNull<LabelPtr> target, Param48 param_4, Param48 param_8)
+            MemOffset(Libshit::NotNull<LabelPtr> target, Param48 param_4,
+                      Param48 param_8)
                 : target{std::move(target)}, param_4{std::move(param_4)},
                   param_8{std::move(param_8)} {}
-            NEPTOOLS_LUA_CLASS;
+            LIBSHIT_LUA_CLASS;
         };
-        struct Indirect : Lua::ValueObject
+        struct Indirect : Libshit::Lua::ValueObject
         {
             uint32_t param_0;
             Param48 param_8;
 
             Indirect(uint32_t param_0, Param48 param_8)
                 : param_0{param_0}, param_8{std::move(param_8)} {}
-            NEPTOOLS_LUA_CLASS;
+            LIBSHIT_LUA_CLASS;
         };
-        enum class NEPTOOLS_LUAGEN() Type
+        enum class LIBSHIT_LUAGEN() Type
         {
 #define NEPTOOLS_GEN_TYPES(x, ...)         \
             x(MEM_OFFSET, __VA_ARGS__)     \
@@ -211,29 +217,29 @@ public:
             NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
         };
         using Variant = std::variant<
-            MemOffset, Indirect, uint32_t, uint32_t, NotNull<LabelPtr>,
-            NotNull<LabelPtr>, NotNull<LabelPtr>>;
+            MemOffset, Indirect, uint32_t, uint32_t, Libshit::NotNull<LabelPtr>,
+            Libshit::NotNull<LabelPtr>, Libshit::NotNull<LabelPtr>>;
 
-        NEPTOOLS_NOLUA
+        LIBSHIT_NOLUA
         Param(Context& ctx, const Parameter& p) : val{GetVariant(ctx, p)} {}
-        template <size_t type, typename T> NEPTOOLS_NOLUA
+        template <size_t type, typename T> LIBSHIT_NOLUA
         Param(std::in_place_index_t<type> x, T val) : val{x, std::move(val)} {}
 
         void Dump(Sink& sink) const;
-        NEPTOOLS_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
+        LIBSHIT_NOLUA void Dump(Sink&& sink) const { Dump(sink); }
 
         Type GetType() const noexcept { return static_cast<Type>(val.index()); }
 
-        template <typename Visitor> NEPTOOLS_NOLUA
+        template <typename Visitor> LIBSHIT_NOLUA
         auto Visit(Visitor&& v) const
         { return std::visit(std::forward<Visitor>(v), val); }
 
-#define NEPTOOLS_GEN_TMPL(x,xname) NEPTOOLS_LUAGEN(                     \
+#define NEPTOOLS_GEN_TMPL(x,xname) LIBSHIT_LUAGEN(                     \
             name=xname..string.lower(#x), template_params={             \
                 "Neptools::Stcm::InstructionItem::Param::Type::"..#x})
         template <Type type> NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_TMPL, "get_")
         auto Get() const { return std::get<static_cast<size_t>(type)>(val); }
-        template <Type type> NEPTOOLS_NOLUA
+        template <Type type> LIBSHIT_NOLUA
         void Set(std::variant_alternative_t<static_cast<size_t>(type), Variant> nval)
         { val.emplace(std::in_place_index<type>(std::move(nval))); }
 
@@ -242,13 +248,14 @@ public:
         { return {std::in_place_index<static_cast<size_t>(type)>, std::move(nval)}; }
 
         static Param NewMemOffset(
-            NotNull<LabelPtr> target, AT<Param48> param_4, AT<Param48> param_8)
+            Libshit::NotNull<LabelPtr> target, Libshit::AT<Param48> param_4,
+            Libshit::AT<Param48> param_8)
         {
             return New<Type::MEM_OFFSET>({
                 std::move(target), std::move(param_4.Get()),
                 std::move(param_8.Get())});
         }
-        static Param NewIndirect(uint32_t param_0, AT<Param48> param_8)
+        static Param NewIndirect(uint32_t param_0, Libshit::AT<Param48> param_8)
         { return New<Type::INDIRECT>({param_0, std::move(param_8.Get())}); }
 
 #undef NEPTOOLS_GEN_TYPES
@@ -266,13 +273,13 @@ public:
     private:
         Variant val;
         static Variant GetVariant(Context& ctx, const Parameter& in);
-    } NEPTOOLS_LUAGEN(post_register="bld.TaggedNew();");
+    } LIBSHIT_LUAGEN(post_register="bld.TaggedNew();");
 
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
     std::vector<Param> params;
 
 private:
-    std::variant<uint32_t, NotNull<LabelPtr>> opcode_target;
+    std::variant<uint32_t, Libshit::NotNull<LabelPtr>> opcode_target;
 
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os, unsigned indent) const override;
@@ -285,7 +292,7 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p);
 }
 }
 
-NEPTOOLS_ENUM(Neptools::Stcm::InstructionItem::Param48::Type);
-NEPTOOLS_ENUM(Neptools::Stcm::InstructionItem::Param::Type);
+LIBSHIT_ENUM(Neptools::Stcm::InstructionItem::Param48::Type);
+LIBSHIT_ENUM(Neptools::Stcm::InstructionItem::Param::Type);
 
 #endif

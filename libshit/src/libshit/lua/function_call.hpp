@@ -2,7 +2,7 @@
 #define UUID_C721F2E1_C293_4D82_8244_2AA0F1B26774
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
@@ -10,7 +10,7 @@
 
 #include <brigand/sequences/list.hpp>
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 template <typename... Args> struct TupleLike<std::tuple<Args...>>
@@ -229,7 +229,7 @@ auto CatchInvoke(StateRef vm, Args&&... args) -> typename std::enable_if<
     catch (const std::exception& e)
     {
         ToLuaException(vm);
-        NEPTOOLS_UNREACHABLE("lua_error returned");
+        LIBSHIT_UNREACHABLE("lua_error returned");
     }
 }
 

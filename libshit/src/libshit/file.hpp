@@ -12,7 +12,7 @@
 #include <brigand/sequences/back.hpp>
 #include <brigand/sequences/list.hpp>
 
-namespace Neptools
+namespace Libshit
 {
 
 template <char... Args> struct StringContainer
@@ -90,17 +90,17 @@ using FileName =
 }
 }
 
-#define NEPTOOLS_FILE \
-    NEPTOOLS_LITERAL_CHARPACK(::Neptools::FileTools::FileName, __FILE__).str
-#define NEPTOOLS_WFILE \
-    NEPTOOLS_LITERAL_CHARPACK(::Neptools::FileTools::FileName, __FILE__).wstr
+#define LIBSHIT_FILE \
+    LIBSHIT_LITERAL_CHARPACK(::Libshit::FileTools::FileName, __FILE__).str
+#define LIBSHIT_WFILE \
+    LIBSHIT_LITERAL_CHARPACK(::Libshit::FileTools::FileName, __FILE__).wstr
 
 // boost doesn't check __clang__, and falls back to some simpler implementation
 #if defined(__GNUC__) || defined(__clang__)
-#  define NEPTOOLS_FUNCTION __PRETTY_FUNCTION__
+#  define LIBSHIT_FUNCTION __PRETTY_FUNCTION__
 #else
 #  include <boost/current_function.hpp>
-#  define NEPTOOLS_FUNCTION BOOST_CURRENT_FUNCTION
+#  define LIBSHIT_FUNCTION BOOST_CURRENT_FUNCTION
 #endif
 
 #endif

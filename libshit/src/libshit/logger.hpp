@@ -7,7 +7,7 @@
 
 #include <iosfwd>
 
-namespace Neptools
+namespace Libshit
 {
 
 class OptionGroup;
@@ -34,31 +34,31 @@ std::ostream& Log(
     const char* fun);
 
 #ifdef NDEBUG
-#  define NEPTOOLS_LOG_ARGS nullptr, 0, nullptr
+#  define LIBSHIT_LOG_ARGS nullptr, 0, nullptr
 #else
-#  define NEPTOOLS_LOG_ARGS NEPTOOLS_FILE, __LINE__, NEPTOOLS_FUNCTION
+#  define LIBSHIT_LOG_ARGS LIBSHIT_FILE, __LINE__, LIBSHIT_FUNCTION
 #endif
 
-#define NEPTOOLS_LOG(name, level)                           \
-    ::Neptools::Logger::CheckLog(name, level) &&            \
-    ::Neptools::Logger::Log(name, level, NEPTOOLS_LOG_ARGS)
+#define LIBSHIT_LOG(name, level)                           \
+    ::Libshit::Logger::CheckLog(name, level) &&            \
+    ::Libshit::Logger::Log(name, level, LIBSHIT_LOG_ARGS)
 
-#define NEPTOOLS_ERR(name)  NEPTOOLS_LOG(name, ::Neptools::Logger::ERROR)
-#define NEPTOOLS_WARN(name) NEPTOOLS_LOG(name, ::Neptools::Logger::WARNING)
-#define NEPTOOLS_INFO(name) NEPTOOLS_LOG(name, ::Neptools::Logger::INFO)
+#define LIBSHIT_ERR(name)  LIBSHIT_LOG(name, ::Libshit::Logger::ERROR)
+#define LIBSHIT_WARN(name) LIBSHIT_LOG(name, ::Libshit::Logger::WARNING)
+#define LIBSHIT_INFO(name) LIBSHIT_LOG(name, ::Libshit::Logger::INFO)
 
 #ifndef NDEBUG
-#  define NEPTOOLS_DBG(name, level)                                             \
+#  define LIBSHIT_DBG(name, level)                                             \
     ([]{static_assert(0 <= (level) && (level) < 5, "invalid debug level");},1) && \
-    NEPTOOLS_LOG(name, level)
+    LIBSHIT_LOG(name, level)
 #else
-#  define NEPTOOLS_DBG(name, level) \
+#  define LIBSHIT_DBG(name, level) \
     while (false) *static_cast<std::ostream*>(nullptr)
 #endif
 
 }
 }
 
-NEPTOOLS_ENUM(Neptools::Logger::Level);
+LIBSHIT_ENUM(Libshit::Logger::Level);
 
 #endif

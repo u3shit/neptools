@@ -2,7 +2,7 @@
 #define UUID_8BEC2FCA_66B2_48E5_A689_E29590320829
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 #define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(name, ...)
 #define NEPTOOLS_DYNAMIC_STRUCT_TABLECTOR(...)
 #else
@@ -37,7 +37,7 @@ constexpr size_t IndexOf = IndexOfImpl<T, 0, Args...>::VALUE;
 template <typename T>
 struct DynamicStructTypeTraitsName
 {
-    static constexpr const char* NAME = Lua::TYPE_NAME<T>;
+    static constexpr const char* NAME = Libshit::Lua::TYPE_NAME<T>;
 };
 
 }
@@ -45,15 +45,15 @@ struct DynamicStructTypeTraitsName
 template <typename T, typename Enable = void>
 struct DynamicStructTypeTraits : Detail::DynamicStructTypeTraitsName<T>
 {
-    static void Push(Lua::StateRef vm, const void* ptr, size_t size)
+    static void Push(Libshit::Lua::StateRef vm, const void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(T)); (void) size;
+        LIBSHIT_ASSERT(size == sizeof(T)); (void) size;
         vm.Push(*static_cast<const T*>(ptr));
     }
 
-    static void Get(Lua::StateRef vm, int idx, void* ptr, size_t size)
+    static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-        NEPTOOLS_ASSERT(size == sizeof(T)); (void) size;
+        LIBSHIT_ASSERT(size == sizeof(T)); (void) size;
         *static_cast<T*>(ptr) = vm.Check<T>(idx);
     }
 
@@ -75,8 +75,8 @@ CNAME(float,    "float");  CNAME(double,   "double");
 template <typename... Args>
 struct DynamicStructTypeInfo
 {
-    void (*push)(Lua::StateRef vm, const void* ptr, size_t size);
-    void (*get)(Lua::StateRef vm, int idx, void* ptr, size_t size);
+    void (*push)(Libshit::Lua::StateRef vm, const void* ptr, size_t size);
+    void (*get)(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size);
     const char* name;
 
     typename boost::uint_value_t<sizeof...(Args)-1>::least index;
@@ -101,55 +101,57 @@ struct DynamicStructBuilderLua
 {
     using FakeClass = typename DynamicStruct<Args...>::TypeBuilder;
 
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     static const DynamicStructTypeInfo<Args...>&
-    GetInfo(Lua::StateRef vm, Lua::Raw<LUA_TSTRING> name)
+    GetInfo(Libshit::Lua::StateRef vm, Libshit::Lua::Raw<LUA_TSTRING> name)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
 
         int r = lua_rawgetp(vm, LUA_REGISTRYINDEX, &infos<Args...>); //+1
-        NEPTOOLS_ASSERT(r);
+        LIBSHIT_ASSERT(r);
         lua_pushvalue(vm, name); //+2
         r = lua_rawget(vm, -2); //+2
-        if (Lua::IsNoneOrNil(r))
+        if (Libshit::Lua::IsNoneOrNil(r))
             luaL_error(vm, "Invalid type %s", vm.Get<const char*, true>(name));
 
-        NEPTOOLS_ASSERT(r == LUA_TLIGHTUSERDATA);
+        LIBSHIT_ASSERT(r == LUA_TLIGHTUSERDATA);
         auto ret = lua_touserdata(vm, -1);
-        NEPTOOLS_ASSERT(ret);
+        LIBSHIT_ASSERT(ret);
         lua_pop(vm, 2); //+0
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top);
+        LIBSHIT_LUA_CHECKTOP(vm, top);
         return *static_cast<DynamicStructTypeInfo<Args...>*>(ret);
     }
 
     // bld:add(type, size) -> bld
-    static Lua::RetNum Add(
-        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING> name, size_t size)
+    static Libshit::Lua::RetNum Add(
+        Libshit::Lua::StateRef vm, FakeClass& bld,
+        Libshit::Lua::Raw<LUA_TSTRING> name, size_t size)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         auto& t = GetInfo(vm, name);
         if (!t.sizable && t.size != size)
             luaL_error(vm, "Type %s is not sizable", t.name);
         bld.Add(t.index, size);
 
         lua_pushvalue(vm, 1);
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 
     // bld:add(type) -> bld
-    static Lua::RetNum Add(
-        Lua::StateRef vm, FakeClass& bld, Lua::Raw<LUA_TSTRING> name)
+    static Libshit::Lua::RetNum Add(
+        Libshit::Lua::StateRef vm, FakeClass& bld,
+        Libshit::Lua::Raw<LUA_TSTRING> name)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         auto& t = GetInfo(vm, name);
         if (t.sizable)
             luaL_error(vm, "Type %s requires size", t.name);
         bld.Add(t.index, t.size);
 
         lua_pushvalue(vm, 1);
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 };
@@ -162,16 +164,17 @@ struct DynamicStructTypeLua
     using BuilderLua = DynamicStructBuilderLua<Args...>;
 
     // type[i] -> {type=string,size=int}|nil
-    static Lua::RetNum Get(Lua::StateRef vm, const FakeClass& t, size_t i) noexcept
+    static Libshit::Lua::RetNum Get(
+        Libshit::Lua::StateRef vm, const FakeClass& t, size_t i) noexcept
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         if (i >= t.item_count)
         {
             lua_pushnil(vm); // +1
-            NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+            LIBSHIT_LUA_CHECKTOP(vm, top+1);
             return 1;
         }
-        NEPTOOLS_ASSERT(t.items[i].idx < sizeof...(Args));
+        LIBSHIT_ASSERT(t.items[i].idx < sizeof...(Args));
 
         const auto& info = infos<Args...>[t.items[i].idx];
         lua_createtable(vm, 0, 2); // +1
@@ -181,25 +184,25 @@ struct DynamicStructTypeLua
         lua_pushinteger(vm, info.size); // +2
         lua_setfield(vm, -2, "size"); // +1
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
         return 1;
     }
 
-    static void Get(const FakeClass&, Lua::VarArg) noexcept {}
+    static void Get(const FakeClass&, Libshit::Lua::VarArg) noexcept {}
 
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     // {"name",size} or {name="name",size=size}
     // size optional
-    static void AddTableType(Lua::StateRef vm, Builder& bld)
+    static void AddTableType(Libshit::Lua::StateRef vm, Builder& bld)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
         int size_type = LUA_TSTRING; // whatever, just be invalid
         if (lua_rawgeti(vm, -1, 1) == LUA_TSTRING) // +1
             size_type = lua_rawgeti(vm, -2, 2); // +2
         else if (lua_pop(vm, 1); lua_getfield(vm, -1, "name") == LUA_TSTRING) // +1
             size_type = lua_getfield(vm, -2, "size"); // +2
 
-        if (Lua::IsNoneOrNil(size_type))
+        if (Libshit::Lua::IsNoneOrNil(size_type))
             BuilderLua::Add(vm, bld, {lua_absindex(vm, -2)}); // +3
         else if (size_type == LUA_TNUMBER)
             BuilderLua::Add(vm, bld, {lua_absindex(vm, -2)},
@@ -209,12 +212,12 @@ struct DynamicStructTypeLua
                        "{name=string, size=integer}");
 
         lua_pop(vm, 2);
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
     }
 
     // create from table
     static boost::intrusive_ptr<const FakeClass>
-    New(Lua::StateRef vm, Lua::RawTable tbl)
+    New(Libshit::Lua::StateRef vm, Libshit::Lua::RawTable tbl)
     {
         Builder bld;
         auto [len, one] = vm.RawLen01(tbl);
@@ -241,7 +244,8 @@ struct DynamicStructLua
     using FakeClass = DynamicStruct<Args...>; // must be first
     static_assert(sizeof...(Args) > 0);
 
-    static Lua::RetNum Get(Lua::StateRef vm, const FakeClass& s, size_t i) noexcept
+    static Libshit::Lua::RetNum Get(
+        Libshit::Lua::StateRef vm, const FakeClass& s, size_t i) noexcept
     {
         if (i >= s.GetSize())
         {
@@ -249,29 +253,30 @@ struct DynamicStructLua
             return 1;
         }
         auto idx = s.GetTypeIndex(i);
-        NEPTOOLS_ASSERT(idx < sizeof...(Args));
+        LIBSHIT_ASSERT(idx < sizeof...(Args));
         infos<Args...>[idx].push(vm, s.GetData(i), s.GetSize(i));
         return 1;
     }
-    static void Get(const FakeClass&, Lua::VarArg) noexcept {}
+    static void Get(const FakeClass&, Libshit::Lua::VarArg) noexcept {}
 
-    static void Set(Lua::StateRef vm, FakeClass& s, size_t i, Lua::Any val)
+    static void Set(
+        Libshit::Lua::StateRef vm, FakeClass& s, size_t i, Libshit::Lua::Any val)
     {
         if (i >= s.GetSize())
-            NEPTOOLS_THROW(std::out_of_range{"DynamicStruct"});
+            LIBSHIT_THROW(std::out_of_range{"DynamicStruct"});
         auto idx = s.GetTypeIndex(i);
-        NEPTOOLS_ASSERT(idx < sizeof...(Args));
+        LIBSHIT_ASSERT(idx < sizeof...(Args));
         infos<Args...>[idx].get(vm, val, s.GetData(i), s.GetSize(i));
     }
 
-    static Lua::RetNum ToTable(Lua::StateRef vm, FakeClass& s)
+    static Libshit::Lua::RetNum ToTable(Libshit::Lua::StateRef vm, FakeClass& s)
     {
         auto size = s.GetSize();
         lua_createtable(vm, size ? size-1 : size, 0); // +1
         for (size_t i = 0; i < size; ++i)
         {
             auto idx = s.GetTypeIndex(i);
-            NEPTOOLS_ASSERT(idx < sizeof...(Args));
+            LIBSHIT_ASSERT(idx < sizeof...(Args));
             infos<Args...>[idx].push(vm, s.GetData(i), s.GetSize(i)); // +2
             lua_rawseti(vm, -2, i); // +1
         }
@@ -279,8 +284,8 @@ struct DynamicStructLua
     }
 
     static boost::intrusive_ptr<FakeClass> New(
-        Lua::StateRef vm, const typename FakeClass::TypePtr type,
-        Lua::RawTable vals)
+        Libshit::Lua::StateRef vm, const typename FakeClass::TypePtr type,
+        Libshit::Lua::RawTable vals)
     {
         auto s = FakeClass::New(type);
         size_t i = 0;
@@ -289,7 +294,7 @@ struct DynamicStructLua
         return s;
     }
 
-    NEPTOOLS_NOLUA static void Register(Lua::TypeBuilder& bld)
+    LIBSHIT_NOLUA static void Register(Libshit::Lua::TypeBuilder& bld)
     {
         // create type table
         lua_createtable(bld, sizeof...(Args)-1, 0); //+1
@@ -313,9 +318,9 @@ struct DynamicStructLua
     /* workaround can't specialize for nested classes in template class, because\
        well, including a wrapper around cairo in the standard is more important \
        than fixing problems like this */                                        \
-    template<> struct Neptools::Lua::GetTableCtor<                              \
+    template<> struct Libshit::Lua::GetTableCtor<                               \
         boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>> \
-        : std::integral_constant<::Neptools::Lua::TableCtorPtr<                 \
+        : std::integral_constant<::Libshit::Lua::TableCtorPtr<                  \
             boost::intrusive_ptr<const ::Neptools::DynamicStruct<__VA_ARGS__>::Type>>, \
             ::Neptools::DynamicStructTypeLua<__VA_ARGS__>::New> {}
 #define NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(nam, ...)                                \
@@ -323,16 +328,16 @@ struct DynamicStructLua
     template struct ::Neptools::DynamicStructLua<__VA_ARGS__>;                  \
     template struct ::Neptools::DynamicStructBuilderLua<__VA_ARGS__>;           \
     template struct ::Neptools::DynamicStructTypeLua<__VA_ARGS__>;              \
-    template<> struct Neptools::Lua::GetTableCtor<                              \
-        Neptools::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>> \
-        : std::integral_constant<::Neptools::Lua::TableCtorPtr<                 \
-            Neptools::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>>, \
-            nullptr> {};             \
-    NEPTOOLS_LUA_TEMPLATE(DynStructBind##nam, (name=#nam),                      \
+    template<> struct Libshit::Lua::GetTableCtor<                               \
+        ::Libshit::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>> \
+        : std::integral_constant<::Libshit::Lua::TableCtorPtr<                  \
+            ::Libshit::NotNull<boost::intrusive_ptr<::Neptools::DynamicStruct<__VA_ARGS__>>>>, \
+            nullptr> {};                                                        \
+    LIBSHIT_LUA_TEMPLATE(DynStructBind##nam, (name=#nam),                       \
                           ::Neptools::DynamicStruct<__VA_ARGS__>);              \
-    NEPTOOLS_LUA_TEMPLATE(DynStructTypeBind##nam, (name=#nam..".type"),         \
+    LIBSHIT_LUA_TEMPLATE(DynStructTypeBind##nam, (name=#nam..".type"),          \
                           ::Neptools::DynamicStruct<__VA_ARGS__>::Type);        \
-    NEPTOOLS_LUA_TEMPLATE(DynStructBldBind##nam, (name=#nam..".builder"),       \
+    LIBSHIT_LUA_TEMPLATE(DynStructBldBind##nam, (name=#nam..".builder"),        \
                           ::Neptools::DynamicStruct<__VA_ARGS__>::TypeBuilder)
 
 #endif

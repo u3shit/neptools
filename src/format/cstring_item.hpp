@@ -10,7 +10,7 @@ namespace Neptools
 
 class CStringItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     CStringItem(Key k, Context& ctx, std::string string)
         : Item{k, ctx}, string{std::move(string)} {}

@@ -11,7 +11,7 @@ namespace Stsc
 
 void HeaderItem::Header::Validate(FilePosition size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stsc::HeaderItem::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stsc::HeaderItem::Header", x)
     VALIDATE(memcmp(magic, "STSC", 4) == 0);
     VALIDATE(entry_point < size - 1);
     VALIDATE((flags & ~0x07) == 0);
@@ -25,7 +25,7 @@ void HeaderItem::Header::Validate(FilePosition size) const
 }
 
 HeaderItem::HeaderItem(Key k, Context& ctx, Source src)
-    : Item{k, ctx}, entry_point{EmptyNotNull{}}
+    : Item{k, ctx}, entry_point{Libshit::EmptyNotNull{}}
 {
     AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }

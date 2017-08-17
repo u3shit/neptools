@@ -42,7 +42,7 @@ def options(opt):
     grp.add_option('--optimize', action='store_true', default=False,
                    help='Enable some default optimizations')
     grp.add_option('--optimize-ext', action='store_true', default=False,
-                   help='Optimize ext libs even if Neptools is in debug mode')
+                   help='Optimize ext libs even if %s is in debug mode' % app.title())
     grp.add_option('--release', action='store_true', default=False,
                    help='Enable some flags for release builds')
     grp.add_option('--without-lua', action='store_true', default=False,
@@ -84,7 +84,7 @@ def configure(cfg):
     cfg.env.CROSS = cross
     cfg.environ = environ
 
-    # override flags specific to neptools/bundled libraries
+    # override flags specific to app/bundled libraries
     for v in [app, 'EXT']:
         cfg.add_os_flags('CPPFLAGS_'+v, dup=False)
         cfg.add_os_flags('CFLAGS_'+v, dup=False)
@@ -205,7 +205,7 @@ int main() { return 0; }
         cfg.check_cxx(lib='user32')
 
     if cfg.options.without_lua:
-        cfg.define('NEPTOOLS_WITHOUT_LUA', 1)
+        cfg.define('LIBSHIT_WITHOUT_LUA', 1)
         cfg.env.WITHOUT_LUA = True
 
     Logs.pprint('NORMAL', 'Configuring ext '+variant)

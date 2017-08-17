@@ -16,15 +16,16 @@ namespace Neptools
 {
 
 class OpenFactory
-    : public BaseFactory<SmartPtr<Dumpable> (*)(Source)>, public Lua::StaticClass
+    : public BaseFactory<Libshit::SmartPtr<Dumpable> (*)(Source)>,
+      public Libshit::Lua::StaticClass
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
-    using Ret = SmartPtr<Dumpable>;
-    NEPTOOLS_NOLUA OpenFactory(BaseFactory::Fun f) : BaseFactory{f} {}
+    using Ret = Libshit::SmartPtr<Dumpable>;
+    LIBSHIT_NOLUA OpenFactory(BaseFactory::Fun f) : BaseFactory{f} {}
 
-    static NotNull<Ret> Open(Source src);
-    static NotNull<Ret> Open(const boost::filesystem::path& fname);
+    static Libshit::NotNull<Ret> Open(Source src);
+    static Libshit::NotNull<Ret> Open(const boost::filesystem::path& fname);
 };
 
 }

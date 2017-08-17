@@ -14,11 +14,11 @@ using LinkMode = boost::intrusive::link_mode<boost::intrusive::normal_link>;
 using LinkMode = boost::intrusive::link_mode<boost::intrusive::safe_link>;
 #endif
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(ContainerConsistency, std::logic_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(ContainerConsistency, std::logic_error);
 // trying to add an already linked item to an intrusive container
-NEPTOOLS_GEN_EXCEPTION_TYPE(ItemAlreadyAdded, ContainerConsistency);
+LIBSHIT_GEN_EXCEPTION_TYPE(ItemAlreadyAdded, ContainerConsistency);
 // item not linked, linked to a different container, item is a root node, ...
-NEPTOOLS_GEN_EXCEPTION_TYPE(ItemNotInContainer, ContainerConsistency);
+LIBSHIT_GEN_EXCEPTION_TYPE(ItemNotInContainer, ContainerConsistency);
 
 }
 

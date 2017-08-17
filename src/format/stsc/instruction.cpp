@@ -15,11 +15,11 @@ namespace Stsc
 // helpers for generic CreateAndInsert
 namespace
 {
-using CreateType = NotNull<SmartPtr<InstructionBase>>
+using CreateType = Libshit::NotNull<Libshit::SmartPtr<InstructionBase>>
     (*)(Context&, const Source&);
 
 template <uint8_t I>
-NotNull<SmartPtr<InstructionBase>>
+Libshit::NotNull<Libshit::SmartPtr<InstructionBase>>
 CreateAdapt(Context& ctx, const Source& src)
 { return ctx.Create<InstructionItem<I>>(I, src); }
 
@@ -153,9 +153,9 @@ template<> struct Traits<void*>
     static constexpr const size_t SIZE = 4;
 
     static void Validate(uint32_t r, FilePosition size)
-    { NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction", r <= size); }
+    { LIBSHIT_VALIDATE_FIELD("Stsc::Instruction", r <= size); }
 
-    static NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
+    static Libshit::NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
     { return ctx.GetLabelTo(r); }
 
     static RawType Dump(const LabelPtr& l)
@@ -169,7 +169,7 @@ template<> struct Traits<void*>
 
 template<> struct Traits<std::string> : public Traits<void*>
 {
-    static NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
+    static Libshit::NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
     {
         auto ptr = ctx.GetPointer(r);
         if (ptr.Maybe<RawItem>())
@@ -260,8 +260,8 @@ void SimpleInstruction<NoReturn, Args...>::Parse_(Context& ctx, Source& src)
 {
     src.CheckSize(SIZE);
     using Tuple = PODTuple<typename Traits<Args>::RawType...>;
-    NEPTOOLS_STATIC_ASSERT(std::is_pod<Tuple>::value);
-    NEPTOOLS_STATIC_ASSERT(EmptySizeof<Tuple> == Operations<Args...>::Size());
+    static_assert(std::is_pod<Tuple>::value);
+    static_assert(Libshit::EmptySizeof<Tuple> == Operations<Args...>::Size());
 
     auto raw = src.ReadGen<Tuple>();
 
@@ -316,7 +316,7 @@ void Instruction0dItem::Parse_(Context& ctx, Source& src)
     for (size_t i = 0; i < n; ++i)
     {
         uint32_t t = src.ReadLittleUint32();
-        NEPTOOLS_VALIDATE_FIELD(
+        LIBSHIT_VALIDATE_FIELD(
             "Stsc::Instruction0dItem", t < ctx.GetSize());
         tgts.push_back(ctx.GetLabelTo(t));
     }
@@ -354,7 +354,7 @@ void Instruction0dItem::PostInsert()
 void Instruction1dItem::FixParams::Validate(
     FilePosition rem_size, FilePosition size)
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction1dItem::FixParams", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1dItem::FixParams", x)
     VALIDATE(this->size * sizeof(NodeParams) <= rem_size);
     VALIDATE(tgt < size);
 #undef VALIDATE
@@ -362,7 +362,7 @@ void Instruction1dItem::FixParams::Validate(
 
 void Instruction1dItem::NodeParams::Validate(uint16_t size)
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction1dItem::NodeParams", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1dItem::NodeParams", x)
     VALIDATE(left <= size);
     VALIDATE(right <= size);
 #undef VALIDATE
@@ -370,7 +370,7 @@ void Instruction1dItem::NodeParams::Validate(uint16_t size)
 
 Instruction1dItem::Instruction1dItem(
     Key k, Context& ctx, uint8_t opcode, Source src)
-    : InstructionBase{k, ctx, opcode}, tgt{EmptyNotNull{}}
+    : InstructionBase{k, ctx, opcode}, tgt{Libshit::EmptyNotNull{}}
 {
     AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, ctx, src);
 }
@@ -440,13 +440,13 @@ void Instruction1dItem::PostInsert()
 
 void Instruction1eItem::FixParams::Validate(FilePosition rem_size)
 {
-    NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction1eItem::FixParams",
+    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1eItem::FixParams",
                             size * sizeof(ExpressionParams) <= rem_size);
 }
 
 void Instruction1eItem::ExpressionParams::Validate(FilePosition size)
 {
-    NEPTOOLS_VALIDATE_FIELD("Stsc::Instruction1eItem::ExpressionParams",
+    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1eItem::ExpressionParams",
                             tgt < size);
 }
 
@@ -516,14 +516,14 @@ void Instruction1eItem::PostInsert()
 }
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-namespace Neptools::Lua
+#ifndef LIBSHIT_WITHOUT_LUA
+namespace Libshit::Lua
 {
 
 template <bool NoReturn, typename... Args>
-struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
+struct TypeRegisterTraits<Neptools::Stsc::SimpleInstruction<NoReturn, Args...>>
 {
-    using T = Stsc::SimpleInstruction<NoReturn, Args...>;
+    using T = Neptools::Stsc::SimpleInstruction<NoReturn, Args...>;
 
     template <size_t I>
     static RetNum Get(StateRef vm, T& instr, int idx)
@@ -552,16 +552,16 @@ struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
 
     static void Register(TypeBuilder& bld)
     {
-        bld.Inherit<Stsc::InstructionBase>();
+        bld.Inherit<Neptools::Stsc::InstructionBase>();
 
         // that tuple constructors can blow up exponentially, disable overload
         // check (tuple constructors can't take source, so it should be ok)
         bld.AddFunction<
             TypeTraits<T>::template Make<
-                Context::Key, Context&, uint8_t, Source&>,
+                Neptools::Context::Key, Neptools::Context&, uint8_t, Neptools::Source&>,
             TypeTraits<T>::template Make<
-                Context::Key, Context&, uint8_t,
-                LuaGetRef<Stsc::TupleTypeMapT<Args>>...>
+                Neptools::Context::Key, Neptools::Context&, uint8_t,
+                LuaGetRef<Neptools::Stsc::TupleTypeMapT<Args>>...>
         >("new");
 
         bld.AddFunction<&Get<0>>("get");
@@ -571,7 +571,7 @@ struct TypeRegisterTraits<Stsc::SimpleInstruction<NoReturn, Args...>>
 
 namespace
 {
-struct NEPTOOLS_NOLUA InstructionItem : StaticClass
+struct LIBSHIT_NOLUA InstructionItem : StaticClass
 {
     constexpr static char TYPE_NAME[] = "neptools.stsc.instruction_item";
 };
@@ -583,7 +583,8 @@ template <size_t... Idx> struct InstructionReg<std::index_sequence<Idx...>>
     static void Register(TypeBuilder& bld)
     {
         auto vm = bld.GetVm();
-        ((TypeRegister::Register<Stsc::InstructionItem<Idx>>(vm), lua_rawseti(vm, -3, Idx)), ...);
+        ((TypeRegister::Register<Neptools::Stsc::InstructionItem<Idx>>(vm),
+          lua_rawseti(vm, -3, Idx)), ...);
     }
 };
 
@@ -598,7 +599,7 @@ static TypeRegister::StateRegister<InstructionItem> reg;
 
 #include "../../container/vector.lua.hpp"
 NEPTOOLS_STD_VECTOR_LUAGEN(
-    label, Neptools::NotNull<Neptools::LabelPtr>);
+    label, Libshit::NotNull<Neptools::LabelPtr>);
 NEPTOOLS_STD_VECTOR_LUAGEN(
     stsc_instruction1d_item_node, Neptools::Stsc::Instruction1dItem::Node);
 NEPTOOLS_STD_VECTOR_LUAGEN(

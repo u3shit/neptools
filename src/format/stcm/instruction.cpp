@@ -18,7 +18,7 @@ namespace Stcm
 
 static void Param48Validate(uint32_t param, FilePosition file_size)
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm Param48", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm Param48", x)
     switch (IP::TypeTag(param))
     {
     case IP::Type48::MEM_OFFSET:
@@ -40,7 +40,7 @@ static void Param48Validate(uint32_t param, FilePosition file_size)
 
 void InstructionItem::Parameter::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::InstructionItem::Parameter", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::InstructionItem::Parameter", x)
     switch (TypeTag(param_0))
     {
     case Type0::MEM_OFFSET:
@@ -84,7 +84,7 @@ void InstructionItem::Parameter::Validate(FilePosition file_size) const
 
 void InstructionItem::Header::Validate(FilePosition file_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::InstructionItem::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::InstructionItem::Header", x)
     VALIDATE(is_call == 0 || is_call == 1);
     VALIDATE(param_count < 16);
     VALIDATE(size >= sizeof(Header) + param_count*sizeof(Parameter));
@@ -159,10 +159,10 @@ auto InstructionItem::Param::GetVariant(Context& ctx, const Parameter& in)
         else if (in.param_0 == Parameter::Type0Special::COLL_LINK)
             RETVAR(COLL_LINK, ctx.GetLabelTo(in.param_4));
         else
-            NEPTOOLS_UNREACHABLE("Invalid special parameter type");
+            LIBSHIT_UNREACHABLE("Invalid special parameter type");
     }
 
-    NEPTOOLS_UNREACHABLE("Invalid parameter type");
+    LIBSHIT_UNREACHABLE("Invalid parameter type");
 }
 
 void InstructionItem::Param::Dump(Sink& sink) const
@@ -251,7 +251,7 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param& p)
     case T::COLL_LINK:
         return os << "{'coll_link', " << PrintLabel(p.Get<T::COLL_LINK>()) << '}';
     }
-    NEPTOOLS_UNREACHABLE("Invalid type");
+    LIBSHIT_UNREACHABLE("Invalid type");
 }
 
 
@@ -280,11 +280,11 @@ auto InstructionItem::Param48::GetVariant(Context& ctx, uint32_t in) -> Variant
             RETVAR(READ_4AC, in - Parameter::Type48Special::READ_4AC_MIN);
         }
         else
-            NEPTOOLS_UNREACHABLE("Invalid 48Special param");
+            LIBSHIT_UNREACHABLE("Invalid 48Special param");
     }
 #undef RETVAR
 
-    NEPTOOLS_UNREACHABLE("Invalid 48 param");
+    LIBSHIT_UNREACHABLE("Invalid 48 param");
 }
 
 std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
@@ -304,7 +304,7 @@ std::ostream& operator<<(std::ostream& os, const InstructionItem::Param48& p)
         return os << "{'read_4ac', " << p.Get<T::READ_4AC>() << '}';
     }
 
-    NEPTOOLS_UNREACHABLE("Invalid 48 param");
+    LIBSHIT_UNREACHABLE("Invalid 48 param");
 }
 
 static const std::set<uint32_t> no_returns{0, 6};
@@ -324,7 +324,7 @@ InstructionItem& InstructionItem::CreateAndInsert(ItemPointer ptr)
     if (rem_data)
         ret.MoveNextToChild(rem_data);
 
-    NEPTOOLS_ASSERT(ret.GetSize() == inst.size);
+    LIBSHIT_ASSERT(ret.GetSize() == inst.size);
 
     // recursive parse
     if (ret.IsCall())
@@ -375,7 +375,7 @@ uint32_t InstructionItem::Param48::Dump() const noexcept
     case Type::READ_4AC:
         return Parameter::Type48Special::READ_4AC_MIN + Get<Type::READ_4AC>();
     }
-    NEPTOOLS_UNREACHABLE("Invalid Param48 Type stored");
+    LIBSHIT_UNREACHABLE("Invalid Param48 Type stored");
 }
 
 void InstructionItem::Fixup()

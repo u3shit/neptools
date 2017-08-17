@@ -21,11 +21,12 @@ namespace Neptools
 class ItemWithChildren;
 struct ItemListTraits;
 
-NEPTOOLS_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
 
-class Item : public RefCounted, public Dumpable, public ParentListBaseHook<>
+class Item :
+        public Libshit::RefCounted, public Dumpable, public ParentListBaseHook<>
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 protected:
     struct Key {};
 public:
@@ -40,38 +41,40 @@ public:
     void operator=(const Item&) = delete;
     virtual ~Item();
 
-    RefCountedPtr<Context> GetContextMaybe() noexcept
+    Libshit::RefCountedPtr<Context> GetContextMaybe() noexcept
     { return context.lock(); }
-    NotNull<RefCountedPtr<Context>> GetContext()
-    { return NotNull<RefCountedPtr<Context>>{context}; }
-    NEPTOOLS_NOLUA Context& GetUnsafeContext() noexcept
+    Libshit::NotNull<Libshit::RefCountedPtr<Context>> GetContext()
+    { return Libshit::NotNull<Libshit::RefCountedPtr<Context>>{context}; }
+    LIBSHIT_NOLUA Context& GetUnsafeContext() noexcept
     { return *context.unsafe_get(); }
     ItemWithChildren* GetParent() noexcept;
 
-    NEPTOOLS_NOLUA RefCountedPtr<const Context> GetContextMaybe() const noexcept
+    LIBSHIT_NOLUA Libshit::RefCountedPtr<const Context>
+    GetContextMaybe() const noexcept
     { return context.lock(); }
-    NEPTOOLS_NOLUA NotNull<RefCountedPtr<const Context>> GetContext() const
-    { return NotNull<RefCountedPtr<const Context>>{context}; }
-    NEPTOOLS_NOLUA const Context& GetUnsafeContext() const noexcept
+    LIBSHIT_NOLUA Libshit::NotNull<Libshit::RefCountedPtr<const Context>>
+    GetContext() const
+    { return Libshit::NotNull<Libshit::RefCountedPtr<const Context>>{context}; }
+    LIBSHIT_NOLUA const Context& GetUnsafeContext() const noexcept
     { return *context.unsafe_get(); }
-    NEPTOOLS_NOLUA const ItemWithChildren* GetParent() const noexcept;
-    NEPTOOLS_NOLUA auto Iterator() const noexcept;
-    NEPTOOLS_NOLUA auto Iterator() noexcept;
+    LIBSHIT_NOLUA const ItemWithChildren* GetParent() const noexcept;
+    LIBSHIT_NOLUA auto Iterator() const noexcept;
+    LIBSHIT_NOLUA auto Iterator() noexcept;
 
     FilePosition GetPosition() const noexcept { return position; }
 
-    template <typename Checker = Check::Assert>
-    void Replace(const NotNull<RefCountedPtr<Item>>& nitem)
+    template <typename Checker = Libshit::Check::Assert>
+    void Replace(const Libshit::NotNull<Libshit::RefCountedPtr<Item>>& nitem)
     {
-        NEPTOOLS_CHECK(InvalidItemState, GetParent(), "no parent");
+        LIBSHIT_CHECK(InvalidItemState, GetParent(), "no parent");
         if constexpr (!Checker::IS_NOP)
         {
             auto nsize = nitem->GetSize();
             for (auto& l : labels)
-                NEPTOOLS_CHECK(InvalidItemState, l.GetPtr().offset <= nsize,
+                LIBSHIT_CHECK(InvalidItemState, l.GetPtr().offset <= nsize,
                                "would invalidate labels");
         }
-        NEPTOOLS_CHECK(InvalidItemState, nitem->labels.empty(),
+        LIBSHIT_CHECK(InvalidItemState, nitem->labels.empty(),
                        "new item has labels");
         Replace_(nitem);
     }
@@ -83,7 +86,7 @@ public:
         boost::intrusive::base_hook<LabelOffsetHook>,
         boost::intrusive::constant_time_size<false>,
         boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
-    NEPTOOLS_LUAGEN(wrap="TableRetWrap")
+    LIBSHIT_LUAGEN(wrap="TableRetWrap")
     const LabelsContainer& GetLabels() const { return labels; }
 
     void Dispose() noexcept override;
@@ -93,27 +96,28 @@ protected:
 
     void Inspect_(std::ostream& os, unsigned indent) const override = 0;
 
-    using SlicePair = std::pair<NotNull<RefCountedPtr<Item>>, FilePosition>;
+    using SlicePair = std::pair<Libshit::NotNull<
+        Libshit::RefCountedPtr<Item>>, FilePosition>;
     using SliceSeq = std::vector<SlicePair>;
     void Slice(SliceSeq seq);
 
     FilePosition position;
 
 private:
-    WeakRefCountedPtr<Context> context;
+    Libshit::WeakRefCountedPtr<Context> context;
 
     LabelsContainer labels;
 
-    void Replace_(const NotNull<RefCountedPtr<Item>>& nitem);
+    void Replace_(const Libshit::NotNull<Libshit::RefCountedPtr<Item>>& nitem);
     virtual void Removed();
 
     friend class Context;
     friend struct ItemListTraits;
     friend class ItemWithChildren;
-    template <typename, typename> friend struct Lua::TypeRegisterTraits;
+    template <typename, typename> friend struct Libshit::Lua::TypeRegisterTraits;
 };
-NEPTOOLS_STATIC_ASSERT(
-    std::is_same<SmartPtr<Item>, RefCountedPtr<Item>>::value);
+static_assert(
+    std::is_same_v<Libshit::SmartPtr<Item>, Libshit::RefCountedPtr<Item>>);
 
 std::ostream& operator<<(std::ostream& os, const Item& item);
 inline FilePosition ToFilePos(ItemPointer ptr) noexcept
@@ -135,18 +139,18 @@ inline auto Item::Iterator() noexcept
 
 class ItemWithChildren : public Item, private ItemList
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
     using Item::Item;
 
-    NEPTOOLS_LUAGEN(wrap="OwnedSharedPtrWrap")
+    LIBSHIT_LUAGEN(wrap="OwnedSharedPtrWrap")
     ItemList& GetChildren() noexcept { return *this; }
-    NEPTOOLS_NOLUA const ItemList& GetChildren() const noexcept { return *this; }
+    LIBSHIT_NOLUA const ItemList& GetChildren() const noexcept { return *this; }
 
     FilePosition GetSize() const override;
     void Fixup() override { Fixup_(0); }
 
-    NEPTOOLS_NOLUA void MoveNextToChild(size_t size) noexcept;
+    LIBSHIT_NOLUA void MoveNextToChild(size_t size) noexcept;
 
     void Dispose() noexcept override;
 
@@ -160,8 +164,8 @@ private:
 
     friend struct ::Neptools::ItemListTraits;
     friend class Item;
-} NEPTOOLS_LUAGEN(post_register=[[
-    NEPTOOLS_LUA_RUNBC(bld, builder, 1);
+} LIBSHIT_LUAGEN(post_register=[[
+    LIBSHIT_LUA_RUNBC(bld, builder, 1);
     bld.SetField("build");
 ]]);
 
@@ -170,16 +174,18 @@ inline ItemWithChildren* Item::GetParent() noexcept
 inline const ItemWithChildren* Item::GetParent() const noexcept
 { return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
 
+}
+
 template <typename T>
-struct Lua::SmartObjectMaker<T, std::enable_if_t<
-    std::is_base_of_v<Item, T> && !std::is_base_of_v<Context, T>>>
+struct Libshit::Lua::SmartObjectMaker<T, std::enable_if_t<
+    std::is_base_of_v<Neptools::Item, T> && !std::is_base_of_v<Neptools::Context, T>>>
 {
     template <typename Key, typename Ctx, typename... Args>
     static decltype(auto) Make(std::remove_pointer_t<Ctx>& ctx, Args&&... args)
     { return ctx.template Create<T>(std::forward<Args>(args)...); }
 };
 
-template<> struct Lua::TypeTraits<Item::Key>
+template<> struct Libshit::Lua::TypeTraits<Neptools::Item::Key>
 {
     // HACK
     // Dummy function, needed by LuaGetRef to get above maker to work when
@@ -187,5 +193,4 @@ template<> struct Lua::TypeTraits<Item::Key>
     template <bool> static void Get(Lua::StateRef, bool, int);
 };
 
-}
 #endif

@@ -14,20 +14,21 @@ namespace Stcm
 
 class GbnlItem final : public Item, public Gbnl
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     GbnlItem(Key k, Context& ctx, Source src)
         : Item{k, ctx}, Gbnl{std::move(src)} {}
     GbnlItem(Key k, Context& ctx, bool is_gstl, uint32_t flags,
              uint32_t field_28, uint32_t field_30,
-             AT<Gbnl::Struct::TypePtr> type)
+             Libshit::AT<Gbnl::Struct::TypePtr> type)
         : Item{k, ctx},
           Gbnl{is_gstl, flags, field_28, field_30, std::move(type)} {}
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
     GbnlItem(
-        Key k, Context& ctx, Lua::StateRef vm, bool is_gstl, uint32_t flags,
-        uint32_t field_28, uint32_t field_30, AT<Gbnl::Struct::TypePtr> type,
-        Lua::RawTable messages)
+        Key k, Context& ctx, Libshit::Lua::StateRef vm, bool is_gstl,
+        uint32_t flags, uint32_t field_28, uint32_t field_30,
+        Libshit::AT<Gbnl::Struct::TypePtr> type,
+        Libshit::Lua::RawTable messages)
         : Item{k, ctx},
           Gbnl{vm, is_gstl, flags, field_28, field_30, std::move(type), messages} {}
 #endif
@@ -43,13 +44,9 @@ private:
     { Item::Inspect_(os, indent); Gbnl::InspectGbnl(os, indent); }
 };
 
-}
-
-namespace Lua
-{
-inline DynamicObject& GetDynamicObject(Stcm::GbnlItem& item)
+inline Libshit::Lua::DynamicObject& GetDynamicObject(GbnlItem& item)
 { return static_cast<Item&>(item); }
-}
 
+}
 }
 #endif

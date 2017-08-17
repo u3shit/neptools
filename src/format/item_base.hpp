@@ -16,7 +16,7 @@
 #include <functional>
 #include <boost/intrusive/set_hook.hpp>
 
-namespace Neptools NEPTOOLS_META(alias_file src/format/item.hpp)
+namespace Neptools LIBSHIT_META(alias_file src/format/item.hpp)
 {
 
 class Item;
@@ -52,33 +52,23 @@ struct ItemPointer
     template <typename T>
     T& As0() const
     {
-        NEPTOOLS_ASSERT(offset == 0);
+        LIBSHIT_ASSERT(offset == 0);
         return *asserted_cast<T*>(item);
     }
 
     template <typename T>
     T& AsChecked0() const
     {
-        NEPTOOLS_ASSERT(offset == 0);
+        LIBSHIT_ASSERT(offset == 0);
         return dynamic_cast<T&>(*item);
     }
 
     template <typename T>
     T* Maybe0() const
     {
-        NEPTOOLS_ASSERT(offset == 0);
+        LIBSHIT_ASSERT(offset == 0);
         return dynamic_cast<T*>(item);
     }
-};
-
-template<> struct Lua::TupleLike<ItemPointer>
-{
-    template <size_t I> static auto& Get(const ItemPointer& ptr) noexcept
-    {
-        if constexpr (I == 0) return *ptr.item;
-        else if constexpr (I == 1) return ptr.offset;
-    }
-    static constexpr size_t SIZE = 2;
 };
 
 using LabelNameHook = boost::intrusive::set_base_hook<
@@ -88,10 +78,11 @@ using LabelOffsetHook = boost::intrusive::set_base_hook<
     boost::intrusive::tag<struct OffsetTag>,
     boost::intrusive::optimize_size<true>, LinkMode>;
 
-class Label final : public RefCounted, public Lua::DynamicObject,
-                    public LabelNameHook, public LabelOffsetHook
+class Label final :
+     public Libshit::RefCounted, public Libshit::Lua::DynamicObject,
+     public LabelNameHook, public LabelOffsetHook
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
 
     Label(std::string name, ItemPointer ptr)
@@ -107,8 +98,8 @@ private:
     ItemPointer ptr;
 };
 
-using LabelPtr = RefCountedPtr<Label>;
-using WeakLabelPtr = WeakRefCountedPtr<Label>;
+using LabelPtr = Libshit::RefCountedPtr<Label>;
+using WeakLabelPtr = Libshit::WeakRefCountedPtr<Label>;
 
 // to be used by boost::intrusive::set
 struct LabelKeyOfValue
@@ -125,9 +116,19 @@ struct LabelOffsetKeyOfValue
 
 }
 
-namespace std
+
+template<> struct Libshit::Lua::TupleLike<Neptools::ItemPointer>
 {
-template<> struct hash<::Neptools::ItemPointer>
+    template <size_t I> static auto& Get(
+        const Neptools::ItemPointer& ptr) noexcept
+    {
+        if constexpr (I == 0) return *ptr.item;
+        else if constexpr (I == 1) return ptr.offset;
+    }
+    static constexpr size_t SIZE = 2;
+};
+
+template<> struct std::hash<::Neptools::ItemPointer>
 {
     std::size_t operator()(const ::Neptools::ItemPointer& ptr) const
     {
@@ -135,6 +136,5 @@ template<> struct hash<::Neptools::ItemPointer>
             hash<::Neptools::FilePosition>()(ptr.offset);
     }
 };
-}
 
 #endif

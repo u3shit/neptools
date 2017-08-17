@@ -2,13 +2,13 @@
 #define UUID_4412E558_283B_48F5_9CC2_8CF95EDFC6E5
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "type_traits.hpp"
 
 #include <boost/endian/arithmetic.hpp>
 
-namespace Neptools
+namespace Libshit
 {
 namespace Lua
 {

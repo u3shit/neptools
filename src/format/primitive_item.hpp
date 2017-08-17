@@ -14,7 +14,7 @@ class PrimitiveItem final : public Item
 {
     static_assert(sizeof(T) == sizeof(DumpT));
     static_assert(sizeof(T) == sizeof(Endian));
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     using Type = T;
 
@@ -24,7 +24,7 @@ public:
         : Item{k, ctx}
     {
         Union u;
-        src.PreadGen<Check::Throw>(0, u.dump);
+        src.PreadGen<Libshit::Check::Throw>(0, u.dump);
         value = u.native;
     }
     static PrimitiveItem& CreateAndInsert(ItemPointer ptr)
@@ -63,7 +63,7 @@ private:
     x(FloatItem, float, PrimitiveItem<                                          \
       float, int32_t, boost::endian::little_int32_t, 'f','l','o','a','t'>)
 #define NEPTOOLS_GEN(cname, lname, ...)                                         \
-    using cname NEPTOOLS_LUAGEN(fullname="neptools."..#lname.."_item") = __VA_ARGS__
+    using cname LIBSHIT_LUAGEN(fullname="neptools."..#lname.."_item") = __VA_ARGS__
 NEPTOOLS_PRIMITIVE_ITEMS(NEPTOOLS_GEN);
 #undef NEPTOOLS_GEN
 

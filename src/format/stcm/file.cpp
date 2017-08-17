@@ -23,21 +23,21 @@ void File::Parse_(Source& src)
 
 void File::Inspect_(std::ostream& os, unsigned indent) const
 {
-    NEPTOOLS_ASSERT(GetLabels().empty());
+    LIBSHIT_ASSERT(GetLabels().empty());
     os << "neptools.stcm.file()";
     InspectChildren(os, indent);
 }
 
-std::vector<NotNull<SmartPtr<const GbnlItem>>> File::FindGbnl() const
+File::ConstGbnlVect File::FindGbnl() const
 {
-    std::vector<NotNull<SmartPtr<const GbnlItem>>> ret;
+    ConstGbnlVect ret;
     FindGbnl_<const Item, const GbnlItem>(*this, ret);
     return ret;
 }
 
-std::vector<NotNull<SmartPtr<GbnlItem>>> File::FindGbnl()
+File::GbnlVect File::FindGbnl()
 {
-    std::vector<NotNull<SmartPtr<GbnlItem>>> ret;
+    GbnlVect ret;
     FindGbnl_<Item, GbnlItem>(*this, ret);
     return ret;
 }
@@ -56,8 +56,7 @@ using MkPtrT = typename MkPtr<T, Ref>::type;
 }
 
 template <typename ItemT, typename GbnlT>
-void File::FindGbnl_(
-    ItemT& root, std::vector<NotNull<SmartPtr<GbnlT>>>& vect) const
+void File::FindGbnl_(ItemT& root, GbnlVectG<GbnlT>& vect) const
 {
     auto x = dynamic_cast<MkPtrT<Stcm::GbnlItem*, ItemT>>(&root);
     if (x)
@@ -84,13 +83,13 @@ void File::ReadTxt_(std::istream& is)
         x->ReadTxt(is);
 }
 
-static OpenFactory stcm_open{[](Source src) -> SmartPtr<Dumpable>
+static OpenFactory stcm_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
 {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];
     src.PreadGen(0, buf);
     if (memcmp(buf, "STCM", 4) == 0)
-        return MakeSmart<File>(src);
+        return Libshit::MakeSmart<File>(src);
     else
         return nullptr;
 }};

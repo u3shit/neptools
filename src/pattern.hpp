@@ -15,12 +15,12 @@ struct Pattern
     const Byte* mask;
     size_t size;
 
-    const Byte* MaybeFind(StringView data) const noexcept;
+    const Byte* MaybeFind(Libshit::StringView data) const noexcept;
 
-    const Byte* Find(StringView data) const
+    const Byte* Find(Libshit::StringView data) const
     {
         auto ret = MaybeFind(data);
-        if (!ret) NEPTOOLS_THROW(std::runtime_error{"Couldn't find pattern"});
+        if (!ret) LIBSHIT_THROW(std::runtime_error{"Couldn't find pattern"});
         return ret;
     }
 };

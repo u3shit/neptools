@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::EofItem::TYPE_NAME[] = "neptools.eof_item";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.eof_item
@@ -15,7 +15,7 @@ void TypeRegisterTraits<::Neptools::EofItem>::Register(TypeBuilder& bld)
     bld.Inherit<::Neptools::EofItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
+        &::Libshit::Lua::TypeTraits<::Neptools::EofItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
     >("new");
 
 }

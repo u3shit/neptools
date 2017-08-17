@@ -9,7 +9,7 @@ namespace Neptools
 
 class EofItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     EofItem(Key k, Context& ctx) : Item{k, ctx} {}
 

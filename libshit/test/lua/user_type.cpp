@@ -5,8 +5,8 @@
 
 #define FT(x) decltype(&x), &x
 
-using namespace Neptools;
-using namespace Neptools::Lua;
+using namespace Libshit;
+using namespace Libshit::Lua;
 
 static int global;
 
@@ -14,20 +14,20 @@ struct Smart final : public SmartObject
 {
     int x = 0;
 
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 };
 
 struct Foo final : public RefCounted, public DynamicObject
 {
     int local_var = 0;
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetRefCountedOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetRefCountedOwnedMember")
     Smart smart;
     void DoIt(int x) { local_var = x; }
 
     Foo() = default; // no ctor generated otherwise.. (bug?)
     ~Foo() { global += 13; }
 
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 
 namespace Bar
@@ -37,7 +37,7 @@ namespace Baz
 struct Asdfgh final : public DynamicObject
 {
     Asdfgh() = default;
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 }
 }
@@ -48,7 +48,7 @@ struct Baz : public DynamicObject
     void SetGlobal(int val) { global = val; }
     int GetRandom() { return 4; }
 
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 
 TEST_CASE("shared check memory", "[lua]")
@@ -166,14 +166,14 @@ struct A : public DynamicObject
 {
     int x = 0;
 
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 
 struct B : public DynamicObject
 {
     int y = 1;
 
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 
 struct Multi : public A, public B
@@ -181,7 +181,7 @@ struct Multi : public A, public B
     Multi() = default;
     SharedPtr<B> ptr;
 
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 };
 
 static DynamicObject& GetDynamicObject(Multi& m) { return static_cast<A&>(m); }

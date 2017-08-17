@@ -2,9 +2,9 @@
 #define UUID_0DFFCD6C_CA34_4A76_B8D7_1A0B4DF20DC6
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 struct ValueObject {};
@@ -18,11 +18,11 @@ struct ValueObject {};
 #include "userdata.hpp"
 #include "../meta.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // no inheritance support for now
-struct NEPTOOLS_LUAGEN(no_inherit=true,const=true) ValueObject {};
+struct LIBSHIT_LUAGEN(no_inherit=true,const=true) ValueObject {};
 
 // specialize if needed
 template <typename T, typename Enable = void>

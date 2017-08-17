@@ -5,7 +5,7 @@
 namespace Neptools
 {
 
-NEPTOOLS_LUAGEN()
+LIBSHIT_LUAGEN()
 static std::string WriteTxt(TxtSerializable& ser)
 {
     std::stringstream ss;
@@ -13,7 +13,7 @@ static std::string WriteTxt(TxtSerializable& ser)
     return ss.str();
 }
 
-NEPTOOLS_LUAGEN()
+LIBSHIT_LUAGEN()
 static void ReadTxt(TxtSerializable& ser, const std::string& str)
 {
     std::stringstream ss{str};

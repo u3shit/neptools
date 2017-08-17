@@ -12,7 +12,7 @@
 #include "../format/primitive_item.hpp"
 #include "../format/stcm/string_data.hpp"
 
-#define NEPTOOLS_LOG_NAME "server"
+#define LIBSHIT_LOG_NAME "server"
 #include <libshit/logger_helper.hpp>
 
 #define WIN32_LEAN_AND_MEAN
@@ -47,6 +47,7 @@ err:
 }
 
 using namespace Neptools;
+using namespace Libshit;
 
 namespace
 {
@@ -68,13 +69,13 @@ static std::string UnfuckString(wchar_t* str)
     auto req = WideCharToMultiByte(
         CP_ACP, 0, str, -1, nullptr, 0, nullptr, nullptr);
     if (req == 0)
-        NEPTOOLS_THROW(std::runtime_error{"Invalid command line parameters"});
+        LIBSHIT_THROW(std::runtime_error{"Invalid command line parameters"});
     std::string ret;
     ret.resize(req-1);
     auto r2 = WideCharToMultiByte(
         CP_ACP, 0, str, -1, &ret[0], req, nullptr, nullptr);
     if (r2 != req)
-        NEPTOOLS_THROW(std::runtime_error{"Invalid command line parameters"});
+        LIBSHIT_THROW(std::runtime_error{"Invalid command line parameters"});
     return ret;
 }
 

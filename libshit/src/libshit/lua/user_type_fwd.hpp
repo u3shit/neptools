@@ -2,7 +2,7 @@
 #define UUID_4EA5C16A_B4BE_478D_82C5_12ED8E4F72FD
 #pragma once
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 class TypeBuilder;

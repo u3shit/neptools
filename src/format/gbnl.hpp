@@ -16,7 +16,7 @@ namespace Neptools
 
 class Gbnl : public Dumpable, public TxtSerializable
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct Header // or Footer
     {
@@ -72,17 +72,18 @@ public:
     using Struct = DynamicStruct<
         int8_t, int16_t, int32_t, int64_t, float, OffsetString,
         FixStringTag, PaddingTag>;
-    using StructPtr = NotNull<boost::intrusive_ptr<Struct>>;
+    using StructPtr = Libshit::NotNull<boost::intrusive_ptr<Struct>>;
     using Messages = std::vector<StructPtr>;
 
     Gbnl(Source src);
     Gbnl(bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,
-         AT<Struct::TypePtr> type)
+         Libshit::AT<Struct::TypePtr> type)
         : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
           type{std::move(type.Get())} {}
-#ifndef NEPTOOLS_WITHOUT_LUA
-    Gbnl(Lua::StateRef vm, bool is_gstl, uint32_t flags, uint32_t field_28,
-         uint32_t field_30, AT<Struct::TypePtr> type, Lua::RawTable messages);
+#ifndef LIBSHIT_WITHOUT_LUA
+    Gbnl(Libshit::Lua::StateRef vm, bool is_gstl, uint32_t flags,
+         uint32_t field_28, uint32_t field_30, Libshit::AT<Struct::TypePtr> type,
+         Libshit::Lua::RawTable messages);
 #endif
 
     void Fixup() override { RecalcSize(); }
@@ -91,7 +92,7 @@ public:
     uint32_t flags, field_28, field_30;
 
     // no setter - it doesn't work how you expect in lua
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
     Messages messages;
 
     Struct::TypePtr type;

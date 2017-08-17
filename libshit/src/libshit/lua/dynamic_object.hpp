@@ -2,9 +2,9 @@
 #define UUID_0863E64B_09C6_449B_A18D_EFD42D57C604
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 struct SmartObject {};
@@ -17,8 +17,8 @@ public:
     virtual ~DynamicObject() = default;
 };
 
-#define NEPTOOLS_DYNAMIC_OBJ_GEN private: static void dummy_function()
-#define NEPTOOLS_DYNAMIC_OBJECT NEPTOOLS_DYNAMIC_OBJ_GEN
+#define LIBSHIT_DYNAMIC_OBJ_GEN private: static void dummy_function()
+#define LIBSHIT_DYNAMIC_OBJECT LIBSHIT_DYNAMIC_OBJ_GEN
 
 template <typename T, typename Enable = void> struct SmartObjectMaker;
 
@@ -33,10 +33,10 @@ template <typename T, typename Enable = void> struct SmartObjectMaker;
 
 #include <type_traits>
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
-class NEPTOOLS_LUAGEN(no_inherit=true) SmartObject {};
+class LIBSHIT_LUAGEN(no_inherit=true) SmartObject {};
 
 // specialize if needed
 template <typename T, typename Enable = void>
@@ -46,7 +46,7 @@ template <typename T>
 constexpr bool IS_SMART_OBJECT = IsSmartObject<T>::value;
 
 
-class NEPTOOLS_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
+class LIBSHIT_LUAGEN(no_inherit=true,smart_object=true) DynamicObject
     : public SmartObject
 {
 public:
@@ -62,20 +62,20 @@ template <typename T>
 constexpr bool IS_SELF_PUSHABLE_DYNAMIC_OBJECT =
     std::is_base_of_v<DynamicObject, T> && std::is_base_of_v<RefCounted, T>;
 
-#define NEPTOOLS_THIS_TYPE std::remove_pointer_t<decltype(this)>
-#define NEPTOOLS_DYNAMIC_OBJ_GEN                                                \
+#define LIBSHIT_THIS_TYPE std::remove_pointer_t<decltype(this)>
+#define LIBSHIT_DYNAMIC_OBJ_GEN                                                \
     private:                                                                    \
-    void PushLua(::Neptools::Lua::StateRef vm,                                  \
-                 ::Neptools::RefCounted& ctrl) override                         \
+    void PushLua(::Libshit::Lua::StateRef vm,                                  \
+                 ::Libshit::RefCounted& ctrl) override                         \
     {                                                                           \
-        ::Neptools::Lua::Userdata::Cached::Create<::Neptools::SharedPtr<char>>( \
-            vm, this, ::Neptools::Lua::TYPE_NAME<NEPTOOLS_THIS_TYPE>, &ctrl,    \
+        ::Libshit::Lua::Userdata::Cached::Create<::Libshit::SharedPtr<char>>( \
+            vm, this, ::Libshit::Lua::TYPE_NAME<LIBSHIT_THIS_TYPE>, &ctrl,    \
             reinterpret_cast<char*>(this), true);                               \
     }
 
-#define NEPTOOLS_DYNAMIC_OBJECT                 \
-    NEPTOOLS_LUA_CLASS;                         \
-    NEPTOOLS_DYNAMIC_OBJ_GEN
+#define LIBSHIT_DYNAMIC_OBJECT                 \
+    LIBSHIT_LUA_CLASS;                         \
+    LIBSHIT_DYNAMIC_OBJ_GEN
 
 inline DynamicObject& GetDynamicObject(DynamicObject& obj) { return obj; }
 

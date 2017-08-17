@@ -9,7 +9,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
 
-#define NEPTOOLS_LOG_NAME "cpk"
+#define LIBSHIT_LOG_NAME "cpk"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
@@ -74,9 +74,9 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         size_t read;
         cpk->entry_vect[index]->read_pos = offs;
         if (!cpk->OrigRead(index, reinterpret_cast<char*>(buf), len, &read))
-            NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
+            LIBSHIT_THROW(CpkError{"Cpk::OrigRead failed"} <<
                            CpkErrorCode{cpk->last_error});
-        NEPTOOLS_ASSERT(read == len);
+        LIBSHIT_ASSERT(read == len);
         return;
     }
 
@@ -89,9 +89,9 @@ void CpkSource::Pread(FilePosition offs, Byte* buf, FileMemSize len)
         size_t read;
         cpk->entry_vect[index]->read_pos = coffs;
         if (!cpk->OrigRead(index, cbuf.get(), csize, &read))
-            NEPTOOLS_THROW(CpkError{"Cpk::OrigRead failed"} <<
+            LIBSHIT_THROW(CpkError{"Cpk::OrigRead failed"} <<
                            CpkErrorCode{cpk->last_error});
-        NEPTOOLS_ASSERT(read == csize);
+        LIBSHIT_ASSERT(read == csize);
 
         auto to_offs = offs % CPK_CHUNK;
         auto to_copy = std::min(len, csize - to_offs);
@@ -176,16 +176,16 @@ bool CpkHandler::OpenTxtFile(
         char hdr_buf[4];
         src.Pread(0, hdr_buf, 4);
 
-        SmartPtr<Dumpable> dmp;
+        Libshit::SmartPtr<Dumpable> dmp;
         TxtSerializable* txt;
         if (memcmp(hdr_buf, "CL3L", 4) == 0)
         {
-            dmp = MakeSmart<Cl3>(src);
+            dmp = Libshit::MakeSmart<Cl3>(src);
             txt = &static_cast<Cl3*>(dmp.get())->GetStcm();
         }
         else
         {
-            dmp = MakeSmart<Gbnl>(src);
+            dmp = Libshit::MakeSmart<Gbnl>(src);
             txt = static_cast<Gbnl*>(dmp.get());
         }
 
@@ -197,7 +197,7 @@ bool CpkHandler::OpenTxtFile(
     }
     catch (const std::exception& e)
     {
-        auto except = ExceptionToString();
+        auto except = Libshit::ExceptionToString();
         DBG(2) << " -- txt hook failed: " << except << std::endl;
 
         std::stringstream ss;
@@ -284,11 +284,11 @@ Source CpkHandler::GetSource(const char* fname)
 {
     size_t index;
     if (!OrigOpenFile(fname, &index))
-            NEPTOOLS_THROW(CpkError{"Cpk::OrigOpenFile failed"} <<
+            LIBSHIT_THROW(CpkError{"Cpk::OrigOpenFile failed"} <<
                            CpkErrorCode{last_error});
     try
     {
-        return Source(MakeSmart<CpkSource>(fname, this, index),
+        return Source(Libshit::MakeSmart<CpkSource>(fname, this, index),
                       entry_vect[index]->entry.uncompressed_size);
     }
     catch (...)

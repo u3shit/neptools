@@ -4,7 +4,7 @@
 
 #include "user_type_fwd.hpp"
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "function_call.hpp"
 #include "type_traits.hpp"
@@ -12,7 +12,7 @@
 
 #include <type_traits>
 
-namespace Neptools
+namespace Libshit
 {
 
 template <typename T> class NotNull;
@@ -100,13 +100,13 @@ public:
     // low-level, pops value from lua stack
     void SetField(const char* name)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
 
         lua_pushvalue(vm, -1);
         lua_setfield(vm, -4, name);
         lua_setfield(vm, -2, name);
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top-1);
+        LIBSHIT_LUA_CHECKTOP(vm, top-1);
     }
 
     void TaggedNew();
@@ -129,7 +129,7 @@ public:
     template <typename Class>
     static void Register(StateRef vm)
     {
-        NEPTOOLS_LUA_GETTOP(vm, top);
+        LIBSHIT_LUA_GETTOP(vm, top);
 
         bool doit = true;
         if constexpr (UserTypeTraits<Class>::INSTANTIABLE)
@@ -147,7 +147,7 @@ public:
             bld.Done();
         }
 
-        NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+        LIBSHIT_LUA_CHECKTOP(vm, top+1);
     }
 
     template <typename... Args>

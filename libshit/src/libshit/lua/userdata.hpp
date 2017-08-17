@@ -6,7 +6,7 @@
 #include "function_call_types.hpp"
 #include "type_traits.hpp"
 
-namespace Neptools::Lua::Userdata
+namespace Libshit::Lua::Userdata
 {
 
 void UnsetMetatable(StateRef vm);
@@ -25,7 +25,7 @@ Ret& GetSimple(StateRef vm, bool arg, int idx, const char* name)
 template <bool Unsafe, typename UD, typename Ret>
 std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
     if (!lua_getmetatable(vm, idx) && !Unsafe) // +1
         vm.TypeError(arg, TYPE_NAME<Ret>, idx);
     lua_rawgetp(vm, -1, TYPE_NAME<Ret>); // +2
@@ -36,9 +36,9 @@ std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
     if (!Unsafe && !isvalid) vm.TypeError(arg, TYPE_NAME<Ret>, idx);
 
     auto ud = static_cast<UD*>(lua_touserdata(vm, idx));
-    NEPTOOLS_ASSERT(ud);
+    LIBSHIT_ASSERT(ud);
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    LIBSHIT_LUA_CHECKTOP(vm, top);
     return {
         ud, reinterpret_cast<Ret*>(reinterpret_cast<char*>(ud->get()) + offs)};
 
@@ -47,15 +47,15 @@ std::pair<UD*, Ret*> GetInherited(StateRef vm, bool arg, int idx)
 template <typename T, typename... Args>
 inline RetNum Create(StateRef vm, Args&&... args)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
     auto ptr = lua_newuserdata(vm, sizeof(T)); // +1
-    NEPTOOLS_ASSERT(ptr);
+    LIBSHIT_ASSERT(ptr);
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, TYPE_NAME<T>); // +2
-    NEPTOOLS_ASSERT(!IsNoneOrNil(type)); (void) type;
+    LIBSHIT_ASSERT(!IsNoneOrNil(type)); (void) type;
 
     new (ptr) T{std::forward<Args>(args)...};
     lua_setmetatable(vm, -2); // +1
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    LIBSHIT_LUA_CHECKTOP(vm, top+1);
     return 1;
 }
 
@@ -65,11 +65,11 @@ namespace Cached
 template <typename T, typename... Args>
 inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
 {
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
 
     // check cache
     auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, &reftbl); // +1
-    NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
+    LIBSHIT_ASSERT(type == LUA_TTABLE); (void) type;
     type = lua_rawgetp(vm, -1, ptr); // +2
     if (type != LUA_TUSERDATA) // no hit
     {
@@ -78,7 +78,7 @@ inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
         // create object
         auto ud = lua_newuserdata(vm, sizeof(T)); // +1
         auto type = lua_rawgetp(vm, LUA_REGISTRYINDEX, name); // +2
-        NEPTOOLS_ASSERT(type == LUA_TTABLE); (void) type;
+        LIBSHIT_ASSERT(type == LUA_TTABLE); (void) type;
 
         new (ud) T{std::forward<Args>(args)...};
         lua_setmetatable(vm, -2); // +1
@@ -89,14 +89,14 @@ inline void Create(StateRef vm, void* ptr, const char* name, Args&&... args)
     }
     else
     {
-        NEPTOOLS_ASSERT_MSG(
+        LIBSHIT_ASSERT_MSG(
             lua_getmetatable(vm, -1) &&
             lua_rawgetp(vm, -1, name) == LUA_TNUMBER &&
             (lua_pop(vm, 2), true), "Pointer aliasing?");
     }
 
     lua_remove(vm, -2); // +1 remove reftbl
-    NEPTOOLS_LUA_CHECKTOP(vm, top+1);
+    LIBSHIT_LUA_CHECKTOP(vm, top+1);
 }
 
 void Clear(StateRef vm, void* ptr);
@@ -106,18 +106,18 @@ inline int GcFun(lua_State* vm)
 {
     static constexpr const char* Tag = TYPE_NAME<NameT>;
 
-    NEPTOOLS_LUA_GETTOP(vm, top);
+    LIBSHIT_LUA_GETTOP(vm, top);
     if (!lua_getmetatable(vm, 1) || // +1
         IsNoneOrNil(lua_rawgetp(vm, -1, Tag))) // +2
         StateRef{vm}.TypeError(true, Tag, 1);
     lua_pop(vm, 2); // 0
 
     auto ud = reinterpret_cast<T*>(lua_touserdata(vm, 1));
-    NEPTOOLS_ASSERT(ud);
+    LIBSHIT_ASSERT(ud);
     Clear(vm, &**ud);
     ud->~T();
 
-    NEPTOOLS_LUA_CHECKTOP(vm, top);
+    LIBSHIT_LUA_CHECKTOP(vm, top);
     return 0;
 
 }

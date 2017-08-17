@@ -2,7 +2,7 @@
 #include <libshit/assert.hpp>
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
-#define NEPTOOLS_LOG_NAME "pattern"
+#define LIBSHIT_LOG_NAME "pattern"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
@@ -17,7 +17,7 @@ static bool CheckPattern(
     return true;
 }
 
-const Byte* Pattern::MaybeFind(StringView data) const noexcept
+const Byte* Pattern::MaybeFind(Libshit::StringView data) const noexcept
 {
     size_t max_len = 0, max_i = 0;
     size_t start_i = 0;
@@ -33,7 +33,7 @@ const Byte* Pattern::MaybeFind(StringView data) const noexcept
         else
             start_i = i+1;
 
-    NEPTOOLS_ASSERT(max_i + max_len <= size);
+    LIBSHIT_ASSERT(max_i + max_len <= size);
     boost::algorithm::boyer_moore<const Byte*> bm{
         pattern + max_i, pattern + max_i + max_len};
 

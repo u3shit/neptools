@@ -2,13 +2,13 @@
 #define UUID_D230EBCE_94C2_4E8F_B2FD_99237D511676
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <lua.hpp>
 #endif
 
 #include "../assert.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 class StateRef;
@@ -31,7 +31,7 @@ class Any
 {
 public:
     constexpr Any(int idx) : idx{idx}
-    { NEPTOOLS_ASSERT_MSG(idx > 0, "Index must be absolute"); }
+    { LIBSHIT_ASSERT_MSG(idx > 0, "Index must be absolute"); }
 
     constexpr int Get() const { return idx; }
     constexpr operator int() const { return idx; }
@@ -40,7 +40,7 @@ private:
     int idx;
 };
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 // ensure type but do not parse
 template <int Type>
 class Raw : public Any

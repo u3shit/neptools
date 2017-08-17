@@ -11,7 +11,7 @@ namespace Stcm
 
 void DataItem::Header::Validate(FilePosition chunk_size) const
 {
-#define VALIDATE(x) NEPTOOLS_VALIDATE_FIELD("Stcm::DataItem::Header", x)
+#define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::DataItem::Header", x)
     VALIDATE(type < 0xff);
     VALIDATE(length <= chunk_size);
 #undef VALIDATE
@@ -36,7 +36,7 @@ DataItem& DataItem::CreateAndInsert(ItemPointer ptr)
     if (x.t.length > 0)
         ret.MoveNextToChild(x.t.length);
 
-    NEPTOOLS_ASSERT(ret.GetSize() == sizeof(Header) + x.t.length);
+    LIBSHIT_ASSERT(ret.GetSize() == sizeof(Header) + x.t.length);
 
     // check heuristics
     if (!ret.GetChildren().empty())

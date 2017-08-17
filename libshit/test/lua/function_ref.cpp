@@ -3,8 +3,8 @@
 #include <libshit/lua/dynamic_object.hpp>
 #include <catch.hpp>
 
-using namespace Neptools;
-using namespace Neptools::Lua;
+using namespace Libshit;
+using namespace Libshit::Lua;
 
 TEST_CASE("Lua FunctionRefs", "[Lua::FunctionRef]")
 {
@@ -71,17 +71,17 @@ TEST_CASE("Lua::FunctionWrap for stl algorithm", "[Lua::FunctionRef]")
 struct FunctionRefTest : public SmartObject
 {
     template <typename Fun>
-    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrapGen<int>"})
+    LIBSHIT_LUAGEN(template_params={"::Libshit::Lua::FunctionWrapGen<int>"})
     void Cb(Fun f) { x = f(23, "hello"); }
 
     template <typename Fun>
-    NEPTOOLS_LUAGEN(template_params={"::Neptools::Lua::FunctionWrap<double(double)>"})
+    LIBSHIT_LUAGEN(template_params={"::Libshit::Lua::FunctionWrap<double(double)>"})
     void Cb2(Fun f) { y = f(3.1415); }
 
     int x = 0;
     double y = 0;
 
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 };
 
 TEST_CASE("Lua::FunctionWrap parameters")

@@ -1,11 +1,11 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::Dumpable::TYPE_NAME[] = "neptools.dumpable";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.dumpable

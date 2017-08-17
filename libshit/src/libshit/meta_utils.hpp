@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace Neptools
+namespace Libshit
 {
 
 template <typename T>
@@ -25,9 +25,9 @@ struct ToCharPack<X, Wrap, std::index_sequence<Idx...>>
 template <typename X, template <char...> typename Wrap, typename Seq>
 using ToCharPackV = typename ToCharPack<X, Wrap, Seq>::Type;
 
-#define NEPTOOLS_LITERAL_CHARPACK(type, str) ([]{                              \
+#define LIBSHIT_LITERAL_CHARPACK(type, str) ([]{                              \
         struct X { static constexpr char Get(size_t i) { return (str)[i]; } }; \
-        return ::Neptools::ToCharPackV<                                        \
+        return ::Libshit::ToCharPackV<                                        \
             X, type, std::make_index_sequence<sizeof(str)-1>>{};               \
     }())
 

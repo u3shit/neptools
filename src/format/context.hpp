@@ -15,7 +15,7 @@ namespace Neptools
 
 class Context : public ItemWithChildren
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
     Context();
     ~Context();
@@ -23,25 +23,25 @@ public:
     void Fixup() override;
 
     template <typename T, typename... Args>
-    NEPTOOLS_NOLUA NotNull<SmartPtr<T>> Create(Args&&... args)
-    { return MakeSmart<T>(Item::Key{}, *this, std::forward<Args>(args)...); }
+    LIBSHIT_NOLUA Libshit::NotNull<Libshit::SmartPtr<T>> Create(Args&&... args)
+    { return Libshit::MakeSmart<T>(Item::Key{}, *this, std::forward<Args>(args)...); }
 
-    NotNull<LabelPtr> GetLabel(const std::string& name) const;
-    NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
-    NotNull<LabelPtr> CreateLabelFallback(
+    Libshit::NotNull<LabelPtr> GetLabel(const std::string& name) const;
+    Libshit::NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
+    Libshit::NotNull<LabelPtr> CreateLabelFallback(
         const std::string& name, ItemPointer ptr);
-    NotNull<LabelPtr> CreateLabelFallback(
+    Libshit::NotNull<LabelPtr> CreateLabelFallback(
         const std::string& name, FilePosition pos)
     { return CreateLabelFallback(name, GetPointer(pos)); }
 
-    NotNull<LabelPtr> CreateOrSetLabel(std::string name, ItemPointer ptr);
-    NotNull<LabelPtr> GetOrCreateDummyLabel(std::string name);
+    Libshit::NotNull<LabelPtr> CreateOrSetLabel(std::string name, ItemPointer ptr);
+    Libshit::NotNull<LabelPtr> GetOrCreateDummyLabel(std::string name);
 
-    NotNull<LabelPtr> GetLabelTo(ItemPointer ptr);
-    NotNull<LabelPtr> GetLabelTo(FilePosition pos)
+    Libshit::NotNull<LabelPtr> GetLabelTo(ItemPointer ptr);
+    Libshit::NotNull<LabelPtr> GetLabelTo(FilePosition pos)
     { return GetLabelTo(GetPointer(pos)); }
 
-    NotNull<LabelPtr> GetLabelTo(FilePosition pos, std::string name);
+    Libshit::NotNull<LabelPtr> GetLabelTo(FilePosition pos, std::string name);
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 

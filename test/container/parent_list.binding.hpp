@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
@@ -7,7 +7,7 @@ const char ::Neptools::Test::ParentListItem::TYPE_NAME[] = "neptools.test.parent
 template <>
 const char ::parent_list_item::TYPE_NAME[] = "neptools.parent_list_parent_list_item";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.test.parent_list_item
@@ -16,20 +16,20 @@ void TypeRegisterTraits<::Neptools::Test::ParentListItem>::Register(TypeBuilder&
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<LuaGetRef<int>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<>,
+        &::Libshit::Lua::TypeTraits<::Neptools::Test::ParentListItem>::Make<LuaGetRef<int>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::i>
+        &::Libshit::Lua::GetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::i>
     >("get_i");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::i>
+        &::Libshit::Lua::SetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::i>
     >("set_i");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::data>
+        &::Libshit::Lua::GetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::data>
     >("get_data");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::data>
+        &::Libshit::Lua::SetMember<::Neptools::Test::ParentListItem, int, &::Neptools::Test::ParentListItem::data>
     >("set_data");
 
 }
@@ -41,7 +41,7 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::parent_list_item>::Make<>
+        &::Libshit::Lua::TypeTraits<::parent_list_item>::Make<>
     >("new");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)(::parent_list_item &) noexcept>(&::parent_list_item::swap)
@@ -93,11 +93,11 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
     >("splice");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)()>(&::parent_list_item::sort),
-        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::sort<::Neptools::Lua::FunctionWrapGen<bool>>)
+        static_cast<void (::parent_list_item::*)(::Libshit::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::sort<::Libshit::Lua::FunctionWrapGen<bool>>)
     >("sort");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)(::parent_list_item &)>(&::parent_list_item::merge<Check::Throw>),
-        static_cast<void (::parent_list_item::*)(::parent_list_item &, ::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::merge<::Neptools::Check::Throw, ::Neptools::Lua::FunctionWrapGen<bool>>)
+        static_cast<void (::parent_list_item::*)(::parent_list_item &, ::Libshit::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::merge<::Libshit::Check::Throw, ::Libshit::Lua::FunctionWrapGen<bool>>)
     >("merge");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)() noexcept>(&::parent_list_item::reverse)
@@ -106,20 +106,20 @@ void TypeRegisterTraits<::parent_list_item>::Register(TypeBuilder& bld)
         static_cast<void (::parent_list_item::*)(::parent_list_item::const_reference)>(&::parent_list_item::remove)
     >("remove");
     bld.AddFunction<
-        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::remove_if<::Neptools::Lua::FunctionWrapGen<bool>>)
+        static_cast<void (::parent_list_item::*)(::Libshit::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::remove_if<::Libshit::Lua::FunctionWrapGen<bool>>)
     >("remove_if");
     bld.AddFunction<
         static_cast<void (::parent_list_item::*)()>(&::parent_list_item::unique),
-        static_cast<void (::parent_list_item::*)(::Neptools::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::unique<::Neptools::Lua::FunctionWrapGen<bool>>)
+        static_cast<void (::parent_list_item::*)(::Libshit::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::unique<::Libshit::Lua::FunctionWrapGen<bool>>)
     >("unique");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Next)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Next)
     >("next");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Prev)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Prev)
     >("prev");
     bld.AddFunction<
-        static_cast<::Neptools::Lua::RetNum (*)(::Neptools::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::ToTable)
+        static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::ToTable)
     >("to_table");
 
 }

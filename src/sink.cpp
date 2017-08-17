@@ -7,7 +7,7 @@
 #include <iostream>
 #include <boost/exception/errinfo_file_name.hpp>
 
-#define NEPTOOLS_LOG_NAME "sink"
+#define LIBSHIT_LOG_NAME "sink"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
@@ -15,11 +15,11 @@ namespace Neptools
 namespace
 {
 
-struct NEPTOOLS_NOLUA MmapSink final : public Sink
+struct LIBSHIT_NOLUA MmapSink final : public Sink
 {
     MmapSink(LowIo&& io, FilePosition size);
     ~MmapSink();
-    void Write_(StringView data) override;
+    void Write_(Libshit::StringView data) override;
     void Pad_(FileMemSize len) override;
 
     void MapNext(FileMemSize len);
@@ -27,7 +27,7 @@ struct NEPTOOLS_NOLUA MmapSink final : public Sink
     LowIo io;
 };
 
-struct NEPTOOLS_NOLUA SimpleSink final : public Sink
+struct LIBSHIT_NOLUA SimpleSink final : public Sink
 {
     SimpleSink(LowIo io, FilePosition size) : Sink{size}, io{std::move(io)}
     {
@@ -36,7 +36,7 @@ struct NEPTOOLS_NOLUA SimpleSink final : public Sink
     }
     ~SimpleSink();
 
-    void Write_(StringView data) override;
+    void Write_(Libshit::StringView data) override;
     void Pad_(FileMemSize len) override;
     void Flush() override;
 
@@ -64,9 +64,9 @@ MmapSink::~MmapSink()
         LowIo::Munmap(buf, buf_size);
 }
 
-void MmapSink::Write_(StringView data)
+void MmapSink::Write_(Libshit::StringView data)
 {
-    NEPTOOLS_ASSERT(buf_put == buf_size && offset < size &&
+    LIBSHIT_ASSERT(buf_put == buf_size && offset < size &&
                     buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put;
@@ -83,16 +83,16 @@ void MmapSink::Write_(StringView data)
     if (buf) // https://stackoverflow.com/a/5243068; C99 7.21.1/2
         memcpy(buf, data.data(), data.length());
     else
-        NEPTOOLS_ASSERT(data.length() == 0);
+        LIBSHIT_ASSERT(data.length() == 0);
 }
 
 void MmapSink::Pad_(FileMemSize len)
 {
-    NEPTOOLS_ASSERT(buf_put == buf_size && offset < size &&
+    LIBSHIT_ASSERT(buf_put == buf_size && offset < size &&
                     buf_size == LowIo::MMAP_CHUNK);
 
     offset += buf_put + len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
-    NEPTOOLS_ASSERT_MSG(offset <= size, "sink overflow");
+    LIBSHIT_ASSERT_MSG(offset <= size, "sink overflow");
     MapNext(len % LowIo::MMAP_CHUNK);
 }
 
@@ -104,7 +104,7 @@ void MmapSink::MapNext(FileMemSize len)
     if (offset < size)
     {
         auto nbuf_size = std::min<FileMemSize>(LowIo::MMAP_CHUNK, size-offset);
-        NEPTOOLS_ASSERT(nbuf_size >= len);
+        LIBSHIT_ASSERT(nbuf_size >= len);
         void* nbuf = io.Mmap(offset, nbuf_size, true);
         io.Munmap(buf, buf_size);
         buf = static_cast<Byte*>(nbuf);
@@ -123,7 +123,7 @@ SimpleSink::~SimpleSink()
     try { Flush(); }
     catch (std::exception& e)
     {
-        ERR << "~SimpleSink " << ExceptionToString() << std::endl;
+        ERR << "~SimpleSink " << Libshit::ExceptionToString() << std::endl;
     }
 }
 
@@ -137,9 +137,9 @@ void SimpleSink::Flush()
     }
 }
 
-void SimpleSink::Write_(StringView data)
+void SimpleSink::Write_(Libshit::StringView data)
 {
-    NEPTOOLS_ASSERT(buf_size == LowIo::MEM_CHUNK &&
+    LIBSHIT_ASSERT(buf_size == LowIo::MEM_CHUNK &&
                     buf_put == LowIo::MEM_CHUNK);
     io.Write(buf, LowIo::MEM_CHUNK);
     offset += LowIo::MEM_CHUNK;
@@ -159,7 +159,7 @@ void SimpleSink::Write_(StringView data)
 
 void SimpleSink::Pad_(FileMemSize len)
 {
-    NEPTOOLS_ASSERT(buf_size == LowIo::MEM_CHUNK &&
+    LIBSHIT_ASSERT(buf_size == LowIo::MEM_CHUNK &&
                     buf_put == LowIo::MEM_CHUNK);
     io.Write(buf, LowIo::MEM_CHUNK);
     offset += LowIo::MEM_CHUNK;
@@ -179,44 +179,45 @@ void SimpleSink::Pad_(FileMemSize len)
     buf_put = len % LowIo::MEM_CHUNK;
 }
 
-NotNull<RefCountedPtr<Sink>> Sink::ToFile(
+Libshit::NotNull<Libshit::RefCountedPtr<Sink>> Sink::ToFile(
     boost::filesystem::path fname, FilePosition size, bool try_mmap)
 {
-    return AddInfo(
-        [&]() -> NotNull<RefCountedPtr<Sink>>
+    return Libshit::AddInfo(
+        [&]() -> Libshit::NotNull<Libshit::RefCountedPtr<Sink>>
         {
             LowIo io{fname.c_str(), true};
             if (!try_mmap)
-                return MakeRefCounted<SimpleSink>(std::move(io), size);
+                return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
 
-            try { return MakeRefCounted<MmapSink>(std::move(io), size); }
+            try { return Libshit::MakeRefCounted<MmapSink>(std::move(io), size); }
             catch (const std::system_error& e)
             {
                 WARN << "Mmmap failed, falling back to normal writing: "
-                     << ExceptionToString() << std::endl;
-                return MakeRefCounted<SimpleSink>(std::move(io), size);
+                     << Libshit::ExceptionToString() << std::endl;
+                return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
             }
         },
         [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; });
 }
 
-NotNull<RefCountedPtr<Sink>> Sink::ToStdOut()
+Libshit::NotNull<Libshit::RefCountedPtr<Sink>> Sink::ToStdOut()
 {
-    return MakeRefCounted<SimpleSink>(LowIo::OpenStdOut(), -1);
+    return Libshit::MakeRefCounted<SimpleSink>(LowIo::OpenStdOut(), -1);
 }
 
-void MemorySink::Write_(StringView)
-{ NEPTOOLS_UNREACHABLE("MemorySink::Write_ called"); }
+void MemorySink::Write_(Libshit::StringView)
+{ LIBSHIT_UNREACHABLE("MemorySink::Write_ called"); }
 void MemorySink::Pad_(FileMemSize)
-{ NEPTOOLS_UNREACHABLE("MemorySink::Pad_ called"); }
+{ LIBSHIT_UNREACHABLE("MemorySink::Pad_ called"); }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
-NEPTOOLS_LUAGEN(name="new", class="Neptools::MemorySink")
-static NotNull<SmartPtr<MemorySink>> MemorySinkFromLua(StringView view)
+#ifndef LIBSHIT_WITHOUT_LUA
+LIBSHIT_LUAGEN(name="new", class="Neptools::MemorySink")
+static Libshit::NotNull<Libshit::SmartPtr<MemorySink>>
+MemorySinkFromLua(Libshit::StringView view)
 {
     std::unique_ptr<Byte[]> buf{new Byte[view.length()]};
     memcpy(buf.get(), view.data(), view.length());
-    return MakeSmart<MemorySink>(std::move(buf), view.length());
+    return Libshit::MakeSmart<MemorySink>(std::move(buf), view.length());
 }
 #endif
 

@@ -9,7 +9,7 @@ static std::string info(const boost::exception& e)
 int main(int argc, const char** argv)
 {
     Catch::ExceptionTranslatorRegistrar x{info};
-    Neptools::Logger::global_level = Neptools::Logger::ERROR;
+    Libshit::Logger::global_level = Libshit::Logger::ERROR;
 
     return Catch::Session().run( argc, argv );
 }

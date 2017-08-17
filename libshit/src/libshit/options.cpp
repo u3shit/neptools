@@ -6,7 +6,7 @@
 #include <climits>
 #include <boost/exception/get_error_info.hpp>
 
-namespace Neptools
+namespace Libshit
 {
 
 OptionGroup::OptionGroup(OptionParser& parser, const char* name, const char* help)
@@ -167,13 +167,13 @@ void OptionParser::Run_(int& argc, const char** argv)
             if (o->short_name)
             {
                 if (short_opts[static_cast<unsigned char>(o->short_name)])
-                    NEPTOOLS_THROW(std::logic_error{"Duplicate short option"});
+                    LIBSHIT_THROW(std::logic_error{"Duplicate short option"});
                 short_opts[static_cast<unsigned char>(o->short_name)] = o;
             }
 
             auto x = long_opts.insert(std::make_pair(o->name, o));
             if (!x.second)
-                NEPTOOLS_THROW(std::logic_error{"Duplicate long option"});
+                LIBSHIT_THROW(std::logic_error{"Duplicate long option"});
         }
 
     for (int i = 1; i < argc; ++i)

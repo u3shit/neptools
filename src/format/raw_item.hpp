@@ -12,13 +12,13 @@ namespace Neptools
 
 class RawItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     RawItem(Key k, Context& ctx, Source src) noexcept
         : Item{k, ctx}, src{std::move(src)} {}
     RawItem(Key k, Context& ctx, std::string src)
         : Item{k, ctx}, src{Source::FromMemory(std::move(src))} {}
-    NEPTOOLS_NOLUA
+    LIBSHIT_NOLUA
     RawItem(Key k, Context& ctx, Source src, FilePosition pos) noexcept
         : Item{k, ctx, pos}, src{std::move(src)} {}
 
@@ -26,8 +26,8 @@ public:
     FilePosition GetSize() const noexcept override { return src.GetSize(); }
 
     template <typename T>
-    NEPTOOLS_LUAGEN(template_params={"::Neptools::Item"})
-    T& Split(FilePosition pos, NotNull<RefCountedPtr<T>> nitem)
+    LIBSHIT_LUAGEN(template_params={"::Neptools::Item"})
+    T& Split(FilePosition pos, Libshit::NotNull<Libshit::RefCountedPtr<T>> nitem)
     {
         T& ret = *nitem;
         Split2(pos, std::move(nitem));
@@ -35,7 +35,7 @@ public:
     }
 
     template <typename T, typename... Args>
-    NEPTOOLS_NOLUA T& SplitCreate(FilePosition pos, Args&&... args)
+    LIBSHIT_NOLUA T& SplitCreate(FilePosition pos, Args&&... args)
     {
         auto ctx = GetContext();
         return Split(pos, ctx->Create<T>(std::forward<Args>(args)...));
@@ -44,12 +44,12 @@ public:
     RawItem& Split(FilePosition offset, FilePosition size);
 
     template <typename T>
-    NEPTOOLS_NOLUA static auto Get(ItemPointer ptr)
+    LIBSHIT_NOLUA static auto Get(ItemPointer ptr)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
-        NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
+        LIBSHIT_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
         if (ptr.offset + sizeof(T) > ritem.GetSize())
-            NEPTOOLS_THROW(DecodeError{"Premature end of data"});
+            LIBSHIT_THROW(Libshit::DecodeError{"Premature end of data"});
 
         struct Ret { RawItem& ritem; T t; };
         return Ret{
@@ -61,34 +61,23 @@ public:
     static GetSourceRet GetSource(ItemPointer ptr, FilePosition len)
     {
         auto& ritem = ptr.AsChecked<RawItem>();
-        NEPTOOLS_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
+        LIBSHIT_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
         if (len == FilePosition(-1)) len = ritem.GetSize() - ptr.offset;
 
         if (ptr.offset + len > ritem.GetSize())
-            NEPTOOLS_THROW(DecodeError{"Premature end of data"});
+            LIBSHIT_THROW(Libshit::DecodeError{"Premature end of data"});
         return {std::ref(ritem), {ritem.src, ptr.offset, len}};
     }
 
 private:
-    NotNull<RefCountedPtr<RawItem>> InternalSlice(
+    Libshit::NotNull<Libshit::RefCountedPtr<RawItem>> InternalSlice(
         FilePosition offset, FilePosition size);
-    void Split2(FilePosition pos, NotNull<SmartPtr<Item>> nitem);
+    void Split2(FilePosition pos, Libshit::NotNull<Libshit::SmartPtr<Item>> nitem);
 
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os, unsigned indent) const override;
 
     Source src;
-};
-
-template<> struct Lua::TupleLike<RawItem::GetSourceRet>
-{
-    template <size_t I>
-    static auto& Get(const RawItem::GetSourceRet& ret) noexcept
-    {
-        if constexpr (I == 0) return ret.ritem;
-        else if constexpr (I == 1) return ret.src;
-    }
-    static constexpr size_t SIZE = 2;
 };
 
 template <typename T>
@@ -108,6 +97,17 @@ inline void MaybeCreateUnchecked(ItemPointer ptr)
         T::CreateAndInsert(ptr);
 }
 
-
 }
+
+template<> struct Libshit::Lua::TupleLike<Neptools::RawItem::GetSourceRet>
+{
+    template <size_t I>
+    static auto& Get(const Neptools::RawItem::GetSourceRet& ret) noexcept
+    {
+        if constexpr (I == 0) return ret.ritem;
+        else if constexpr (I == 1) return ret.src;
+    }
+    static constexpr size_t SIZE = 2;
+};
+
 #endif

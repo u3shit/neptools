@@ -10,11 +10,13 @@ class DataItem;
 
 class StringDataItem final : public Item
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     StringDataItem(Key k, Context& ctx, std::string str)
         : Item{k, ctx}, string{std::move(str)} {}
-    static RefCountedPtr<StringDataItem> MaybeCreateAndReplace(DataItem& it);
+
+    static Libshit::RefCountedPtr<StringDataItem>
+    MaybeCreateAndReplace(DataItem& it);
 
     FilePosition GetSize() const noexcept override;
 

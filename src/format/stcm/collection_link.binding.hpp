@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
@@ -9,7 +9,7 @@ const char ::Neptools::Stcm::CollectionLinkItem::TYPE_NAME[] = "neptools.stcm.co
 
 const char ::Neptools::Stcm::CollectionLinkItem::LinkEntry::TYPE_NAME[] = "neptools.stcm.collection_link_item.link_entry";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.stcm.collection_link_header_item
@@ -19,16 +19,16 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Register(Ty
     bld.Inherit<::Neptools::Stcm::CollectionLinkHeaderItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkHeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>>
     >("new");
     bld.AddFunction<
         static_cast<::Neptools::Stcm::CollectionLinkHeaderItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::CollectionLinkHeaderItem::CreateAndInsert)
     >("create_and_insert");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stcm::CollectionLinkHeaderItem, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkHeaderItem::data>
+        &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkHeaderItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkHeaderItem::data>
     >("get_data");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Stcm::CollectionLinkHeaderItem, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkHeaderItem::data>
+        &::Libshit::Lua::SetMember<::Neptools::Stcm::CollectionLinkHeaderItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkHeaderItem::data>
     >("set_data");
 
 }
@@ -41,12 +41,12 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem>::Register(TypeBuil
     bld.Inherit<::Neptools::Stcm::CollectionLinkItem, ::Neptools::Item>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>,
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<AT<std::vector<::Neptools::Stcm::CollectionLinkItem::LinkEntry> >>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>,
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>, LuaGetRef<::uint32_t>>,
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<Libshit::AT<std::vector<::Neptools::Stcm::CollectionLinkItem::LinkEntry> >>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Stcm::CollectionLinkItem, std::vector<::Neptools::Stcm::CollectionLinkItem::LinkEntry>, &::Neptools::Stcm::CollectionLinkItem::entries>
+        &::Libshit::Lua::GetSmartOwnedMember<::Neptools::Stcm::CollectionLinkItem, std::vector<::Neptools::Stcm::CollectionLinkItem::LinkEntry>, &::Neptools::Stcm::CollectionLinkItem::entries>
     >("get_entries");
 
 }
@@ -58,13 +58,13 @@ void TypeRegisterTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Regist
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_0>
+        &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_0>
     >("get_name_0");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_1>
+        &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_1>
     >("get_name_1");
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Make<LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Make<LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>>
     >("new");
 
 }

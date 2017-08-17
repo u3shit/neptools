@@ -163,7 +163,9 @@ local function freestanding_func(c, info, tbl)
     typ = x and x.type
   else
     local i = 1
-    while info.args[i]:type():name() == "Lua::StateRef" do i = i+1 end
+    while info.args[i]:type():canonical():name() == "Libshit::Lua::StateRef" do
+      i = i+1
+    end
     typ = info.args[i]:type()
     typ = typ:pointee() or typ -- get rid of &, *
     typ = typ:declaration():type() -- and const, whatever
@@ -186,7 +188,7 @@ end
 
 local function ctor(c, info, tbl)
   if not tbl.value_tmpl then
-    tbl.value_tmpl = "&::Neptools::Lua::TypeTraits</*$= class */>::\z
+    tbl.value_tmpl = "&::Libshit::Lua::TypeTraits</*$= class */>::\z
       Make</*$= argsf('LuaGetRef') */>"
   end
   return true
@@ -242,9 +244,9 @@ local function field(c, info, tbl)
 
   if not tbl.value_tmpl then
     if tbl.get then
-      info.key = tbl.get == true and "::Neptools::Lua::GetMember" or tbl.get
+      info.key = tbl.get == true and "::Libshit::Lua::GetMember" or tbl.get
     else
-      info.key = tbl.set == true and "::Neptools::Lua::SetMember" or tbl.set
+      info.key = tbl.set == true and "::Libshit::Lua::SetMember" or tbl.set
     end
     tbl.value_tmpl = "&/*$= key */</*$= class */, /*$= type */, /*$= value */>"
   end
@@ -378,7 +380,7 @@ local function parse_class(type, class)
   class.parents = {}
   type:declaration():children(parse_class_v)
   if class.smart_object and not type:isAbstract() and not class.has_push_lua then
-    utils.print_warning("Missing NEPTOOLS_DYNAMIC_OBJECT", type:declaration())
+    utils.print_warning("Missing LIBSHIT_DYNAMIC_OBJECT", type:declaration())
   end
   return class
 end

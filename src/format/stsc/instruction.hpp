@@ -13,7 +13,7 @@ namespace Stsc
 
 class InstructionBase : public Item
 {
-    NEPTOOLS_LUA_CLASS;
+    LIBSHIT_LUA_CLASS;
 public:
     InstructionBase(Key k, Context& ctx, uint8_t opcode)
         : Item{k, ctx}, opcode{opcode} {}
@@ -78,7 +78,7 @@ class SimpleInstruction final : public InstructionBase
         Pref::Append<'f','a','l','s','e'>>;
     using TypeName = typename AppendTypes<Boold, Args...>::Type;
 
-    NEPTOOLS_DYNAMIC_OBJ_GEN;
+    LIBSHIT_DYNAMIC_OBJ_GEN;
 public:
     static constexpr const char* TYPE_NAME = TypeName::str;
 
@@ -102,13 +102,13 @@ private:
 
 class Instruction0dItem final : public InstructionBase
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     Instruction0dItem(Key k, Context& ctx, uint8_t opcode, Source src);
     FilePosition GetSize() const noexcept override { return 2 + tgts.size()*4; }
 
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
-    std::vector<NotNull<LabelPtr>> tgts;
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
+    std::vector<Libshit::NotNull<LabelPtr>> tgts;
 
 private:
     void Parse_(Context& ctx, Source& src);
@@ -119,12 +119,12 @@ private:
 
 class UnimplementedInstructionItem final : public InstructionBase
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     UnimplementedInstructionItem(
         Key k, Context& ctx, uint8_t opcode, const Source&)
         : InstructionBase{k, ctx, opcode}
-    { NEPTOOLS_THROW(DecodeError{"Unimplemented instruction"}); }
+    { LIBSHIT_THROW(Libshit::DecodeError{"Unimplemented instruction"}); }
 
     FilePosition GetSize() const noexcept override { return 0; }
 
@@ -136,7 +136,7 @@ private:
 
 class Instruction1dItem final : public InstructionBase
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct FixParams
     {
@@ -162,8 +162,8 @@ public:
     FilePosition GetSize() const noexcept override
     { return 1 + sizeof(FixParams) + tree.size() * sizeof(NodeParams); }
 
-    NotNull<LabelPtr> tgt;
-    struct Node : Lua::ValueObject
+    Libshit::NotNull<LabelPtr> tgt;
+    struct Node : Libshit::Lua::ValueObject
     {
         uint8_t operation;
         uint32_t value;
@@ -171,9 +171,9 @@ public:
 
         Node(uint8_t operation, uint32_t value, size_t left, size_t right)
             : operation{operation}, value{value}, left{left}, right{right} {}
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     };
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
     std::vector<Node> tree;
 
     void Dispose() noexcept override;
@@ -188,7 +188,7 @@ private:
 
 class Instruction1eItem final : public InstructionBase
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     struct FixParams
     {
@@ -215,16 +215,16 @@ public:
     uint32_t field_0;
     bool flag;
 
-    struct Expression : Lua::ValueObject
+    struct Expression : Libshit::Lua::ValueObject
     {
         uint32_t expression;
-        NotNull<LabelPtr> target;
+        Libshit::NotNull<LabelPtr> target;
 
-        Expression(uint32_t expression, NotNull<LabelPtr> target)
+        Expression(uint32_t expression, Libshit::NotNull<LabelPtr> target)
             : expression{expression}, target{std::move(target)} {}
-        NEPTOOLS_LUA_CLASS;
+        LIBSHIT_LUA_CLASS;
     };
-    NEPTOOLS_LUAGEN(get="::Neptools::Lua::GetSmartOwnedMember")
+    LIBSHIT_LUAGEN(get="::Libshit::Lua::GetSmartOwnedMember")
     std::vector<Expression> expressions;
 
     void Dispose() noexcept override;

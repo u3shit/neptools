@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include <libshit/lua/user_type.hpp>
 
 
@@ -17,7 +17,7 @@ const char ::Neptools::Stsc::Instruction1eItem::TYPE_NAME[] = "neptools.stsc.ins
 
 const char ::Neptools::Stsc::Instruction1eItem::Expression::TYPE_NAME[] = "neptools.stsc.instruction1e_item.expression";
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 // class neptools.stsc.instruction_base
@@ -30,7 +30,7 @@ void TypeRegisterTraits<::Neptools::Stsc::InstructionBase>::Register(TypeBuilder
         static_cast<::Neptools::Stsc::InstructionBase & (*)(::Neptools::ItemPointer)>(::Neptools::Stsc::InstructionBase::CreateAndInsert)
     >("create_and_insert");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::InstructionBase, const ::uint8_t, &::Neptools::Stsc::InstructionBase::opcode>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::InstructionBase, const ::uint8_t, &::Neptools::Stsc::InstructionBase::opcode>
     >("get_opcode");
 
 }
@@ -43,10 +43,10 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction0dItem>::Register(TypeBuild
     bld.Inherit<::Neptools::Stsc::Instruction0dItem, ::Neptools::Stsc::InstructionBase>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::Instruction0dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction0dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction0dItem, std::vector<::Neptools::NotNull<::Neptools::LabelPtr> >, &::Neptools::Stsc::Instruction0dItem::tgts>
+        &::Libshit::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction0dItem, std::vector<::Libshit::NotNull<::Neptools::LabelPtr> >, &::Neptools::Stsc::Instruction0dItem::tgts>
     >("get_tgts");
 
 }
@@ -59,7 +59,7 @@ void TypeRegisterTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Registe
     bld.Inherit<::Neptools::Stsc::UnimplementedInstructionItem, ::Neptools::Stsc::InstructionBase>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<const ::Neptools::Source &>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::UnimplementedInstructionItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<const ::Neptools::Source &>>
     >("new");
 
 }
@@ -72,16 +72,16 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem>::Register(TypeBuild
     bld.Inherit<::Neptools::Stsc::Instruction1dItem, ::Neptools::Stsc::InstructionBase>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1dItem, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1dItem::tgt>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1dItem::tgt>
     >("get_tgt");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Stsc::Instruction1dItem, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1dItem::tgt>
+        &::Libshit::Lua::SetMember<::Neptools::Stsc::Instruction1dItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1dItem::tgt>
     >("set_tgt");
     bld.AddFunction<
-        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction1dItem, std::vector<::Neptools::Stsc::Instruction1dItem::Node>, &::Neptools::Stsc::Instruction1dItem::tree>
+        &::Libshit::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction1dItem, std::vector<::Neptools::Stsc::Instruction1dItem::Node>, &::Neptools::Stsc::Instruction1dItem::tree>
     >("get_tree");
 
 }
@@ -93,19 +93,19 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1dItem::Node>::Register(Typ
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::uint8_t, &::Neptools::Stsc::Instruction1dItem::Node::operation>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::uint8_t, &::Neptools::Stsc::Instruction1dItem::Node::operation>
     >("get_operation");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::uint32_t, &::Neptools::Stsc::Instruction1dItem::Node::value>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::uint32_t, &::Neptools::Stsc::Instruction1dItem::Node::value>
     >("get_value");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::size_t, &::Neptools::Stsc::Instruction1dItem::Node::left>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::size_t, &::Neptools::Stsc::Instruction1dItem::Node::left>
     >("get_left");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::size_t, &::Neptools::Stsc::Instruction1dItem::Node::right>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::size_t, &::Neptools::Stsc::Instruction1dItem::Node::right>
     >("get_right");
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem::Node>::Make<LuaGetRef<::uint8_t>, LuaGetRef<::uint32_t>, LuaGetRef<::size_t>, LuaGetRef<::size_t>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem::Node>::Make<LuaGetRef<::uint8_t>, LuaGetRef<::uint32_t>, LuaGetRef<::size_t>, LuaGetRef<::size_t>>
     >("new");
 
 }
@@ -118,22 +118,22 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem>::Register(TypeBuild
     bld.Inherit<::Neptools::Stsc::Instruction1eItem, ::Neptools::Stsc::InstructionBase>();
 
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::Instruction1eItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1eItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1eItem, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::field_0>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1eItem, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::field_0>
     >("get_field_0");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Stsc::Instruction1eItem, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::field_0>
+        &::Libshit::Lua::SetMember<::Neptools::Stsc::Instruction1eItem, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::field_0>
     >("set_field_0");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1eItem, bool, &::Neptools::Stsc::Instruction1eItem::flag>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1eItem, bool, &::Neptools::Stsc::Instruction1eItem::flag>
     >("get_flag");
     bld.AddFunction<
-        &::Neptools::Lua::SetMember<::Neptools::Stsc::Instruction1eItem, bool, &::Neptools::Stsc::Instruction1eItem::flag>
+        &::Libshit::Lua::SetMember<::Neptools::Stsc::Instruction1eItem, bool, &::Neptools::Stsc::Instruction1eItem::flag>
     >("set_flag");
     bld.AddFunction<
-        &::Neptools::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction1eItem, std::vector<::Neptools::Stsc::Instruction1eItem::Expression>, &::Neptools::Stsc::Instruction1eItem::expressions>
+        &::Libshit::Lua::GetSmartOwnedMember<::Neptools::Stsc::Instruction1eItem, std::vector<::Neptools::Stsc::Instruction1eItem::Expression>, &::Neptools::Stsc::Instruction1eItem::expressions>
     >("get_expressions");
 
 }
@@ -145,13 +145,13 @@ void TypeRegisterTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Regist
 {
 
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1eItem::Expression, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::Expression::expression>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1eItem::Expression, ::uint32_t, &::Neptools::Stsc::Instruction1eItem::Expression::expression>
     >("get_expression");
     bld.AddFunction<
-        &::Neptools::Lua::GetMember<::Neptools::Stsc::Instruction1eItem::Expression, ::Neptools::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1eItem::Expression::target>
+        &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1eItem::Expression, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1eItem::Expression::target>
     >("get_target");
     bld.AddFunction<
-        &::Neptools::Lua::TypeTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Make<LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::NotNull<::Neptools::LabelPtr>>>
+        &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1eItem::Expression>::Make<LuaGetRef<::uint32_t>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>>
     >("new");
 
 }

@@ -11,7 +11,7 @@ namespace Neptools::Stsc
 
 class File final : public Context, public TxtSerializable
 {
-    NEPTOOLS_DYNAMIC_OBJECT;
+    LIBSHIT_DYNAMIC_OBJECT;
 public:
     File() = default;
     File(Source src);

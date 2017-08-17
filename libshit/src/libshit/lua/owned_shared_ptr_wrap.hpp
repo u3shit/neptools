@@ -2,13 +2,13 @@
 #define UUID_B8B05EAA_92F1_4605_AE60_0067F9F66406
 #pragma once
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 
 #include "base.hpp"
 #include "../meta_utils.hpp"
 #include "../shared_ptr.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 template <auto Fun, typename Args = FunctionArguments<decltype(Fun)>>

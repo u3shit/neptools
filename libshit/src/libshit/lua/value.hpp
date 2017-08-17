@@ -4,7 +4,7 @@
 
 #include "base.hpp"
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 class StackValue
@@ -12,7 +12,7 @@ class StackValue
 public:
     static constexpr const bool HAS_VM = false;
 
-    StackValue(int idx) noexcept : idx{idx} { NEPTOOLS_ASSERT(idx > 0); }
+    StackValue(int idx) noexcept : idx{idx} { LIBSHIT_ASSERT(idx > 0); }
     StackValue(StateRef, int idx) noexcept : StackValue{idx} {}
 
     void Push(StateRef vm) const { lua_pushvalue(vm, idx); }

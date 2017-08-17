@@ -2,15 +2,15 @@
 #define UUID_AFD13C49_2B38_4C98_88BE_F8D45F347F14
 #pragma once
 
-#ifdef NEPTOOLS_WITHOUT_LUA
+#ifdef LIBSHIT_WITHOUT_LUA
 
-namespace Neptools::Lua
+namespace Libshit::Lua
 {
 
 template <typename T, typename Enable = void> struct TypeTraits;
 
-#define NEPTOOLS_LUA_CLASS public: static void dummy_ignore()
-#define NEPTOOLS_ENUM(name)
+#define LIBSHIT_LUA_CLASS public: static void dummy_ignore()
+#define LIBSHIT_ENUM(name)
 
 }
 
@@ -27,7 +27,7 @@ template <typename T, typename Enable = void> struct TypeTraits;
 
 namespace boost { namespace filesystem { class path; } }
 
-namespace Neptools
+namespace Libshit
 {
 template <typename T> class NotNull;
 
@@ -57,12 +57,12 @@ template<> struct TypeName<std::string>
 template <typename T>
 constexpr const char* TYPE_NAME = TypeName<T>::TYPE_NAME;
 
-#define NEPTOOLS_LUA_CLASS         \
+#define LIBSHIT_LUA_CLASS         \
     public:                        \
     static const char TYPE_NAME[]
 
-#define NEPTOOLS_ENUM(name)                         \
-    template<> struct Neptools::Lua::TypeName<name> \
+#define LIBSHIT_ENUM(name)                         \
+    template<> struct Libshit::Lua::TypeName<name> \
     { static const char TYPE_NAME[]; }
 
 // lauxlib operations:

@@ -9,7 +9,7 @@
 #include "options.hpp"
 #include "lua/function_call.hpp"
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 #include "libshit/logger.lua.h"
 #endif
 
@@ -27,7 +27,7 @@
 #define strcasecmp _stricmp
 #endif
 
-namespace Neptools
+namespace Libshit
 {
 namespace Logger
 {
@@ -291,7 +291,7 @@ std::ostream& Log(
     return log_os;
 }
 
-#ifndef NEPTOOLS_WITHOUT_LUA
+#ifndef LIBSHIT_WITHOUT_LUA
 static void LuaLog(Lua::StateRef vm, const char* name, int level, Lua::Skip msg)
 {
     (void) msg;
@@ -338,10 +338,10 @@ static Lua::State::Register reg{[](Lua::StateRef vm)
         lua_setfield(vm, -2, "INFO"); // +1
 
         lua_pushglobaltable(vm); // +2
-        vm.SetRecTable("neptools.log", -2); // +1
+        vm.SetRecTable("libshit.log", -2); // +1
         lua_pop(vm, 1); // 0
 
-        NEPTOOLS_LUA_RUNBC(vm, logger, 0);
+        LIBSHIT_LUA_RUNBC(vm, logger, 0);
     }};
 
 #endif

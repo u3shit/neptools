@@ -7,11 +7,11 @@
 #include <vector>
 #include <boost/exception/info.hpp>
 
-namespace Neptools
+namespace Libshit
 {
 
 struct Exit { bool success; };
-NEPTOOLS_GEN_EXCEPTION_TYPE(InvalidParam, std::runtime_error);
+LIBSHIT_GEN_EXCEPTION_TYPE(InvalidParam, std::runtime_error);
 
 struct Option;
 class OptionParser;

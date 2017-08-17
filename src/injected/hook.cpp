@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <cstdlib>
 
-#define NEPTOOLS_LOG_NAME "hook"
+#define LIBSHIT_LOG_NAME "hook"
 #include <libshit/logger_helper.hpp>
 
 #define WIN32_LEAN_AND_MEAN
@@ -45,7 +45,7 @@ void* Hook(void* fun, void* dst, size_t copy)
     if (copy)
     {
         ret = static_cast<char*>(HeapAlloc(heap, 0, copy + JMP_SIZE));
-        if (!ret) NEPTOOLS_THROW(std::bad_alloc{});
+        if (!ret) LIBSHIT_THROW(std::bad_alloc{});
         memcpy(ret, addr, copy);
         ret[copy] = 0xe9; // jmp
         auto base = ret + copy + JMP_SIZE;
@@ -72,7 +72,7 @@ void* Hook(void* fun, void* dst, size_t copy)
 Unprotect::Unprotect(void* ptr, size_t len) : ptr{ptr}, len{len}
 {
     if (!VirtualProtect(ptr, len, PAGE_EXECUTE_READWRITE, &orig_prot))
-        NEPTOOLS_THROW(std::runtime_error{"Unprotect: VirtualProtect"});
+        LIBSHIT_THROW(std::runtime_error{"Unprotect: VirtualProtect"});
 }
 
 Unprotect::~Unprotect()

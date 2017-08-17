@@ -7,7 +7,8 @@
 namespace Neptools::Stcm
 {
 
-RefCountedPtr<StringDataItem> StringDataItem::MaybeCreateAndReplace(DataItem& it)
+Libshit::RefCountedPtr<StringDataItem>
+StringDataItem::MaybeCreateAndReplace(DataItem& it)
 {
     // string: data(0, x, 1), where x = size/4, size is strlen+1 rounded to 4 bytes
     // ignore x == 1: it's probably an int32
