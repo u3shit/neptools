@@ -2,15 +2,16 @@
 #define UUID_4CADE91E_2AF1_47AF_8425_9AA799509BFD
 #pragma once
 
+#include "../source.hpp"
+#include "../sink.hpp"
+#include "../container/ordered_map.hpp"
+
+#include <libshit/fixed_string.hpp>
+#include <libshit/lua/auto_table.hpp>
+
 #include <vector>
 #include <boost/endian/arithmetic.hpp>
 #include <boost/filesystem/path.hpp>
-
-#include "../source.hpp"
-#include "../sink.hpp"
-#include "../fixed_string.hpp"
-#include "../container/ordered_map.hpp"
-#include "../lua/auto_table.hpp"
 
 namespace Neptools
 {

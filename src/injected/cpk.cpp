@@ -10,7 +10,7 @@
 #include <iostream>
 
 #define NEPTOOLS_LOG_NAME "cpk"
-#include "../logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {

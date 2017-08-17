@@ -1,10 +1,10 @@
 #include "cl3.hpp"
 #include "stcm/file.hpp"
-#include "../except.hpp"
 #include "../open.hpp"
 #include "../container/ordered_map.lua.hpp"
 #include "../container/vector.lua.hpp"
 
+#include <libshit/except.hpp>
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 

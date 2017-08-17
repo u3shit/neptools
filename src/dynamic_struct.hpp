@@ -2,11 +2,11 @@
 #define UUID_98C06485_8AE9_47DA_B99F_62CA5AF00FF4
 #pragma once
 
-#include "meta.hpp"
 #include "utils.hpp"
 
-#include "lua/intrusive_object.hpp"
-#include "lua/value_object.hpp"
+#include <libshit/meta.hpp>
+#include <libshit/lua/intrusive_object.hpp>
+#include <libshit/lua/value_object.hpp>
 
 #include <atomic>
 #include <cstdint>

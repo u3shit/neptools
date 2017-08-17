@@ -10,7 +10,7 @@
 #include "lua/function_call.hpp"
 
 #ifndef NEPTOOLS_WITHOUT_LUA
-#include "logger.lua.h"
+#include "libshit/logger.lua.h"
 #endif
 
 #include <algorithm>

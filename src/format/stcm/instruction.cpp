@@ -3,8 +3,9 @@
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include "../../container/vector.lua.hpp"
-#include "../../except.hpp"
 #include "../../sink.hpp"
+
+#include <libshit/except.hpp>
 #include <set>
 #include <iostream>
 

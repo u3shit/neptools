@@ -3,11 +3,12 @@
 #pragma once
 
 #include "item_base.hpp"
-#include "../check.hpp"
 #include "../dumpable.hpp"
-#include "../shared_ptr.hpp"
 #include "../container/parent_list.hpp"
-#include "../lua/user_type_fwd.hpp"
+
+#include <libshit/check.hpp>
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/user_type_fwd.hpp>
 
 #include <iosfwd>
 #include <vector>

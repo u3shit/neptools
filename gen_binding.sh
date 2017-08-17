@@ -1,11 +1,6 @@
 #! /bin/bash
 
-cd "$(dirname ${BASH_SOURCE[0]})"
-
-[[ -z $PREFIX ]] || LD_LIBRARY_PATH="$PREFIX/lib:$LD_LIBRARY_PATH"
-
-export LUA_PATH=";;ext/ljclang/?.lua"
-export LD_LIBRARY_PATH="ext/ljclang:$LD_LIBRARY_PATH"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 src=(src/dumpable src/open src/sink src/source src/txt_serializable
      src/format/cl3 src/format/context src/format/cstring_item
@@ -16,23 +11,6 @@ src=(src/dumpable src/open src/sink src/source src/txt_serializable
      src/format/stcm/header src/format/stcm/instruction
      src/format/stcm/string_data
      src/format/stsc/file src/format/stsc/header src/format/stsc/instruction
-     test/container/ordered_map test/container/parent_list
-     test/lua/function_ref test/lua/user_type)
+     test/container/ordered_map test/container/parent_list)
 
-req=()
-while (( "$#" )); do
-    [[ $1 == -- ]] && break
-    req+=("$1")
-    src=("${req[@]}")
-    shift
-done
-shift
-
-ret=0
-for i in "${src[@]}"; do
-    echo "$i.cpp" >&2
-    ${LUAJIT:-luajit} gen_binding.lua $i.cpp $i.binding.hpp "$@"
-    tret=$?
-    [[ $tret != 0 ]] && ret=$tret
-done
-exit $ret
+. libshit/gen_binding.sh

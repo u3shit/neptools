@@ -4,7 +4,7 @@
 #include <cstdlib>
 
 #define NEPTOOLS_LOG_NAME "hook"
-#include "logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

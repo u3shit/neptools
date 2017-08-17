@@ -1,6 +1,6 @@
 #include "open.hpp"
-#include "except.hpp"
 
+#include <libshit/except.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
 
 namespace Neptools

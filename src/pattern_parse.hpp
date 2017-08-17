@@ -3,7 +3,7 @@
 #pragma once
 
 #include "pattern.hpp"
-#include "meta_utils.hpp"
+#include <libshit/meta_utils.hpp>
 
 namespace Neptools
 {

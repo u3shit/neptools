@@ -1,6 +1,6 @@
-#include "lua/user_type.hpp"
-#include "lua/dynamic_object.hpp"
-#include "lua/function_call.hpp"
+#include <libshit/lua/user_type.hpp>
+#include <libshit/lua/dynamic_object.hpp>
+#include <libshit/lua/function_call.hpp>
 #include <catch.hpp>
 
 #define FT(x) decltype(&x), &x

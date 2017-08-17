@@ -3,7 +3,6 @@
 #pragma once
 
 #include "not_null.hpp"
-#include "utils.hpp"
 
 #include <atomic>
 
@@ -95,18 +94,18 @@ struct SharedPtrStorageRefCounted
     // can't put the IS_REFCOUNTED static assert into the class body, as that
     // would break when using this on incomplete types
     SharedPtrStorageRefCounted()
-    { NEPTOOLS_STATIC_ASSERT(IS_REFCOUNTED<T>); }
+    { static_assert(IS_REFCOUNTED<T>); }
     SharedPtrStorageRefCounted(RefCounted* ctrl, T* ptr)
         : ptr{const_cast<U*>(ptr)}
     {
         (void) ctrl;
-        NEPTOOLS_STATIC_ASSERT(IS_REFCOUNTED<T>);
+        static_assert(IS_REFCOUNTED<T>);
         NEPTOOLS_ASSERT(ctrl == ptr);
     }
 
     RefCounted* GetCtrl() const noexcept
     {
-        NEPTOOLS_STATIC_ASSERT(IS_REFCOUNTED<T>);
+        static_assert(IS_REFCOUNTED<T>);
         return ptr;
     }
     T* GetPtr() const noexcept { return ptr; }
@@ -128,7 +127,7 @@ class SharedPtrBase
     template <typename U = T>
     static constexpr bool IS_REFCOUNTED_S = std::is_same<
         Storage<T>, SharedPtrStorageRefCounted<U>>::value;
-    NEPTOOLS_STATIC_ASSERT(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
+    static_assert(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
 
 public:
     SharedPtrBase() = default;
@@ -276,7 +275,7 @@ class WeakPtrBase
     template <typename U = T>
     static constexpr bool IS_REFCOUNTED_S = std::is_same<
         Storage<T>, SharedPtrStorageRefCounted<U>>::value;
-    NEPTOOLS_STATIC_ASSERT(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
+    static_assert(IS_NORMAL_S<> || IS_REFCOUNTED_S<>);
 
 public:
     WeakPtrBase() = default;

@@ -47,7 +47,7 @@ end
 local template_str = [=[
 // Auto generated code, do not edit. See gen_binding in project root.
 #ifndef NEPTOOLS_WITHOUT_LUA
-#include "lua/user_type.hpp"
+#include <libshit/lua/user_type.hpp>
 
 //$ for i,cls in ipairs(classes) do
 //$   if cls.is_enum then

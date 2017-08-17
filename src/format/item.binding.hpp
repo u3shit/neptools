@@ -1,6 +1,6 @@
 // Auto generated code, do not edit. See gen_binding in project root.
 #ifndef NEPTOOLS_WITHOUT_LUA
-#include "lua/user_type.hpp"
+#include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::Label::TYPE_NAME[] = "neptools.label";
@@ -69,7 +69,7 @@ void TypeRegisterTraits<::Neptools::ItemWithChildren>::Register(TypeBuilder& bld
     bld.AddFunction<
         OwnedSharedPtrWrap<static_cast<::Neptools::ItemList & (::Neptools::ItemWithChildren::*)() noexcept>(&::Neptools::ItemWithChildren::GetChildren)>::Wrap
     >("get_children");
- do { auto runbc_ret = luaL_loadbuffer( bld, luaJIT_BC_builder, luaJIT_BC_builder_SIZE, "builder"); (__builtin_expect(!!(runbc_ret == 0), 1) ? ((void)0) : ::Neptools::AssertFailed("runbc_ret == 0", nullptr, ([]{ struct X { static constexpr char Get(size_t i) { return ("src/format/item.hpp")[i]; } }; return ::Neptools::ToCharPackV< X, ::Neptools::FileTools::FileName, std::make_index_sequence<sizeof("src/format/item.hpp")-1>>{}; }()).str, 163, __PRETTY_FUNCTION__)); (void) runbc_ret; lua_call(bld, 0, 1); } while (false); bld.SetField("build"); 
+ do { auto runbc_ret = luaL_loadbuffer( bld, luaJIT_BC_builder, luaJIT_BC_builder_SIZE, "builder"); (__builtin_expect(!!(runbc_ret == 0), 1) ? ((void)0) : ::Neptools::AssertFailed("runbc_ret == 0", nullptr, ([]{ struct X { static constexpr char Get(size_t i) { return ("src/format/item.hpp")[i]; } }; return ::Neptools::ToCharPackV< X, ::Neptools::FileTools::FileName, std::make_index_sequence<sizeof("src/format/item.hpp")-1>>{}; }()).str, 164, __PRETTY_FUNCTION__)); (void) runbc_ret; lua_call(bld, 0, 1); } while (false); bld.SetField("build"); 
 }
 static TypeRegister::StateRegister<::Neptools::ItemWithChildren> reg_neptools_item_with_children;
 

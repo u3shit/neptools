@@ -1,12 +1,12 @@
 [submodule "ext/catch"]
-	path = ext/catch
+	path = libshit/ext/catch
 	url = git://github.com/philsquared/Catch.git
 [submodule "ext/ljx"]
-	path = ext/ljx
+	path = libshit/ext/ljx
 	url = ../ljx.git
 [submodule "ext/ljclang"]
-	path = ext/ljclang
+	path = libshit/ext/ljclang
 	url = ../ljclang.git
 [submodule "ext/brigand"]
-	path = ext/brigand
+	path = libshit/ext/brigand
 	url = git://github.com/edouarda/brigand.git

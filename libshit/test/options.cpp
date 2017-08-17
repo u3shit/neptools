@@ -1,4 +1,4 @@
-#include "options.hpp"
+#include <libshit/options.hpp>
 #include <catch.hpp>
 #include <cstring>
 

@@ -1,4 +1,4 @@
-#include "lua/type_traits.hpp"
+#include <libshit/lua/type_traits.hpp>
 #include <catch.hpp>
 
 using namespace Neptools::Lua;

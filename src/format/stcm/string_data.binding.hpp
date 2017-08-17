@@ -1,6 +1,6 @@
 // Auto generated code, do not edit. See gen_binding in project root.
 #ifndef NEPTOOLS_WITHOUT_LUA
-#include "lua/user_type.hpp"
+#include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::Stcm::StringDataItem::TYPE_NAME[] = "neptools.stcm.string_data_item";

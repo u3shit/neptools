@@ -3,12 +3,13 @@
 #pragma once
 
 #include "intrusive.hpp"
-#include "../assert.hpp"
-#include "../check.hpp"
-#include "../meta.hpp"
-#include "../shared_ptr.hpp"
-#include "../lua/type_traits.hpp"
-#include "../lua/dynamic_object.hpp"
+
+#include <libshit/assert.hpp>
+#include <libshit/check.hpp>
+#include <libshit/meta.hpp>
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/type_traits.hpp>
+#include <libshit/lua/dynamic_object.hpp>
 
 #include <boost/intrusive/circular_list_algorithms.hpp>
 #include <boost/intrusive/pointer_traits.hpp>

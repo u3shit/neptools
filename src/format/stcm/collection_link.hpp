@@ -3,9 +3,10 @@
 #pragma once
 
 #include "../item.hpp"
-#include "../../lua/auto_table.hpp"
-#include "../../lua/value_object.hpp"
 #include "../../source.hpp"
+
+#include <libshit/lua/auto_table.hpp>
+#include <libshit/lua/value_object.hpp>
 #include <boost/endian/arithmetic.hpp>
 
 namespace Neptools

@@ -7,8 +7,8 @@
 #else
 
 #include "parent_list.hpp"
-#include "../lua/type_traits.hpp"
-#include "../lua/function_ref.hpp"
+#include <libshit/lua/type_traits.hpp>
+#include <libshit/lua/function_ref.hpp>
 
 namespace Neptools
 {

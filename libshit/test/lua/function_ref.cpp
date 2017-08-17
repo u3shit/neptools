@@ -1,6 +1,6 @@
-#include "lua/function_ref.hpp"
-#include "lua/type_traits.hpp"
-#include "lua/dynamic_object.hpp"
+#include <libshit/lua/function_ref.hpp>
+#include <libshit/lua/type_traits.hpp>
+#include <libshit/lua/dynamic_object.hpp>
 #include <catch.hpp>
 
 using namespace Neptools;

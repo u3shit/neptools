@@ -1,8 +1,9 @@
 #include "../injected/cpk.hpp"
 #include "../injected/hook.hpp"
 #include "../pattern_parse.hpp"
-#include "../options.hpp"
 #include "version.hpp"
+
+#include <libshit/options.hpp>
 
 // factory
 #include "../format/cl3.hpp"
@@ -12,7 +13,7 @@
 #include "../format/stcm/string_data.hpp"
 
 #define NEPTOOLS_LOG_NAME "server"
-#include "../logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

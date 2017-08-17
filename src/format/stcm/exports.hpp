@@ -4,8 +4,9 @@
 
 #include "../item.hpp"
 #include "../../source.hpp"
-#include "../../fixed_string.hpp"
-#include "../../lua/auto_table.hpp"
+
+#include <libshit/fixed_string.hpp>
+#include <libshit/lua/auto_table.hpp>
 #include <boost/endian/arithmetic.hpp>
 
 namespace Neptools

@@ -285,7 +285,7 @@ def build_ljx(ctx, minilua, host_env, pref, suf):
         ctx(rule   = 'cp ${SRC} ${TGT}',
             cls_keyword = lambda x: 'cp',
             source = pref+'lua53.dll',
-            target = '../lua53.dll')
+            target = '../../lua53.dll')
 
     # todo: maybe integrate into stcm-editor
     # only really needed for host
@@ -371,8 +371,9 @@ class ljx(Task.Task):
 def lua_to_h(self, node):
     tsk = self.create_task('ljx', node, node.change_ext('.lua.h'))
     pref = self.bld.env.LJX_CROSS and 'host/' or ''
-    ljx = self.path.find_resource('ext/%sluajit-ljx' % pref)
-    bcsav = self.path.find_node('ext/ljx/src/jit/bcsave.lua')
+    ljxtask = self.bld.get_tgen_by_name(pref+'luajit-ljx')
+    ljx = ljxtask.link_task.outputs[0]
+    bcsav = ljxtask.compiled_tasks[0].inputs[0].find_node('../jit/bcsave.lua')
 
     tsk.executable = ljx.abspath()
     tsk.env.env = {'LUA_PATH': '%s/?.lua' % bcsav.parent.parent.bldpath()}

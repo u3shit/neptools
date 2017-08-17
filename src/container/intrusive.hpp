@@ -2,8 +2,7 @@
 #define UUID_4120A45C_2DF0_41E9_B367_956A8E211C54
 #pragma once
 
-#include "../except.hpp"
-
+#include <libshit/except.hpp>
 #include <boost/intrusive/options.hpp>
 
 namespace Neptools

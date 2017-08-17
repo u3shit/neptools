@@ -3,8 +3,9 @@
 #include "../cstring_item.hpp"
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
-#include "../../lua/static_class.hpp"
-#include "../../lua/user_type.hpp"
+
+#include <libshit/lua/static_class.hpp>
+#include <libshit/lua/user_type.hpp>
 
 namespace Neptools
 {

@@ -2,8 +2,8 @@
 #define UUID_9AE0723F_DD0B_434B_8880_D7981FAF1F20
 #pragma once
 
-#include "except.hpp"
-#include "nonowning_string.hpp"
+#include <libshit/except.hpp>
+#include <libshit/nonowning_string.hpp>
 
 #include <iosfwd>
 #include <boost/filesystem/path.hpp>

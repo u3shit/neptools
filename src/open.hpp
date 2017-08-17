@@ -4,9 +4,10 @@
 
 #include "dumpable.hpp"
 #include "factory.hpp"
-#include "shared_ptr.hpp"
 #include "source.hpp"
-#include "lua/static_class.hpp"
+
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/static_class.hpp>
 
 #include <functional>
 #include <vector>

@@ -1,14 +1,14 @@
 #include "sink.hpp"
-
-#include "except.hpp"
 #include "low_io.hpp"
-#include "lua/boost_endian_traits.hpp"
+
+#include <libshit/except.hpp>
+#include <libshit/lua/boost_endian_traits.hpp>
 
 #include <iostream>
 #include <boost/exception/errinfo_file_name.hpp>
 
 #define NEPTOOLS_LOG_NAME "sink"
-#include "logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {

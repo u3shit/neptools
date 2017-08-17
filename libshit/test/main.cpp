@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-#include "logger.hpp"
+#include <libshit/logger.hpp>
 
 static std::string info(const boost::exception& e)
 { return boost::diagnostic_information(e); }

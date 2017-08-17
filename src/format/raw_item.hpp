@@ -4,7 +4,8 @@
 
 #include "context.hpp"
 #include "../source.hpp"
-#include "../except.hpp"
+
+#include <libshit/except.hpp>
 
 namespace Neptools
 {

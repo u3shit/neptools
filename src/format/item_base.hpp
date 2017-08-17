@@ -2,14 +2,15 @@
 #define UUID_02043882_EC07_4CCA_BD13_1BB9F5C7DB9F
 #pragma once
 
-#include "../assert.hpp"
-#include "../meta.hpp"
-#include "../shared_ptr.hpp"
 #include "../utils.hpp"
 #include "../container/intrusive.hpp"
-#include "../lua/dynamic_object.hpp"
-#include "../lua/function_call_types.hpp"
-#include "../lua/type_traits.hpp"
+
+#include <libshit/assert.hpp>
+#include <libshit/meta.hpp>
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/dynamic_object.hpp>
+#include <libshit/lua/function_call_types.hpp>
+#include <libshit/lua/type_traits.hpp>
 
 #include <cstdint>
 #include <functional>

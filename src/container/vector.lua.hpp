@@ -9,9 +9,9 @@
 
 #include <vector>
 
-#include "../lua/auto_table.hpp"
-#include "../lua/dynamic_object.hpp"
-#include "../lua/user_type.hpp"
+#include <libshit/lua/auto_table.hpp>
+#include <libshit/lua/dynamic_object.hpp>
+#include <libshit/lua/user_type.hpp>
 
 namespace Neptools::Lua
 {

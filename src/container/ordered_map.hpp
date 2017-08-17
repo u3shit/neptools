@@ -3,11 +3,12 @@
 #pragma once
 
 #include "intrusive.hpp"
-#include "../check.hpp"
-#include "../meta.hpp"
-#include "../shared_ptr.hpp"
-#include "../lua/dynamic_object.hpp"
-#include "../lua/type_traits.hpp"
+
+#include <libshit/check.hpp>
+#include <libshit/meta.hpp>
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/dynamic_object.hpp>
+#include <libshit/lua/type_traits.hpp>
 
 #include <boost/intrusive/set.hpp>
 #include <vector>

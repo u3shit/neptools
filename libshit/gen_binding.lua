@@ -16,11 +16,12 @@ local vr = cl.ChildVisitResult
 -- add general options
 local args = {
   "-DNEPTOOLS_BINDING_GENERATOR",
-  "-Iext/boost",
-  "-Iext/ljx/src",
-  "-Iext/catch/include",
-  "-Iext/brigand/include",
   "-Isrc",
+  "-Ilibshit/src",
+  "-Ilibshit/ext/boost",
+  "-Ilibshit/ext/ljx/src",
+  "-Ilibshit/ext/catch/include",
+  "-Ilibshit/ext/brigand/include",
   "-std=c++1z",
   "-stdlib=libc++", -- probably better c++1* support than random gcc headers
   "-Wno-undefined-inline", "-Wno-undefined-internal", -- skip function bodies

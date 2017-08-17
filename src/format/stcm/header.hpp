@@ -2,8 +2,8 @@
 #define UUID_B9D3C4DA_158C_4858_903C_9EBDD92C2CBC
 #pragma once
 
-#include "../../fixed_string.hpp"
 #include "../raw_item.hpp"
+#include <libshit/fixed_string.hpp>
 #include <boost/endian/arithmetic.hpp>
 
 namespace Neptools

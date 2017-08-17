@@ -2,13 +2,14 @@
 #define UUID_8EC8FF70_7F93_4281_9370_FF756B846775
 #pragma once
 
-#include "check.hpp"
-#include "meta.hpp"
-#include "meta_utils.hpp"
-#include "nonowning_string.hpp"
-#include "shared_ptr.hpp"
 #include "utils.hpp"
-#include "lua/dynamic_object.hpp"
+
+#include <libshit/check.hpp>
+#include <libshit/meta.hpp>
+#include <libshit/meta_utils.hpp>
+#include <libshit/nonowning_string.hpp>
+#include <libshit/shared_ptr.hpp>
+#include <libshit/lua/dynamic_object.hpp>
 
 #include <cstring>
 #include <boost/endian/arithmetic.hpp>

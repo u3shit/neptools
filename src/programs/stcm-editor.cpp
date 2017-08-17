@@ -5,13 +5,15 @@
 #include "../format/stcm/gbnl.hpp"
 #include "../format/stcm/string_data.hpp"
 #include "../format/stsc/file.hpp"
-#include "../except.hpp"
 #include "../open.hpp"
-#include "../options.hpp"
 #include "../txt_serializable.hpp"
 #include "../utils.hpp"
-#include "../lua/base.hpp"
 #include "version.hpp"
+
+#include <libshit/options.hpp>
+#include <libshit/except.hpp>
+#include <libshit/lua/base.hpp>
+
 #include <iostream>
 #include <fstream>
 #include <deque>
@@ -27,7 +29,7 @@
 #endif
 
 #define NEPTOOLS_LOG_NAME "stcm-editor"
-#include "../logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 using namespace Neptools;
 

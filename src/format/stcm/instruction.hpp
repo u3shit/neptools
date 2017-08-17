@@ -3,9 +3,10 @@
 #pragma once
 
 #include "../item.hpp"
-#include "../../check.hpp"
 #include "../../source.hpp"
-#include "../../lua/auto_table.hpp"
+
+#include <libshit/check.hpp>
+#include <libshit/lua/auto_table.hpp>
 
 #include <boost/endian/arithmetic.hpp>
 #include <variant>

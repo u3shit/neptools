@@ -3,8 +3,8 @@
 #pragma once
 
 #include "utils.hpp"
-#include "except.hpp"
-#include "nonowning_string.hpp"
+#include <libshit/except.hpp>
+#include <libshit/nonowning_string.hpp>
 
 namespace Neptools
 {

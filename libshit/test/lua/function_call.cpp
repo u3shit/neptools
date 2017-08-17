@@ -1,4 +1,4 @@
-#include "lua/function_call.hpp"
+#include <libshit/lua/function_call.hpp>
 #include <catch.hpp>
 
 using namespace Neptools::Lua;

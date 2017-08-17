@@ -1,7 +1,8 @@
 #include "context.hpp"
 #include "item.hpp"
 #include "../utils.hpp"
-#include "../except.hpp"
+
+#include <libshit/except.hpp>
 #include <iomanip>
 #include <fstream>
 #include <sstream>

@@ -10,7 +10,7 @@
 #endif
 
 #define NEPTOOLS_LOG_NAME "item"
-#include "../logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {
@@ -200,7 +200,7 @@ void ItemWithChildren::Removed()
 }
 
 #include "../container/parent_list.lua.hpp"
-#include "../lua/table_ret_wrap.hpp"
-#include "../lua/owned_shared_ptr_wrap.hpp"
+#include <libshit/lua/table_ret_wrap.hpp>
+#include <libshit/lua/owned_shared_ptr_wrap.hpp>
 NEPTOOLS_PARENT_LIST_LUAGEN(item, false, Neptools::Item, Neptools::ItemListTraits);
 #include "item.binding.hpp"

@@ -1,13 +1,14 @@
 #include "source.hpp"
 #include "sink.hpp"
-#include "except.hpp"
-#include "lua/function_call.hpp"
+
+#include <libshit/except.hpp>
+#include <libshit/lua/function_call.hpp>
 
 #include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
 #define NEPTOOLS_LOG_NAME "source"
-#include "logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {

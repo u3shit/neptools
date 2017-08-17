@@ -1,8 +1,8 @@
 #include "gbnl_lua.hpp"
-#include "../except.hpp"
 #include "../open.hpp"
 #include "../sink.hpp"
 
+#include <libshit/except.hpp>
 #include <map>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>

@@ -97,5 +97,5 @@ static OpenFactory stcm_open{[](Source src) -> SmartPtr<Dumpable>
 
 }
 
-#include "../../lua/table_ret_wrap.hpp"
+#include <libshit/lua/table_ret_wrap.hpp>
 #include "file.binding.hpp"

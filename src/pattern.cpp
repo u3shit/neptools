@@ -1,9 +1,9 @@
 #include "pattern.hpp"
-#include "assert.hpp"
+#include <libshit/assert.hpp>
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
 #define NEPTOOLS_LOG_NAME "pattern"
-#include "logger_helper.hpp"
+#include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {

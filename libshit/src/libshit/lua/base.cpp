@@ -1,6 +1,6 @@
 #include "type_traits.hpp"
 #include "../assert.hpp"
-#include "lua/base_funcs.lua.h"
+#include "libshit/lua/base_funcs.lua.h"
 
 #include <cstring>
 

@@ -1,6 +1,6 @@
 // Auto generated code, do not edit. See gen_binding in project root.
 #ifndef NEPTOOLS_WITHOUT_LUA
-#include "lua/user_type.hpp"
+#include <libshit/lua/user_type.hpp>
 
 
 const char ::Neptools::Test::ParentListItem::TYPE_NAME[] = "neptools.test.parent_list_item";

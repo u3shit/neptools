@@ -8,8 +8,9 @@
 #else
 
 #include "dynamic_struct.hpp"
-#include "lua/auto_table.hpp"
-#include "lua/user_type.hpp"
+
+#include <libshit/lua/auto_table.hpp>
+#include <libshit/lua/user_type.hpp>
 
 #include <type_traits>
 #include <boost/integer.hpp>

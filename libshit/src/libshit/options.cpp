@@ -1,5 +1,4 @@
 #include "options.hpp"
-#include "utils.hpp"
 #include <iostream>
 #include <array>
 #include <map>
@@ -158,7 +157,7 @@ void OptionParser::Run_(int& argc, const char** argv)
     }
 
     std::array<Option*, 256> short_opts{};
-    NEPTOOLS_STATIC_ASSERT(CHAR_BIT == 8);
+    static_assert(CHAR_BIT == 8);
     std::map<const char*, Option*, OptCmp> long_opts;
 
     for (auto g : groups)
