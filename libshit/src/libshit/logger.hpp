@@ -14,20 +14,20 @@ namespace Libshit::Logger
 
 #undef ERROR // fuck you windows.h
 
-enum Level
-{
+  enum Level
+  {
     NONE = -4,
     ERROR = -3,
     WARNING = -2,
     INFO = -1,
-};
+  };
 
-OptionGroup& GetOptionGroup();
-extern int global_level;
-extern bool show_fun;
+  OptionGroup& GetOptionGroup();
+  extern int global_level;
+  extern bool show_fun;
 
-bool CheckLog(const char* name, int level) noexcept;
-std::ostream& Log(
+  bool CheckLog(const char* name, int level) noexcept;
+  std::ostream& Log(
     const char* name, int level, const char* file, unsigned line,
     const char* fun);
 
@@ -37,21 +37,21 @@ std::ostream& Log(
 #  define LIBSHIT_LOG_ARGS LIBSHIT_FILE, __LINE__, LIBSHIT_FUNCTION
 #endif
 
-#define LIBSHIT_LOG(name, level)                           \
-    ::Libshit::Logger::CheckLog(name, level) &&            \
-    ::Libshit::Logger::Log(name, level, LIBSHIT_LOG_ARGS)
+#define LIBSHIT_LOG(name, level)              \
+  ::Libshit::Logger::CheckLog(name, level) && \
+  ::Libshit::Logger::Log(name, level, LIBSHIT_LOG_ARGS)
 
 #define LIBSHIT_ERR(name)  LIBSHIT_LOG(name, ::Libshit::Logger::ERROR)
 #define LIBSHIT_WARN(name) LIBSHIT_LOG(name, ::Libshit::Logger::WARNING)
 #define LIBSHIT_INFO(name) LIBSHIT_LOG(name, ::Libshit::Logger::INFO)
 
 #ifndef NDEBUG
-#  define LIBSHIT_DBG(name, level)                                             \
-    ([]{static_assert(0 <= (level) && (level) < 5, "invalid debug level");},1) && \
-    LIBSHIT_LOG(name, level)
+#  define LIBSHIT_DBG(name, level)                                              \
+  ([]{static_assert(0 <= (level) && (level) < 5, "invalid debug level");},1) && \
+  LIBSHIT_LOG(name, level)
 #else
 #  define LIBSHIT_DBG(name, level) \
-    while (false) *static_cast<std::ostream*>(nullptr)
+  while (false) *static_cast<std::ostream*>(nullptr)
 #endif
 
 }

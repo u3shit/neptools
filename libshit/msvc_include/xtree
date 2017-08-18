@@ -32,45 +32,45 @@ V6.00:0009 */
 
 
 // not noexcept because standard doesn't say it and std::less isn't noexcept
-#define crend() __ignore_this_function_msvc_header_hack_move_along();           \
-    template <typename K, typename Comp = key_compare,                          \
-              typename = typename Comp::is_transparent>                         \
-    iterator find(const K& key)                                                 \
-    {                                                                           \
-        iterator it(transparent_lbound(key), this);                             \
-        if (it == end() ||                                                      \
-            _DEBUG_LT_PRED(this->_Getcomp(), key, this->_Key(it._Mynode())))    \
-            return end();                                                       \
-        return it;                                                              \
-    }                                                                           \
-    template <typename K, typename Comp = key_compare,                          \
-              typename = typename Comp::is_transparent>                         \
-    const_iterator find(const K& key) const                                     \
-    {                                                                           \
-        const_iterator it(transparent_lbound(key), this);                       \
-        if (it == end() ||                                                      \
-            _DEBUG_LT_PRED(this->_Getcomp(), key, this->_Key(it._Mynode())))    \
-            return end();                                                       \
-        return it;                                                              \
-    }                                                                           \
-private:                                                                        \
-    template <typename K>                                                       \
-    _Nodeptr transparent_lbound(const K& k) const                               \
-    {                                                                           \
-        auto node = _Root();                                                    \
-        auto head = _Myhead; /* aka end() */                                    \
-        while (!_Isnil(node))                                                   \
-            if (_DEBUG_LT_PRED(_Getcomp(), _Key(node), k))                      \
-                node = _Right(node);                                            \
-            else                                                                \
-            {                                                                   \
-                head = node;                                                    \
-                node = _Left(node);                                             \
-            }                                                                   \
-        return head;                                                            \
-    }                                                                           \
-    public:                                                                     \
-    const_reverse_iterator crend() /* const _NOEXCEPT ... */
+#define crend() __ignore_this_function_msvc_header_hack_move_along();    \
+  template <typename K, typename Comp = key_compare,                     \
+            typename = typename Comp::is_transparent>                    \
+  iterator find(const K& key)                                            \
+  {                                                                      \
+    iterator it(transparent_lbound(key), this);                          \
+    if (it == end() ||                                                   \
+        _DEBUG_LT_PRED(this->_Getcomp(), key, this->_Key(it._Mynode()))) \
+      return end();                                                      \
+    return it;                                                           \
+  }                                                                      \
+  template <typename K, typename Comp = key_compare,                     \
+            typename = typename Comp::is_transparent>                    \
+  const_iterator find(const K& key) const                                \
+  {                                                                      \
+    const_iterator it(transparent_lbound(key), this);                    \
+    if (it == end() ||                                                   \
+        _DEBUG_LT_PRED(this->_Getcomp(), key, this->_Key(it._Mynode()))) \
+      return end();                                                      \
+    return it;                                                           \
+  }                                                                      \
+private:                                                                 \
+  template <typename K>                                                  \
+  _Nodeptr transparent_lbound(const K& k) const                          \
+  {                                                                      \
+    auto node = _Root();                                                 \
+    auto head = _Myhead; /* aka end() */                                 \
+    while (!_Isnil(node))                                                \
+      if (_DEBUG_LT_PRED(_Getcomp(), _Key(node), k))                     \
+        node = _Right(node);                                             \
+      else                                                               \
+      {                                                                  \
+        head = node;                                                     \
+        node = _Left(node);                                              \
+      }                                                                  \
+    return head;                                                         \
+  }                                                                      \
+public:                                                                  \
+  const_reverse_iterator crend() /* const _NOEXCEPT ... */
 
 #include_next<xtree>
 #undef crend

@@ -8,22 +8,22 @@
 namespace std
 {
 
-// https://timsong-cpp.github.io/cppwp/n4659/comparisons.less
-template <typename T = void> struct less
-{
+  // https://timsong-cpp.github.io/cppwp/n4659/comparisons.less
+  template <typename T = void> struct less
+  {
     constexpr bool operator()(const T& x, const T& y) const { return x < y; }
-};
+  };
 
-template<> struct less<void>
-{
+  template<> struct less<void>
+  {
     template <typename T, typename U>
     constexpr auto operator()(T&& t, U&& u) const
-        -> decltype(static_cast<T&&>(t) < static_cast<U&&>(u))
+      -> decltype(static_cast<T&&>(t) < static_cast<U&&>(u))
     {
-        return static_cast<T&&>(t) < static_cast<U&&>(u);
+      return static_cast<T&&>(t) < static_cast<U&&>(u);
     }
 
     using is_transparent = void;
-};
+  };
 
 }

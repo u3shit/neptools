@@ -9,10 +9,10 @@
 namespace std
 {
 
-template <typename E>
-class initializer_list
-{
-public:
+  template <typename E>
+  class initializer_list
+  {
+  public:
     using value_type      = E;
     using reference       = const E&;
     using const_reference = const E&;
@@ -27,13 +27,13 @@ public:
     constexpr const E* begin() const noexcept { return first; }  // first element
     constexpr const E* end()   const noexcept { return last; }   // one past the last element
 
-private:
+  private:
     const iterator first = nullptr, last = nullptr;
-};
+  };
 
-// [support.initlist.range], initializer list range access
-template <typename E>
-constexpr const E* begin(initializer_list<E> il) noexcept { return il.begin(); }
-template <typename E>
-constexpr const E* end(initializer_list<E> il) noexcept { return il.end(); }
+  // [support.initlist.range], initializer list range access
+  template <typename E>
+  constexpr const E* begin(initializer_list<E> il) noexcept { return il.begin(); }
+  template <typename E>
+  constexpr const E* end(initializer_list<E> il) noexcept { return il.end(); }
 }

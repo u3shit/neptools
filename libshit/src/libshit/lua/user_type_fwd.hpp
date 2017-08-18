@@ -5,12 +5,12 @@
 namespace Libshit::Lua
 {
 
-class TypeBuilder;
+  class TypeBuilder;
 
-template <typename T, typename Enable = void> struct TypeRegisterTraits
-{
+  template <typename T, typename Enable = void> struct TypeRegisterTraits
+  {
     static void Register(TypeBuilder& bld); // so you can fully specialize
-};
+  };
 
 }
 

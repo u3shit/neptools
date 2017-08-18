@@ -11,15 +11,16 @@
 namespace Libshit
 {
 
-// like string_view, except it CString=true, it must be zero terminated if
-// !empty() (but can contain embedded zeros)
-template <typename Char, bool CString, typename Traits = std::char_traits<Char>>
-class BaseBasicNonowningString
+  // like string_view, except it CString=true, it must be zero terminated if
+  // !empty() (but can contain embedded zeros)
+  template <typename Char, bool CString,
+            typename Traits = std::char_traits<Char>>
+  class BaseBasicNonowningString
     : boost::totally_ordered<BaseBasicNonowningString<Char, CString, Traits>>,
       boost::totally_ordered<BaseBasicNonowningString<Char, CString, Traits>,
                              const Char*>
-{
-public:
+  {
+  public:
     static constexpr bool ZERO_TERMINATED = CString;
     using traits_type = Traits;
     using value_type = Char;
@@ -46,28 +47,29 @@ public:
     { len = str ? Traits::length(str) : 0; }
 
     BaseBasicNonowningString(unsigned_const_pointer str) noexcept
-        : BaseBasicNonowningString{reinterpret_cast<const_pointer>(str)} {}
+      : BaseBasicNonowningString{reinterpret_cast<const_pointer>(str)} {}
 
-    constexpr BaseBasicNonowningString(const_pointer str, size_type len) noexcept
-        : str{str}, len{len}
+    constexpr BaseBasicNonowningString(
+      const_pointer str, size_type len) noexcept
+      : str{str}, len{len}
     {
-        LIBSHIT_ASSERT(str != nullptr || len == 0);
-        if (CString && str) LIBSHIT_ASSERT(str[len] == '\0');
+      LIBSHIT_ASSERT(str != nullptr || len == 0);
+      if (CString && str) LIBSHIT_ASSERT(str[len] == '\0');
     }
 
     constexpr BaseBasicNonowningString(
-        unsigned_const_pointer str, size_type len) noexcept
-        : BaseBasicNonowningString{reinterpret_cast<const_pointer>(str), len} {}
+      unsigned_const_pointer str, size_type len) noexcept
+      : BaseBasicNonowningString{reinterpret_cast<const_pointer>(str), len} {}
 
 
     template <typename Allocator>
     BaseBasicNonowningString(
-        const std::basic_string<Char, Traits, Allocator>& str) noexcept
-        : str{str.c_str()}, len{str.size()} {}
+      const std::basic_string<Char, Traits, Allocator>& str) noexcept
+      : str{str.c_str()}, len{str.size()} {}
 
     template <size_t N>
     constexpr BaseBasicNonowningString(const Char (&str)[N]) noexcept
-        : str{str}, len{N-1} {}
+      : str{str}, len{N-1} {}
 
     constexpr const_iterator  begin() const noexcept { return str; }
     constexpr const_iterator cbegin() const noexcept { return str; }
@@ -83,9 +85,9 @@ public:
     { return str[i]; }
     constexpr const_reference at(size_type i) const
     {
-        if (CString ? (i > len) : (i >= len))
-            LIBSHIT_THROW(std::out_of_range{"NonowningString"});
-        return str[i];
+      if (CString ? (i > len) : (i >= len))
+        LIBSHIT_THROW(std::out_of_range{"NonowningString"});
+      return str[i];
     }
 
     constexpr unsigned_const_reference uindex(size_type i) const noexcept
@@ -120,11 +122,11 @@ public:
     // copy, *find*, substr: too lazy
     template <bool CStringO>
     constexpr int compare(
-        BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
+      BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
     {
-        auto cmp = Traits::compare(str, o.str, std::min(len, o.len));
-        if (cmp == 0) cmp = (len == o.len ? 0 : (len < o.len ? -1 : 1));
-        return cmp;
+      auto cmp = Traits::compare(str, o.str, std::min(len, o.len));
+      if (cmp == 0) cmp = (len == o.len ? 0 : (len < o.len ? -1 : 1));
+      return cmp;
     }
     constexpr int compare(BaseBasicNonowningString o) const noexcept
     { return compare<CString>(o); }
@@ -132,10 +134,10 @@ public:
 
     template <bool CStringO>
     constexpr bool operator==(
-        BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
+      BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
     {
-        return len == o.len &&
-            (str == o.str || Traits::compare(str, o.str, len) == 0);
+      return len == o.len &&
+        (str == o.str || Traits::compare(str, o.str, len) == 0);
     }
     constexpr bool operator==(BaseBasicNonowningString o) const noexcept
     { return operator==<CString>(o); }
@@ -143,67 +145,68 @@ public:
 
     template <bool CStringO>
     constexpr bool operator<(
-        BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
+      BaseBasicNonowningString<Char, CStringO, Traits> o) const noexcept
     { return compare(o) < 0; }
     constexpr bool operator<(BaseBasicNonowningString o) const noexcept
     { return operator< <CString>(o); }
 
-protected:
+  protected:
     const_pointer str;
     size_type len;
-};
+  };
 
-#define X_GEN_OP(op)                                                            \
-    template <typename Char, bool CString, typename Traits, typename Allocator> \
-    inline bool operator op(                                                    \
-        const std::basic_string<Char, Traits, Allocator>& lhs,                  \
-        BaseBasicNonowningString<Char, CString, Traits> rhs)                    \
-    {                                                                           \
-         return BaseBasicNonowningString<Char, CString, Traits>{lhs} op rhs;    \
-    }
-X_GEN_OP(==)
-X_GEN_OP(!=)
-X_GEN_OP(<)
-X_GEN_OP(<=)
-X_GEN_OP(>)
-X_GEN_OP(>=)
+#define X_GEN_OP(op)                                                          \
+  template <typename Char, bool CString, typename Traits, typename Allocator> \
+  inline bool operator op(                                                    \
+    const std::basic_string<Char, Traits, Allocator>& lhs,                    \
+    BaseBasicNonowningString<Char, CString, Traits> rhs)                      \
+  {                                                                           \
+    return BaseBasicNonowningString<Char, CString, Traits>{lhs} op rhs;       \
+  }
+  X_GEN_OP(==)
+  X_GEN_OP(!=)
+  X_GEN_OP(<)
+  X_GEN_OP(<=)
+  X_GEN_OP(>)
+  X_GEN_OP(>=)
 #undef X_GEN_OP
 
-template <typename Char, bool CString, typename Traits = std::char_traits<Char>>
-class BasicNonowningString;
+  template <typename Char, bool CString,
+            typename Traits = std::char_traits<Char>>
+  class BasicNonowningString;
 
-template <typename Char, typename Traits>
-class BasicNonowningString<Char, true, Traits> final
+  template <typename Char, typename Traits>
+  class BasicNonowningString<Char, true, Traits> final
     : public BaseBasicNonowningString<Char, true, Traits>
-{
+  {
     using Base = BaseBasicNonowningString<Char, true, Traits>;
-public:
+  public:
     using Base::Base;
 
     constexpr typename Base::const_pointer c_str() const noexcept
     { return this->data(); }
-};
+  };
 
-template <typename Char, typename Traits>
-class BasicNonowningString<Char, false, Traits> final
+  template <typename Char, typename Traits>
+  class BasicNonowningString<Char, false, Traits> final
     : public BaseBasicNonowningString<Char, false, Traits>
-{
+  {
     using Base = BaseBasicNonowningString<Char, false, Traits>;
-public:
+  public:
     using Base::Base;
 
     BasicNonowningString(BaseBasicNonowningString<Char, true, Traits> str)
-        : Base{str.data(), str.length()} {}
+      : Base{str.data(), str.length()} {}
 
     constexpr void remove_suffix(typename Base::size_type n) noexcept
     { Base::len -= n; }
-};
+  };
 
-using NonowningString = BasicNonowningString<char, true>;
-using NonowningWString = BasicNonowningString<wchar_t, true>;
+  using NonowningString = BasicNonowningString<char, true>;
+  using NonowningWString = BasicNonowningString<wchar_t, true>;
 
-using StringView = BasicNonowningString<char, false>;
-using WStringView = BasicNonowningString<wchar_t, false>;
+  using StringView = BasicNonowningString<char, false>;
+  using WStringView = BasicNonowningString<wchar_t, false>;
 
 }
 

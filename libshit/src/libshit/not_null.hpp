@@ -8,13 +8,13 @@
 namespace Libshit
 {
 
-// construct a null notnull...
-struct EmptyNotNull {};
+  // construct a null notnull...
+  struct EmptyNotNull {};
 
-template <typename T>
-class NotNull
-{
-public:
+  template <typename T>
+  class NotNull
+  {
+  public:
     NotNull() = delete;
     NotNull(std::nullptr_t) = delete;
     NotNull(NotNull&) = default;
@@ -28,7 +28,7 @@ public:
 
     template <typename U>
     NotNull(NotNull<U> o) noexcept(noexcept(T{std::move(o.t)}))
-        : t{std::move(o.t)} {}
+      : t{std::move(o.t)} {}
 
     NotNull& operator=(const NotNull&) = default;
     NotNull& operator=(NotNull&&) = default; // NOLINT
@@ -45,18 +45,18 @@ public:
     bool operator!=(const NotNull& o) const noexcept { return t != o.t; }
 
     decltype(auto) get() const { return t.get(); }
-    template <typename U, typename = std::enable_if_t<std::is_convertible<T, U>::value>>
+    template <typename U,
+              typename = std::enable_if_t<std::is_convertible<T, U>::value>>
     operator U() const { LIBSHIT_ASSERT(t); return static_cast<U>(t); }
-private:
+  private:
     T t;
 
     template <typename U> friend class NotNull;
-};
+  };
 
-template <typename T>
-NotNull<T> MakeNotNull(T t) noexcept(noexcept(NotNull<T>(std::move(t))))
-{ return NotNull<T>(std::move(t)); }
-
+  template <typename T>
+  NotNull<T> MakeNotNull(T t) noexcept(noexcept(NotNull<T>(std::move(t))))
+  { return NotNull<T>(std::move(t)); }
 }
 
 #endif

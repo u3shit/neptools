@@ -7,9 +7,9 @@
 namespace Libshit::Lua
 {
 
-class StackValue
-{
-public:
+  class StackValue
+  {
+  public:
     static constexpr const bool HAS_VM = false;
 
     StackValue(int idx) noexcept : idx{idx} { LIBSHIT_ASSERT(idx > 0); }
@@ -18,9 +18,9 @@ public:
     void Push(StateRef vm) const { lua_pushvalue(vm, idx); }
 
     void Destroy(StateRef) noexcept {}
-private:
+  private:
     int idx;
-};
+  };
 
 }
 

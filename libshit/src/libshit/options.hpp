@@ -10,41 +10,41 @@
 namespace Libshit
 {
 
-struct Exit { bool success; };
-LIBSHIT_GEN_EXCEPTION_TYPE(InvalidParam, std::runtime_error);
+  struct Exit { bool success; };
+  LIBSHIT_GEN_EXCEPTION_TYPE(InvalidParam, std::runtime_error);
 
-struct Option;
-class OptionParser;
+  struct Option;
+  class OptionParser;
 
-class OptionGroup final
-{
-public:
+  class OptionGroup final
+  {
+  public:
     OptionGroup(
-        OptionParser& parser, const char* name, const char* help = nullptr);
+      OptionParser& parser, const char* name, const char* help = nullptr);
 
     const char* GetName() const noexcept { return name; }
     const char* GetHelp() const noexcept { return help; }
     const std::vector<Option*>& GetOptions() const noexcept { return options; }
 
-private:
+  private:
     friend struct Option;
     const char* const name;
     const char* const help;
     std::vector<Option*> options;
-};
+  };
 
-struct Option final
-{
+  struct Option final
+  {
     using Func = std::function<void (std::vector<const char*>&&)>;
     Option(OptionGroup& group, const char* name, char short_name,
            size_t args_count, const char* args_help, const char* help, Func func)
-        : name{name}, short_name{short_name}, args_count{args_count},
-          args_help{args_help}, help{help}, func{std::move(func)}
+      : name{name}, short_name{short_name}, args_count{args_count},
+        args_help{args_help}, help{help}, func{std::move(func)}
     { group.options.push_back(this); }
 
     Option(OptionGroup& group, const char* name, size_t args_count,
            const char* args_help, const char* help, Func func)
-        : Option{group, name, 0, args_count, args_help, help, std::move(func)} {}
+      : Option{group, name, 0, args_count, args_help, help, std::move(func)} {}
 
     const char* const name;
     const char short_name;
@@ -55,11 +55,11 @@ struct Option final
 
     const Func func;
     bool enabled = true;
-};
+  };
 
-class OptionParser final
-{
-public:
+  class OptionParser final
+  {
+  public:
     OptionParser();
     OptionParser(const OptionParser&) = delete;
     void operator=(const OptionParser&) = delete;
@@ -75,7 +75,8 @@ public:
     void FailOnNoArg();
     const NoArgFun& GetNoArgHandler() const { return no_arg_fun; }
 
-    void SetShowHelpOnNoOptions(bool show = true) noexcept { no_opts_help = show; }
+    void SetShowHelpOnNoOptions(bool show = true) noexcept
+    { no_opts_help = show; }
     bool GetShowHelpOnNoOptions() const noexcept { return no_opts_help; }
 
     void SetOstream(std::ostream& os) { this->os = &os; }
@@ -87,11 +88,11 @@ public:
 
     static inline OptionParser& GetGlobal()
     {
-        static OptionParser inst;
-        return inst;
+      static OptionParser inst;
+      return inst;
     }
 
-private:
+  private:
     void ShowHelp();
     void Run_(int& argc, const char** argv);
 
@@ -107,9 +108,9 @@ private:
 
     std::ostream* os;
     const char* argv0 = nullptr;
-};
+  };
 
-using ProcessedOption = boost::error_info<struct ProcessedOptionTag, std::string>;
-
+  using ProcessedOption = boost::error_info<
+    struct ProcessedOptionTag, std::string>;
 }
 #endif

@@ -9,8 +9,8 @@
 // http://stackoverflow.com/a/21371401
 #define __GET_MACRO(_0, _1, _2, _3, _4, NAME, ...) NAME
 #define tuple(...) \
-    __GET_MACRO(_0, ##__VA_ARGS__, tuple, tuple, tuple, tuple, constexpr tuple)\
-    (__VA_ARGS__)
+  __GET_MACRO(_0, ##__VA_ARGS__, tuple, tuple, tuple, tuple, constexpr tuple) \
+  (__VA_ARGS__)
 
 // remove explicit from direct ctor (this is not c++17 compatible, but the
 // libc++ builds should catch this problem)
@@ -29,10 +29,10 @@
 namespace std
 {
 
-template <typename T>
-inline constexpr size_t tuple_size_v = tuple_size<T>::value;
+  template <typename T>
+  inline constexpr size_t tuple_size_v = tuple_size<T>::value;
 
-template <std::size_t I, typename T>
-using tuple_element_t = typename tuple_element<I, T>::type;
+  template <std::size_t I, typename T>
+  using tuple_element_t = typename tuple_element<I, T>::type;
 
 }

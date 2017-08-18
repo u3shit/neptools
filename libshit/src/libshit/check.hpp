@@ -6,20 +6,20 @@
 #include "except.hpp"
 
 #ifdef NDEBUG
-#define LIBSHIT_CHECK_ARGS nullptr, 0, nullptr
+#  define LIBSHIT_CHECK_ARGS nullptr, 0, nullptr
 #else
-#define LIBSHIT_CHECK_ARGS LIBSHIT_FILE, __LINE__, LIBSHIT_FUNCTION
+#  define LIBSHIT_CHECK_ARGS LIBSHIT_FILE, __LINE__, LIBSHIT_FUNCTION
 #endif
 
-#define LIBSHIT_CHECK(except_type, x, msg)                     \
-    Checker{}.template Check<except_type>(                      \
-        [&]() { return (x); }, #x, msg, LIBSHIT_CHECK_ARGS)
+#define LIBSHIT_CHECK(except_type, x, msg) \
+  Checker{}.template Check<except_type>(   \
+    [&]() { return (x); }, #x, msg, LIBSHIT_CHECK_ARGS)
 
 namespace Libshit::Check
 {
 
-struct No
-{
+  struct No
+  {
     template <typename ExceptT, typename Fun>
     void Check(Fun f, const char*, const char*, const char*, unsigned,
                const char*) noexcept
@@ -27,16 +27,16 @@ struct No
 
     static constexpr bool IS_NOP = true;
     static constexpr bool IS_NOEXCEPT = true;
-};
+  };
 
-struct DoAssert
-{
+  struct DoAssert
+  {
     template <typename ExceptT, typename Fun>
     void Check(Fun f, const char* expr, const char* msg, const char* file,
                unsigned line, const char* fun)
     {
-        if (BOOST_UNLIKELY(!f()))
-            AssertFailed(expr, msg, file, line, fun);
+      if (BOOST_UNLIKELY(!f()))
+        AssertFailed(expr, msg, file, line, fun);
     }
 
     static constexpr bool IS_NOP = false;
@@ -45,35 +45,35 @@ struct DoAssert
     // noexcept(Checker::IS_NOEXCEPT)  would have different noexceptness on
     // debug and release
     static constexpr bool IS_NOEXCEPT = true;
-};
+  };
 
 #ifndef NDEBUG
-using Assert = DoAssert;
+  using Assert = DoAssert;
 #else
-using Assert = No;
+  using Assert = No;
 #endif
 
 
-struct Throw
-{
+  struct Throw
+  {
     template <typename ExceptT, typename Fun>
     void Check(Fun f, const char* expr, const char* msg, const char* file,
                unsigned line, const char* fun)
     {
-        if (!f())
-            throw ::boost::enable_error_info(ExceptT{msg}) <<
+      if (!f())
+        throw ::boost::enable_error_info(ExceptT{msg}) <<
 #ifndef NDEBUG
-                ::boost::throw_file(file) <<
-                ::boost::throw_line(line) <<
-                ::boost::throw_function(fun) <<
+              ::boost::throw_file(file) <<
+              ::boost::throw_line(line) <<
+              ::boost::throw_function(fun) <<
 #endif
-                FailedExpression{expr};
-        ((void) file); ((void) line); ((void) fun);
+              FailedExpression{expr};
+      ((void) file); ((void) line); ((void) fun);
     }
 
     static constexpr bool IS_NOP = false;
     static constexpr bool IS_NOEXCEPT = false;
-};
+  };
 
 }
 #endif

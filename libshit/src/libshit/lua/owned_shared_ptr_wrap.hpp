@@ -11,23 +11,23 @@
 namespace Libshit::Lua
 {
 
-template <auto Fun, typename Args = FunctionArguments<decltype(Fun)>>
-struct OwnedSharedPtrWrap;
+  template <auto Fun, typename Args = FunctionArguments<decltype(Fun)>>
+  struct OwnedSharedPtrWrap;
 
-template <auto Fun, typename Class, typename... Args>
-struct OwnedSharedPtrWrap<Fun, brigand::list<Class, Args...>>
-{
+  template <auto Fun, typename Class, typename... Args>
+  struct OwnedSharedPtrWrap<Fun, brigand::list<Class, Args...>>
+  {
     using OrigRet = std::remove_reference_t<FunctionReturn<decltype(Fun)>>;
     using NewRet = NotNull<SharedPtr<OrigRet>>;
 
     static NewRet Wrap(Class&& thiz, Args&&... args)
     {
-        return NewRet{
-            &thiz,
-            &Invoke(Fun, std::forward<Class>(thiz), std::forward<Args>(args)...),
-            true};
+      return NewRet{
+        &thiz,
+        &Invoke(Fun, std::forward<Class>(thiz), std::forward<Args>(args)...),
+        true};
     }
-};
+  };
 
 }
 

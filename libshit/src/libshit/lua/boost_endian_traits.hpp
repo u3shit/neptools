@@ -11,19 +11,19 @@
 namespace Libshit::Lua
 {
 
-template <boost::endian::order Order, typename T, size_t N,
-          boost::endian::align A>
-struct IsBoostEndian<boost::endian::endian_arithmetic<Order, T, N, A>>
+  template <boost::endian::order Order, typename T, size_t N,
+            boost::endian::align A>
+  struct IsBoostEndian<boost::endian::endian_arithmetic<Order, T, N, A>>
     : std::true_type {};
 
-#define X(type)                                         \
-    template<> struct TypeName<boost::endian::type>     \
-    { static constexpr const char* TYPE_NAME = #type; }
-X(little_uint8_t);
-X(little_uint16_t);
-X(little_uint32_t);
-X(little_uint64_t);
-#undef X
+#define LIBSHIT_GEN(type)                         \
+  template<> struct TypeName<boost::endian::type> \
+  { static constexpr const char* TYPE_NAME = #type; }
+  LIBSHIT_GEN(little_uint8_t);
+  LIBSHIT_GEN(little_uint16_t);
+  LIBSHIT_GEN(little_uint32_t);
+  LIBSHIT_GEN(little_uint64_t);
+#undef LIBSHIT_GEN
 
 }
 

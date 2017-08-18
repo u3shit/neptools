@@ -7,7 +7,7 @@
 namespace Libshit::Lua
 {
 
-struct ValueObject {};
+  struct ValueObject {};
 
 }
 
@@ -21,19 +21,19 @@ struct ValueObject {};
 namespace Libshit::Lua
 {
 
-// no inheritance support for now
-struct LIBSHIT_LUAGEN(no_inherit=true,const=true) ValueObject {};
+  // no inheritance support for now
+  struct LIBSHIT_LUAGEN(no_inherit=true,const=true) ValueObject {};
 
-// specialize if needed
-template <typename T, typename Enable = void>
-struct IsValueObject : std::is_base_of<ValueObject, T> {};
+  // specialize if needed
+  template <typename T, typename Enable = void>
+  struct IsValueObject : std::is_base_of<ValueObject, T> {};
 
-template <typename T>
-constexpr bool IS_VALUE_OBJECT = IsValueObject<T>::value;
+  template <typename T>
+  constexpr bool IS_VALUE_OBJECT = IsValueObject<T>::value;
 
-template <typename T>
-struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
-{
+  template <typename T>
+  struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
+  {
     using RawType = T;
 
     template <bool Unsafe>
@@ -53,22 +53,22 @@ struct TypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
 
     static void PrintName(std::ostream& os) { os << TYPE_NAME<T>; }
     static constexpr const char* TAG = TYPE_NAME<T>;
-};
+  };
 
-template <typename T>
-struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
-{
+  template <typename T>
+  struct UserTypeTraits<T, std::enable_if_t<IsValueObject<T>::value>>
+  {
     static constexpr bool INSTANTIABLE = true;
     static constexpr bool NEEDS_GC = !std::is_trivially_destructible_v<T>;
 
     BOOST_FORCEINLINE
     static void GcFun(StateRef vm, T& t)
     {
-        static_assert(NEEDS_GC);
-        t.~T();
-        Userdata::UnsetMetatable(vm);
+      static_assert(NEEDS_GC);
+      t.~T();
+      Userdata::UnsetMetatable(vm);
     }
-};
+  };
 
 }
 

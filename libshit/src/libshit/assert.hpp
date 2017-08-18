@@ -30,30 +30,30 @@
 #  include "file.hpp"
 
 #  define LIBSHIT_ASSERT(expr) \
-    (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, nullptr))
+  (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, nullptr))
 
 #  define LIBSHIT_ASSERT_MSG(expr, msg) \
-    (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, msg))
+  (BOOST_LIKELY(!!(expr)) ? ((void)0) : LIBSHIT_ASSERT_FAILED(#expr, msg))
 
-#  define LIBSHIT_ASSERT_FAILED(expr, msg)                      \
-    ::Libshit::AssertFailed(expr, msg, LIBSHIT_FILE, __LINE__, \
-                             LIBSHIT_FUNCTION)
+#  define LIBSHIT_ASSERT_FAILED(expr, msg)                   \
+  ::Libshit::AssertFailed(expr, msg, LIBSHIT_FILE, __LINE__, \
+                          LIBSHIT_FUNCTION)
 
-#  define LIBSHIT_UNREACHABLE(x)                   \
-    do                                              \
-    {                                               \
-        LIBSHIT_ASSERT_FAILED("unreachable", x);   \
-        /* click on ignore -> you're toasted */     \
-        LIBSHIT_BUILTIN_UNREACHABLE();             \
-    } while (false)
+#  define LIBSHIT_UNREACHABLE(x)             \
+  do                                         \
+  {                                          \
+    LIBSHIT_ASSERT_FAILED("unreachable", x); \
+    /* click on ignore -> you're toasted */  \
+    LIBSHIT_BUILTIN_UNREACHABLE();           \
+  } while (false)
 #endif
 
 namespace Libshit
 {
 #ifndef WINDOWS
-BOOST_NORETURN
+  BOOST_NORETURN
 #endif
-void AssertFailed(
+  void AssertFailed(
     const char* expr, const char* msg, const char* file, unsigned line,
     const char* fun);
 

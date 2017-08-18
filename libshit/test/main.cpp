@@ -8,8 +8,8 @@ static std::string info(const boost::exception& e)
 
 int main(int argc, const char** argv)
 {
-    Catch::ExceptionTranslatorRegistrar x{info};
-    Libshit::Logger::global_level = Libshit::Logger::ERROR;
+  Catch::ExceptionTranslatorRegistrar x{info};
+  Libshit::Logger::global_level = Libshit::Logger::ERROR;
 
-    return Catch::Session().run( argc, argv );
+  return Catch::Session().run( argc, argv );
 }
