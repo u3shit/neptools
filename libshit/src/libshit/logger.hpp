@@ -7,11 +7,9 @@
 
 #include <iosfwd>
 
-namespace Libshit
-{
+namespace Libshit { class OptionGroup; }
 
-class OptionGroup;
-namespace Logger
+namespace Libshit::Logger
 {
 
 #undef ERROR // fuck you windows.h
@@ -56,7 +54,6 @@ std::ostream& Log(
     while (false) *static_cast<std::ostream*>(nullptr)
 #endif
 
-}
 }
 
 LIBSHIT_ENUM(Libshit::Logger::Level);

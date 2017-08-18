@@ -27,11 +27,9 @@ template <typename T, typename Enable = void> struct TypeTraits;
 
 namespace boost { namespace filesystem { class path; } }
 
-namespace Libshit
-{
-template <typename T> class NotNull;
+namespace Libshit { template <typename T> class NotNull; }
 
-namespace Lua
+namespace Libshit::Lua
 {
 
 // type name
@@ -292,7 +290,6 @@ struct UserTypeTraits<T, std::enable_if_t<std::is_enum_v<T>>>
     static constexpr bool NEEDS_GC = false;
 };
 
-}
 }
 
 #endif

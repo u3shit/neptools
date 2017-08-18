@@ -38,8 +38,22 @@ void OptionParser::FailOnNoArg()
 namespace
 {
 
-size_t ParseShort(const std::array<Option*, 256>& short_opts,
-                  size_t argc, size_t i, const char** argv)
+struct OptCmp
+{
+    bool operator()(const char* a, const char* b) const
+    {
+        while (*a && *a == *b) ++a, ++b;
+
+        if (*a == '=' || *b == '=') return false;
+        return *reinterpret_cast<const unsigned char*>(a) <
+            *reinterpret_cast<const unsigned char*>(b);
+    }
+};
+
+}
+
+static size_t ParseShort(const std::array<Option*, 256>& short_opts,
+                         size_t argc, size_t i, const char** argv)
 {
     auto ptr = argv[i];
     return AddInfo([&]() -> size_t
@@ -80,20 +94,8 @@ size_t ParseShort(const std::array<Option*, 256>& short_opts,
     }, [&](auto& e) { e << ProcessedOption{{'-', *ptr}}; });
 }
 
-struct OptCmp
-{
-    bool operator()(const char* a, const char* b) const
-    {
-        while (*a && *a == *b) ++a, ++b;
-
-        if (*a == '=' || *b == '=') return false;
-        return *reinterpret_cast<const unsigned char*>(a) <
-            *reinterpret_cast<const unsigned char*>(b);
-    }
-};
-
-size_t ParseLong(const std::map<const char*, Option*, OptCmp>& long_opts,
-                 size_t argc, size_t i, const char** argv)
+static size_t ParseLong(const std::map<const char*, Option*, OptCmp>& long_opts,
+                        size_t argc, size_t i, const char** argv)
 {
     auto arg = strchr(argv[i]+2, '=');
     auto len = arg ? arg - argv[i] - 2 : strlen(argv[i]+2);
@@ -138,8 +140,6 @@ size_t ParseLong(const std::map<const char*, Option*, OptCmp>& long_opts,
 
     opt->func(std::move(args));
     return count;
-}
-
 }
 
 void OptionParser::Run_(int& argc, const char** argv)

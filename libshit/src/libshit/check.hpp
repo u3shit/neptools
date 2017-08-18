@@ -1,3 +1,5 @@
+#ifndef UUID_A21F2BE3_75BB_4F94_9C73_1AC078681341
+#define UUID_A21F2BE3_75BB_4F94_9C73_1AC078681341
 #pragma once
 
 #include "assert.hpp"
@@ -13,9 +15,7 @@
     Checker{}.template Check<except_type>(                      \
         [&]() { return (x); }, #x, msg, LIBSHIT_CHECK_ARGS)
 
-namespace Libshit
-{
-namespace Check
+namespace Libshit::Check
 {
 
 struct No
@@ -76,4 +76,4 @@ struct Throw
 };
 
 }
-}
+#endif

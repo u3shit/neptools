@@ -26,9 +26,7 @@ using std::is_assignable;
 #define LIBSHIT_LUA_CHECKTOP(vm, val) LIBSHIT_ASSERT(lua_gettop(vm) == val)
 #endif
 
-namespace Libshit
-{
-namespace Lua
+namespace Libshit::Lua
 {
 
 template <typename T, typename Enable = void> struct TypeTraits;
@@ -182,7 +180,6 @@ public:
 
 //using Traceback = boost::error_info<struct TracebackTag, std::string>;
 
-}
 }
 
 #endif

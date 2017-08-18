@@ -1,9 +1,7 @@
 #include "user_type.hpp"
 #include <cstring>
 
-namespace Libshit
-{
-namespace Lua
+namespace Libshit::Lua
 {
 
 TypeBuilder::TypeBuilder(StateRef vm, const char* name, bool instantiable)
@@ -179,5 +177,4 @@ int TypeBuilder::IsFunc(lua_State* vm) noexcept
     return 1;
 }
 
-}
 }

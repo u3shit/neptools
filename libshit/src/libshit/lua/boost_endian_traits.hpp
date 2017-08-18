@@ -8,9 +8,7 @@
 
 #include <boost/endian/arithmetic.hpp>
 
-namespace Libshit
-{
-namespace Lua
+namespace Libshit::Lua
 {
 
 template <boost::endian::order Order, typename T, size_t N,
@@ -27,7 +25,6 @@ X(little_uint32_t);
 X(little_uint64_t);
 #undef X
 
-}
 }
 
 #endif

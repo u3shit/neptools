@@ -27,9 +27,7 @@
 #define strcasecmp _stricmp
 #endif
 
-namespace Libshit
-{
-namespace Logger
+namespace Libshit::Logger
 {
 
 OptionGroup& GetOptionGroup()
@@ -41,12 +39,9 @@ OptionGroup& GetOptionGroup()
 int global_level = -1;
 bool show_fun = false;
 
-namespace
-{
+static std::map<std::string, int, std::less<>> level_map;
 
-std::map<std::string, int, std::less<>> level_map;
-
-Option show_fun_opt{
+static Option show_fun_opt{
     GetOptionGroup(), "show-functions", 0, nullptr,
 #ifdef NDEBUG
     "Ignored for compatibility with debug builds",
@@ -55,7 +50,7 @@ Option show_fun_opt{
 #endif
     [](auto&&) { show_fun = true; }};
 
-int ParseLevel(const char* str)
+static int ParseLevel(const char* str)
 {
     if (strcasecmp(str, "none") == 0)
         return NONE;
@@ -79,7 +74,7 @@ int ParseLevel(const char* str)
     }
 }
 
-Option debug_level_opt{
+static Option debug_level_opt{
     GetOptionGroup(), "log-level", 'l', 1, "[MODULE=LEVEL,[...]][DEFAULT_LEVEL]",
     "Sets logging level for the specified modules, or the global default\n\t"
     "Valid levels: none, err, warn, info"
@@ -106,7 +101,10 @@ Option debug_level_opt{
         }
     }};
 
-auto& os = std::clog;
+static auto& os = std::clog;
+
+namespace
+{
 struct LogBuffer final : public std::streambuf
 {
     LogBuffer()
@@ -260,10 +258,10 @@ struct LogBuffer final : public std::streambuf
     size_t max_file = 20, max_fun = 20;
 #endif
 };
-
-LogBuffer filter;
-std::ostream log_os{&filter};
 }
+
+static LogBuffer filter;
+static std::ostream log_os{&filter};
 
 bool CheckLog(const char* name, int level) noexcept
 {
@@ -345,5 +343,4 @@ static Lua::State::Register reg{[](Lua::StateRef vm)
     }};
 
 #endif
-}
 }

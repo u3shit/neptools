@@ -12,12 +12,9 @@
 
 #include <type_traits>
 
-namespace Libshit
-{
+namespace Libshit { template <typename T> class NotNull; }
 
-template <typename T> class NotNull;
-
-namespace Lua
+namespace Libshit::Lua
 {
 
 // When specifying T as template argument for vararg &&... argument,
@@ -182,7 +179,6 @@ struct TypeBuilder::InheritHelp<Deriv, Head, Rest...>
 };
 
 
-}
 }
 
 #endif

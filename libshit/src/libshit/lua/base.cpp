@@ -4,9 +4,7 @@
 
 #include <cstring>
 
-namespace Libshit
-{
-namespace Lua
+namespace Libshit::Lua
 {
 
 char reftbl;
@@ -197,5 +195,4 @@ void StateRef::DoString(const char* str)
 thread_local const char* StateRef::error_msg;
 thread_local size_t StateRef::error_len;
 
-}
 }
