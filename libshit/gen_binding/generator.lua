@@ -52,7 +52,7 @@ local template_str = [=[
 //$ for i,cls in ipairs(classes) do
 //$   if cls.is_enum then
 const char ::Libshit::Lua::TypeName</*$= cls.cpp_name */>::TYPE_NAME[] =
-    "/*$= cls.name */";
+  "/*$= cls.name */";
 //$   else
 /*$ if cls.template then */template <>/*$ end */
 const char /*$= cls.cpp_name */::TYPE_NAME[] = "/*$= cls.name */";
@@ -63,10 +63,10 @@ namespace Libshit::Lua
 {
 //$ for i,cls in ipairs(classes) do
 
-// class /*$= cls.name */
-template<>
-void TypeRegisterTraits</*$= cls.cpp_name */>::Register(TypeBuilder& bld)
-{
+  // class /*$= cls.name */
+  template<>
+  void TypeRegisterTraits</*$= cls.cpp_name */>::Register(TypeBuilder& bld)
+  {
 //$   local x = { cls.cpp_name }
 //$   for i,v in ipairs(cls.parents) do
 //$     if not v.no_inherit then x[#x+1] = v.cpp_name end
@@ -82,14 +82,14 @@ void TypeRegisterTraits</*$= cls.cpp_name */>::Register(TypeBuilder& bld)
 //$     else
     bld.AddFunction<
 //$       for i,m in ipairs(v) do
-        /*$= m.value_str *//*$= i == #v and '' or ',' */
+      /*$= m.value_str *//*$= i == #v and '' or ',' */
 //$       end
     >("/*$= k */");
 //$     end
 //$   end
 /*$= cls.post_register or "", cls */
-}
-static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
+  }
+  static TypeRegister::StateRegister</*$= cls.cpp_name */> reg_/*$= (cls.name:gsub("%.", "_")) */;
 //$ end
 
 }
