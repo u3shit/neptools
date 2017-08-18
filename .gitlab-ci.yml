@@ -9,7 +9,7 @@ variables:
       - build/
 
 before_script:
-  - ln -nsf /opt/boost ext/boost || true
+  - ln -nsf /opt/boost libshit/ext/boost || true
 
 stages:
   - build
@@ -21,7 +21,7 @@ stages:
     LINKFLAGS: -static-libstdc++
   before_script:
     # HACK: automatically find latest gcc installed
-    - ln -nsf /opt/boost ext/boost || true
+    - ln -nsf /opt/boost libshit/ext/boost || true
     - export CC="$(cd /usr/bin; ls gcc-*.*.* | tail -n1)"
     - export CXX="$(cd /usr/bin; ls g++-*.*.* | tail -n1)"
 
@@ -195,9 +195,9 @@ test-clang-amd64-rel:
 binding-gen-test:
   stage: build
   cache:
-    paths: [ ext/ljclang/*.so ]
+    paths: [ libshit/ext/ljclang/*.so ]
   script:
-    - make -C ext/ljclang
+    - make -C libshit/ext/ljclang
     - ./gen_binding.sh
-    - git diff --exit-code
+    - git diff --submodule=diff --exit-code
   allow_failure: true
