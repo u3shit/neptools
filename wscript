@@ -115,6 +115,7 @@ def test(bld):
         defines=['TEST_PATTERN="bz ff"'])
 
     src = [
+        'libshit/test/main.cpp',
         'test/pattern.cpp',
         'test/sink.cpp',
         'test/container/ordered_map.cpp',
