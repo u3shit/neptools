@@ -9,8 +9,8 @@
 namespace Neptools
 {
 
-struct Pattern
-{
+  struct Pattern
+  {
     const Byte* pattern;
     const Byte* mask;
     size_t size;
@@ -19,11 +19,11 @@ struct Pattern
 
     const Byte* Find(Libshit::StringView data) const
     {
-        auto ret = MaybeFind(data);
-        if (!ret) LIBSHIT_THROW(std::runtime_error{"Couldn't find pattern"});
-        return ret;
+      auto ret = MaybeFind(data);
+      if (!ret) LIBSHIT_THROW(std::runtime_error{"Couldn't find pattern"});
+      return ret;
     }
-};
+  };
 
 }
 #endif

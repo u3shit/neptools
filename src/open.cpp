@@ -6,24 +6,24 @@
 namespace Neptools
 {
 
-auto OpenFactory::Open(Source src) -> Libshit::NotNull<Ret>
-{
+  auto OpenFactory::Open(Source src) -> Libshit::NotNull<Ret>
+  {
     for (auto& x : GetStore())
     {
-        auto ret = x(src);
-        if (ret) return MakeNotNull(ret);
+      auto ret = x(src);
+      if (ret) return MakeNotNull(ret);
     }
     LIBSHIT_THROW(Libshit::DecodeError{"Unknown input file"});
-}
+  }
 
-auto OpenFactory::Open(const boost::filesystem::path& fname)
+  auto OpenFactory::Open(const boost::filesystem::path& fname)
     -> Libshit::NotNull<Ret>
-{
+  {
     return AddInfo(
-        static_cast<Libshit::NotNull<Ret> (*)(Source)>(Open),
-        [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
-        Source::FromFile(fname.native()));
-}
+      static_cast<Libshit::NotNull<Ret> (*)(Source)>(Open),
+      [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
+      Source::FromFile(fname.native()));
+  }
 
 }
 

@@ -7,8 +7,8 @@
 namespace Neptools
 {
 
-struct LowIo final
-{
+  struct LowIo final
+  {
 #ifdef WINDOWS
     using FileName = const wchar_t*;
     using FdType = void*;
@@ -38,16 +38,16 @@ struct LowIo final
         , mmap_fd{o.mmap_fd}
 #endif
     {
-        o.fd = NEPTOOLS_INVALID_FD;
+      o.fd = NEPTOOLS_INVALID_FD;
 #ifdef WINDOWS
-        o.mmap_fd = NEPTOOLS_INVALID_FD;
+      o.mmap_fd = NEPTOOLS_INVALID_FD;
 #endif
     }
     LowIo& operator=(LowIo&& o) noexcept
     {
-        this->~LowIo();
-        new (this) LowIo{std::move(o)};
-        return *this;
+      this->~LowIo();
+      new (this) LowIo{std::move(o)};
+      return *this;
     }
 
     FilePosition GetSize() const;
@@ -63,10 +63,10 @@ struct LowIo final
 #ifdef WINDOWS
     FdType mmap_fd = NEPTOOLS_INVALID_FD;
 #endif
-};
+  };
 
-using MmapOffset = boost::error_info<struct MmapOffsetTag, FilePosition>;
-using MmapSize = boost::error_info<struct MmapSizeTag, FilePosition>;
+  using MmapOffset = boost::error_info<struct MmapOffsetTag, FilePosition>;
+  using MmapSize = boost::error_info<struct MmapSizeTag, FilePosition>;
 
 }
 #endif

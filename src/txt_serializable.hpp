@@ -12,19 +12,19 @@
 namespace Neptools
 {
 
-class TxtSerializable : public Libshit::Lua::DynamicObject
-{
+  class TxtSerializable : public Libshit::Lua::DynamicObject
+  {
     LIBSHIT_LUA_CLASS;
-public:
+  public:
     LIBSHIT_NOLUA void WriteTxt(std::ostream& os) const { WriteTxt_(os); }
     LIBSHIT_NOLUA void WriteTxt(std::ostream&& os) const { WriteTxt_(os); }
     LIBSHIT_NOLUA void ReadTxt(std::istream& is) { ReadTxt_(is); }
     LIBSHIT_NOLUA void ReadTxt(std::istream&& is) { ReadTxt_(is); }
 
-private:
+  private:
     virtual void WriteTxt_(std::ostream& os) const = 0;
     virtual void ReadTxt_(std::istream& is) = 0;
-};
+  };
 
 }
 #endif

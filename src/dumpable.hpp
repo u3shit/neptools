@@ -12,12 +12,12 @@
 namespace Neptools
 {
 
-class Sink;
+  class Sink;
 
-class Dumpable : public Libshit::Lua::DynamicObject
-{
+  class Dumpable : public Libshit::Lua::DynamicObject
+  {
     LIBSHIT_LUA_CLASS;
-public:
+  public:
     Dumpable() = default;
     Dumpable(const Dumpable&) = delete;
     void operator=(const Dumpable&) = delete;
@@ -40,17 +40,17 @@ public:
     void Inspect(const boost::filesystem::path& path) const;
     std::string Inspect() const;
 
-protected:
+  protected:
     static std::ostream& Indent(std::ostream& os, unsigned indent);
 
-private:
+  private:
     virtual void Dump_(Sink& sink) const = 0;
     virtual void Inspect_(std::ostream& os, unsigned indent) const = 0;
-};
+  };
 
-std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
+  std::ostream& operator<<(std::ostream& os, const Dumpable& dmp);
 
-inline Libshit::Lua::DynamicObject& GetDynamicObject(Dumpable& d) { return d; }
+  inline Libshit::Lua::DynamicObject& GetDynamicObject(Dumpable& d) { return d; }
 
 }
 #endif
