@@ -10,47 +10,47 @@
 namespace Neptools::Stsc
 {
 
-File::File(Source src)
-{
+  File::File(Source src)
+  {
     AddInfo(&File::Parse_, ADD_SOURCE(src), this, src);
-}
+  }
 
-void File::Parse_(Source& src)
-{
+  void File::Parse_(Source& src)
+  {
     auto root = Create<RawItem>(src);
     SetupParseFrom(*root);
     root->Split(root->GetSize(), Create<EofItem>());
     HeaderItem::CreateAndInsert({&*root, 0});
-}
+  }
 
-void File::Inspect_(std::ostream& os, unsigned indent) const
-{
+  void File::Inspect_(std::ostream& os, unsigned indent) const
+  {
     LIBSHIT_ASSERT(GetLabels().empty());
     os << "neptools.stsc.file()";
     InspectChildren(os, indent);
-}
+  }
 
-static const char SEP_DASH[] = {
+  static const char SEP_DASH[] = {
 #define REP_MACRO(x,y,z) char(0x81), char(0x5c),
     BOOST_PP_REPEAT(40, REP_MACRO, )
     '\r', 0,
-};
+  };
 
-void File::WriteTxt_(std::ostream& os) const
-{
+  void File::WriteTxt_(std::ostream& os) const
+  {
     for (auto& it : GetChildren())
     {
-        auto str = dynamic_cast<const CStringItem*>(&it);
-        if (str)
-        {
-            os << boost::replace_all_copy(str->string, "\\n", "\r\n")
-               << "\r\n" << SEP_DASH << '\n';
-        }
+      auto str = dynamic_cast<const CStringItem*>(&it);
+      if (str)
+      {
+        os << boost::replace_all_copy(str->string, "\\n", "\r\n")
+           << "\r\n" << SEP_DASH << '\n';
+      }
     }
-}
+  }
 
-void File::ReadTxt_(std::istream& is)
-{
+  void File::ReadTxt_(std::istream& is)
+  {
     std::string line, msg;
     auto it = GetChildren().begin();
     auto end = GetChildren().end();
@@ -59,41 +59,41 @@ void File::ReadTxt_(std::istream& is)
     is.exceptions(std::ios_base::badbit);
     while (!std::getline(is, line).fail())
     {
-        if (line == SEP_DASH)
-        {
-            if (it == end)
-                LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: too many strings"});
+      if (line == SEP_DASH)
+      {
+        if (it == end)
+          LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: too many strings"});
 
-            LIBSHIT_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
-            if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
-            static_cast<CStringItem&>(*it).string = std::move(msg);
+        LIBSHIT_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
+        if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
+        static_cast<CStringItem&>(*it).string = std::move(msg);
 
-            ++it;
-            while (it != end && !dynamic_cast<CStringItem*>(&*it)) ++it;
+        ++it;
+        while (it != end && !dynamic_cast<CStringItem*>(&*it)) ++it;
 
-            msg.clear();
-        }
-        else
-        {
-            if (!line.empty() && line.back() == '\r') line.pop_back();
-            msg.append(line).append("\\n");
-        }
+        msg.clear();
+      }
+      else
+      {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        msg.append(line).append("\\n");
+      }
     }
 
     if (it != end)
-        LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: not enough strings"});
-}
+      LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: not enough strings"});
+  }
 
-static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
-{
+  static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
+  {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];
     src.PreadGen(0, buf);
     if (memcmp(buf, "STSC", 4) == 0)
-        return Libshit::MakeSmart<File>(src);
+      return Libshit::MakeSmart<File>(src);
     else
-        return nullptr;
-}};
+      return nullptr;
+  }};
 
 }
 

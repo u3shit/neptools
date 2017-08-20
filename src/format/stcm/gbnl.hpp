@@ -5,32 +5,30 @@
 #include "../item.hpp"
 #include "../gbnl.hpp"
 
-namespace Neptools
-{
-class RawItem;
+namespace Neptools { class RawItem; }
 
-namespace Stcm
+namespace Neptools::Stcm
 {
 
-class GbnlItem final : public Item, public Gbnl
-{
+  class GbnlItem final : public Item, public Gbnl
+  {
     LIBSHIT_DYNAMIC_OBJECT;
-public:
+  public:
     GbnlItem(Key k, Context& ctx, Source src)
-        : Item{k, ctx}, Gbnl{std::move(src)} {}
+      : Item{k, ctx}, Gbnl{std::move(src)} {}
     GbnlItem(Key k, Context& ctx, bool is_gstl, uint32_t flags,
              uint32_t field_28, uint32_t field_30,
              Libshit::AT<Gbnl::Struct::TypePtr> type)
-        : Item{k, ctx},
-          Gbnl{is_gstl, flags, field_28, field_30, std::move(type)} {}
+      : Item{k, ctx},
+        Gbnl{is_gstl, flags, field_28, field_30, std::move(type)} {}
 #ifndef LIBSHIT_WITHOUT_LUA
     GbnlItem(
-        Key k, Context& ctx, Libshit::Lua::StateRef vm, bool is_gstl,
-        uint32_t flags, uint32_t field_28, uint32_t field_30,
-        Libshit::AT<Gbnl::Struct::TypePtr> type,
-        Libshit::Lua::RawTable messages)
-        : Item{k, ctx},
-          Gbnl{vm, is_gstl, flags, field_28, field_30, std::move(type), messages} {}
+      Key k, Context& ctx, Libshit::Lua::StateRef vm, bool is_gstl,
+      uint32_t flags, uint32_t field_28, uint32_t field_30,
+      Libshit::AT<Gbnl::Struct::TypePtr> type,
+      Libshit::Lua::RawTable messages)
+      : Item{k, ctx},
+        Gbnl{vm, is_gstl, flags, field_28, field_30, std::move(type), messages} {}
 #endif
 
     static GbnlItem& CreateAndInsert(ItemPointer ptr);
@@ -38,15 +36,14 @@ public:
     void Fixup() override { Gbnl::Fixup(); }
     FilePosition GetSize() const noexcept override { return Gbnl::GetSize(); }
 
-private:
+  private:
     void Dump_(Sink& sink) const override { Gbnl::Dump_(sink); }
     void Inspect_(std::ostream& os, unsigned indent) const override
     { Item::Inspect_(os, indent); Gbnl::InspectGbnl(os, indent); }
-};
+  };
 
-inline Libshit::Lua::DynamicObject& GetDynamicObject(GbnlItem& item)
-{ return static_cast<Item&>(item); }
+  inline Libshit::Lua::DynamicObject& GetDynamicObject(GbnlItem& item)
+  { return static_cast<Item&>(item); }
 
-}
 }
 #endif

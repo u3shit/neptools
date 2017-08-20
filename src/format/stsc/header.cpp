@@ -4,13 +4,11 @@
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
 
-namespace Neptools
-{
-namespace Stsc
+namespace Neptools::Stsc
 {
 
-void HeaderItem::Header::Validate(FilePosition size) const
-{
+  void HeaderItem::Header::Validate(FilePosition size) const
+  {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stsc::HeaderItem::Header", x)
     VALIDATE(memcmp(magic, "STSC", 4) == 0);
     VALIDATE(entry_point < size - 1);
@@ -22,34 +20,34 @@ void HeaderItem::Header::Validate(FilePosition size) const
     if (flags & 4) hdr_len += 2; // uint16_t
     VALIDATE(entry_point >= hdr_len);
 #undef VALIDATE
-}
+  }
 
-HeaderItem::HeaderItem(Key k, Context& ctx, Source src)
+  HeaderItem::HeaderItem(Key k, Context& ctx, Source src)
     : Item{k, ctx}, entry_point{Libshit::EmptyNotNull{}}
-{
+  {
     AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, ctx, src);
-}
+  }
 
-FilePosition HeaderItem::GetSize() const noexcept
-{
+  FilePosition HeaderItem::GetSize() const noexcept
+  {
     FilePosition size = sizeof(Header);
     if (flags & 1) size += 32;
     if (flags & 2) size += sizeof(ExtraHeader2);
     if (flags & 4) size += 2;
     return size;
-}
+  }
 
-HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
-{
+  HeaderItem& HeaderItem::CreateAndInsert(ItemPointer ptr)
+  {
     auto x = RawItem::GetSource(ptr, -1);
     auto& ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.src);
 
     InstructionBase::CreateAndInsert(ret.entry_point->GetPtr());
     return ret;
-}
+  }
 
-void HeaderItem::Parse_(Context& ctx, Source& src)
-{
+  void HeaderItem::Parse_(Context& ctx, Source& src)
+  {
     src.CheckRemainingSize(sizeof(Header));
     auto hdr = src.ReadGen<Header>();
     hdr.Validate(src.GetSize());
@@ -58,24 +56,24 @@ void HeaderItem::Parse_(Context& ctx, Source& src)
     flags = hdr.flags;
 
     if (flags & 1)
-        src.ReadGen(extra_headers_1);
+      src.ReadGen(extra_headers_1);
     if (flags & 2)
     {
-        auto eh2 = src.ReadGen<ExtraHeader2>();
-        extra_headers_2_0 = eh2.field_0;
-        extra_headers_2_2 = eh2.field_2;
-        extra_headers_2_4 = eh2.field_4;
-        extra_headers_2_6 = eh2.field_6;
-        extra_headers_2_8 = eh2.field_8;
-        extra_headers_2_a = eh2.field_a;
-        extra_headers_2_c = eh2.field_c;
+      auto eh2 = src.ReadGen<ExtraHeader2>();
+      extra_headers_2_0 = eh2.field_0;
+      extra_headers_2_2 = eh2.field_2;
+      extra_headers_2_4 = eh2.field_4;
+      extra_headers_2_6 = eh2.field_6;
+      extra_headers_2_8 = eh2.field_8;
+      extra_headers_2_a = eh2.field_a;
+      extra_headers_2_c = eh2.field_c;
     }
     if (flags & 4)
-        extra_headers_4 = src.ReadLittleUint16();
-}
+      extra_headers_4 = src.ReadLittleUint16();
+  }
 
-void HeaderItem::Dump_(Sink& sink) const
-{
+  void HeaderItem::Dump_(Sink& sink) const
+  {
     Header hdr;
     memcpy(hdr.magic, "STSC", 4);
     hdr.entry_point = ToFilePos(entry_point->GetPtr());
@@ -85,43 +83,42 @@ void HeaderItem::Dump_(Sink& sink) const
     if (flags & 1) sink.WriteGen(extra_headers_1);
     if (flags & 2)
     {
-        ExtraHeader2 eh;
-        eh.field_0 = extra_headers_2_0;
-        eh.field_2 = extra_headers_2_2;
-        eh.field_4 = extra_headers_2_4;
-        eh.field_6 = extra_headers_2_6;
-        eh.field_8 = extra_headers_2_8;
-        eh.field_a = extra_headers_2_a;
-        eh.field_c = extra_headers_2_c;
-        sink.WriteGen(eh);
+      ExtraHeader2 eh;
+      eh.field_0 = extra_headers_2_0;
+      eh.field_2 = extra_headers_2_2;
+      eh.field_4 = extra_headers_2_4;
+      eh.field_6 = extra_headers_2_6;
+      eh.field_8 = extra_headers_2_8;
+      eh.field_a = extra_headers_2_a;
+      eh.field_c = extra_headers_2_c;
+      sink.WriteGen(eh);
     }
     if (flags & 4)
-        sink.WriteLittleUint16(extra_headers_4);
-}
+      sink.WriteLittleUint16(extra_headers_4);
+  }
 
-void HeaderItem::Inspect_(std::ostream& os, unsigned indent) const
-{
+  void HeaderItem::Inspect_(std::ostream& os, unsigned indent) const
+  {
     Item::Inspect_(os, indent);
 
     os << "header(" << PrintLabel(entry_point) << ", " << flags;
     if (flags & 1)
     {
-        os << ", ";
-        DumpBytes(os, {extra_headers_1.data(), extra_headers_1.size()});
+      os << ", ";
+      DumpBytes(os, {extra_headers_1.data(), extra_headers_1.size()});
     }
     if (flags & 2)
-        os << ", " << extra_headers_2_0
-           << ", " << extra_headers_2_2
-           << ", " << extra_headers_2_4
-           << ", " << extra_headers_2_6
-           << ", " << extra_headers_2_8
-           << ", " << extra_headers_2_a
-           << ", " << extra_headers_2_c;
+      os << ", " << extra_headers_2_0
+         << ", " << extra_headers_2_2
+         << ", " << extra_headers_2_4
+         << ", " << extra_headers_2_6
+         << ", " << extra_headers_2_8
+         << ", " << extra_headers_2_a
+         << ", " << extra_headers_2_c;
     if (flags & 4) os << ", " << extra_headers_4;
     os << ")";
-}
+  }
 
-}
 }
 
 #include "header.binding.hpp"

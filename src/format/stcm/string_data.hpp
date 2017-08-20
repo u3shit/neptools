@@ -6,14 +6,14 @@
 
 namespace Neptools::Stcm
 {
-class DataItem;
+  class DataItem;
 
-class StringDataItem final : public Item
-{
+  class StringDataItem final : public Item
+  {
     LIBSHIT_DYNAMIC_OBJECT;
-public:
+  public:
     StringDataItem(Key k, Context& ctx, std::string str)
-        : Item{k, ctx}, string{std::move(str)} {}
+      : Item{k, ctx}, string{std::move(str)} {}
 
     static Libshit::RefCountedPtr<StringDataItem>
     MaybeCreateAndReplace(DataItem& it);
@@ -22,10 +22,10 @@ public:
 
     std::string string;
 
-private:
+  private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os, unsigned indent) const override;
-};
+  };
 
 }
 

@@ -18,25 +18,25 @@
 namespace Neptools
 {
 
-class ItemWithChildren;
-struct ItemListTraits;
+  class ItemWithChildren;
+  struct ItemListTraits;
 
-LIBSHIT_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
+  LIBSHIT_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
 
-class Item :
-        public Libshit::RefCounted, public Dumpable, public ParentListBaseHook<>
-{
+  class Item :
+    public Libshit::RefCounted, public Dumpable, public ParentListBaseHook<>
+  {
     LIBSHIT_LUA_CLASS;
-protected:
+  protected:
     struct Key {};
-public:
+  public:
     // do not change Context& to Weak/Shared ptr
     // otherwise Context's constructor will try to construct a WeakPtr before
     // RefCounted's constructor is finished, making an off-by-one error and
     // freeing the context twice
     explicit Item(
-        Key, Context& ctx, FilePosition position = 0) noexcept
-        : position{position}, context{&ctx} {}
+      Key, Context& ctx, FilePosition position = 0) noexcept
+      : position{position}, context{&ctx} {}
     Item(const Item&) = delete;
     void operator=(const Item&) = delete;
     virtual ~Item();
@@ -66,44 +66,44 @@ public:
     template <typename Checker = Libshit::Check::Assert>
     void Replace(const Libshit::NotNull<Libshit::RefCountedPtr<Item>>& nitem)
     {
-        LIBSHIT_CHECK(InvalidItemState, GetParent(), "no parent");
-        if constexpr (!Checker::IS_NOP)
-        {
-            auto nsize = nitem->GetSize();
-            for (auto& l : labels)
-                LIBSHIT_CHECK(InvalidItemState, l.GetPtr().offset <= nsize,
-                               "would invalidate labels");
-        }
-        LIBSHIT_CHECK(InvalidItemState, nitem->labels.empty(),
-                       "new item has labels");
-        Replace_(nitem);
+      LIBSHIT_CHECK(InvalidItemState, GetParent(), "no parent");
+      if constexpr (!Checker::IS_NOP)
+      {
+        auto nsize = nitem->GetSize();
+        for (auto& l : labels)
+          LIBSHIT_CHECK(InvalidItemState, l.GetPtr().offset <= nsize,
+                        "would invalidate labels");
+      }
+      LIBSHIT_CHECK(InvalidItemState, nitem->labels.empty(),
+                    "new item has labels");
+      Replace_(nitem);
     }
 
     // properties needed: none (might help if ordered)
     // update Slice if no longer ordered
     using LabelsContainer = boost::intrusive::multiset<
-        Label,
-        boost::intrusive::base_hook<LabelOffsetHook>,
-        boost::intrusive::constant_time_size<false>,
-        boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
+      Label,
+      boost::intrusive::base_hook<LabelOffsetHook>,
+      boost::intrusive::constant_time_size<false>,
+      boost::intrusive::key_of_value<LabelOffsetKeyOfValue>>;
     LIBSHIT_LUAGEN(wrap="TableRetWrap")
     const LabelsContainer& GetLabels() const { return labels; }
 
     void Dispose() noexcept override;
 
-protected:
+  protected:
     void UpdatePosition(FilePosition npos);
 
     void Inspect_(std::ostream& os, unsigned indent) const override = 0;
 
     using SlicePair = std::pair<Libshit::NotNull<
-        Libshit::RefCountedPtr<Item>>, FilePosition>;
+                                  Libshit::RefCountedPtr<Item>>, FilePosition>;
     using SliceSeq = std::vector<SlicePair>;
     void Slice(SliceSeq seq);
 
     FilePosition position;
 
-private:
+  private:
     Libshit::WeakRefCountedPtr<Context> context;
 
     LabelsContainer labels;
@@ -115,32 +115,32 @@ private:
     friend struct ItemListTraits;
     friend class ItemWithChildren;
     template <typename, typename> friend struct Libshit::Lua::TypeRegisterTraits;
-};
-static_assert(
+  };
+  static_assert(
     std::is_same_v<Libshit::SmartPtr<Item>, Libshit::RefCountedPtr<Item>>);
 
-std::ostream& operator<<(std::ostream& os, const Item& item);
-inline FilePosition ToFilePos(ItemPointer ptr) noexcept
-{ return ptr.item->GetPosition() + ptr.offset; }
+  std::ostream& operator<<(std::ostream& os, const Item& item);
+  inline FilePosition ToFilePos(ItemPointer ptr) noexcept
+  { return ptr.item->GetPosition() + ptr.offset; }
 
-using ItemList = ParentList<Item, ItemListTraits>;
-struct ItemListTraits
-{
+  using ItemList = ParentList<Item, ItemListTraits>;
+  struct ItemListTraits
+  {
     static void add(ItemList&, Item& item) noexcept
     { item.AddRef(); }
     static void remove(ItemList&, Item& item) noexcept
     { item.Removed(); item.RemoveRef(); }
-};
+  };
 
-inline auto Item::Iterator() const noexcept
-{ return ItemList::s_iterator_to(*this); }
-inline auto Item::Iterator() noexcept
-{ return ItemList::s_iterator_to(*this); }
+  inline auto Item::Iterator() const noexcept
+  { return ItemList::s_iterator_to(*this); }
+  inline auto Item::Iterator() noexcept
+  { return ItemList::s_iterator_to(*this); }
 
-class ItemWithChildren : public Item, private ItemList
-{
+  class ItemWithChildren : public Item, private ItemList
+  {
     LIBSHIT_LUA_CLASS;
-public:
+  public:
     using Item::Item;
 
     LIBSHIT_LUAGEN(wrap="OwnedSharedPtrWrap")
@@ -154,43 +154,45 @@ public:
 
     void Dispose() noexcept override;
 
-protected:
+  protected:
     void Dump_(Sink& sink) const override;
     void InspectChildren(std::ostream& sink, unsigned indent) const;
     void Fixup_(FilePosition offset);
 
-private:
+  private:
     void Removed() override;
 
     friend struct ::Neptools::ItemListTraits;
     friend class Item;
-} LIBSHIT_LUAGEN(post_register=[[
+  } LIBSHIT_LUAGEN(post_register=[[
     LIBSHIT_LUA_RUNBC(bld, builder, 1);
     bld.SetField("build");
-]]);
+  ]]);
 
-inline ItemWithChildren* Item::GetParent() noexcept
-{ return static_cast<ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
-inline const ItemWithChildren* Item::GetParent() const noexcept
-{ return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
+  inline ItemWithChildren* Item::GetParent() noexcept
+  { return static_cast<ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
+  inline const ItemWithChildren* Item::GetParent() const noexcept
+  { return static_cast<const ItemWithChildren*>(ItemList::opt_get_parent(*this)); }
 
 }
 
 template <typename T>
-struct Libshit::Lua::SmartObjectMaker<T, std::enable_if_t<
-    std::is_base_of_v<Neptools::Item, T> && !std::is_base_of_v<Neptools::Context, T>>>
+struct Libshit::Lua::SmartObjectMaker<
+  T, std::enable_if_t<
+       std::is_base_of_v<Neptools::Item, T> &&
+       !std::is_base_of_v<Neptools::Context, T>>>
 {
-    template <typename Key, typename Ctx, typename... Args>
-    static decltype(auto) Make(std::remove_pointer_t<Ctx>& ctx, Args&&... args)
-    { return ctx.template Create<T>(std::forward<Args>(args)...); }
+  template <typename Key, typename Ctx, typename... Args>
+  static decltype(auto) Make(std::remove_pointer_t<Ctx>& ctx, Args&&... args)
+  { return ctx.template Create<T>(std::forward<Args>(args)...); }
 };
 
 template<> struct Libshit::Lua::TypeTraits<Neptools::Item::Key>
 {
-    // HACK
-    // Dummy function, needed by LuaGetRef to get above maker to work when
-    // using binding generator. It's undefined on purpose.
-    template <bool> static void Get(Lua::StateRef, bool, int);
+  // HACK
+  // Dummy function, needed by LuaGetRef to get above maker to work when
+  // using binding generator. It's undefined on purpose.
+  template <bool> static void Get(Lua::StateRef, bool, int);
 };
 
 #endif

@@ -9,22 +9,22 @@
 namespace Neptools::Stsc
 {
 
-class File final : public Context, public TxtSerializable
-{
+  class File final : public Context, public TxtSerializable
+  {
     LIBSHIT_DYNAMIC_OBJECT;
-public:
+  public:
     File() = default;
     File(Source src);
 
-protected:
+  protected:
     void Inspect_(std::ostream& os, unsigned indent) const override;
 
-private:
+  private:
     void Parse_(Source& src);
 
     void WriteTxt_(std::ostream& os) const override;
     void ReadTxt_(std::istream& is) override;
-};
+  };
 
 }
 

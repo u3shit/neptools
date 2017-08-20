@@ -10,13 +10,13 @@
 namespace Neptools::Stcm
 {
 
-class File final : public Context, public TxtSerializable
-{
+  class File final : public Context, public TxtSerializable
+  {
     LIBSHIT_DYNAMIC_OBJECT;
 
     template <typename T>
     using GbnlVectG = std::vector<Libshit::NotNull<Libshit::SmartPtr<T>>>;
-public:
+  public:
     using GbnlVect = GbnlVectG<GbnlItem>;
     using ConstGbnlVect = GbnlVectG<const GbnlItem>;
 
@@ -28,10 +28,10 @@ public:
     LIBSHIT_LUAGEN(wrap="TableRetWrap")
     GbnlVect FindGbnl();
 
-protected:
+  protected:
     void Inspect_(std::ostream& os, unsigned indent) const override;
 
-private:
+  private:
     void Parse_(Source& src);
 
     template <typename ItemT, typename GbnlT>
@@ -39,7 +39,7 @@ private:
 
     void WriteTxt_(std::ostream& os) const override;
     void ReadTxt_(std::istream& is) override;
-};
+  };
 
 }
 #endif

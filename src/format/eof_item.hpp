@@ -7,16 +7,16 @@
 namespace Neptools
 {
 
-class EofItem final : public Item
-{
+  class EofItem final : public Item
+  {
     LIBSHIT_DYNAMIC_OBJECT;
-public:
+  public:
     EofItem(Key k, Context& ctx) : Item{k, ctx} {}
 
     void Dump_(Sink&) const override {}
     void Inspect_(std::ostream& os, unsigned indent) const override;
     FilePosition GetSize() const noexcept override { return 0; }
-};
+  };
 
 }
 #endif

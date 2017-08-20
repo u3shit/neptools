@@ -4,11 +4,11 @@
 namespace Neptools
 {
 
-void EofItem::Inspect_(std::ostream& os, unsigned indent) const
-{
+  void EofItem::Inspect_(std::ostream& os, unsigned indent) const
+  {
     Item::Inspect_(os, indent);
     os << "eof()";
-}
+  }
 
 }
 

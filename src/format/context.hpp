@@ -13,10 +13,10 @@
 namespace Neptools
 {
 
-class Context : public ItemWithChildren
-{
+  class Context : public ItemWithChildren
+  {
     LIBSHIT_LUA_CLASS;
-public:
+  public:
     Context();
     ~Context();
 
@@ -24,7 +24,10 @@ public:
 
     template <typename T, typename... Args>
     LIBSHIT_NOLUA Libshit::NotNull<Libshit::SmartPtr<T>> Create(Args&&... args)
-    { return Libshit::MakeSmart<T>(Item::Key{}, *this, std::forward<Args>(args)...); }
+    {
+      return Libshit::MakeSmart<T>(
+        Item::Key{}, *this, std::forward<Args>(args)...);
+    }
 
     Libshit::NotNull<LabelPtr> GetLabel(const std::string& name) const;
     Libshit::NotNull<LabelPtr> CreateLabel(std::string name, ItemPointer ptr);
@@ -47,31 +50,31 @@ public:
 
     void Dispose() noexcept override;
 
-protected:
+  protected:
     void SetupParseFrom(Item& item);
 
-private:
+  private:
     friend class Item;
 
     // properties needed: stable pointers
     using LabelsMap = boost::intrusive::set<
-        Label,
-        boost::intrusive::base_hook<LabelNameHook>,
-        boost::intrusive::constant_time_size<false>,
-        boost::intrusive::key_of_value<LabelKeyOfValue>>;
+      Label,
+      boost::intrusive::base_hook<LabelNameHook>,
+      boost::intrusive::constant_time_size<false>,
+      boost::intrusive::key_of_value<LabelKeyOfValue>>;
     LabelsMap labels;
 
     // properties needed: sorted
     using PointerMap = std::map<FilePosition, Item*>;
     PointerMap pmap;
-};
+  };
 
-struct PrintLabelStruct { const Label* label; };
-std::ostream& operator<<(std::ostream& os, PrintLabelStruct label);
-inline PrintLabelStruct PrintLabel(const LabelPtr& label)
-{ return {label.get()}; }
+  struct PrintLabelStruct { const Label* label; };
+  std::ostream& operator<<(std::ostream& os, PrintLabelStruct label);
+  inline PrintLabelStruct PrintLabel(const LabelPtr& label)
+  { return {label.get()}; }
 
-using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
+  using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
 }
 
 #endif

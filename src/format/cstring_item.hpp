@@ -8,12 +8,12 @@
 namespace Neptools
 {
 
-class CStringItem final : public Item
-{
+  class CStringItem final : public Item
+  {
     LIBSHIT_DYNAMIC_OBJECT;
-public:
+  public:
     CStringItem(Key k, Context& ctx, std::string string)
-        : Item{k, ctx}, string{std::move(string)} {}
+      : Item{k, ctx}, string{std::move(string)} {}
     CStringItem(Key k, Context& ctx, const Source& src);
     static CStringItem& CreateAndInsert(ItemPointer ptr);
     FilePosition GetSize() const noexcept override { return string.size() + 1; }
@@ -23,10 +23,10 @@ public:
 
     std::string string;
 
-private:
+  private:
     void Dump_(Sink& sink) const override;
     void Inspect_(std::ostream& os, unsigned indent) const override;
-};
+  };
 
 }
 
