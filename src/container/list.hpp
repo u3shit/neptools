@@ -8,25 +8,23 @@
 namespace Neptools
 {
 
-template <typename Item, typename Traits, typename... Args>
-class List : private boost::intrusive::list<Item, Args...>, private Traits
-{
+  template <typename Item, typename Traits, typename... Args>
+  class List : private boost::intrusive::list<Item, Args...>, private Traits
+  {
     using list = boost::intrusive::list<Item, Args...>;
     static constexpr bool NOEXCEPT_ADD = noexcept(std::declval<Traits>().add(
-            std::declval<List&>(), std::declval<typename list::value_type&>()));
+      std::declval<List&>(), std::declval<typename list::value_type&>()));
 
     static constexpr bool NOEXCEPT_REMOVE = noexcept(std::declval<Traits>().remove(
-        std::declval<List&>(), std::declval<typename list::value_type&>()));
-    NEPTOOLS_STATIC_ASSERT(NOEXCEPT_REMOVE);
+      std::declval<List&>(), std::declval<typename list::value_type&>()));
+    static_assert(NOEXCEPT_REMOVE);
 
-    // todo
-    /*
     static constexpr bool NOEXCEPT_MOVE = !Traits::is_movable || noexcept(
-        Traits::move(std::declval<List&>(), std::declval<List&>(),
-                     std::declval<typename list::value_type&>()));
-    NEPTOOLS_STATIC_ASSERT(NOEXCEPT_MOVE);
-    */
-public:
+      Traits::move(std::declval<List&>(), std::declval<List&>(),
+                   std::declval<typename list::value_type&>()));
+    static_assert(NOEXCEPT_MOVE);
+
+  public:
     // types
     using typename list::value_traits;
     using typename list::pointer;
@@ -51,7 +49,7 @@ public:
     explicit List(const value_traits& vt) : list{vt} {}
     explicit List(Traits ts) : Traits{std::move(ts)} {}
     explicit List(const value_traits& vt, Traits ts)
-        : list{vt}, Traits{std::move(ts)} {}
+      : list{vt}, Traits{std::move(ts)} {}
 
     template <typename Iterator>
     List(Iterator b, Iterator e, const value_traits& vt = {}) : list{vt}
@@ -60,14 +58,14 @@ public:
 
     void push_back(reference it) noexcept(NOEXCEPT_ADD)
     {
-        Traits::add(*this, it);
-        list::push_back(it);
+      Traits::add(*this, it);
+      list::push_back(it);
     }
 
     void push_front(reference it) noexcept(NOEXCEPT_ADD)
     {
-        Traits::add(*this, it);
-        list::push_front(it);
+      Traits::add(*this, it);
+      list::push_front(it);
     }
 
     void pop_back() noexcept { list::pop_back_and_dispose(Disposer{this}); }
@@ -115,27 +113,28 @@ public:
 
     NEPTOOLS_MOVABLE_ONLY() void splice(const_iterator p, List& l) noexcept
     {
-        for (auto& el : l) Traits::move(l, *this, l);
-        list::splice(p, l);
+      for (auto& el : l) Traits::move(l, *this, l);
+      list::splice(p, l);
     }
 
     NEPTOOLS_MOVABLE_ONLY()
     void splice(const_iterator p, List& l, const_iterator el) noexcept
     {
-        Traits::move(l, *this, *el);
-        list::splice(p, l, el);
+      Traits::move(l, *this, *el);
+      list::splice(p, l, el);
     }
 
     NEPTOOLS_MOVABLE_ONLY()
-    void splice(const_iterator p, List& l, const_iterator b, const_iterator e) noexcept
+    void splice(
+      const_iterator p, List& l, const_iterator b, const_iterator e) noexcept
     {
-        size_t dist = 0;
-        for (auto it = b; it != e; ++it)
-        {
-            ++dist;
-            Traits::move(l, *this, *it);
-        }
-        list::splice(p, l, b, e, dist);
+      size_t dist = 0;
+      for (auto it = b; it != e; ++it)
+      {
+        ++dist;
+        Traits::move(l, *this, *it);
+      }
+      list::splice(p, l, b, e, dist);
     }
 
     using list::sort;
@@ -145,8 +144,8 @@ public:
     NEPTOOLS_MOVABLE_ONLY(typename Predicate,)
     void merge(List& l, Predicate p) noexcept
     {
-        for (auto& it : l) Traits::move(l, *this, it);
-        list::merge(l, p);
+      for (auto& it : l) Traits::move(l, *this, it);
+      list::merge(l, p);
     }
 #undef NEPTOOLS_MOVABLE_ONLY
 
@@ -178,11 +177,11 @@ public:
     using list::stateful_value_traits;
     using list::has_container_from_iterator;
 
-private:
+  private:
     struct Disposer
     {
-        List* list;
-        void operator()(pointer p) { list->Traits::remove(*list, *p); }
+      List* list;
+      void operator()(pointer p) { list->Traits::remove(*list, *p); }
     };
 };
 

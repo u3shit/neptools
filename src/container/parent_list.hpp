@@ -18,15 +18,15 @@
 namespace Neptools
 {
 
-struct ParentListNode
-{
+  struct ParentListNode
+  {
     ParentListNode* prev;
     ParentListNode* next;
     ParentListNode* parent = nullptr;
-};
+  };
 
-struct ParentListNodeTraits
-{
+  struct ParentListNodeTraits
+  {
     using node = ParentListNode;
     using node_ptr = node*;
     using const_node_ptr = const node*;
@@ -37,18 +37,18 @@ struct ParentListNodeTraits
     static void set_next(node_ptr n, node_ptr v) noexcept { n->next = v; }
     static node_ptr get_parent(const_node_ptr n) noexcept { return n->parent; }
     static void set_parent(node_ptr n, node_ptr v) noexcept { n->parent = v; }
-};
+  };
 
-class ParentListHook : private ParentListNode
-{
-public:
+  class ParentListHook : private ParentListNode
+  {
+  public:
     ParentListHook() = default;
     ParentListHook(const ParentListHook&) = delete;
     void operator=(const ParentListHook&) = delete;
 
     ~ParentListHook() noexcept
     {
-        LIBSHIT_ASSERT_MSG(!is_linked(), "destroying linked node");
+      LIBSHIT_ASSERT_MSG(!is_linked(), "destroying linked node");
     }
 
     bool is_root() const noexcept { return parent == this; }
@@ -56,22 +56,22 @@ public:
 
     void unlink() noexcept
     {
-        LIBSHIT_ASSERT(is_linked());
-        LIBSHIT_ASSERT(!is_root());
-        next->prev = prev;
-        prev->next = next;
-        parent = nullptr;
+      LIBSHIT_ASSERT(is_linked());
+      LIBSHIT_ASSERT(!is_root());
+      next->prev = prev;
+      prev->next = next;
+      parent = nullptr;
     }
 
     template <typename T, typename Tag> friend struct ParentListBaseHookTraits;
-};
+  };
 
-template <typename Tag = struct DefaultTag>
-struct ParentListBaseHook : ParentListHook {};
+  template <typename Tag = struct DefaultTag>
+  struct ParentListBaseHook : ParentListHook {};
 
-template <typename T, typename Tag = DefaultTag>
-struct ParentListBaseHookTraits
-{
+  template <typename T, typename Tag = DefaultTag>
+  struct ParentListBaseHookTraits
+  {
     using Hook = ParentListBaseHook<Tag>;
     static_assert(std::is_base_of_v<Hook, T>,
                   "T must inherit from ParentListBaseHook<Tag>");
@@ -91,33 +91,34 @@ struct ParentListBaseHookTraits
     { return static_cast<pointer>(static_cast<Hook*>(n)); }
     static const_pointer to_value_ptr(const_node_ptr n) noexcept
     { return static_cast<const_pointer>(static_cast<const Hook*>(n)); }
-};
+  };
 
-template <typename Traits, bool IsConst>
-class ParentListIterator
+  template <typename Traits, bool IsConst>
+  class ParentListIterator
     : public std::iterator<std::bidirectional_iterator_tag,
                            typename Traits::value_type>
-{
+  {
     using NodePtr = typename Traits::node_ptr;
     using ConstNodePtr = typename Traits::const_node_ptr;
     using NodeTraits = typename Traits::node_traits;
 
     ParentListIterator(ConstNodePtr ptr) noexcept
-        : ptr{const_cast<NodePtr>(ptr)} {}
-public:
+      : ptr{const_cast<NodePtr>(ptr)} {}
+  public:
     using RawT = typename Traits::value_type;
     using T = std::conditional_t<IsConst, const RawT, RawT>;
 
     ParentListIterator() = default;
     ParentListIterator(const ParentListIterator<Traits, false>& o) noexcept
-        : ptr{o.ptr} {}
+      : ptr{o.ptr} {}
     ParentListIterator(T& val) noexcept
-        : ptr{const_cast<NodePtr>(Traits::to_node_ptr(val))} {}
+      : ptr{const_cast<NodePtr>(Traits::to_node_ptr(val))} {}
 
-    ParentListIterator& operator=(const ParentListIterator<Traits, false>& o) noexcept
+    ParentListIterator& operator=(
+      const ParentListIterator<Traits, false>& o) noexcept
     {
-        ptr = o.ptr;
-        return *this;
+      ptr = o.ptr;
+      return *this;
     }
 
     T& operator*() const noexcept { return *Traits::to_value_ptr(ptr); }
@@ -128,37 +129,37 @@ public:
     bool operator!=(const ParentListIterator& o) const noexcept
     { return ptr != o.ptr; }
 
-#define NEPTOOLS_GEN(op, fun)                       \
-    ParentListIterator& operator op() noexcept      \
-    {                                               \
-        ptr = NodeTraits::fun(ptr);                 \
-        return *this;                               \
-    }                                               \
-    ParentListIterator operator op(int) noexcept    \
-    {                                               \
-        auto ret = *this;                           \
-        ptr = NodeTraits::fun(ptr);                 \
-        return ret;                                 \
+#define NEPTOOLS_GEN(op, fun)                    \
+    ParentListIterator& operator op() noexcept   \
+    {                                            \
+      ptr = NodeTraits::fun(ptr);                \
+      return *this;                              \
+    }                                            \
+    ParentListIterator operator op(int) noexcept \
+    {                                            \
+      auto ret = *this;                          \
+      ptr = NodeTraits::fun(ptr);                \
+      return ret;                                \
     }
     NEPTOOLS_GEN(++, get_next) NEPTOOLS_GEN(--, get_previous)
 #undef NEPTOOLS_GEN
 
-private:
+  private:
     NodePtr ptr = nullptr;
 
     template <typename, bool> friend class ParentListIterator;
     template <typename, typename, typename> friend class ParentList;
-};
+  };
 
-struct NullTraits {};
+  struct NullTraits {};
 
-template <typename T, typename LifetimeTraits = NullTraits,
-          typename Traits = ParentListBaseHookTraits<T>>
-class ParentList :
-        public Libshit::Lua::SmartObject, private Traits::node_traits::node
-{
+  template <typename T, typename LifetimeTraits = NullTraits,
+            typename Traits = ParentListBaseHookTraits<T>>
+  class ParentList :
+    public Libshit::Lua::SmartObject, private Traits::node_traits::node
+  {
     LIBSHIT_LUA_CLASS;
-public:
+  public:
     using value_traits = Traits;
     using pointer = typename value_traits::pointer;
     using const_pointer = typename value_traits::const_pointer;
@@ -175,34 +176,34 @@ public:
     using node = typename node_traits::node;
     using node_ptr = typename node_traits::node_ptr;
     using const_node_ptr = typename node_traits::const_node_ptr;
-private:
+  private:
     using ListAlgo = boost::intrusive::circular_list_algorithms<node_traits>;
-public:
+  public:
 
     // O(1)
     ParentList() noexcept { Init(); }
     template <typename Iterator>
     LIBSHIT_NOLUA ParentList(Iterator b, Iterator e)
     {
-        Init();
-        insert(end(), b, e);
+      Init();
+      insert(end(), b, e);
     }
 
     // warning! O(n.size())
     LIBSHIT_NOLUA ParentList(ParentList&& o) noexcept
     {
-        for (auto n = node_traits::get_next(o.GetRoot()); n != o.GetRoot();
-             n = node_traits::get_next(n))
-            node_traits::set_parent(n, GetRoot());
-        Init();
-        ListAlgo::swap_nodes(GetRoot(), o.GetRoot());
+      for (auto n = node_traits::get_next(o.GetRoot()); n != o.GetRoot();
+           n = node_traits::get_next(n))
+        node_traits::set_parent(n, GetRoot());
+      Init();
+      ListAlgo::swap_nodes(GetRoot(), o.GetRoot());
     }
 
     ParentList& operator=(ParentList&& o) noexcept
     {
-        clear();
-        swap(o);
-        return *this;
+      clear();
+      swap(o);
+      return *this;
     }
 
     // O(size())
@@ -211,46 +212,46 @@ public:
     // warning! O(n)
     void swap(ParentList& o) noexcept
     {
-        ListAlgo::swap_nodes(GetRoot(), o.GetRoot());
+      ListAlgo::swap_nodes(GetRoot(), o.GetRoot());
 
-        for (auto it = node_traits::get_next(GetRoot()); it != GetRoot();
-             it = node_traits::get_next(it))
-            node_traits::set_parent(it, GetRoot());
+      for (auto it = node_traits::get_next(GetRoot()); it != GetRoot();
+           it = node_traits::get_next(it))
+        node_traits::set_parent(it, GetRoot());
 
-        for (auto it = node_traits::get_next(o.GetRoot()); it != o.GetRoot();
-             it = node_traits::get_next(it))
-            node_traits::set_parent(it, o.GetRoot());
+      for (auto it = node_traits::get_next(o.GetRoot()); it != o.GetRoot();
+           it = node_traits::get_next(it))
+        node_traits::set_parent(it, o.GetRoot());
     }
 
     // push*, pop*, front, back, *begin, *end -> O(1)
-#define NEPTOOLS_GEN(name, link_dir, get_dir)                       \
-    template <typename Checker = Libshit::Check::Assert>            \
-    void push_##name(reference ref) noexcept(Checker::IS_NOEXCEPT)  \
-    {                                                               \
-        auto node = Traits::to_node_ptr(ref);                       \
-        CheckUnlinked<Checker>(node);                               \
-        ListAlgo::link_dir(GetRoot(), node);                        \
-        NodeAdded(node);                                            \
-    }                                                               \
-    template <typename Checker = Libshit::Check::Assert>            \
-    void pop_##name() noexcept(Checker::IS_NOEXCEPT)                \
-    {                                                               \
-        LIBSHIT_CHECK(Libshit::OutOfRange, !empty(),                \
-                       "ParentList::pop_" #name);                   \
-        auto node = node_traits::get_dir(GetRoot());                \
-        ListAlgo::unlink(node);                                     \
-        NodeRemoved(node);                                          \
+#define NEPTOOLS_GEN(name, link_dir, get_dir)                      \
+    template <typename Checker = Libshit::Check::Assert>           \
+    void push_##name(reference ref) noexcept(Checker::IS_NOEXCEPT) \
+    {                                                              \
+      auto node = Traits::to_node_ptr(ref);                        \
+      CheckUnlinked<Checker>(node);                                \
+      ListAlgo::link_dir(GetRoot(), node);                         \
+      NodeAdded(node);                                             \
+    }                                                              \
+    template <typename Checker = Libshit::Check::Assert>           \
+    void pop_##name() noexcept(Checker::IS_NOEXCEPT)               \
+    {                                                              \
+      LIBSHIT_CHECK(Libshit::OutOfRange, !empty(),                 \
+                    "ParentList::pop_" #name);                     \
+      auto node = node_traits::get_dir(GetRoot());                 \
+      ListAlgo::unlink(node);                                      \
+      NodeRemoved(node);                                           \
     }
     NEPTOOLS_GEN(back, link_before, get_previous)
     NEPTOOLS_GEN(front, link_after, get_next)
 #undef NEPTOOLS_GEN
 
-#define NEPTOOLS_GEN(ret, name, opt_const, fun)                             \
-    template <typename Checker = Libshit::Check::Assert>                    \
-    ret name() opt_const noexcept(Checker::IS_NOEXCEPT)                     \
-    {                                                                       \
-        LIBSHIT_CHECK(Libshit::OutOfRange, !empty(), "ParentList::" #name); \
-        return *Traits::to_value_ptr(node_traits::fun(GetRoot()));          \
+#define NEPTOOLS_GEN(ret, name, opt_const, fun)                           \
+    template <typename Checker = Libshit::Check::Assert>                  \
+    ret name() opt_const noexcept(Checker::IS_NOEXCEPT)                   \
+    {                                                                     \
+      LIBSHIT_CHECK(Libshit::OutOfRange, !empty(), "ParentList::" #name); \
+      return *Traits::to_value_ptr(node_traits::fun(GetRoot()));          \
     }
     NEPTOOLS_GEN(reference, front, , get_next)
     NEPTOOLS_GEN(LIBSHIT_NOLUA const_reference, front, const, get_next)
@@ -258,14 +259,14 @@ public:
     NEPTOOLS_GEN(LIBSHIT_NOLUA const_reference, back, const, get_previous)
 #undef NEPTOOLS_GEN
 
-#define NEPTOOLS_GEN(ret, name, opt_const, node)        \
+#define NEPTOOLS_GEN(ret, name, opt_const, node) \
     LIBSHIT_NOLUA ret name() opt_const noexcept { return ret{node}; }
-#define NEPTOOLS_GEN2(ret, const_ret, name, node)   \
-    NEPTOOLS_GEN(ret, name, , node)                 \
-    NEPTOOLS_GEN(const_ret, name, const, node)      \
+#define NEPTOOLS_GEN2(ret, const_ret, name, node) \
+    NEPTOOLS_GEN(ret, name, , node)               \
+    NEPTOOLS_GEN(const_ret, name, const, node)    \
     NEPTOOLS_GEN(const_ret, c##name, const, node)
-#define NEPTOOLS_GEN3(name, rname, node)                                    \
-    NEPTOOLS_GEN2(iterator, const_iterator, name, node)                     \
+#define NEPTOOLS_GEN3(name, rname, node)                \
+    NEPTOOLS_GEN2(iterator, const_iterator, name, node) \
     NEPTOOLS_GEN2(reverse_iterator, const_reverse_iterator, rname, node)
 
     NEPTOOLS_GEN3(begin, rend, node_traits::get_next(GetRoot()))
@@ -289,120 +290,123 @@ public:
     template <typename Checker = Libshit::Check::Assert>
     iterator erase(const_iterator it) noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtr<Checker>(it.ptr);
-        auto ret = it; ++ret;
-        ListAlgo::unlink(it.ptr);
-        NodeRemoved(it.ptr);
-        return ret.ptr;
+      CheckNodePtr<Checker>(it.ptr);
+      auto ret = it; ++ret;
+      ListAlgo::unlink(it.ptr);
+      NodeRemoved(it.ptr);
+      return ret.ptr;
     }
 
     // O(distance(b, e))
     template <typename Checker = Libshit::Check::Assert>
-    iterator erase(const_iterator b, const_iterator e) noexcept(Checker::IS_NOEXCEPT)
+    iterator erase(const_iterator b, const_iterator e)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtr<Checker>(b.ptr);
-        CheckNodePtrEnd<Checker>(e.ptr);
-        if constexpr (!Checker::IS_NOP)
-            for (auto it = b; it != e; ++it)
-                LIBSHIT_CHECK(ItemNotInContainer, it.ptr != GetRoot(),
-                               "Invalid range");
-
+      CheckNodePtr<Checker>(b.ptr);
+      CheckNodePtrEnd<Checker>(e.ptr);
+      if constexpr (!Checker::IS_NOP)
         for (auto it = b; it != e; ++it)
-            NodeRemoved(it.ptr);
+          LIBSHIT_CHECK(ItemNotInContainer, it.ptr != GetRoot(),
+                        "Invalid range");
 
-        ListAlgo::unlink(b.ptr, e.ptr);
-        return e.ptr;
+      for (auto it = b; it != e; ++it)
+        NodeRemoved(it.ptr);
+
+      ListAlgo::unlink(b.ptr, e.ptr);
+      return e.ptr;
     }
 
     // O(size())
     void clear() noexcept
     {
-        for (auto it = begin(); it != end(); )
-        {
-            auto rem = it++;
-            NodeRemoved(rem.ptr);
-        }
-        ListAlgo::init_header(GetRoot());
+      for (auto it = begin(); it != end(); )
+      {
+        auto rem = it++;
+        NodeRemoved(rem.ptr);
+      }
+      ListAlgo::init_header(GetRoot());
     }
 
     // clone_from?
 
     // O(1)
     template <typename Checker = Libshit::Check::Assert>
-    iterator insert(const_iterator p, reference ref) noexcept(Checker::IS_NOEXCEPT)
+    iterator insert(const_iterator p, reference ref)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(p.ptr);
+      CheckNodePtrEnd<Checker>(p.ptr);
 
-        auto node = Traits::to_node_ptr(ref);
-        CheckUnlinked<Checker>(node);
-        ListAlgo::link_before(p.ptr, node);
-        NodeAdded(node);
-        return node;
+      auto node = Traits::to_node_ptr(ref);
+      CheckUnlinked<Checker>(node);
+      ListAlgo::link_before(p.ptr, node);
+      NodeAdded(node);
+      return node;
     }
 
     // O(distance(b, e))
     template <typename Checker = Libshit::Check::Assert, typename Iterator>
     LIBSHIT_NOLUA void insert(const_iterator p, Iterator b, Iterator e)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(p.ptr);
-        if constexpr (!Checker::IS_NOP)
-            for (auto it = b; it != e; ++it)
-                CheckUnlinked<Checker>(Traits::to_node_ptr(*it));
-
+      CheckNodePtrEnd<Checker>(p.ptr);
+      if constexpr (!Checker::IS_NOP)
         for (auto it = b; it != e; ++it)
-        {
-            auto node = Traits::to_node_ptr(*it);
-            ListAlgo::link_before(p.ptr, node);
-            NodeAdded(node);
-        }
+          CheckUnlinked<Checker>(Traits::to_node_ptr(*it));
+
+      for (auto it = b; it != e; ++it)
+      {
+        auto node = Traits::to_node_ptr(*it);
+        ListAlgo::link_before(p.ptr, node);
+        NodeAdded(node);
+      }
     }
 
     // O(distance(b, e))
     template <typename Checker = Libshit::Check::Assert, typename Iterator>
     LIBSHIT_NOLUA void assign(Iterator b, Iterator e)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        auto old_last = --end();
-        insert<Checker>(end(), b, e); // may throw
-        erase<std::conditional_t<
-            std::is_same_v<Checker, Libshit::Check::No>, Libshit::Check::No, Libshit::Check::Assert>>(
-                begin(), ++old_last);
+      auto old_last = --end();
+      insert<Checker>(end(), b, e); // may throw
+      erase<std::conditional_t<
+        std::is_same_v<Checker, Libshit::Check::No>,
+        Libshit::Check::No, Libshit::Check::Assert>>(
+          begin(), ++old_last);
     }
 
     // O(x.size())
     template <typename Checker = Libshit::Check::Assert>
     void splice(const_iterator p, ParentList& x) noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(p.ptr);
+      CheckNodePtrEnd<Checker>(p.ptr);
 
-        for (auto it = x.begin(); it != x.end(); ++it)
-            node_traits::set_parent(it.ptr, GetRoot());
-        ListAlgo::transfer(p.ptr, x.begin().ptr, x.end().ptr);
+      for (auto it = x.begin(); it != x.end(); ++it)
+        node_traits::set_parent(it.ptr, GetRoot());
+      ListAlgo::transfer(p.ptr, x.begin().ptr, x.end().ptr);
     }
     // O(1)
     template <typename Checker = Libshit::Check::Assert>
     void splice(const_iterator p, ParentList& x, const_iterator new_ele)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(p.ptr);
-        x.CheckNodePtr<Checker>(new_ele.ptr);
+      CheckNodePtrEnd<Checker>(p.ptr);
+      x.CheckNodePtr<Checker>(new_ele.ptr);
 
-        node_traits::set_parent(new_ele.ptr, GetRoot());
-        ListAlgo::transfer(p.ptr, new_ele.ptr);
+      node_traits::set_parent(new_ele.ptr, GetRoot());
+      ListAlgo::transfer(p.ptr, new_ele.ptr);
     }
     // O(distance(b, e))
     template <typename Checker = Libshit::Check::Assert>
     void splice(const_iterator p, ParentList& x, const_iterator b,
                 const_iterator e) noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(p.ptr);
-        x.CheckNodePtr<Checker>(b.ptr);
-        x.CheckNodePtrEnd<Checker>(e.ptr);
+      CheckNodePtrEnd<Checker>(p.ptr);
+      x.CheckNodePtr<Checker>(b.ptr);
+      x.CheckNodePtrEnd<Checker>(e.ptr);
 
-        for (auto it = b; it != e; ++it)
-            node_traits::set_parent(it.ptr, GetRoot());
-        ListAlgo::transfer(p.ptr, b.ptr, e.ptr);
+      for (auto it = b; it != e; ++it)
+        node_traits::set_parent(it.ptr, GetRoot());
+      ListAlgo::transfer(p.ptr, b.ptr, e.ptr);
     }
 
     // O(n log n), n=size(); exception->basic guarantee
@@ -410,71 +414,71 @@ public:
     void sort() { sort(std::less<value_type>{}); }
     template <typename Predicate>
     LIBSHIT_LUAGEN(template_params={"::Libshit::Lua::FunctionWrapGen<bool>"})
-    void sort(Predicate cmp)
+      void sort(Predicate cmp)
     {
-        // based on
-        // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-        for (size_t k = 1; ; k *= 2)
+      // based on
+      // http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+      for (size_t k = 1; ; k *= 2)
+      {
+        // break cycle
+        node_traits::set_next(node_traits::get_previous(GetRoot()), nullptr);
+        auto p = node_traits::get_next(GetRoot());
+        ListAlgo::init_header(GetRoot()); // GetRoot(): L in paper
+        size_t merges = 0;
+
+        while (p)
         {
-            // break cycle
-            node_traits::set_next(node_traits::get_previous(GetRoot()), nullptr);
-            auto p = node_traits::get_next(GetRoot());
-            ListAlgo::init_header(GetRoot()); // GetRoot(): L in paper
-            size_t merges = 0;
+          ++merges;
+          auto q = p;
 
-            while (p)
+          size_t psize;
+          for (psize = 0; q && psize < k; ++psize)
+            q = node_traits::get_next(q);
+
+          size_t qsize = k;
+          try
+          {
+            while (psize > 0 || (qsize > 0 && q))
             {
-                ++merges;
-                auto q = p;
-
-                size_t psize;
-                for (psize = 0; q && psize < k; ++psize)
-                    q = node_traits::get_next(q);
-
-                size_t qsize = k;
-                try
-                {
-                    while (psize > 0 || (qsize > 0 && q))
-                    {
-                        node_ptr e;
-                        if (psize == 0 || (qsize > 0 && q && cmp(
-                            *Traits::to_value_ptr(q), *Traits::to_value_ptr(p))))
-                        {
-                            e = q;
-                            q = node_traits::get_next(q);
-                            --qsize;
-                        }
-                        else
-                        {
-                            e = p;
-                            p = node_traits::get_next(p);
-                            --psize;
-                        }
-                        ListAlgo::link_before(GetRoot(), e);
-                    }
-                }
-                catch (...)
-                {
-                    // uh-oh. Basic guarantee, make sure no node is lost...
-                    for (; psize > 0; --psize)
-                    {
-                        auto e = p;
-                        p = node_traits::get_next(p);
-                        ListAlgo::link_before(GetRoot(), e);
-                    }
-                    for (; q; )
-                    {
-                        auto e = q;
-                        q = node_traits::get_next(q);
-                        ListAlgo::link_before(GetRoot(), e);
-                    }
-                    throw;
-                }
-                p = q;
+              node_ptr e;
+              if (psize == 0 || (qsize > 0 && q && cmp(
+                    *Traits::to_value_ptr(q), *Traits::to_value_ptr(p))))
+              {
+                e = q;
+                q = node_traits::get_next(q);
+                --qsize;
+              }
+              else
+              {
+                e = p;
+                p = node_traits::get_next(p);
+                --psize;
+              }
+              ListAlgo::link_before(GetRoot(), e);
             }
-
-            if (merges <= 1) return;
+          }
+          catch (...)
+          {
+            // uh-oh. Basic guarantee, make sure no node is lost...
+            for (; psize > 0; --psize)
+            {
+              auto e = p;
+              p = node_traits::get_next(p);
+              ListAlgo::link_before(GetRoot(), e);
+            }
+            for (; q; )
+            {
+              auto e = q;
+              q = node_traits::get_next(q);
+              ListAlgo::link_before(GetRoot(), e);
+            }
+            throw;
+          }
+          p = q;
         }
+
+        if (merges <= 1) return;
+      }
     }
 
     // O(size() + o.size()); exception->basic guarantee
@@ -486,16 +490,16 @@ public:
         "::Libshit::Check::Throw","::Libshit::Lua::FunctionWrapGen<bool>"})
     void merge(ParentList& o, Predicate cmp)
     {
-        LIBSHIT_CHECK(ContainerConsistency, &o != this,
-                       "Trying to merge ParentList with itself");
-        auto tit = begin(), oit = o.begin();
-        auto tend = end(), oend = o.end();
-        while (oit != oend)
-        {
-            if (tit == tend || cmp(*oit, *tit)) splice(tit, o, oit++);
-            else ++tit;
-        }
-        LIBSHIT_ASSERT(o.empty());
+      LIBSHIT_CHECK(ContainerConsistency, &o != this,
+                    "Trying to merge ParentList with itself");
+      auto tit = begin(), oit = o.begin();
+      auto tend = end(), oend = o.end();
+      while (oit != oend)
+      {
+        if (tit == tend || cmp(*oit, *tit)) splice(tit, o, oit++);
+        else ++tit;
+      }
+      LIBSHIT_ASSERT(o.empty());
     }
 
     // O(size())
@@ -509,9 +513,9 @@ public:
     LIBSHIT_LUAGEN(template_params={"::Libshit::Lua::FunctionWrapGen<bool>"})
     void remove_if(Predicate p)
     {
-        for (auto it = begin(); it != end();)
-            if (p(*it)) it = erase(it);
-            else ++it;
+      for (auto it = begin(); it != end();)
+        if (p(*it)) it = erase(it);
+        else ++it;
     }
 
     // O(size()); exception->basic guarantee
@@ -521,178 +525,185 @@ public:
     LIBSHIT_LUAGEN(template_params={"::Libshit::Lua::FunctionWrapGen<bool>"})
     void unique(Predicate p)
     {
-        auto it = begin();
-        auto next = it; ++next;
-        LIBSHIT_ASSERT((next == end()) == (size() <= 1));
+      auto it = begin();
+      auto next = it; ++next;
+      LIBSHIT_ASSERT((next == end()) == (size() <= 1));
 
-        while (next != end())
-            if (p(*it, *next)) next = erase(next);
-            else it = next++;
+      while (next != end())
+        if (p(*it, *next)) next = erase(next);
+        else it = next++;
     }
 
     // O(1)
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA iterator iterator_to(reference ref)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedThis<Checker>(node);
-        return node;
+      node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedThis<Checker>(node);
+      return node;
     }
 
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA const_iterator iterator_to(const_reference ref) const
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        const_node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedThis<Checker>(node);
-        return node;
+      const_node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedThis<Checker>(node);
+      return node;
     }
 
     // static funs
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA static ParentList& container_from_iterator(iterator it)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckLinkedAny<Checker>(it.ptr);
-        return *static_cast<ParentList*>(node_traits::get_parent(it.ptr));
+      CheckLinkedAny<Checker>(it.ptr);
+      return *static_cast<ParentList*>(node_traits::get_parent(it.ptr));
     }
 
     template <typename Checker = Libshit::Check::Assert>
-    LIBSHIT_NOLUA static const ParentList& container_from_iterator(const_iterator it)
-        noexcept(Checker::IS_NOEXCEPT)
+    LIBSHIT_NOLUA static const ParentList& container_from_iterator(
+      const_iterator it) noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckLinkedAny<Checker>(it.ptr);
-        return *static_cast<const ParentList*>(node_traits::get_parent(it.ptr));
+      CheckLinkedAny<Checker>(it.ptr);
+      return *static_cast<const ParentList*>(node_traits::get_parent(it.ptr));
     }
 
 
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA static iterator s_iterator_to(reference ref)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedAny<Checker>(node);
-        return node;
+      node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedAny<Checker>(node);
+      return node;
     }
 
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA static const_iterator s_iterator_to(const_reference ref)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        const_node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedAny<Checker>(node);
-        return node;
+      const_node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedAny<Checker>(node);
+      return node;
     }
 
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA static ParentList& get_parent(reference ref)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedAny<Checker>(node);
-        return *static_cast<ParentList*>(node_traits::get_parent(node));
+      node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedAny<Checker>(node);
+      return *static_cast<ParentList*>(node_traits::get_parent(node));
     }
 
     template <typename Checker = Libshit::Check::Assert>
     LIBSHIT_NOLUA static const ParentList& get_parent(const_reference ref)
-        noexcept(Checker::IS_NOEXCEPT)
+      noexcept(Checker::IS_NOEXCEPT)
     {
-        const_node_ptr node = Traits::to_node_ptr(ref);
-        CheckLinkedAny<Checker>(node);
-        return *static_cast<const ParentList*>(node_traits::get_parent(node));
+      const_node_ptr node = Traits::to_node_ptr(ref);
+      CheckLinkedAny<Checker>(node);
+      return *static_cast<const ParentList*>(node_traits::get_parent(node));
     }
 
     LIBSHIT_NOLUA static ParentList* opt_get_parent(reference ref) noexcept
-    { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
-    LIBSHIT_NOLUA static const ParentList* opt_get_parent(const_reference ref) noexcept
-    { return static_cast<ParentList*>(node_traits::get_parent(Traits::to_node_ptr(ref))); }
-private:
+    {
+      return static_cast<ParentList*>(node_traits::get_parent(
+                                        Traits::to_node_ptr(ref)));
+    }
+    LIBSHIT_NOLUA static const ParentList* opt_get_parent(
+      const_reference ref) noexcept
+    {
+      return static_cast<ParentList*>(node_traits::get_parent(
+                                        Traits::to_node_ptr(ref)));
+    }
+  private:
     void Init() noexcept
     {
-        ListAlgo::init_header(GetRoot());
-        node_traits::set_parent(GetRoot(), GetRoot());
+      ListAlgo::init_header(GetRoot());
+      node_traits::set_parent(GetRoot(), GetRoot());
     }
 
     template <typename U, typename = void> struct HasAdd : std::false_type {};
     template <typename U> struct HasAdd<U, std::void_t<decltype(U::add)>>
-        : std::true_type {};
+      : std::true_type {};
 
     template <typename U, typename = void> struct HasRemove : std::false_type {};
     template <typename U> struct HasRemove<U, std::void_t<decltype(U::remove)>>
-        : std::true_type {};
+      : std::true_type {};
 
     void NodeAdded(node_ptr nd) noexcept
     {
-        node_traits::set_parent(nd, GetRoot());
-        if constexpr (HasAdd<LifetimeTraits>::value)
-        {
-            static_assert(
-                noexcept(LifetimeTraits::add(*this, std::declval<reference>())),
-                "LifetimeTraits::add must be noexcept");
-            LifetimeTraits::add(*this, *Traits::to_value_ptr(nd));
-        }
+      node_traits::set_parent(nd, GetRoot());
+      if constexpr (HasAdd<LifetimeTraits>::value)
+      {
+        static_assert(
+          noexcept(LifetimeTraits::add(*this, std::declval<reference>())),
+          "LifetimeTraits::add must be noexcept");
+        LifetimeTraits::add(*this, *Traits::to_value_ptr(nd));
+      }
     }
 
     void NodeRemoved(node_ptr nd) noexcept
     {
-        node_traits::set_parent(nd, nullptr);
-        if constexpr (HasRemove<LifetimeTraits>::value)
-        {
-            static_assert(
-                noexcept(LifetimeTraits::remove(*this, std::declval<reference>())),
-                "LifetimeTraits::remove must be noexcept");
-            LifetimeTraits::remove(*this, *Traits::to_value_ptr(nd));
-        }
+      node_traits::set_parent(nd, nullptr);
+      if constexpr (HasRemove<LifetimeTraits>::value)
+      {
+        static_assert(
+          noexcept(LifetimeTraits::remove(*this, std::declval<reference>())),
+          "LifetimeTraits::remove must be noexcept");
+        LifetimeTraits::remove(*this, *Traits::to_value_ptr(nd));
+      }
     }
 
     template <typename Checker>
     void CheckNodePtr(const_node_ptr ptr) noexcept(Checker::IS_NOEXCEPT)
     {
-        CheckNodePtrEnd<Checker>(ptr);
-        LIBSHIT_CHECK(
-            ItemNotInContainer, ptr != GetRoot(), "Item is the root item");
+      CheckNodePtrEnd<Checker>(ptr);
+      LIBSHIT_CHECK(
+        ItemNotInContainer, ptr != GetRoot(), "Item is the root item");
     }
 
     template <typename Checker>
     void CheckNodePtrEnd(const_node_ptr ptr) noexcept(Checker::IS_NOEXCEPT)
     {
-        LIBSHIT_CHECK(
-            ItemNotInContainer, node_traits::get_parent(ptr) == GetRoot(),
-            "Item not in this list");
+      LIBSHIT_CHECK(
+        ItemNotInContainer, node_traits::get_parent(ptr) == GetRoot(),
+        "Item not in this list");
     }
 
     template <typename Checker>
     static void CheckUnlinked(const_node_ptr ptr) noexcept(Checker::IS_NOEXCEPT)
     {
-        LIBSHIT_CHECK(
-            ItemAlreadyAdded, node_traits::get_parent(ptr) == nullptr,
-            "Item already linked");
+      LIBSHIT_CHECK(
+        ItemAlreadyAdded, node_traits::get_parent(ptr) == nullptr,
+        "Item already linked");
     }
 
     template <typename Checker>
     static void CheckLinkedAny(const_node_ptr ptr) noexcept(Checker::IS_NOEXCEPT)
     {
-        LIBSHIT_CHECK(
-            ItemNotInContainer, node_traits::get_parent(ptr),
-            "Item not in any container");
+      LIBSHIT_CHECK(
+        ItemNotInContainer, node_traits::get_parent(ptr),
+        "Item not in any container");
     }
 
     template <typename Checker>
     void CheckLinkedThis(const_node_ptr ptr) const noexcept(Checker::IS_NOEXCEPT)
     {
-        LIBSHIT_CHECK(
-            ItemNotInContainer, node_traits::get_parent(ptr) == GetRoot(),
-            "Item not in this container");
+      LIBSHIT_CHECK(
+        ItemNotInContainer, node_traits::get_parent(ptr) == GetRoot(),
+        "Item not in this container");
     }
 
     node_ptr GetRoot() noexcept { return this; }
     const_node_ptr GetRoot() const noexcept { return this; }
-};
+  };
 
-template <typename T, typename A, typename B>
-inline void swap(ParentList<T,A,B>& a, ParentList<T,A,B>& b) noexcept
-{ a.swap(b); }
+  template <typename T, typename A, typename B>
+  inline void swap(ParentList<T,A,B>& a, ParentList<T,A,B>& b) noexcept
+  { a.swap(b); }
 
 }
 

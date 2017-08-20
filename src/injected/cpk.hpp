@@ -14,12 +14,12 @@
 namespace Neptools
 {
 
-#define GEN_FWD(name, fld) \
-    template <typename... Args> inline auto name(Args&&... args)  \
-    { return (this->*fld)(std::forward<Args>(args)...); }
+#define GEN_FWD(name, fld)                                     \
+  template <typename... Args> inline auto name(Args&&... args) \
+  { return (this->*fld)(std::forward<Args>(args)...); }
 
-struct PakEntry
-{
+  struct PakEntry
+  {
     unsigned field_000;
     unsigned file_index;
     char file_name[260];
@@ -28,11 +28,11 @@ struct PakEntry
     size_t uncompressed_size;
     unsigned is_compressed;
     unsigned field_11c;
-};
-NEPTOOLS_STATIC_ASSERT(sizeof(PakEntry) == 0x120);
+  };
+  static_assert(sizeof(PakEntry) == 0x120);
 
-struct CpkHandlerFileInfo
-{
+  struct CpkHandlerFileInfo
+  {
     unsigned index;
     HANDLE handle;
     bool is_valid;
@@ -42,11 +42,11 @@ struct CpkHandlerFileInfo
     void* huffmann_hdr;
     void* block;
     int decoded_block_index;
-};
-NEPTOOLS_STATIC_ASSERT(sizeof(CpkHandlerFileInfo) == 0x140);
+  };
+  static_assert(sizeof(CpkHandlerFileInfo) == 0x140);
 
-struct CpkHandler
-{
+  struct CpkHandler
+  {
     unsigned vect0_begin, vect0_end, vect0_capacity;
     using FileInfo = CpkHandlerFileInfo;
     std::vector<FileInfo*> entry_vect;
@@ -79,20 +79,20 @@ struct CpkHandler
 
     Source GetSource(const char* fname);
 
-private:
+  private:
     FileInfo& GetEntryVect(size_t* out);
     bool OpenFsFile(
-        const char* fname, const boost::filesystem::path& pth, size_t* out);
+      const char* fname, const boost::filesystem::path& pth, size_t* out);
     bool OpenTxtFile(
-        const char* fname, const boost::filesystem::path& pth, size_t* out);
-};
-NEPTOOLS_STATIC_ASSERT(sizeof(CpkHandler) == 0x50);
+      const char* fname, const boost::filesystem::path& pth, size_t* out);
+  };
+  static_assert(sizeof(CpkHandler) == 0x50);
 
-struct CpkError : std::runtime_error, virtual boost::exception
-{
+  struct CpkError : std::runtime_error, virtual boost::exception
+  {
     using std::runtime_error::runtime_error;
-};
-using CpkErrorCode = boost::error_info<struct CpkErrorCodeTag, int>;
+  };
+  using CpkErrorCode = boost::error_info<struct CpkErrorCodeTag, int>;
 
 }
 #endif
