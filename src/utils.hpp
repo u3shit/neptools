@@ -60,7 +60,5 @@ namespace Neptools
   { DumpBytes(os, q.view); return os; }
   inline QuotedString Quoted(Libshit::StringView view) { return {view}; }
 
-#define NEPTOOLS_STATIC_ASSERT(...) static_assert(__VA_ARGS__, #__VA_ARGS__)
-
 }
 #endif

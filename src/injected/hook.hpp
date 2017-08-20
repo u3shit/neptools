@@ -22,7 +22,7 @@ namespace Neptools
   template <typename T>
   inline T Hook(void* hook, T dst, size_t copy)
   {
-    NEPTOOLS_STATIC_ASSERT(sizeof(T) == 4);
+    static_assert(sizeof(T) == 4);
     union
     {
       T t;

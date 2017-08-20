@@ -243,7 +243,7 @@ namespace Neptools
       }
       void operator()(float y, size_t)
       {
-        NEPTOOLS_STATIC_ASSERT(sizeof(float) == sizeof(uint32_t));
+        static_assert(sizeof(float) == sizeof(uint32_t));
         union { float f; uint32_t i; } x;
         x.f = y;
         *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x.i;

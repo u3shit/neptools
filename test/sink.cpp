@@ -27,7 +27,7 @@ TEST_CASE("small simple write", "[Sink]")
 TEST_CASE("many small writes", "[Sink]")
 {
   int buf[6] = {0,77,-123,98,77,-1};
-  NEPTOOLS_STATIC_ASSERT(sizeof(buf) == 24);
+  static_assert(sizeof(buf) == 24);
 
   static constexpr FilePosition SIZE = 2*1024*1024 / 24 * 24;
   {
