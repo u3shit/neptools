@@ -105,7 +105,7 @@ static Option console_opt{
     SetConsoleTitleA("NepTools Console");
     freopen("CONOUT$", "w", stdout);
     freopen("CONOUT$", "w", stderr);
-    INFO << "Console init" << std::endl;
+    INF << "Console init" << std::endl;
   }};
 
 static Option file_opt{
@@ -115,7 +115,7 @@ static Option file_opt{
   {
     freopen(args.front(), "w", stdout);
     _dup2(_fileno(stdout), _fileno(stderr));
-    INFO << "Logging to file " << args.front() << std::endl;
+    INF << "Logging to file " << args.front() << std::endl;
   }};
 
 static void PrintRecord(const EXCEPTION_RECORD* er, int lvl = 0)

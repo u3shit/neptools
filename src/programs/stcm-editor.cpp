@@ -169,14 +169,14 @@ static auto BaseDoAutoFun(const boost::filesystem::path& p, const char* ext)
     cl3 = p.native().substr(0, p.native().size()-4);
     txt = p;
     import = true;
-    INFO << "Importing: " << cl3 << " <- " << txt << std::endl;
+    INF << "Importing: " << cl3 << " <- " << txt << std::endl;
   }
   else
   {
     cl3 = txt = p;
     txt += ext;
     import = false;
-    INFO << "Exporting: " << cl3 << " -> " << txt << std::endl;
+    INF << "Exporting: " << cl3 << " -> " << txt << std::endl;
   }
 
   return std::make_tuple(import, cl3, txt);
@@ -244,7 +244,7 @@ static void DoAutoCl3(const boost::filesystem::path& p)
   {
     boost::filesystem::path cl3_file =
       p.native().substr(0, p.native().size() - 4);
-    INFO << "Packing " << cl3_file << std::endl;
+    INF << "Packing " << cl3_file << std::endl;
     Cl3 cl3{Source::FromFile(cl3_file)};
     cl3.UpdateFromDir(p);
     cl3.Fixup();
@@ -252,7 +252,7 @@ static void DoAutoCl3(const boost::filesystem::path& p)
   }
   else
   {
-    INFO << "Extracting " << p << std::endl;
+    INF << "Extracting " << p << std::endl;
     Cl3 cl3{Source::FromFile(p)};
     auto out = p;
     cl3.ExtractTo(out += ".out");

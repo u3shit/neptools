@@ -136,8 +136,8 @@ though, especially with the console method).
 Compilation
 ===========
 
-See [COMPILE.md](COMPILE.md) if you downloaded a source distribution. Otherwise
-refer to http://github.com/u3shit/stcm-editor.
+See libshit/COMPILE.md if you checked out from git. Otherwise refer to
+http://github.com/u3shit/neptools.
 
 License
 =======

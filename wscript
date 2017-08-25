@@ -1,7 +1,9 @@
 # -*- mode: python -*-
 
-# the following two variables are used by the target "waf dist"
+# libshit 'config'
 APPNAME='neptools'
+BOOST_LIBS = ['system', 'filesystem']
+DEFAULT_LUA = 'ljx'
 
 def options(opt):
     opt.recurse('libshit', name='options')
@@ -48,7 +50,7 @@ def build_common(bld):
 
     bld.stlib(source   = src,
               uselib   = 'NEPTOOLS',
-              use      = 'libshit',
+              use      = 'libshit boost_system boost_filesystem',
               includes = 'src',
               target   = 'common')
 
