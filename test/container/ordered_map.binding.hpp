@@ -111,7 +111,7 @@ namespace Libshit::Lua
     bld.AddFunction<
       static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::om_item_test &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::to_table)
     >("to_table");
-  luaL_getmetatable(bld, "neptools_ipairs");  bld.SetField("__ipairs");
+    luaL_getmetatable(bld, "neptools_ipairs");    bld.SetField("__ipairs");
   }
   static TypeRegister::StateRegister<::om_item_test> reg_neptools_ordered_map_om_item_test;
 

@@ -162,7 +162,7 @@ namespace Libshit::Lua
     bld.AddFunction<
       static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::cl3_entry &)>(::Neptools::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::to_table)
     >("to_table");
-  luaL_getmetatable(bld, "neptools_ipairs");  bld.SetField("__ipairs");
+    luaL_getmetatable(bld, "neptools_ipairs");    bld.SetField("__ipairs");
   }
   static TypeRegister::StateRegister<::cl3_entry> reg_neptools_ordered_map_cl3_entry;
 
