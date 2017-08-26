@@ -108,7 +108,7 @@ namespace Neptools
 
 #define NEPTOOLS_MOVABLE_ONLY(...)                              \
     template <__VA_ARGS__ typename T,                           \
-              std::enable_if_t<std::is_same<T, Item>::value &&  \
+              std::enable_if_t<std::is_same_v<T, Item> &&       \
                                Traits::is_movable, bool> = true>
 
     NEPTOOLS_MOVABLE_ONLY() void splice(const_iterator p, List& l) noexcept

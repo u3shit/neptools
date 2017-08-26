@@ -259,7 +259,7 @@ namespace Neptools::Stsc
   {
     src.CheckSize(SIZE);
     using Tuple = PODTuple<typename Traits<Args>::RawType...>;
-    static_assert(std::is_pod<Tuple>::value);
+    static_assert(std::is_pod_v<Tuple>);
     static_assert(Libshit::EmptySizeof<Tuple> == Operations<Args...>::Size());
 
     auto raw = src.ReadGen<Tuple>();
