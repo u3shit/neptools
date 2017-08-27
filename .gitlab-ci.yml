@@ -1,82 +1,18 @@
+# global config
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   TERM: xterm
 
+stages:
+  - build
+
+# templates
 .cached: &cached
   cache:
     key: "$CI_BUILD_REF_NAME/$CI_BUILD_NAME$CI_PROJECT_DIR"
     paths:
       - build/
-
-before_script:
-  - ln -nsf /opt/boost libshit/ext/boost || true
-
-stages:
-  - build
-  - test
-
-.gcc-env: &gcc_env
-  variables:
-    AR: gcc-ar
-    LINKFLAGS: -static-libstdc++
-  before_script:
-    # HACK: automatically find latest gcc installed
-    - ln -nsf /opt/boost libshit/ext/boost || true
-    - export CC="$(cd /usr/bin; ls gcc-*.*.* | tail -n1)"
-    - export CXX="$(cd /usr/bin; ls g++-*.*.* | tail -n1)"
-
-.clang-env: &clang_env
-  variables:
-    CC: clang
-    CXX: clang++
-    CXXFLAGS: -stdlib=libc++
-    LINKFLAGS: "-stdlib=libc++ -fuse-ld=gold -static-libstdc++ -Wl,--as-needed -lpthread -Wl,--no-as-needed"
-
-.clang-msvc-env: &clang_msvc_env
-  variables:
-    CFLAGS: '-m32 -Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared -DCATCH_CONFIG_COLOUR_ANSI'
-    CXXFLAGS: "$CFLAGS"
-    LINKFLAGS: '/libpath:/mnt/msvc/vc12/lib /libpath:/mnt/msvc/vc12/win_sdk/lib/winv6.3/um/x86'
-    WINRCFLAGS: -m32
-    HOST_CC: gcc
-    HOST_CXX: g++
-    HOST_CFLAGS: ''
-    HOST_CXXFLAGS: ''
-    HOST_LINKFLAGS: ''
-    CONFIG_OPTS: --clang-hack --optimize --lua-dll # pdbs don't work atm
-
-.clang-msvc64-env: &clang_msvc64_env
-  variables:
-    CFLAGS: '-Xclang -target-cpu -Xclang x86-64 -fms-compatibility-version=18 -imsvc /mnt/msvc/vc12/include -imsvc /mnt/msvc/vc12/win_sdk/include/um -imsvc /mnt/msvc/vc12/win_sdk/include/shared -DCATCH_CONFIG_COLOUR_ANSI'
-    CXXFLAGS: "$CFLAGS"
-    LINKFLAGS: '/libpath:/mnt/msvc/vc12/lib/amd64 /libpath:/mnt/msvc/vc12/win_sdk/lib/winv6.3/um/x64'
-    HOST_CC: gcc
-    HOST_CXX: g++
-    HOST_CFLAGS: ''
-    HOST_CXXFLAGS: ''
-    HOST_LINKFLAGS: ''
-    CONFIG_OPTS: --clang-hack --optimize --lua-dll # pdbs don't work atm
-
-
-.debug-build: &debug_build
-  <<: *cached
   stage: build
-  script:
-    - echo $CONFIG_OPTS
-    - ./waf --color=yes configure --optimize-ext $CONFIG_OPTS
-    - ./waf --color=yes build test -j2 --skip-run-tests
-
-.rel-build: &rel_build
-  <<: *cached
-  stage: build
-  script:
-    - echo $CONFIG_OPTS
-    - ./waf --color=yes configure --release $CONFIG_OPTS
-    - ./waf --color=yes build test -j2 --skip-run-tests
-    - |
-      if [[ -f build/stcm-editor ]]; then
-        strip --strip-unneeded -R .comment -R .GCC.command.line build/stcm-editor
-      fi
 
 .win-artifacts: &win_artifacts
   artifacts:
@@ -86,111 +22,66 @@ stages:
       - build/neptools-server.dll
       - build/run-tests.exe
       - build/stcm-editor.exe
+    when: always
 
 .linux-artifacts: &linux_artifacts
   artifacts:
     paths:
       - build/stcm-editor
       - build/run-tests
+    when: always
 
 
-.test-common: &test_common
-  stage: test
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
-  before_script: []
-
-.wine-test: &wine_test
-  <<: *test_common
-  script:
-    - wine build/run-tests.exe
-
-.win7-test: &win7_test
-  <<: *test_common
-  script:
-    - tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe build/lua53.dll
-
-.test: &test
-  <<: *test_common
-  script:
-    - build/run-tests
-
+# builds...
 build-clang-msvc-debug:
-  <<: *clang_msvc_env
-  <<: *debug_build
+  <<: *cached
   <<: *win_artifacts
-test-wine-clang-msvc-debug:
-  <<: *wine_test
-  dependencies:
-    - build-clang-msvc-debug
-test-win7-clang-msvc-debug:
-  <<: *win7_test
-  dependencies:
-    - build-clang-msvc-debug
+  script:
+    - tools/ci.sh clang-msvc debug
 
 build-clang-msvc-rel:
-  <<: *clang_msvc_env
-  <<: *rel_build
+  <<: *cached
   <<: *win_artifacts
-test-wine-clang-msvc-rel:
-  <<: *wine_test
-  dependencies:
-    - build-clang-msvc-rel
-test-win7-clang-msvc-rel:
-  <<: *win7_test
-  dependencies:
-    - build-clang-msvc-rel
+  script:
+    - tools/ci.sh clang-msvc rel
+
+build-clang-msvc64-debug:
+  <<: *cached
+  <<: *win_artifacts
+  script:
+    - tools/ci.sh clang-msvc64 debug
 
 build-clang-msvc64-rel:
-  <<: *clang_msvc64_env
-  <<: *rel_build
+  <<: *cached
   <<: *win_artifacts
-test-wine-clang-msvc64-rel:
-  <<: *wine_test
-  dependencies:
-    - build-clang-msvc64-rel
-test-win7-clang-msvc64-rel:
-  <<: *win7_test
-  dependencies:
-    - build-clang-msvc64-rel
-
+  script:
+    - tools/ci.sh clang-msvc64 rel
 
 
 build-gcc-amd64-debug:
-  <<: *gcc_env
-  <<: *debug_build
+  <<: *cached
   <<: *linux_artifacts
-test-gcc-amd64-debug:
-  <<: *test
-  dependencies:
-    - build-gcc-amd64-debug
+  script:
+    - tools/ci.sh gcc debug
 
 build-gcc-amd64-rel:
-  <<: *gcc_env
-  <<: *rel_build
+  <<: *cached
   <<: *linux_artifacts
-test-gcc-amd64-rel:
-  <<: *test
-  dependencies:
-    - build-gcc-amd64-rel
+  script:
+    - tools/ci.sh gcc rel
 
 build-clang-amd64-debug:
-  <<: *clang_env
-  <<: *debug_build
+  <<: *cached
   <<: *linux_artifacts
-test-clang-amd64-debug:
-  <<: *test
-  dependencies:
-    - build-clang-amd64-debug
+  script:
+    - tools/ci.sh clang debug
 
 build-clang-amd64-rel:
-  <<: *clang_env
-  <<: *rel_build
+  <<: *cached
   <<: *linux_artifacts
-test-clang-amd64-rel:
-  <<: *test
-  dependencies:
-    - build-clang-amd64-rel
+  script:
+    - tools/ci.sh clang rel
+
 
 binding-gen-test:
   stage: build
