@@ -10,7 +10,7 @@ namespace Neptools::Stcm
 
   File::File(Source src)
   {
-    AddInfo(&File::Parse_, ADD_SOURCE(src), this, src);
+    ADD_SOURCE(Parse_(src), src);
   }
 
   void File::Parse_(Source& src)

@@ -5,7 +5,6 @@
 #include <libshit/lua/boost_endian_traits.hpp>
 
 #include <iostream>
-#include <boost/exception/errinfo_file_name.hpp>
 
 #define LIBSHIT_LOG_NAME "sink"
 #include <libshit/logger_helper.hpp>
@@ -197,7 +196,7 @@ namespace Neptools
           return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
         }
       },
-      [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; });
+      [&](auto& e) { Libshit::AddInfos(e, "File name", fname.string()); });
   }
 
   Libshit::NotNull<Libshit::RefCountedPtr<Sink>> Sink::ToStdOut()

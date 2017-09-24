@@ -1,7 +1,6 @@
 #include "open.hpp"
 
 #include <libshit/except.hpp>
-#include <boost/exception/errinfo_file_name.hpp>
 
 namespace Neptools
 {
@@ -13,16 +12,15 @@ namespace Neptools
       auto ret = x(src);
       if (ret) return MakeNotNull(ret);
     }
-    LIBSHIT_THROW(Libshit::DecodeError{"Unknown input file"});
+    LIBSHIT_THROW(Libshit::DecodeError, "Unknown input file");
   }
 
   auto OpenFactory::Open(const boost::filesystem::path& fname)
     -> Libshit::NotNull<Ret>
   {
-    return AddInfo(
-      static_cast<Libshit::NotNull<Ret> (*)(Source)>(Open),
-      [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
-      Source::FromFile(fname.native()));
+    LIBSHIT_ADD_INFOS(
+      return Open(Source::FromFile(fname.native())),
+      "File name", fname.string());
   }
 
 }

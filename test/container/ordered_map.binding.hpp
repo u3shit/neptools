@@ -93,17 +93,17 @@ namespace Libshit::Lua
       static_cast<void (*)(::om_item_test &, ::Libshit::Lua::Skip) noexcept>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::get)
     >("get");
     bld.AddFunction<
-      static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::size_t, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::insert)
+      static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::size_t, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits, ::std::less<::std::basic_string<char> > >::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::insert)
     >("insert");
     bld.AddFunction<
       static_cast<::size_t (*)(::om_item_test &, ::size_t, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::erase),
       static_cast<::size_t (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::erase)
     >("erase");
     bld.AddFunction<
-      static_cast<::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::remove)
+      static_cast<::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits, ::std::less<::std::basic_string<char> > >::NotNullPtr (*)(::om_item_test &, ::size_t)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::remove)
     >("remove");
     bld.AddFunction<
-      static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::push_back)
+      static_cast<std::tuple<bool, ::size_t> (*)(::om_item_test &, ::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits, ::std::less<::std::basic_string<char> > >::NotNullPtr &&)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::push_back)
     >("push_back");
     bld.AddFunction<
       static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::om_item_test &, const typename ::om_item_test::key_type &)>(::Neptools::OrderedMapLua<::Neptools::Test::OMItemTest, ::Neptools::Test::OMItemTestTraits>::find)

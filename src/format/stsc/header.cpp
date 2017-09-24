@@ -25,7 +25,7 @@ namespace Neptools::Stsc
   HeaderItem::HeaderItem(Key k, Context& ctx, Source src)
     : Item{k, ctx}, entry_point{Libshit::EmptyNotNull{}}
   {
-    AddInfo(&HeaderItem::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   FilePosition HeaderItem::GetSize() const noexcept

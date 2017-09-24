@@ -20,7 +20,7 @@ namespace Neptools
     const Byte* Find(Libshit::StringView data) const
     {
       auto ret = MaybeFind(data);
-      if (!ret) LIBSHIT_THROW(std::runtime_error{"Couldn't find pattern"});
+      if (!ret) LIBSHIT_THROW(std::runtime_error, "Couldn't find pattern");
       return ret;
     }
   };

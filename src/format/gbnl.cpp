@@ -45,12 +45,12 @@ namespace Neptools
     case Gbnl::TypeDescriptor::FLOAT: return 4;
     case Gbnl::TypeDescriptor::STRING: return 4;
     }
-    LIBSHIT_THROW(Libshit::DecodeError{"Gbnl: invalid type"});
+    LIBSHIT_THROW(Libshit::DecodeError, "Gbnl: invalid type");
   }
 
   Gbnl::Gbnl(Source src)
   {
-    Libshit::AddInfo(&Gbnl::Parse_, ADD_SOURCE(src), this, src);
+    ADD_SOURCE(Parse_(src), src);
   }
 
   void Gbnl::Parse_(Source& src)
@@ -110,7 +110,7 @@ namespace Neptools
         bld.Add<OffsetString>();
         break;
       default:
-        LIBSHIT_THROW(Libshit::DecodeError{"GBNL: invalid type"});
+        LIBSHIT_THROW(Libshit::DecodeError, "GBNL: invalid type");
       }
     }
     Pad(msg_descr_size - calc_offs, bld, int8_in_progress);
@@ -650,20 +650,20 @@ namespace Neptools
         if (pos == static_cast<size_t>(-1))
         {
           LIBSHIT_THROW(
-            Libshit::DecodeError{"GbnlTxt: invalid id in input"} <<
-            FailedId{id});
+            Libshit::DecodeError, "GbnlTxt: invalid id in input",
+            "Failed id", id);
         }
       }
       else
       {
         if (pos == static_cast<size_t>(-1))
           LIBSHIT_THROW(
-            Libshit::DecodeError{"GbnlTxt: data before separator"});
+            Libshit::DecodeError, "GbnlTxt: data before separator");
         if (!line.empty() && line.back() == '\r') line.pop_back();
         msg.append(line).append(1, '\n');
       }
     }
-    LIBSHIT_THROW(Libshit::DecodeError{"GbnlTxt: EOF"});
+    LIBSHIT_THROW(Libshit::DecodeError, "GbnlTxt: EOF");
   }
 
   static OpenFactory gbnl_open{[](Source src) -> Libshit::SmartPtr<Dumpable>

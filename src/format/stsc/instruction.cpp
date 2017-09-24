@@ -6,6 +6,7 @@
 
 #include <libshit/lua/static_class.hpp>
 #include <libshit/lua/user_type.hpp>
+#include <iomanip>
 
 namespace Neptools::Stsc
 {
@@ -251,7 +252,7 @@ namespace Neptools::Stsc
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
   {
-    AddInfo(&SimpleInstruction::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   template <bool NoReturn, typename... Args>
@@ -301,7 +302,7 @@ namespace Neptools::Stsc
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
   {
-    AddInfo(&Instruction0dItem::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   void Instruction0dItem::Parse_(Context& ctx, Source& src)
@@ -373,7 +374,7 @@ namespace Neptools::Stsc
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}, tgt{Libshit::EmptyNotNull{}}
   {
-    AddInfo(&Instruction1dItem::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   void Instruction1dItem::Dispose() noexcept
@@ -455,7 +456,7 @@ namespace Neptools::Stsc
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
   {
-    AddInfo(&Instruction1eItem::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   void Instruction1eItem::Dispose() noexcept

@@ -22,7 +22,7 @@ namespace Neptools::Stcm
   ExportsItem::ExportsItem(Key k, Context& ctx, Source src, uint32_t export_count)
     : Item{k, ctx}
   {
-    AddInfo(&ExportsItem::Parse_, ADD_SOURCE(src), this, ctx, src, export_count);
+    ADD_SOURCE(Parse_(ctx, src, export_count), src);
   }
 
   void ExportsItem::Parse_(Context& ctx, Source& src, uint32_t export_count)

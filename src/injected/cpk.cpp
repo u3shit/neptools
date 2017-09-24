@@ -73,8 +73,8 @@ namespace Neptools
       size_t read;
       cpk->entry_vect[index]->read_pos = offs;
       if (!cpk->OrigRead(index, reinterpret_cast<char*>(buf), len, &read))
-        LIBSHIT_THROW(CpkError{"Cpk::OrigRead failed"} <<
-                      CpkErrorCode{cpk->last_error});
+        LIBSHIT_THROW(CpkError, "Cpk::OrigRead failed",
+                      "Cpk error code", cpk->last_error);
       LIBSHIT_ASSERT(read == len);
       return;
     }
@@ -88,8 +88,8 @@ namespace Neptools
       size_t read;
       cpk->entry_vect[index]->read_pos = coffs;
       if (!cpk->OrigRead(index, cbuf.get(), csize, &read))
-        LIBSHIT_THROW(CpkError{"Cpk::OrigRead failed"} <<
-                      CpkErrorCode{cpk->last_error});
+        LIBSHIT_THROW(CpkError, "Cpk::OrigRead failed",
+                      "Cpk error code", cpk->last_error);
       LIBSHIT_ASSERT(read == csize);
 
       auto to_offs = offs % CPK_CHUNK;
@@ -283,8 +283,8 @@ namespace Neptools
   {
     size_t index;
     if (!OrigOpenFile(fname, &index))
-      LIBSHIT_THROW(CpkError{"Cpk::OrigOpenFile failed"} <<
-                    CpkErrorCode{last_error});
+      LIBSHIT_THROW(CpkError, "Cpk::OrigOpenFile failed",
+                    "Cpk error code", last_error);
     try
     {
       return Source(Libshit::MakeSmart<CpkSource>(fname, this, index),

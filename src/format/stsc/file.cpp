@@ -12,7 +12,7 @@ namespace Neptools::Stsc
 
   File::File(Source src)
   {
-    AddInfo(&File::Parse_, ADD_SOURCE(src), this, src);
+    ADD_SOURCE(Parse_(src), src);
   }
 
   void File::Parse_(Source& src)
@@ -62,7 +62,7 @@ namespace Neptools::Stsc
       if (line == SEP_DASH)
       {
         if (it == end)
-          LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: too many strings"});
+          LIBSHIT_THROW(Libshit::DecodeError, "StscTxt: too many strings");
 
         LIBSHIT_ASSERT(msg.empty() || msg.substr(msg.length()-2) == "\\n");
         if (!msg.empty()) { msg.pop_back(); msg.pop_back(); }
@@ -81,7 +81,7 @@ namespace Neptools::Stsc
     }
 
     if (it != end)
-      LIBSHIT_THROW(Libshit::DecodeError{"StscTxt: not enough strings"});
+      LIBSHIT_THROW(Libshit::DecodeError, "StscTxt: not enough strings");
   }
 
   static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>

@@ -99,7 +99,7 @@ namespace Neptools::Stcm
   InstructionItem::InstructionItem(Key k, Context& ctx, Source src)
     : ItemWithChildren{k, ctx}
   {
-    AddInfo(&InstructionItem::Parse_, ADD_SOURCE(src), this, ctx, src);
+    ADD_SOURCE(Parse_(ctx, src), src);
   }
 
   void InstructionItem::Parse_(Context& ctx, Source& src)

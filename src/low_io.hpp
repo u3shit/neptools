@@ -65,8 +65,5 @@ namespace Neptools
 #endif
   };
 
-  using MmapOffset = boost::error_info<struct MmapOffsetTag, FilePosition>;
-  using MmapSize = boost::error_info<struct MmapSizeTag, FilePosition>;
-
 }
 #endif

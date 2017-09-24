@@ -13,20 +13,12 @@
 
 #include <array>
 #include <boost/endian/arithmetic.hpp>
-#include <boost/exception/info.hpp>
-#include <boost/exception/get_error_info.hpp>
 #include <boost/filesystem/path.hpp>
 
 namespace Neptools
 {
 
   LIBSHIT_GEN_EXCEPTION_TYPE(SourceOverflow, std::logic_error);
-
-  class Source;
-  using UsedSource = boost::error_info<struct UsedSourceTag, Source>;
-  using ReadOffset = boost::error_info<struct ReadOffsetTag, FilePosition>;
-  using ReadSize = boost::error_info<struct ReadOffsetTag, FileMemSize>;
-  std::string to_string(const UsedSource& src);
 
   /// A fixed size, read-only, seekable data source (or something that emulates
   /// it)
@@ -81,8 +73,8 @@ namespace Neptools
     void CheckSize(FilePosition size) const
     {
       if (p->size < size)
-        LIBSHIT_THROW(Libshit::DecodeError{"Premature end of data"} <<
-                      UsedSource(*this));
+        LIBSHIT_THROW(Libshit::DecodeError, "Premature end of data",
+                      "Used source", *this);
     }
     void CheckRemainingSize(FilePosition size) const { CheckSize(get + size); }
 
@@ -114,16 +106,11 @@ namespace Neptools
     LIBSHIT_NOLUA void Pread(
       FilePosition offs, Byte* buf, FileMemSize len) const
     {
-      Libshit::AddInfo([&]
-      {
+      LIBSHIT_ADD_INFOS(
         LIBSHIT_CHECK(SourceOverflow, offs <= size && offs+len <= size,
                       "Source overflow");
-        Pread_(offs, buf, len);
-      },
-      [=] (auto& e)
-      {
-        e << UsedSource{*this} << ReadOffset{offs} << ReadSize{len};
-      });
+        Pread_(offs, buf, len),
+        "Used source", *this, "Read offset", offs, "Read size", len);
     }
 
     template <typename Checker = Libshit::Check::Assert>
@@ -198,6 +185,8 @@ namespace Neptools
   inline std::ostream& operator<<(std::ostream& os, const Source s)
   { s.Inspect(os); return os; }
 
+  std::string to_string(const Source& s);
+
   class DumpableSource final : public Dumpable
   {
     LIBSHIT_DYNAMIC_OBJECT;
@@ -218,12 +207,8 @@ namespace Neptools
     void Inspect_(std::ostream& os, unsigned) const override;
   };
 
-#define ADD_SOURCE(src)                                     \
-  [&](auto& add_source_e)                                   \
-  {                                                         \
-    if (!::boost::get_error_info<UsedSource>(add_source_e)) \
-      add_source_e << UsedSource{src};                      \
-  }
+#define ADD_SOURCE(expr, ...) \
+  LIBSHIT_ADD_INFOS(expr, "Used source", __VA_ARGS__)
 
   struct QuotedSource { Source src; };
   inline std::ostream& operator<<(std::ostream& os, QuotedSource q)

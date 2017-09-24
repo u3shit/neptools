@@ -76,7 +76,7 @@ namespace Neptools::Lua
     static auto CheckedNthEnd(Vect& v, size_type i)
     {
       if (i <= v.size()) return v.begin() + i;
-      else LIBSHIT_THROW(std::out_of_range{"VectorBinding::CheckedNthEnd"});
+      else LIBSHIT_THROW(std::out_of_range, "VectorBinding::CheckedNthEnd");
     }
 
     static auto IndexOf(Vect& v, typename Vect::iterator it) noexcept

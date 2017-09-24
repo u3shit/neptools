@@ -5,7 +5,6 @@
 #include "item.hpp"
 #include "../dumpable.hpp"
 
-#include <boost/exception/info.hpp>
 #include <boost/intrusive/set.hpp>
 #include <string>
 #include <map>
@@ -73,8 +72,6 @@ namespace Neptools
   std::ostream& operator<<(std::ostream& os, PrintLabelStruct label);
   inline PrintLabelStruct PrintLabel(const LabelPtr& label)
   { return {label.get()}; }
-
-  using AffectedLabel = boost::error_info<struct AffectedLabelTag, std::string>;
 }
 
 #endif

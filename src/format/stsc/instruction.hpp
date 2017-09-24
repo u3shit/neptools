@@ -122,7 +122,7 @@ namespace Neptools::Stsc
     UnimplementedInstructionItem(
       Key k, Context& ctx, uint8_t opcode, const Source&)
       : InstructionBase{k, ctx, opcode}
-    { LIBSHIT_THROW(Libshit::DecodeError{"Unimplemented instruction"}); }
+    { LIBSHIT_THROW(Libshit::DecodeError, "Unimplemented instruction"); }
 
     FilePosition GetSize() const noexcept override { return 0; }
 

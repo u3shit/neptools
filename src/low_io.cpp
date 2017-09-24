@@ -1,7 +1,6 @@
 #include "low_io.hpp"
 
 #include <libshit/except.hpp>
-#include <boost/exception/errinfo_api_function.hpp>
 
 #ifdef WINDOWS
 #  define NOMINMAX
@@ -19,10 +18,10 @@
 #ifdef WINDOWS
 #  include <iostream>
 
-#  define SYSERROR2(x, rst)                                \
-  LIBSHIT_THROW((Libshit::SystemError{std::error_code{     \
-          int(GetLastError()), std::system_category()}} << \
-      boost::errinfo_api_function{x} rst))
+#  define SYSERROR2(x, ...)                                \
+  LIBSHIT_THROW(Libshit::SystemError, std::error_code{     \
+      int(GetLastError()), std::system_category()},        \
+    "API function", x __VA_ARGS__)
 #  define SYSERROR(x) SYSERROR2(x, )
 
 namespace Neptools
@@ -84,7 +83,7 @@ namespace Neptools
     auto ret = MapViewOfFile(mmap_fd, write ? FILE_MAP_WRITE : FILE_MAP_READ,
                              offs >> 16 >> 16, offs, size);
     if (ret == nullptr)
-      SYSERROR2("MapViewOfFile", << MmapOffset(offs) << MmapSize(size));
+      SYSERROR2("MapViewOfFile", ,"Mmap offset", offs, "Mmap size", size);
     return ret;
   }
 
@@ -128,10 +127,10 @@ namespace Neptools
 
 #else // linux/unix
 
-#  define SYSERROR(x)                                   \
-  LIBSHIT_THROW((Libshit::SystemError{                  \
-        std::error_code{errno, std::system_category()}} \
-      << boost::errinfo_api_function{x}))
+#  define SYSERROR(x)                                           \
+  LIBSHIT_THROW(Libshit::SystemError,                           \
+                std::error_code{errno, std::system_category()}, \
+                "API function", x)
 
 namespace Neptools
 {

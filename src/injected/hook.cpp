@@ -45,7 +45,7 @@ namespace Neptools
     if (copy)
     {
       ret = static_cast<char*>(HeapAlloc(heap, 0, copy + JMP_SIZE));
-      if (!ret) LIBSHIT_THROW(std::bad_alloc{});
+      if (!ret) LIBSHIT_THROW(std::bad_alloc, std::make_tuple());
       memcpy(ret, addr, copy);
       ret[copy] = 0xe9; // jmp
       auto base = ret + copy + JMP_SIZE;
@@ -72,7 +72,7 @@ namespace Neptools
   Unprotect::Unprotect(void* ptr, size_t len) : ptr{ptr}, len{len}
   {
     if (!VirtualProtect(ptr, len, PAGE_EXECUTE_READWRITE, &orig_prot))
-      LIBSHIT_THROW(std::runtime_error{"Unprotect: VirtualProtect"});
+      LIBSHIT_THROW(std::runtime_error, "Unprotect: VirtualProtect");
   }
 
   Unprotect::~Unprotect()

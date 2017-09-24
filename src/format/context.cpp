@@ -43,8 +43,8 @@ namespace Neptools
   {
     auto it = labels.find(name);
     if (it == labels.end())
-      LIBSHIT_THROW(Libshit::OutOfRange{"Context::GetLabel"} <<
-                    AffectedLabel{name});
+      LIBSHIT_THROW(Libshit::OutOfRange, "Context::GetLabel",
+                    "Affected label", name);
     return MakeNotNull(const_cast<Label*>(&*it));
   }
 
@@ -57,8 +57,8 @@ namespace Neptools
     {
       name = std::move(lbl->name);
       delete lbl;
-      LIBSHIT_THROW(Libshit::OutOfRange{"label already exists"} <<
-                    AffectedLabel{std::move(name)});
+      LIBSHIT_THROW(Libshit::OutOfRange, "label already exists",
+                    "Affected label", std::move(name));
     }
 
     ptr->labels.insert(*pair.first);

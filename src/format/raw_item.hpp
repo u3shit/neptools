@@ -49,7 +49,7 @@ namespace Neptools
       auto& ritem = ptr.AsChecked<RawItem>();
       LIBSHIT_ASSERT_MSG(ptr.offset <= ritem.GetSize(), "invalid offset");
       if (ptr.offset + sizeof(T) > ritem.GetSize())
-        LIBSHIT_THROW(Libshit::DecodeError{"Premature end of data"});
+        LIBSHIT_THROW(Libshit::DecodeError, "Premature end of data");
 
       struct Ret { RawItem& ritem; T t; };
       return Ret{
@@ -65,7 +65,7 @@ namespace Neptools
       if (len == FilePosition(-1)) len = ritem.GetSize() - ptr.offset;
 
       if (ptr.offset + len > ritem.GetSize())
-        LIBSHIT_THROW(Libshit::DecodeError{"Premature end of data"});
+        LIBSHIT_THROW(Libshit::DecodeError, "Premature end of data");
       return {std::ref(ritem), {ritem.src, ptr.offset, len}};
     }
 

@@ -63,7 +63,7 @@ namespace Neptools
 
   Cl3::Cl3(Source src)
   {
-    AddInfo(&Cl3::Parse_, ADD_SOURCE(src), this, src);
+    ADD_SOURCE(Parse_(src), src);
   }
 
 #ifndef LIBSHIT_WITHOUT_LUA
@@ -368,7 +368,7 @@ namespace Neptools
       {
         le.linked_file_id = IndexOf(l);
         if (le.linked_file_id == uint32_t(-1))
-          LIBSHIT_THROW(std::runtime_error{"Invalid file link"});
+          LIBSHIT_THROW(std::runtime_error, "Invalid file link");
         le.link_id = i++;
         sink.WriteGen(le);
       }
@@ -379,7 +379,7 @@ namespace Neptools
   {
     auto dat = entries.find("main.DAT", std::less<>{});
     if (dat == entries.end() || !dat->src)
-      LIBSHIT_THROW(Libshit::DecodeError{"Invalid CL3 file: no main.DAT"});
+      LIBSHIT_THROW(Libshit::DecodeError, "Invalid CL3 file: no main.DAT");
 
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
     if (stcm) return *stcm;

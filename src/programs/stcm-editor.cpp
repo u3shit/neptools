@@ -18,7 +18,6 @@
 #include <fstream>
 #include <deque>
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/exception/errinfo_file_name.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
@@ -107,7 +106,7 @@ static void EnsureTxt(State& st)
   if (st.txt) return;
   EnsureStcm(st);
   if (st.stcm->FindGbnl().empty())
-    LIBSHIT_THROW(DecodeError{"No GBNL found in STCM"});
+    LIBSHIT_THROW(DecodeError, "No GBNL found in STCM");
   st.txt = st.stcm;
 }
 
@@ -222,7 +221,7 @@ static void DoAutoLua(const boost::filesystem::path& p)
       auto cl3 = MakeSmart<Cl3>(Source::FromFile(bin));
       auto stcme = cl3->entries.find("main.DAT", std::less<>{});
       if (stcme == cl3->entries.end())
-        LIBSHIT_THROW(DecodeError{"Invalid CL3 file: no main.DAT"});
+        LIBSHIT_THROW(DecodeError, "Invalid CL3 file: no main.DAT");
       stcme->src = dmp;
       cl3->Fixup();
       dmp = cl3;

@@ -4,7 +4,6 @@
 #include <libshit/except.hpp>
 #include <libshit/lua/function_call.hpp>
 
-#include <boost/exception/errinfo_file_name.hpp>
 #include <iostream>
 
 #define LIBSHIT_LOG_NAME "source"
@@ -73,10 +72,7 @@ namespace Neptools
 
   Source Source::FromFile(const boost::filesystem::path& fname)
   {
-    return Libshit::AddInfo(
-      &FromFile_,
-      [&](auto& e) { e << boost::errinfo_file_name{fname.string()}; },
-      fname);
+    LIBSHIT_ADD_INFOS(return FromFile_(fname), "File name", fname.string());
   }
 
   Source Source::FromFile_(const boost::filesystem::path& fname)
@@ -302,12 +298,10 @@ namespace Neptools
     os << ')';
   }
 
-  std::string to_string(const UsedSource& src)
+  std::string to_string(const Source& src)
   {
     std::stringstream ss;
-    ss << "[Source] = ";
-    DumpableSource{src.value()}.Inspect(ss);
-    ss << ", pos: " << src.value().Tell() << '\n';
+    ss << src.GetFileName() << ", pos: " << src.Tell();
     return ss.str();
   }
 

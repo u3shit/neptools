@@ -89,7 +89,7 @@ namespace Neptools::Stcm
     Key k, Context& ctx, Source src, uint32_t count)
     : Item{k, ctx}
   {
-    AddInfo(&CollectionLinkItem::Parse_, ADD_SOURCE(src), this, ctx, src, count);
+    ADD_SOURCE(Parse_(ctx, src, count), src);
   }
 
   void CollectionLinkItem::Dispose() noexcept

@@ -125,7 +125,8 @@ namespace Neptools
 
     // bld:add(type, size) -> bld
     static Libshit::Lua::RetNum Add(
-      Libshit::Lua::StateRef vm, FakeClass& bld,
+      Libshit::Lua::StateRef vm,
+      typename DynamicStruct<Args...>::TypeBuilder& bld,
       Libshit::Lua::Raw<LUA_TSTRING> name, size_t size)
     {
       LIBSHIT_LUA_GETTOP(vm, top);
@@ -141,7 +142,8 @@ namespace Neptools
 
     // bld:add(type) -> bld
     static Libshit::Lua::RetNum Add(
-      Libshit::Lua::StateRef vm, FakeClass& bld,
+      Libshit::Lua::StateRef vm,
+      typename DynamicStruct<Args...>::TypeBuilder& bld,
       Libshit::Lua::Raw<LUA_TSTRING> name)
     {
       LIBSHIT_LUA_GETTOP(vm, top);
@@ -165,7 +167,9 @@ namespace Neptools
 
     // type[i] -> {type=string,size=int}|nil
     static Libshit::Lua::RetNum Get(
-      Libshit::Lua::StateRef vm, const FakeClass& t, size_t i) noexcept
+      Libshit::Lua::StateRef vm,
+      const typename DynamicStruct<Args...>::Type& t,
+      size_t i) noexcept
     {
       LIBSHIT_LUA_GETTOP(vm, top);
       if (i >= t.item_count)
@@ -188,7 +192,9 @@ namespace Neptools
       return 1;
     }
 
-    static void Get(const FakeClass&, Libshit::Lua::VarArg) noexcept {}
+    static void Get(
+      const typename DynamicStruct<Args...>::Type&,
+      Libshit::Lua::VarArg) noexcept {}
 
     LIBSHIT_NOLUA
     // {"name",size} or {name="name",size=size}
@@ -245,7 +251,8 @@ namespace Neptools
     static_assert(sizeof...(Args) > 0);
 
     static Libshit::Lua::RetNum Get(
-      Libshit::Lua::StateRef vm, const FakeClass& s, size_t i) noexcept
+      Libshit::Lua::StateRef vm, const DynamicStruct<Args...>& s,
+      size_t i) noexcept
     {
       if (i >= s.GetSize())
       {
@@ -257,19 +264,22 @@ namespace Neptools
       infos<Args...>[idx].push(vm, s.GetData(i), s.GetSize(i));
       return 1;
     }
-    static void Get(const FakeClass&, Libshit::Lua::VarArg) noexcept {}
+    static void Get(
+      const DynamicStruct<Args...>&, Libshit::Lua::VarArg) noexcept {}
 
     static void Set(
-      Libshit::Lua::StateRef vm, FakeClass& s, size_t i, Libshit::Lua::Any val)
+      Libshit::Lua::StateRef vm, DynamicStruct<Args...>& s, size_t i,
+      Libshit::Lua::Any val)
     {
       if (i >= s.GetSize())
-        LIBSHIT_THROW(std::out_of_range{"DynamicStruct"});
+        LIBSHIT_THROW(std::out_of_range, "DynamicStruct");
       auto idx = s.GetTypeIndex(i);
       LIBSHIT_ASSERT(idx < sizeof...(Args));
       infos<Args...>[idx].get(vm, val, s.GetData(i), s.GetSize(i));
     }
 
-    static Libshit::Lua::RetNum ToTable(Libshit::Lua::StateRef vm, FakeClass& s)
+    static Libshit::Lua::RetNum ToTable(
+      Libshit::Lua::StateRef vm, DynamicStruct<Args...>& s)
     {
       auto size = s.GetSize();
       lua_createtable(vm, size ? size-1 : size, 0); // +1

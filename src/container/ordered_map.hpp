@@ -286,12 +286,12 @@ namespace Neptools
     LIBSHIT_NOLUA iterator checked_nth(size_t i)
     {
       if (i < size()) return nth(i);
-      else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+      else LIBSHIT_THROW(std::out_of_range, "OrderedMap::checked_nth");
     }
     LIBSHIT_NOLUA iterator checked_nth_end(size_t i)
     {
       if (i <= size()) return nth(i);
-      else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
+      else LIBSHIT_THROW(std::out_of_range, "OrderedMap::checked_nth_end");
     }
 
     LIBSHIT_NOLUA const_iterator nth(size_t i) const noexcept
@@ -299,12 +299,12 @@ namespace Neptools
     LIBSHIT_NOLUA const_iterator checked_nth(size_t i) const
     {
       if (i < size()) return nth(i);
-      else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth"});
+      else LIBSHIT_THROW(std::out_of_range, "OrderedMap::checked_nth");
     }
     LIBSHIT_NOLUA const_iterator checked_nth_end(size_t i) const
     {
       if (i <= size()) return nth(i);
-      else LIBSHIT_THROW(std::out_of_range{"OrderedMap::checked_nth_end"});
+      else LIBSHIT_THROW(std::out_of_range, "OrderedMap::checked_nth_end");
     }
 
     template <typename Checker = Libshit::Check::Assert>

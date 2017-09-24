@@ -113,13 +113,13 @@ namespace Libshit::Lua
       static_cast<void (::parent_list_item::*)(::Libshit::Lua::FunctionWrapGen<bool>)>(&::parent_list_item::unique<::Libshit::Lua::FunctionWrapGen<bool>>)
     >("unique");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Next)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Test::ParentListItem, ::Neptools::DefaultTag> >::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Next)
     >("next");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Prev)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Test::ParentListItem, ::Neptools::DefaultTag> >::FakeClass &, ::Neptools::Test::ParentListItem &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::Prev)
     >("prev");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::ToTable)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Test::ParentListItem, ::Neptools::DefaultTag> >::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Test::ParentListItem, ::Neptools::Test::ParentListItemTraits>::ToTable)
     >("to_table");
 
   }

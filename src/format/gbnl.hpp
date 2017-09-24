@@ -100,8 +100,6 @@ namespace Neptools
     void RecalcSize();
     FilePosition GetSize() const noexcept override;
 
-    using FailedId = boost::error_info<struct FailedIdTag, int32_t>;
-
   protected:
     // todo: private after removing GbnlItem
     void Dump_(Sink& sink) const override;

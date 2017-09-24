@@ -66,13 +66,13 @@ static std::string UnfuckString(wchar_t* str)
   auto req = WideCharToMultiByte(
     CP_ACP, 0, str, -1, nullptr, 0, nullptr, nullptr);
   if (req == 0)
-    LIBSHIT_THROW(std::runtime_error{"Invalid command line parameters"});
+    LIBSHIT_THROW(std::runtime_error, "Invalid command line parameters");
   std::string ret;
   ret.resize(req-1);
   auto r2 = WideCharToMultiByte(
     CP_ACP, 0, str, -1, &ret[0], req, nullptr, nullptr);
   if (r2 != req)
-    LIBSHIT_THROW(std::runtime_error{"Invalid command line parameters"});
+    LIBSHIT_THROW(std::runtime_error, "Invalid command line parameters");
   return ret;
 }
 

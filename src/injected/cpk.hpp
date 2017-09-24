@@ -88,11 +88,9 @@ namespace Neptools
   };
   static_assert(sizeof(CpkHandler) == 0x50);
 
-  struct CpkError : std::runtime_error, virtual boost::exception
+  struct CpkError : std::runtime_error, virtual Libshit::Exception
   {
     using std::runtime_error::runtime_error;
   };
-  using CpkErrorCode = boost::error_info<struct CpkErrorCodeTag, int>;
-
 }
 #endif
