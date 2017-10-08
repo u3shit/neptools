@@ -2,6 +2,7 @@
 #include "sink.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/char_utils.hpp>
 #include <libshit/lua/function_call.hpp>
 
 #include <iostream>
@@ -268,8 +269,9 @@ namespace Neptools
 
   void Source::Inspect(std::ostream& os) const
   {
-    os << "neptools.source.from_memory(" << Quoted(GetFileName().string())
-       << ", " << Quoted(*this)  << ")";
+    os << "neptools.source.from_memory("
+       << Libshit::Quoted(GetFileName().string()) << ", "
+       << Quoted(*this)  << ")";
   }
 
   std::string Source::Inspect() const

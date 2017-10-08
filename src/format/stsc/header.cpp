@@ -4,6 +4,8 @@
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
 
+#include <libshit/char_utils.hpp>
+
 namespace Neptools::Stsc
 {
 
@@ -105,7 +107,7 @@ namespace Neptools::Stsc
     if (flags & 1)
     {
       os << ", ";
-      DumpBytes(os, {extra_headers_1.data(), extra_headers_1.size()});
+      Libshit::DumpBytes(os, {extra_headers_1.data(), extra_headers_1.size()});
     }
     if (flags & 2)
       os << ", " << extra_headers_2_0

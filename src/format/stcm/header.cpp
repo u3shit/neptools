@@ -4,6 +4,8 @@
 #include "../context.hpp"
 #include "../../sink.hpp"
 #include "../../utils.hpp"
+
+#include <libshit/char_utils.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -62,8 +64,9 @@ namespace Neptools::Stcm
   {
     Item::Inspect_(os, indent);
 
-    os << "header(" << Quoted(msg.c_str()) << ", " << PrintLabel(export_sec)
-       << ", " << PrintLabel(collection_link) << ", " << field_28 << ")";
+    os << "header(" << Libshit::Quoted(msg.c_str()) << ", "
+       << PrintLabel(export_sec) << ", " << PrintLabel(collection_link) << ", "
+       << field_28 << ")";
   }
 
 }

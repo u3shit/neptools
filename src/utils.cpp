@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <libshit/char_utils.hpp>
 
 #include "source.hpp"
 #include <fstream>
@@ -29,44 +30,19 @@ namespace Neptools
     return is;
   }
 
-  static void DumpByte(std::ostream& os, char c)
-  {
-    if (c == '"')
-      os << "\\\"";
-    else if (c == '\\')
-      os << "\\\\";
-    else if (c == '\n')
-      os << "\\n";
-    else if (c == '\r')
-      os << "\\r";
-    else if (c >= ' ' && c <= '~')
-      os << c;
-    else
-      os << "\\x" << std::setw(2) << unsigned(static_cast<unsigned char>(c));
-  }
-
-  void DumpBytes(std::ostream& os, Libshit::StringView data)
-  {
-    auto flags = os.flags();
-    os << std::hex << std::setfill('0') << '"';
-    for (size_t i = 0; i < data.length(); ++i) DumpByte(os, data[i]);
-    os << '"';
-    os.flags(flags);
-  }
-
   void DumpBytes(std::ostream& os, Source data)
   {
-    auto flags = os.flags();
-    os << std::hex << std::setfill('0') << '"';
+    os << '"';
 
+    bool hex = false;
     for (FilePosition offs = 0, size = data.GetSize(); offs < size; )
     {
       auto chunk = data.GetChunk(offs);
-      for (char c : chunk) DumpByte(os, c);
+      for (char c : chunk)
+        hex = Libshit::DumpByte(os, c, hex);
       offs += chunk.length();
     }
     os << '"';
-    os.flags(flags);
   }
 
 }

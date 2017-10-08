@@ -2,6 +2,8 @@
 #include "raw_item.hpp"
 #include "../sink.hpp"
 
+#include <libshit/char_utils.hpp>
+
 namespace Neptools
 {
 
@@ -23,7 +25,7 @@ namespace Neptools
   void CStringItem::Inspect_(std::ostream& os, unsigned indent) const
   {
     Item::Inspect_(os, indent);
-    os << "c_string(" << Quoted(string) << ')';
+    os << "c_string(" << Libshit::Quoted(string) << ')';
   }
 
   std::string CStringItem::GetLabelName(std::string string)

@@ -3,6 +3,8 @@
 #include "../sink.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/char_utils.hpp>
+
 #include <map>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -398,12 +400,12 @@ namespace Neptools
         if (ofs.offset == static_cast<uint32_t>(-1))
           os << "null";
         else
-          DumpBytes(os, ofs.str);
+          Libshit::DumpBytes(os, ofs.str);
       }
       void operator()(const Gbnl::FixStringTag& fs, size_t)
-      { DumpBytes(os, fs.str); }
+      { Libshit::DumpBytes(os, fs.str); }
       void operator()(const Gbnl::PaddingTag& pd, size_t size)
-      { DumpBytes(os, {pd.pad, size}); }
+      { Libshit::DumpBytes(os, {pd.pad, size}); }
       void operator()(uint8_t x, size_t) { os << static_cast<unsigned>(x); }
       template <typename T> void operator()(T x, size_t) { os << x; }
     };

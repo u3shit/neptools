@@ -5,6 +5,7 @@
 #include "../container/vector.lua.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/char_utils.hpp>
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -275,15 +276,15 @@ namespace Neptools
     os << "neptools.cl3(" << field_14 << ", {\n";
     for (auto& e : entries)
     {
-      Indent(os, indent+1) << '{' << Quoted(e.name) << ", " << e.field_200
-                           << ", {";
+      Indent(os, indent+1)
+        << '{' << Libshit::Quoted(e.name) << ", " << e.field_200 << ", {";
       bool first = true;
       for (auto& l : e.links)
       {
         if (!first) os << ", ";
         first = false;
         auto ll = l.lock();
-        if (ll) DumpBytes(os, ll->name);
+        if (ll) Libshit::DumpBytes(os, ll->name);
         else os << "nil";
       }
       os << "}, ";
@@ -384,7 +385,7 @@ namespace Neptools
     auto stcm = dynamic_cast<Stcm::File*>(dat->src.get());
     if (stcm) return *stcm;
 
-    auto src = asserted_cast<DumpableSource*>(dat->src.get());
+    auto src = Libshit::asserted_cast<DumpableSource*>(dat->src.get());
     auto nstcm = Libshit::MakeSmart<Stcm::File>(src->GetSource());
     auto ret = nstcm.get();
     dat->src = std::move(nstcm);

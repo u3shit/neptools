@@ -8,6 +8,7 @@
 #include <libshit/assert.hpp>
 #include <libshit/meta.hpp>
 #include <libshit/shared_ptr.hpp>
+#include <libshit/utils.hpp>
 #include <libshit/lua/dynamic_object.hpp>
 #include <libshit/lua/function_call_types.hpp>
 #include <libshit/lua/type_traits.hpp>
@@ -41,7 +42,7 @@ namespace Neptools LIBSHIT_META(alias_file src/format/item.hpp)
     Item* operator->() const { return &*item; }
 
     template <typename T>
-    T& As() const { return *asserted_cast<T*>(item); }
+    T& As() const { return *Libshit::asserted_cast<T*>(item); }
 
     template <typename T>
     T& AsChecked() const { return dynamic_cast<T&>(*item); }
@@ -53,7 +54,7 @@ namespace Neptools LIBSHIT_META(alias_file src/format/item.hpp)
     T& As0() const
     {
       LIBSHIT_ASSERT(offset == 0);
-      return *asserted_cast<T*>(item);
+      return *Libshit::asserted_cast<T*>(item);
     }
 
     template <typename T>

@@ -5,6 +5,8 @@
 #include "../context.hpp"
 #include "../../sink.hpp"
 #include "../../container/vector.lua.hpp"
+
+#include <libshit/char_utils.hpp>
 #include <iostream>
 
 namespace Neptools::Stcm
@@ -88,8 +90,9 @@ namespace Neptools::Stcm
     os << "exports{\n";
     for (auto& e : entries)
     {
-      Indent(os, indent+1) << '{' << e->type << ", " <<
-        Quoted(e->name.c_str()) << ", " << PrintLabel(e->lbl) << "},\n";
+      Indent(os, indent+1)
+        << '{' << e->type << ", " <<  Libshit::Quoted(e->name.c_str()) << ", "
+        << PrintLabel(e->lbl) << "},\n";
     }
     Indent(os, indent) << '}';
   }

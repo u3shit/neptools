@@ -4,6 +4,8 @@
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
 
+#include <libshit/char_utils.hpp>
+
 namespace Neptools::Stcm
 {
 
@@ -51,7 +53,7 @@ namespace Neptools::Stcm
   void StringDataItem::Inspect_(std::ostream& os, unsigned indent) const
   {
     Item::Inspect_(os, indent);
-    os << "string_data(" << Quoted(string) << ')';
+    os << "string_data(" << Libshit::Quoted(string) << ')';
   }
 
   static Stcm::DataFactory reg{[](DataItem& it) {

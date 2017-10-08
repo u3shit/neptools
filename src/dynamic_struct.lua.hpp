@@ -11,6 +11,7 @@
 
 #include <libshit/lua/auto_table.hpp>
 #include <libshit/lua/user_type.hpp>
+#include <libshit/utils.hpp>
 
 #include <type_traits>
 #include <boost/integer.hpp>
@@ -312,7 +313,7 @@ namespace Neptools
       for (size_t i = 0; i < sizeof...(Args); ++i)
       {
         lua_pushlightuserdata(
-          bld, implicit_const_cast<void*>(&infos<Args...>[i])); //+2
+          bld, Libshit::implicit_const_cast<void*>(&infos<Args...>[i])); //+2
         lua_setfield(bld, -2, infos<Args...>[i].name); //+1
       }
       lua_rawsetp(bld, LUA_REGISTRYINDEX, infos<Args...>); //+0

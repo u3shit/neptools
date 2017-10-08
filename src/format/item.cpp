@@ -2,6 +2,9 @@
 #include "context.hpp"
 #include "raw_item.hpp"
 #include "../utils.hpp"
+
+#include <libshit/char_utils.hpp>
+
 #include <algorithm>
 #include <iostream>
 
@@ -24,7 +27,7 @@ namespace Neptools
   {
     for (const auto& it : GetLabels())
     {
-      os << "label(" << Quoted(it.GetName());
+      os << "label(" << Libshit::Quoted(it.GetName());
       if (it.GetPtr().offset != 0)
         os << ", " << it.GetPtr().offset;
       os << ")\n";
@@ -179,7 +182,7 @@ namespace Neptools
   {
     auto& list = GetParent()->GetChildren();
     // make sure we have a ref when erasing...
-    Libshit::SmartPtr<Item> nchild = &asserted_cast<RawItem&>(
+    Libshit::SmartPtr<Item> nchild = &Libshit::asserted_cast<RawItem&>(
       *++Iterator()).Split(0, size);
     list.erase(nchild->Iterator());
     GetChildren().push_back(*nchild);

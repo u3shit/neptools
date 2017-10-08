@@ -3,6 +3,7 @@
 #include "../utils.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/char_utils.hpp>
 #include <iomanip>
 #include <fstream>
 #include <sstream>
@@ -176,7 +177,7 @@ namespace Neptools
   {
     if (l.label == nullptr)
       return os << "nil";
-    return os << "l(" << Quoted(l.label->GetName()) << ')';
+    return os << "l(" << Libshit::Quoted(l.label->GetName()) << ')';
   }
 
 }
