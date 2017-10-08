@@ -6,6 +6,6 @@ run export HOST_LINKFLAGS=
 config_opts=(--clang-hack --optimize --lua-dll) # pdbs don't work atm
 
 tests=(
-    'wine build/run-tests.exe'
-    'tools/vmrun.sh /opt/win7-vm/vm.opts build/run-tests.exe build/lua53.dll'
+    'wine build/run-tests.exe -o test.xml -r junit'
+    'tools/vmrun.sh /opt/win7-vm/vm.opts test-remote.xml build/run-tests.exe build/lua53.dll'
 )

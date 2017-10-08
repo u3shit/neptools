@@ -6,4 +6,6 @@ function before()
         build/launcher.exe build/lua53.dll build/neptools-server.dll
 }
 build_opts=(-j2)
-tests=(build/run-tests)
+tests=(
+    'build/run-tests -o test.xml -r junit'
+)

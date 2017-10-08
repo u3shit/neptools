@@ -1,7 +1,7 @@
 #! /bin/bash
 
-if [[ $# -lt 2 ]]; then
-    echo "Usage: $0 vm.opts files" >&2
+if [[ $# -lt 3 ]]; then
+    echo "Usage: $0 vm.opts test.xml files" >&2
     exit 1
 fi
 
@@ -20,6 +20,9 @@ fifo=fifo
 source "$1"
 shift
 
+test_dest="$1"
+shift
+
 set -eEx
 function cleanup() {
     "$dir/qmp" --path=qemu.sock quit
@@ -27,7 +30,7 @@ function cleanup() {
 }
 trap cleanup ERR SIGTERM SIGINT
 
-cp --reflink=always "$src_img" "$temp_img"
+cp --reflink=auto "$src_img" "$temp_img"
 
 qemu-system-x86_64 \
     "${qemu_opts[@]}" \
@@ -47,8 +50,11 @@ scp -o StrictHostKeyChecking=no -P $port "$@" "$username@localhost:$tmp_dir/"
 rm -f "$fifo" && mkfifo "$fifo"
 sleep 60 > "$fifo" &
 ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
-              "cd $tmp_dir && run-tests" < "$fifo"
+    "cd $tmp_dir && run-tests -o test.xml -r junit" < "$fifo"
+
+scp -o StrictHostKeyChecking=no -P $port \
+    "$username@localhost:$tmp_dir/test.xml" "$test_dest"
 
 "$dir/qmp" --path=qemu.sock quit
 
-rm "$temp_img"
+rm "$temp_img" "$fifo"
