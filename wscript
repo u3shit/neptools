@@ -38,9 +38,6 @@ def build_common(bld):
         'src/format/stcm/header.cpp',
         'src/format/stcm/instruction.cpp',
         'src/format/stcm/string_data.cpp',
-        'src/format/stsc/file.cpp',
-        'src/format/stsc/header.cpp',
-        'src/format/stsc/instruction.cpp',
     ]
     if not bld.env.WITHOUT_LUA:
         src += [
@@ -48,11 +45,22 @@ def build_common(bld):
             'src/format/builder.lua',
         ]
 
-    bld.stlib(source   = src,
-              uselib   = 'NEPTOOLS',
-              use      = 'libshit boost_system boost_filesystem',
-              includes = 'src',
-              target   = 'common')
+    bld.objects(source   = src,
+                uselib   = 'NEPTOOLS',
+                use      = 'libshit boost_system boost_filesystem',
+                includes = 'src',
+                target   = 'common')
+
+    src = [
+        'src/format/stsc/file.cpp',
+        'src/format/stsc/header.cpp',
+        'src/format/stsc/instruction.cpp',
+    ]
+    bld.objects(source   = src,
+                uselib   = 'NEPTOOLS',
+                use      = 'libshit boost_system boost_filesystem',
+                includes = 'src',
+                target   = 'common-stsc')
 
 def build(bld):
     build_common(bld)
@@ -60,7 +68,7 @@ def build(bld):
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
                 includes = 'src', # for version.hpp
                 uselib = 'NEPTOOLS',
-                use = 'common',
+                use = 'common common-stsc',
                 target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32':

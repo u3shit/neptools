@@ -33,19 +33,6 @@
 using namespace Neptools;
 using namespace Libshit;
 
-// bring in required shit for OpenFactory/DataFactory
-// do not actually call this, as it would crash
-static void Dependencies()
-{
-  Source* src = nullptr;
-  Cl3 cl3{*src};
-  Stcm::File stcm{*src};
-  stcm.Create<Stcm::GbnlItem>(*src);
-  stcm.Create<Int32Item>(*src);
-  stcm.Create<Stcm::StringDataItem>("");
-  Stsc::File stsc{*src};
-}
-
 namespace
 {
   struct State
@@ -390,7 +377,6 @@ static void DoAuto(const boost::filesystem::path& path)
 
 int main(int argc, char** argv)
 {
-  if (argc < 0) Dependencies();
   State st;
   auto& parser = OptionParser::GetGlobal();
   OptionGroup hgrp{parser, "High-level options"};

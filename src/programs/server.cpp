@@ -49,18 +49,6 @@ err:
 using namespace Neptools;
 using namespace Libshit;
 
-// bring in required shit for OpenFactory/DataFactory
-// do not actually call this, as it would crash
-static void Dependencies()
-{
-  Source* src = nullptr;
-  Cl3 cl3{*src};
-  Stcm::File stcm{*src};
-  stcm.Create<Stcm::GbnlItem>(*src);
-  stcm.Create<Int32Item>(*src);
-  stcm.Create<Stcm::StringDataItem>("");
-}
-
 static std::string UnfuckString(wchar_t* str)
 {
   auto req = WideCharToMultiByte(
@@ -220,7 +208,6 @@ static constexpr size_t MAIN_CALL_OFFSET = -201+1;
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID)
 {
   if (reason != DLL_PROCESS_ATTACH) return true;
-  if (inst == nullptr) Dependencies();
   dll_base = inst;
 
   DisableThreadLibraryCalls(inst);
