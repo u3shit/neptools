@@ -16,19 +16,20 @@ namespace Neptools::Stcm
   public:
     GbnlItem(Key k, Context& ctx, Source src)
       : Item{k, ctx}, Gbnl{std::move(src)} {}
-    GbnlItem(Key k, Context& ctx, bool is_gstl, uint32_t flags,
+    GbnlItem(Key k, Context& ctx, Endian endian, bool is_gstl, uint32_t flags,
              uint32_t field_28, uint32_t field_30,
              Libshit::AT<Gbnl::Struct::TypePtr> type)
       : Item{k, ctx},
-        Gbnl{is_gstl, flags, field_28, field_30, std::move(type)} {}
+        Gbnl{endian, is_gstl, flags, field_28, field_30, std::move(type)} {}
 #ifndef LIBSHIT_WITHOUT_LUA
     GbnlItem(
-      Key k, Context& ctx, Libshit::Lua::StateRef vm, bool is_gstl,
-      uint32_t flags, uint32_t field_28, uint32_t field_30,
+      Key k, Context& ctx, Libshit::Lua::StateRef vm, Endian endian,
+      bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,
       Libshit::AT<Gbnl::Struct::TypePtr> type,
       Libshit::Lua::RawTable messages)
       : Item{k, ctx},
-        Gbnl{vm, is_gstl, flags, field_28, field_30, std::move(type), messages} {}
+        Gbnl{vm, endian, is_gstl, flags, field_28, field_30, std::move(type),
+             messages} {}
 #endif
 
     static GbnlItem& CreateAndInsert(ItemPointer ptr);

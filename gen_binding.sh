@@ -2,7 +2,7 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
-src=(src/dumpable src/open src/sink src/source src/txt_serializable
+src=(src/dumpable src/endian src/open src/sink src/source src/txt_serializable
      src/format/cl3 src/format/context src/format/cstring_item
      src/format/eof_item src/format/gbnl src/format/item
      src/format/primitive_item src/format/raw_item

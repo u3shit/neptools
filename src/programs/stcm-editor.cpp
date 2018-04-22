@@ -209,10 +209,11 @@ static void DoAutoLua(const boost::filesystem::path& p)
       auto stcme = cl3->entries.find("main.DAT", std::less<>{});
       if (stcme == cl3->entries.end())
         LIBSHIT_THROW(DecodeError, "Invalid CL3 file: no main.DAT");
+      dmp->Fixup();
       stcme->src = dmp;
-      cl3->Fixup();
       dmp = cl3;
     }
+    dmp->Fixup();
     dmp->Dump(bin);
   }
   else

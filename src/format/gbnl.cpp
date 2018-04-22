@@ -20,20 +20,46 @@ namespace Neptools
   void Gbnl::Header::Validate(size_t chunk_size) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Gbnl::Header", x)
-    VALIDATE(field_04 == 1 && field_08 == 16 && field_0c == 4);
+    VALIDATE(endian == 'L' || endian == 'B');
+    VALIDATE(field_04 == 1 && field_06 == 0 && field_08 == 16 && field_0c == 4);
     VALIDATE(descr_offset + msg_descr_size * count_msgs < chunk_size);
-    VALIDATE(field_22 == 0);
     VALIDATE(offset_types + sizeof(TypeDescriptor) * count_types < chunk_size);
     VALIDATE(offset_msgs < chunk_size);
     VALIDATE(field_34 == 0 && field_38 == 0 && field_3c == 0);
 
-    if (memcmp(magic, "GBNL", 4) == 0)
+    if (memcmp(magic, "GBN", 3) == 0)
       VALIDATE(descr_offset == 0);
-    else if (memcmp(magic, "GSTL", 4) == 0)
+    else if (memcmp(magic, "GST", 3) == 0)
       VALIDATE(descr_offset == sizeof(Header));
     else
       VALIDATE(!"Invalid magic");
 #undef VALIDATE
+  }
+
+  void endian_reverse_inplace(Gbnl::Header& hdr)
+  {
+    boost::endian::endian_reverse_inplace(hdr.field_04);
+    boost::endian::endian_reverse_inplace(hdr.field_06);
+    boost::endian::endian_reverse_inplace(hdr.field_08);
+    boost::endian::endian_reverse_inplace(hdr.field_0c);
+    boost::endian::endian_reverse_inplace(hdr.flags);
+    boost::endian::endian_reverse_inplace(hdr.descr_offset);
+    boost::endian::endian_reverse_inplace(hdr.count_msgs);
+    boost::endian::endian_reverse_inplace(hdr.msg_descr_size);
+    boost::endian::endian_reverse_inplace(hdr.count_types);
+    boost::endian::endian_reverse_inplace(hdr.offset_types);
+    boost::endian::endian_reverse_inplace(hdr.field_28);
+    boost::endian::endian_reverse_inplace(hdr.offset_msgs);
+    boost::endian::endian_reverse_inplace(hdr.field_30);
+    boost::endian::endian_reverse_inplace(hdr.field_34);
+    boost::endian::endian_reverse_inplace(hdr.field_38);
+    boost::endian::endian_reverse_inplace(hdr.field_3c);
+  }
+
+  void endian_reverse_inplace(Gbnl::TypeDescriptor& desc)
+  {
+    boost::endian::endian_reverse_inplace(desc.type);
+    boost::endian::endian_reverse_inplace(desc.offset);
   }
 
   static size_t GetSize(uint16_t type)
@@ -61,7 +87,7 @@ namespace Neptools
 
     src.CheckSize(sizeof(Header));
     auto foot = src.PreadGen<Header>(0);
-    if (memcmp(foot.magic, "GSTL", 4) == 0)
+    if (memcmp(foot.magic, "GST", 3) == 0)
       is_gstl = true;
     else
     {
@@ -69,6 +95,8 @@ namespace Neptools
       is_gstl = false;
     }
 
+    endian = foot.endian == 'L' ? Endian::LITTLE : Endian::BIG;
+    ToNative(foot, endian);
     foot.Validate(src.GetSize());
     flags = foot.flags;
     field_28 = foot.field_28;
@@ -78,13 +106,12 @@ namespace Neptools
     msg_descr_size = foot.msg_descr_size;
     size_t calc_offs = 0;
 
-    //std::vector<uint16_t> offsets;
-    //offsets.reserve(foot.count_types);
     Struct::TypeBuilder bld;
     bool int8_in_progress = false;
     for (size_t i = 0; i < foot.count_types; ++i)
     {
       auto type = src.ReadGen<TypeDescriptor>();
+      ToNative(type, endian);
       VALIDATE("unordered types", calc_offs <= type.offset);
 
       Pad(type.offset - calc_offs, bld, int8_in_progress);
@@ -131,27 +158,27 @@ namespace Neptools
         switch (type->items[i].idx)
         {
         case Struct::GetIndexFromType<int8_t>():
-          m->Get<int8_t>(i) = src.ReadLittleUint8();
+          m->Get<int8_t>(i) = src.ReadUint8(endian);
           break;
         case Struct::GetIndexFromType<int16_t>():
-          m->Get<int16_t>(i) = src.ReadLittleUint16();
+          m->Get<int16_t>(i) = src.ReadUint16(endian);
           break;
         case Struct::GetIndexFromType<int32_t>():
-          m->Get<int32_t>(i) = src.ReadLittleUint32();
+          m->Get<int32_t>(i) = src.ReadUint32(endian);
           break;
         case Struct::GetIndexFromType<int64_t>():
-          m->Get<int64_t>(i) = src.ReadLittleUint64();
+          m->Get<int64_t>(i) = src.ReadUint64(endian);
           break;
         case Struct::GetIndexFromType<float>():
         {
           union { float f; uint32_t i; } x;
-          x.i = src.ReadLittleUint32();
+          x.i = src.ReadUint32(endian);
           m->Get<float>(i) = x.f;
           break;
         }
         case Struct::GetIndexFromType<OffsetString>():
         {
-          uint32_t offs = src.ReadLittleUint32();
+          uint32_t offs = src.ReadUint32(endian);
           if (offs == 0xffffffff)
             m->Get<OffsetString>(i).offset = -1;
           else
@@ -182,11 +209,11 @@ namespace Neptools
   }
 
 #ifndef LIBSHIT_WITHOUT_LUA
-  Gbnl::Gbnl(Libshit::Lua::StateRef vm, bool is_gstl, uint32_t flags,
-             uint32_t field_28, uint32_t field_30,
+  Gbnl::Gbnl(Libshit::Lua::StateRef vm, Endian endian, bool is_gstl,
+             uint32_t flags, uint32_t field_28, uint32_t field_30,
              Libshit::AT<Struct::TypePtr> type, Libshit::Lua::RawTable msgs)
-    : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
-      type{std::move(type.Get())}
+    : endian{endian}, is_gstl{is_gstl}, flags{flags}, field_28{field_28},
+      field_30{field_30}, type{std::move(type.Get())}
   {
     auto [len, one] = vm.RawLen01(msgs);
     messages.reserve(len);
@@ -220,46 +247,37 @@ namespace Neptools
   {
     struct WriteDescr
     {
-      WriteDescr(Byte* ptr) : ptr{ptr} {}
+      WriteDescr(Byte* ptr, Endian e) : ptr{ptr}, e{e} {}
       Byte* ptr;
-      // todo: template
-      void operator()(int8_t x, size_t)
+      Endian e;
+
+      // int8, 16, 32, 64
+      template <typename T,
+                typename Enable = std::enable_if_t<std::is_integral_v<T>>>
+      void operator()(T x, size_t len)
       {
-        *reinterpret_cast<boost::endian::little_int8_t*>(ptr) = x;
-        ptr += 1;
+        LIBSHIT_ASSERT(sizeof(T) == len); (void) len;
+        *reinterpret_cast<T*>(ptr) = FromNativeCopy(x, e);
+        ptr += sizeof(T);
       }
-      void operator()(int16_t x, size_t)
-      {
-        *reinterpret_cast<boost::endian::little_int16_t*>(ptr) = x;
-        ptr += 2;
-      }
-      void operator()(int32_t x, size_t)
-      {
-        *reinterpret_cast<boost::endian::little_int32_t*>(ptr) = x;
-        ptr += 4;
-      }
-      void operator()(int64_t x, size_t)
-      {
-        *reinterpret_cast<boost::endian::little_int64_t*>(ptr) = x;
-        ptr += 8;
-      }
+
       void operator()(float y, size_t)
       {
         static_assert(sizeof(float) == sizeof(uint32_t));
         union { float f; uint32_t i; } x;
         x.f = y;
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = x.i;
+        *reinterpret_cast<std::uint32_t*>(ptr) = FromNativeCopy(x.i, e);
         ptr += 4;
       }
       void operator()(const Gbnl::OffsetString& os, size_t)
       {
-        *reinterpret_cast<boost::endian::little_uint32_t*>(ptr) = os.offset;
+        *reinterpret_cast<std::uint32_t*>(ptr) = FromNativeCopy(os.offset, e);
         ptr += 4;
       }
       void operator()(const Gbnl::FixStringTag& fs, size_t len)
       {
-        memset(ptr, 0, len);
         strncpy(reinterpret_cast<char*>(ptr), fs.str, len-1);
+        ptr[len-1] = '\0';
         ptr += len;
       }
       void operator()(const Gbnl::PaddingTag& pd, size_t len)
@@ -284,7 +302,7 @@ namespace Neptools
 
     for (const auto& m : messages)
     {
-      m->ForEach(WriteDescr{msgd.data()});
+      m->ForEach(WriteDescr{msgd.data(), endian});
       sink.Write({msgd.data(), msg_descr_size});
     }
 
@@ -331,6 +349,7 @@ namespace Neptools
         offs += type->items[i].size;
         goto skip;
       }
+      FromNative(ctrl, endian);
       sink.WriteGen(ctrl);
     skip: ;
     }
@@ -366,7 +385,8 @@ namespace Neptools
   void Gbnl::DumpHeader(Sink& sink) const
   {
     Header head;
-    memcpy(head.magic, is_gstl ? "GSTL" : "GBNL", 4);
+    memcpy(head.magic, is_gstl ? "GST" : "GBN", 4);
+    head.endian = endian == Endian::LITTLE ? 'L' : 'B';
     head.field_04 = 1;
     head.field_08 = 16;
     head.field_0c = 4;
@@ -376,7 +396,6 @@ namespace Neptools
     head.count_msgs = messages.size();
     head.msg_descr_size = msg_descr_size;
     head.count_types = real_item_count;
-    head.field_22 = 0;
     auto msgs_end_round = Align(offset + msg_descr_size * messages.size());
     head.offset_types = msgs_end_round;;
     head.field_28 = field_28;
@@ -387,6 +406,7 @@ namespace Neptools
     head.field_34 = 0;
     head.field_38 = 0;
     head.field_3c = 0;
+    FromNative(head, endian);
     sink.WriteGen(head);
   }
 
@@ -398,7 +418,7 @@ namespace Neptools
       void operator()(const Gbnl::OffsetString& ofs, size_t)
       {
         if (ofs.offset == static_cast<uint32_t>(-1))
-          os << "null";
+          os << "nil";
         else
           Libshit::DumpBytes(os, ofs.str);
       }
@@ -406,7 +426,7 @@ namespace Neptools
       { Libshit::DumpBytes(os, fs.str); }
       void operator()(const Gbnl::PaddingTag& pd, size_t size)
       { Libshit::DumpBytes(os, {pd.pad, size}); }
-      void operator()(uint8_t x, size_t) { os << static_cast<unsigned>(x); }
+      void operator()(int8_t x, size_t) { os << static_cast<unsigned>(x); }
       template <typename T> void operator()(T x, size_t) { os << x; }
     };
   }
@@ -418,8 +438,9 @@ namespace Neptools
   }
   void Gbnl::InspectGbnl(std::ostream& os, unsigned indent) const
   {
-    os << "gbnl(" << (is_gstl ? "true" : "false") << ", " << flags
-       << ", " << field_28 << ", " << field_30 << ", {";
+    os << "gbnl(neptools.endian." << ToString(endian) << ", "
+       << (is_gstl ? "true" : "false") << ", " << flags << ", " << field_28
+       << ", " << field_30 << ", {";
 
     for (size_t i = 0; i < type->item_count; ++i)
     {
@@ -436,7 +457,7 @@ namespace Neptools
         os << "{\"fix_string\", " << type->items[i].size << "}";
         break;
       case Struct::GetIndexFromType<PaddingTag>():
-        os << "{\"pad\", " << type->items[i].size << "}";
+        os << "{\"padding\", " << type->items[i].size << "}";
         break;
       }
     }
@@ -673,10 +694,10 @@ namespace Neptools
       if (src.GetSize() < sizeof(Gbnl::Header)) return nullptr;
       char buf[4];
       src.PreadGen(0, buf);
-      if (memcmp(buf, "STSC", 4) == 0)
+      if (memcmp(buf, "GST", 3) == 0)
         return Libshit::MakeSmart<Gbnl>(src);
       src.PreadGen(src.GetSize() - sizeof(Gbnl::Header), buf);
-      if (memcmp(buf, "STSC", 4) == 0)
+      if (memcmp(buf, "GBN", 3) == 0)
         return Libshit::MakeSmart<Gbnl>(src);
 
       return nullptr;

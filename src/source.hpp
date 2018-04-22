@@ -3,6 +3,7 @@
 #pragma once
 
 #include "dumpable.hpp"
+#include "endian.hpp"
 #include "low_io.hpp"
 
 #include <libshit/check.hpp>
@@ -12,7 +13,7 @@
 #include <libshit/lua/value_object.hpp>
 
 #include <array>
-#include <boost/endian/arithmetic.hpp>
+#include <cstdint>
 #include <boost/filesystem/path.hpp>
 
 namespace Neptools
@@ -119,14 +120,35 @@ namespace Neptools
     { Pread<Checker>(offs, reinterpret_cast<Byte*>(buf), len); }
 
     // helper
+#define NEPTOOLS_GEN_HLP2(bits, Camel, snake)                             \
+    template <typename Checker = Libshit::Check::Assert>                  \
+    std::uint##bits##_t Read##Camel##Uint##bits()                         \
+    {                                                                     \
+      return boost::endian::snake##_to_native(                            \
+        ReadGen<std::uint##bits##_t, Checker>());                         \
+    }                                                                     \
+    template <typename Checker = Libshit::Check::Assert>                  \
+    std::uint##bits##_t Pread##Camel##Uint##bits(FilePosition offs) const \
+    {                                                                     \
+      return boost::endian::snake##_to_native(                            \
+        PreadGen<std::uint##bits##_t, Checker>(offs));                    \
+    }
 #define NEPTOOLS_GEN_HLP(bits)                                           \
     template <typename Checker = Libshit::Check::Assert>                 \
-    uint##bits##_t ReadLittleUint##bits()                                \
-    { return ReadGen<boost::endian::little_uint##bits##_t, Checker>(); } \
+    std::uint##bits##_t ReadUint##bits(Endian e)                         \
+    {                                                                    \
+      return ToNativeCopy(ReadGen<std::uint##bits##_t, Checker>(), e);   \
+    }                                                                    \
     template <typename Checker = Libshit::Check::Assert>                 \
-    uint##bits##_t PreadLittleUint##bits(FilePosition offs) const        \
-    { return PreadGen<boost::endian::little_uint##bits##_t, Checker>(offs); }
+    std::uint##bits##_t PreadUint##bits(FilePosition offs, Endian e)     \
+    {                                                                    \
+      return ToNativeCopy(                                               \
+        PreadGen<std::uint##bits##_t, Checker>(offs), e);                \
+    }                                                                    \
+    NEPTOOLS_GEN_HLP2(bits, Little, little)                              \
+    NEPTOOLS_GEN_HLP2(bits, Big, big)
 
+    // 8-bit values have no endian, but have these functions for consistency
     NEPTOOLS_GEN_HLP(8)
     NEPTOOLS_GEN_HLP(16)
     NEPTOOLS_GEN_HLP(32)

@@ -59,29 +59,77 @@ namespace Libshit::Lua
       static_cast<void (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::CheckRemainingSize)
     >("check_remaining_size");
     bld.AddFunction<
-      static_cast<::uint8_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint8<Check::Throw>)
+      static_cast<std::uint8_t (::Neptools::Source::*)(::Neptools::Endian)>(&::Neptools::Source::ReadUint8<Check::Throw>)
+    >("read_uint8");
+    bld.AddFunction<
+      static_cast<std::uint8_t (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::Endian)>(&::Neptools::Source::PreadUint8<Check::Throw>)
+    >("pread_uint8");
+    bld.AddFunction<
+      static_cast<std::uint8_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint8<Check::Throw>)
     >("read_little_uint8");
     bld.AddFunction<
-      static_cast<::uint8_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint8<Check::Throw>)
+      static_cast<std::uint8_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint8<Check::Throw>)
     >("pread_little_uint8");
     bld.AddFunction<
-      static_cast<::uint16_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint16<Check::Throw>)
+      static_cast<std::uint8_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadBigUint8<Check::Throw>)
+    >("read_big_uint8");
+    bld.AddFunction<
+      static_cast<std::uint8_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadBigUint8<Check::Throw>)
+    >("pread_big_uint8");
+    bld.AddFunction<
+      static_cast<std::uint16_t (::Neptools::Source::*)(::Neptools::Endian)>(&::Neptools::Source::ReadUint16<Check::Throw>)
+    >("read_uint16");
+    bld.AddFunction<
+      static_cast<std::uint16_t (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::Endian)>(&::Neptools::Source::PreadUint16<Check::Throw>)
+    >("pread_uint16");
+    bld.AddFunction<
+      static_cast<std::uint16_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint16<Check::Throw>)
     >("read_little_uint16");
     bld.AddFunction<
-      static_cast<::uint16_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint16<Check::Throw>)
+      static_cast<std::uint16_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint16<Check::Throw>)
     >("pread_little_uint16");
     bld.AddFunction<
-      static_cast<::uint32_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint32<Check::Throw>)
+      static_cast<std::uint16_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadBigUint16<Check::Throw>)
+    >("read_big_uint16");
+    bld.AddFunction<
+      static_cast<std::uint16_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadBigUint16<Check::Throw>)
+    >("pread_big_uint16");
+    bld.AddFunction<
+      static_cast<std::uint32_t (::Neptools::Source::*)(::Neptools::Endian)>(&::Neptools::Source::ReadUint32<Check::Throw>)
+    >("read_uint32");
+    bld.AddFunction<
+      static_cast<std::uint32_t (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::Endian)>(&::Neptools::Source::PreadUint32<Check::Throw>)
+    >("pread_uint32");
+    bld.AddFunction<
+      static_cast<std::uint32_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint32<Check::Throw>)
     >("read_little_uint32");
     bld.AddFunction<
-      static_cast<::uint32_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint32<Check::Throw>)
+      static_cast<std::uint32_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint32<Check::Throw>)
     >("pread_little_uint32");
     bld.AddFunction<
-      static_cast<::uint64_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint64<Check::Throw>)
+      static_cast<std::uint32_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadBigUint32<Check::Throw>)
+    >("read_big_uint32");
+    bld.AddFunction<
+      static_cast<std::uint32_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadBigUint32<Check::Throw>)
+    >("pread_big_uint32");
+    bld.AddFunction<
+      static_cast<std::uint64_t (::Neptools::Source::*)(::Neptools::Endian)>(&::Neptools::Source::ReadUint64<Check::Throw>)
+    >("read_uint64");
+    bld.AddFunction<
+      static_cast<std::uint64_t (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::Endian)>(&::Neptools::Source::PreadUint64<Check::Throw>)
+    >("pread_uint64");
+    bld.AddFunction<
+      static_cast<std::uint64_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadLittleUint64<Check::Throw>)
     >("read_little_uint64");
     bld.AddFunction<
-      static_cast<::uint64_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint64<Check::Throw>)
+      static_cast<std::uint64_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadLittleUint64<Check::Throw>)
     >("pread_little_uint64");
+    bld.AddFunction<
+      static_cast<std::uint64_t (::Neptools::Source::*)()>(&::Neptools::Source::ReadBigUint64<Check::Throw>)
+    >("read_big_uint64");
+    bld.AddFunction<
+      static_cast<std::uint64_t (::Neptools::Source::*)(::Neptools::FilePosition) const>(&::Neptools::Source::PreadBigUint64<Check::Throw>)
+    >("pread_big_uint64");
     bld.AddFunction<
       static_cast<std::string (::Neptools::Source::*)()>(&::Neptools::Source::ReadCString)
     >("read_cstring");

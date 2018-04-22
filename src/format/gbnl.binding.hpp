@@ -22,9 +22,15 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Neptools::Source>>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<Libshit::AT<::Neptools::Gbnl::Struct::TypePtr>>>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Libshit::Lua::StateRef>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<Libshit::AT<::Neptools::Gbnl::Struct::TypePtr>>, LuaGetRef<::Libshit::Lua::RawTable>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Neptools::Endian>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<Libshit::AT<::Neptools::Gbnl::Struct::TypePtr>>>,
+      &::Libshit::Lua::TypeTraits<::Neptools::Gbnl>::Make<LuaGetRef<::Libshit::Lua::StateRef>, LuaGetRef<::Neptools::Endian>, LuaGetRef<bool>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<::uint32_t>, LuaGetRef<Libshit::AT<::Neptools::Gbnl::Struct::TypePtr>>, LuaGetRef<::Libshit::Lua::RawTable>>
     >("new");
+    bld.AddFunction<
+      &::Libshit::Lua::GetMember<::Neptools::Gbnl, ::Neptools::Endian, &::Neptools::Gbnl::endian>
+    >("get_endian");
+    bld.AddFunction<
+      &::Libshit::Lua::SetMember<::Neptools::Gbnl, ::Neptools::Endian, &::Neptools::Gbnl::endian>
+    >("set_endian");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Gbnl, bool, &::Neptools::Gbnl::is_gstl>
     >("get_is_gstl");

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../dumpable.hpp"
+#include "../endian.hpp"
 #include "../source.hpp"
 #include "../dynamic_struct.hpp"
 #include "../txt_serializable.hpp"
@@ -21,26 +22,26 @@ namespace Neptools
     struct Header // or Footer
     {
       char magic[3];
-      char version;
+      char endian;
 
-      boost::endian::little_uint32_t field_04;
-      boost::endian::little_uint32_t field_08;
-      boost::endian::little_uint32_t field_0c;
-      boost::endian::little_uint32_t flags; // 1 if there's a string, 0 otherwise?
-      boost::endian::little_uint32_t descr_offset;
-      boost::endian::little_uint32_t count_msgs;
-      boost::endian::little_uint32_t msg_descr_size;
-      boost::endian::little_uint16_t count_types;
-      boost::endian::little_uint16_t field_22;
-      boost::endian::little_uint32_t offset_types;
-      boost::endian::little_uint32_t field_28;
-      boost::endian::little_uint32_t offset_msgs;
-      boost::endian::little_uint32_t field_30;
-      boost::endian::little_uint32_t field_34;
-      boost::endian::little_uint32_t field_38;
-      boost::endian::little_uint32_t field_3c;
+      std::uint16_t field_04;
+      std::uint16_t field_06;
+      std::uint32_t field_08;
+      std::uint32_t field_0c;
+      std::uint32_t flags; // 1 if there's a string, 0 otherwise?
+      std::uint32_t descr_offset;
+      std::uint32_t count_msgs;
+      std::uint32_t msg_descr_size;
+      std::uint32_t count_types;
+      std::uint32_t offset_types;
+      std::uint32_t field_28;
+      std::uint32_t offset_msgs;
+      std::uint32_t field_30;
+      std::uint32_t field_34;
+      std::uint32_t field_38;
+      std::uint32_t field_3c;
 
-      void Validate(size_t chunk_size) const;
+      void Validate(std::size_t chunk_size) const;
     };
     static_assert(sizeof(Header) == 0x40);
 
@@ -55,8 +56,8 @@ namespace Neptools
         STRING = 5,
         INT64  = 6,
       };
-      boost::endian::little_uint16_t type;
-      boost::endian::little_uint16_t offset;
+      std::uint16_t type;
+      std::uint16_t offset;
     };
     static_assert(sizeof(TypeDescriptor) == 0x04);
 
@@ -76,18 +77,19 @@ namespace Neptools
     using Messages = std::vector<StructPtr>;
 
     Gbnl(Source src);
-    Gbnl(bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,
-         Libshit::AT<Struct::TypePtr> type)
-      : is_gstl{is_gstl}, flags{flags}, field_28{field_28}, field_30{field_30},
-        type{std::move(type.Get())} {}
+    Gbnl(Endian endian, bool is_gstl, uint32_t flags, uint32_t field_28,
+         uint32_t field_30, Libshit::AT<Struct::TypePtr> type)
+      : endian{endian}, is_gstl{is_gstl}, flags{flags}, field_28{field_28},
+        field_30{field_30}, type{std::move(type.Get())} {}
 #ifndef LIBSHIT_WITHOUT_LUA
-    Gbnl(Libshit::Lua::StateRef vm, bool is_gstl, uint32_t flags,
+    Gbnl(Libshit::Lua::StateRef vm, Endian endian, bool is_gstl, uint32_t flags,
          uint32_t field_28, uint32_t field_30, Libshit::AT<Struct::TypePtr> type,
          Libshit::Lua::RawTable messages);
 #endif
 
     void Fixup() override { RecalcSize(); }
 
+    Endian endian;
     bool is_gstl;
     uint32_t flags, field_28, field_30;
 
@@ -123,5 +125,7 @@ namespace Neptools
     size_t real_item_count; // excluding dummy pad items
   };
 
+  void endian_reverse_inplace(Gbnl::Header& hdr);
+  void endian_reverse_inplace(Gbnl::TypeDescriptor& desc);
 }
 #endif
