@@ -14,16 +14,17 @@ Header/Footer
 ```c++
 struct HeaderFooter
 {
-    char magic[4];
-    uint32_t field_04; // always 1
+    char magic[3];
+    char endian;
+    uint16_t field_04; // always 1
+    uint16_t field_06; // always 0
     uint32_t field_08; // always 16
     uint32_t field_0c; // always 4
     uint32_t flags;
     uint32_t struct_offset;
     uint32_t struct_count;
     uint32_t struct_size;
-    uint16_t types_count;
-    uint16_t field_22; // padding? always 0
+    uint32_t types_count;
     uint32_t types_offset;
     uint32_t field_28; // ??
     uint32_t string_offset;
@@ -34,8 +35,9 @@ sizeof(HeaderFooter) == 0x40
 ```
 
 In GSTR the above struct is a header, at the beginning of the file, magic string
-is `GSTL`. In GBIN it's a footer (so it starts at `EOF-sizeof(HeaderFooter)`),
-and the magic is `GBNL`...
+is `GST`. In GBIN it's a footer (so it starts at `EOF-sizeof(HeaderFooter)`),
+and the magic is `GBN`... Endian is denoted by `endian`, if `L` means
+little-endian and `B` means big-endian.
 
 `flags` is 1 if there's any string stored in the file (see Type descriptor
 below), 0 otherwise. `struct_offset` is 0 in GBIN and 0x40 in GSTR files (but

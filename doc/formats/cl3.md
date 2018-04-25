@@ -11,7 +11,8 @@ Header
 ```c++
 struct Header
 {
-    char magic[4];     // always "CL3L"
+    char magic[3];     // always "CL3"
+    char endian;
     uint32_t field_04; // always 0
     uint32_t field_08; // always 3
     uint32_t sections_count;
@@ -22,8 +23,8 @@ struct Header
 sizeof(Header) == 0x18
 ```
 
-`field_14` is either 0, 1 or 2 (at least in RB3). Script `.cl3`s use 1, effect
-`.cl3`s use 2.
+`endian` is `L` if the file is little-endian, `B` if big-endian. `field_14` is
+either 0, 1 or 2 (at least in RB3). Script `.cl3`s use 1, effect `.cl3`s use 2.
 
 Sections
 --------
