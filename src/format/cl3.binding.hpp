@@ -20,9 +20,15 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Neptools::Source>>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Cl3>::Make<>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Libshit::Lua::StateRef>, LuaGetRef<::uint32_t>, LuaGetRef<::Libshit::Lua::RawTable>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Neptools::Endian>>,
+      &::Libshit::Lua::TypeTraits<::Neptools::Cl3>::Make<LuaGetRef<::Libshit::Lua::StateRef>, LuaGetRef<::Neptools::Endian>, LuaGetRef<::uint32_t>, LuaGetRef<::Libshit::Lua::RawTable>>
     >("new");
+    bld.AddFunction<
+      &::Libshit::Lua::GetMember<::Neptools::Cl3, ::Neptools::Endian, &::Neptools::Cl3::endian>
+    >("get_endian");
+    bld.AddFunction<
+      &::Libshit::Lua::SetMember<::Neptools::Cl3, ::Neptools::Endian, &::Neptools::Cl3::endian>
+    >("set_endian");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Cl3, ::uint32_t, &::Neptools::Cl3::field_14>
     >("get_field_14");

@@ -15,11 +15,21 @@ namespace Neptools
   void Cl3::Header::Validate(FilePosition file_size) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::Header", x)
-    VALIDATE(memcmp(magic, "CL3L", 4) == 0);
+    VALIDATE(memcmp(magic, "CL3", 3) == 0);
+    VALIDATE(endian == 'L' || endian == 'B');
     VALIDATE(field_04 == 0);
     VALIDATE(field_08 == 3);
     VALIDATE(sections_offset + sections_count * sizeof(Section) <= file_size);
 #undef VALIDATE
+  }
+
+  void endian_reverse_inplace(Cl3::Header& hdr) noexcept
+  {
+    boost::endian::endian_reverse_inplace(hdr.field_04);
+    boost::endian::endian_reverse_inplace(hdr.field_08);
+    boost::endian::endian_reverse_inplace(hdr.sections_count);
+    boost::endian::endian_reverse_inplace(hdr.sections_offset);
+    boost::endian::endian_reverse_inplace(hdr.field_14);
   }
 
   void Cl3::Section::Validate(FilePosition file_size) const
@@ -34,6 +44,22 @@ namespace Neptools
 #undef VALIDATE
   }
 
+  void endian_reverse_inplace(Cl3::Section& sec) noexcept
+  {
+    boost::endian::endian_reverse_inplace(sec.count);
+    boost::endian::endian_reverse_inplace(sec.data_size);
+    boost::endian::endian_reverse_inplace(sec.data_offset);
+    boost::endian::endian_reverse_inplace(sec.field_2c);
+    boost::endian::endian_reverse_inplace(sec.field_30);
+    boost::endian::endian_reverse_inplace(sec.field_34);
+    boost::endian::endian_reverse_inplace(sec.field_38);
+    boost::endian::endian_reverse_inplace(sec.field_3c);
+    boost::endian::endian_reverse_inplace(sec.field_40);
+    boost::endian::endian_reverse_inplace(sec.field_44);
+    boost::endian::endian_reverse_inplace(sec.field_48);
+    boost::endian::endian_reverse_inplace(sec.field_4c);
+  }
+
   void Cl3::FileEntry::Validate(uint32_t block_size) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::FileEntry", x)
@@ -45,6 +71,22 @@ namespace Neptools
 #undef VALIDATE
   }
 
+  void endian_reverse_inplace(Cl3::FileEntry& entry) noexcept
+  {
+    boost::endian::endian_reverse_inplace(entry.field_200);
+    boost::endian::endian_reverse_inplace(entry.data_offset);
+    boost::endian::endian_reverse_inplace(entry.data_size);
+    boost::endian::endian_reverse_inplace(entry.link_start);
+    boost::endian::endian_reverse_inplace(entry.link_count);
+    boost::endian::endian_reverse_inplace(entry.field_214);
+    boost::endian::endian_reverse_inplace(entry.field_218);
+    boost::endian::endian_reverse_inplace(entry.field_21c);
+    boost::endian::endian_reverse_inplace(entry.field_220);
+    boost::endian::endian_reverse_inplace(entry.field_224);
+    boost::endian::endian_reverse_inplace(entry.field_228);
+    boost::endian::endian_reverse_inplace(entry.field_22c);
+  }
+
   void Cl3::LinkEntry::Validate(uint32_t i, uint32_t file_count) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Cl3::LinkEntry", x)
@@ -54,6 +96,18 @@ namespace Neptools
     VALIDATE(field_0c == 0);
     VALIDATE(field_10 == 0 && field_14 == 0 && field_18 == 0 && field_1c == 0);
 #undef VALIDATE
+  }
+
+  void endian_reverse_inplace(Cl3::LinkEntry& entry) noexcept
+  {
+    boost::endian::endian_reverse_inplace(entry.field_00);
+    boost::endian::endian_reverse_inplace(entry.linked_file_id);
+    boost::endian::endian_reverse_inplace(entry.link_id);
+    boost::endian::endian_reverse_inplace(entry.field_0c);
+    boost::endian::endian_reverse_inplace(entry.field_10);
+    boost::endian::endian_reverse_inplace(entry.field_14);
+    boost::endian::endian_reverse_inplace(entry.field_18);
+    boost::endian::endian_reverse_inplace(entry.field_1c);
   }
 
   void Cl3::Entry::Dispose() noexcept
@@ -68,9 +122,9 @@ namespace Neptools
   }
 
 #ifndef LIBSHIT_WITHOUT_LUA
-  Cl3::Cl3(Libshit::Lua::StateRef vm, uint32_t field_14,
+  Cl3::Cl3(Libshit::Lua::StateRef vm, Endian endian, uint32_t field_14,
            Libshit::Lua::RawTable tbl)
-    : field_14{field_14}
+    : endian{endian}, field_14{field_14}
   {
     auto [len, one] = vm.RawLen01(tbl);
     entries.reserve(len);
@@ -139,6 +193,8 @@ namespace Neptools
   {
     src.CheckSize(sizeof(Header));
     auto hdr = src.PreadGen<Header>(0);
+    endian = hdr.endian == 'L' ? Endian::LITTLE : Endian::BIG;
+    ToNative(hdr, endian);
     hdr.Validate(src.GetSize());
 
     field_14 = hdr.field_14;
@@ -151,6 +207,7 @@ namespace Neptools
     for (size_t i = 0; i < secs; ++i)
     {
       auto sec = src.ReadGen<Section>();
+      ToNative(sec, endian);
       sec.Validate(src.GetSize());
 
       if (sec.name == "FILE_COLLECTION")
@@ -174,6 +231,7 @@ namespace Neptools
     for (uint32_t i = 0; i < file_count; ++i)
     {
       auto e = src.ReadGen<FileEntry>();
+      ToNative(e, endian);
       e.Validate(file_size);
 
       entries.emplace_back(
@@ -185,6 +243,7 @@ namespace Neptools
     for (uint32_t i = 0; i < file_count; ++i)
     {
       auto e = src.ReadGen<FileEntry>();
+      ToNative(e, endian);
       auto& ls = entries[i].links;
       uint32_t lbase = e.link_start;
       uint32_t lcount = e.link_count;
@@ -273,7 +332,8 @@ namespace Neptools
 
   void Cl3::Inspect_(std::ostream& os, unsigned indent) const
   {
-    os << "neptools.cl3(" << field_14 << ", {\n";
+    os << "neptools.cl3(neptools.endian." << ToString(endian) << ", "
+       << field_14 << ", {\n";
     for (auto& e : entries)
     {
       Indent(os, indent+1)
@@ -297,6 +357,13 @@ namespace Neptools
     os << "})";
   }
 
+  template <typename T>
+  static T endian_reverse(T t) noexcept
+  {
+    endian_reverse_inplace(t);
+    return t;
+  }
+
   void Cl3::Dump_(Sink& sink) const
   {
     auto sections_offset = (sizeof(Header)+PAD) & ~PAD;
@@ -305,12 +372,14 @@ namespace Neptools
     auto link_offset = data_offset + data_size;
 
     Header hdr;
-    memcpy(hdr.magic, "CL3L", 4);
+    memcpy(hdr.magic, "CL3", 3);
+    hdr.endian =  endian == Endian::LITTLE ? 'L' : 'B';
     hdr.field_04 = 0;
     hdr.field_08 = 3;
     hdr.sections_count = 2;
     hdr.sections_offset = sections_offset;
     hdr.field_14 = field_14;
+    FromNative(hdr, endian);
     sink.WriteGen(hdr);
     sink.Pad(sections_offset-sizeof(Header));
 
@@ -320,12 +389,13 @@ namespace Neptools
     sec.count = entries.size();
     sec.data_size = link_offset - files_offset;
     sec.data_offset = files_offset;
-    sink.WriteGen(sec);
+    sink.WriteGen(FromNativeCopy(sec, endian));
 
     sec.name = "FILE_LINK";
     sec.count = link_count;
     sec.data_size = link_count * sizeof(LinkEntry);
     sec.data_offset = link_offset;
+    FromNative(hdr, endian);
     sink.WriteGen(sec);
     sink.Pad((PAD_BYTES - ((2*sizeof(Section)) & PAD)) & PAD);
 
@@ -344,7 +414,7 @@ namespace Neptools
       fe.data_size = size;
       fe.link_start = link_i;
       fe.link_count = e.links.size();
-      sink.WriteGen(fe);
+      sink.WriteGen(FromNativeCopy(fe, endian));
 
       offset = (offset+size+PAD) & ~PAD;
       link_i += e.links.size();
@@ -371,7 +441,7 @@ namespace Neptools
         if (le.linked_file_id == uint32_t(-1))
           LIBSHIT_THROW(std::runtime_error, "Invalid file link");
         le.link_id = i++;
-        sink.WriteGen(le);
+        sink.WriteGen(FromNativeCopy(le, endian));
       }
     }
   }
