@@ -3,12 +3,12 @@
 #pragma once
 
 #include "../utils.hpp"
-#include "../container/intrusive.hpp"
 
 #include <libshit/assert.hpp>
 #include <libshit/meta.hpp>
 #include <libshit/shared_ptr.hpp>
 #include <libshit/utils.hpp>
+#include <libshit/container/intrusive.hpp>
 #include <libshit/lua/dynamic_object.hpp>
 #include <libshit/lua/function_call_types.hpp>
 #include <libshit/lua/type_traits.hpp>
@@ -74,10 +74,10 @@ namespace Neptools LIBSHIT_META(alias_file src/format/item.hpp)
 
   using LabelNameHook = boost::intrusive::set_base_hook<
     boost::intrusive::tag<struct NameTag>,
-    boost::intrusive::optimize_size<true>, LinkMode>;
+    boost::intrusive::optimize_size<true>, Libshit::LinkMode>;
   using LabelOffsetHook = boost::intrusive::set_base_hook<
     boost::intrusive::tag<struct OffsetTag>,
-    boost::intrusive::optimize_size<true>, LinkMode>;
+    boost::intrusive::optimize_size<true>, Libshit::LinkMode>;
 
   class Label final :
        public Libshit::RefCounted, public Libshit::Lua::DynamicObject,

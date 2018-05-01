@@ -5,9 +5,9 @@
 #include "../endian.hpp"
 #include "../source.hpp"
 #include "../sink.hpp"
-#include "../container/ordered_map.hpp"
 
 #include <libshit/fixed_string.hpp>
+#include <libshit/container/ordered_map.hpp>
 #include <libshit/lua/auto_table.hpp>
 
 #include <cstdint>
@@ -91,7 +91,8 @@ namespace Neptools
     };
     static_assert(sizeof(LinkEntry) == 0x20);
 
-    struct Entry : public OrderedMapItem, public Libshit::Lua::DynamicObject
+    struct Entry
+      : public Libshit::OrderedMapItem, public Libshit::Lua::DynamicObject
     {
       LIBSHIT_DYNAMIC_OBJECT;
     public:
@@ -117,7 +118,7 @@ namespace Neptools
       using type = std::string;
       const type& operator()(const Entry& e) { return e.name; }
     };
-    using Entries = OrderedMap<Entry, EntryKeyOfValue>;
+    using Entries = Libshit::OrderedMap<Entry, EntryKeyOfValue>;
 
 
     Cl3(Source src);

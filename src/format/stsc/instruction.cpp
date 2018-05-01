@@ -598,12 +598,12 @@ namespace Libshit::Lua
 
 }
 
-#include "../../container/vector.lua.hpp"
-NEPTOOLS_STD_VECTOR_LUAGEN(
+#include <libshit/container/vector.lua.hpp>
+LIBSHIT_STD_VECTOR_LUAGEN(
   label, Libshit::NotNull<Neptools::LabelPtr>);
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   stsc_instruction1d_item_node, Neptools::Stsc::Instruction1dItem::Node);
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   stsc_instruction1e_item_expression,
   Neptools::Stsc::Instruction1eItem::Expression);
 #include "instruction.binding.hpp"

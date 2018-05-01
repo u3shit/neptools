@@ -202,9 +202,9 @@ namespace Neptools
 
 }
 
-#include "../container/parent_list.lua.hpp"
+#include <libshit/container/parent_list.lua.hpp>
 #include <libshit/lua/table_ret_wrap.hpp>
 #include <libshit/lua/owned_shared_ptr_wrap.hpp>
-NEPTOOLS_PARENT_LIST_LUAGEN(
+LIBSHIT_PARENT_LIST_LUAGEN(
   item, false, Neptools::Item, Neptools::ItemListTraits);
 #include "item.binding.hpp"

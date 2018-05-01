@@ -3,7 +3,8 @@
 #include "../context.hpp"
 #include "../gbnl_lua.hpp"
 #include "../raw_item.hpp"
-#include "../../container/vector.lua.hpp"
+
+#include <libshit/container/vector.lua.hpp>
 
 namespace Neptools::Stcm
 {
@@ -32,5 +33,5 @@ namespace Neptools::Stcm
 
 }
 
-NEPTOOLS_STD_VECTOR_FWD(gbnl_struct, Neptools::Gbnl::StructPtr);
+LIBSHIT_STD_VECTOR_FWD(gbnl_struct, Neptools::Gbnl::StructPtr);
 #include "gbnl.binding.hpp"

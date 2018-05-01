@@ -318,7 +318,7 @@ namespace Neptools
       }
       lua_rawsetp(bld, LUA_REGISTRYINDEX, infos<Args...>); //+0
 
-      luaL_getmetatable(bld, "neptools_ipairs");
+      luaL_getmetatable(bld, "libshit_ipairs");
       bld.SetField("__ipairs");
     }
   };

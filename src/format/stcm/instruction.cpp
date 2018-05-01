@@ -2,10 +2,11 @@
 #include "data.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
-#include "../../container/vector.lua.hpp"
 #include "../../sink.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/container/vector.lua.hpp>
+
 #include <set>
 #include <iostream>
 
@@ -425,6 +426,6 @@ namespace Neptools::Stcm
 
 }
 
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   stcm_instruction_param, Neptools::Stcm::InstructionItem::Param);
 #include "instruction.binding.hpp"

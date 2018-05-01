@@ -129,8 +129,6 @@ def test(bld):
         'libshit/test/main.cpp',
         'test/pattern.cpp',
         'test/sink.cpp',
-        'test/container/ordered_map.cpp',
-        'test/container/parent_list.cpp',
     ]
     bld.program(source   = src,
                 includes = 'src libshit/ext/catch/include',

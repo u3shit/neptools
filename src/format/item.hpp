@@ -4,10 +4,10 @@
 
 #include "item_base.hpp"
 #include "../dumpable.hpp"
-#include "../container/parent_list.hpp"
 
 #include <libshit/check.hpp>
 #include <libshit/shared_ptr.hpp>
+#include <libshit/container/parent_list.hpp>
 #include <libshit/lua/user_type_fwd.hpp>
 
 #include <iosfwd>
@@ -23,8 +23,9 @@ namespace Neptools
 
   LIBSHIT_GEN_EXCEPTION_TYPE(InvalidItemState, std::logic_error);
 
-  class Item :
-    public Libshit::RefCounted, public Dumpable, public ParentListBaseHook<>
+  class Item
+    : public Libshit::RefCounted, public Dumpable,
+      public Libshit::ParentListBaseHook<>
   {
     LIBSHIT_LUA_CLASS;
   protected:
@@ -123,7 +124,7 @@ namespace Neptools
   inline FilePosition ToFilePos(ItemPointer ptr) noexcept
   { return ptr.item->GetPosition() + ptr.offset; }
 
-  using ItemList = ParentList<Item, ItemListTraits>;
+  using ItemList = Libshit::ParentList<Item, ItemListTraits>;
   struct ItemListTraits
   {
     static void add(ItemList&, Item& item) noexcept

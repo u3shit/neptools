@@ -705,12 +705,12 @@ namespace Neptools
 
 }
 
-#include "../container/vector.lua.hpp"
+#include <libshit/container/vector.lua.hpp>
 
 NEPTOOLS_DYNAMIC_STRUCT_LUAGEN(
   gbnl, int8_t, int16_t, int32_t, int64_t, float,
   ::Neptools::Gbnl::OffsetString, ::Neptools::Gbnl::FixStringTag,
   ::Neptools::Gbnl::PaddingTag);
-NEPTOOLS_STD_VECTOR_LUAGEN(gbnl_struct, Neptools::Gbnl::StructPtr);
+LIBSHIT_STD_VECTOR_LUAGEN(gbnl_struct, Neptools::Gbnl::StructPtr);
 
 #include "gbnl.binding.hpp"

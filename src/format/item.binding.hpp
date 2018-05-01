@@ -9,7 +9,7 @@ const char ::Neptools::Item::TYPE_NAME[] = "neptools.item";
 
 const char ::Neptools::ItemWithChildren::TYPE_NAME[] = "neptools.item_with_children";
 template <>
-const char ::item::TYPE_NAME[] = "neptools.parent_list_item";
+const char ::item::TYPE_NAME[] = "libshit.parent_list_item";
 
 namespace Libshit::Lua
 {
@@ -69,11 +69,11 @@ namespace Libshit::Lua
     bld.AddFunction<
       OwnedSharedPtrWrap<static_cast<::Neptools::ItemList & (::Neptools::ItemWithChildren::*)() noexcept>(&::Neptools::ItemWithChildren::GetChildren)>::Wrap
     >("get_children");
- do { auto runbc_ret = luaL_loadbuffer( bld, luaJIT_BC_builder, luaJIT_BC_builder_SIZE, "builder"); (__builtin_expect(!!(runbc_ret == 0), 1) ? ((void)0) : ::Libshit::AssertFailed("runbc_ret == 0", nullptr, ([]{ struct X { static constexpr char Get(size_t i) { return ("src/format/item.hpp")[i]; } }; return ::Libshit::ToCharPackV< X, ::Libshit::FileTools::FileName, std::make_index_sequence<sizeof("src/format/item.hpp")-1>>{}; }()).str, 168, __PRETTY_FUNCTION__)); (void) runbc_ret; lua_call(bld, 0, 1); } while (false); bld.SetField("build"); 
+ do { auto runbc_ret = luaL_loadbuffer( bld, luaJIT_BC_builder, luaJIT_BC_builder_SIZE, "builder"); (__builtin_expect(!!(runbc_ret == 0), 1) ? ((void)0) : ::Libshit::AssertFailed("runbc_ret == 0", nullptr, ([]{ struct X { static constexpr char Get(size_t i) { return ("src/format/item.hpp")[i]; } }; return ::Libshit::ToCharPackV< X, ::Libshit::FileTools::FileName, std::make_index_sequence<sizeof("src/format/item.hpp")-1>>{}; }()).str, 169, __PRETTY_FUNCTION__)); (void) runbc_ret; lua_call(bld, 0, 1); } while (false); bld.SetField("build"); 
   }
   static TypeRegister::StateRegister<::Neptools::ItemWithChildren> reg_neptools_item_with_children;
 
-  // class neptools.parent_list_item
+  // class libshit.parent_list_item
   template<>
   void TypeRegisterTraits<::item>::Register(TypeBuilder& bld)
   {
@@ -145,17 +145,17 @@ namespace Libshit::Lua
       static_cast<void (::item::*)(::Libshit::Lua::FunctionWrapGen<bool>)>(&::item::unique<::Libshit::Lua::FunctionWrapGen<bool>>)
     >("unique");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::FakeClass &, ::Neptools::Item &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Next)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Libshit::ParentListBaseHookTraits<::Neptools::Item, ::Libshit::DefaultTag> >::FakeClass &, ::Neptools::Item &)>(::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Next)
     >("next");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::FakeClass &, ::Neptools::Item &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Prev)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Libshit::ParentListBaseHookTraits<::Neptools::Item, ::Libshit::DefaultTag> >::FakeClass &, ::Neptools::Item &)>(::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::Prev)
     >("prev");
     bld.AddFunction<
-      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Neptools::ParentListBaseHookTraits<::Neptools::Item, ::Neptools::DefaultTag> >::FakeClass &)>(::Neptools::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::ToTable)
+      static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits, ::Libshit::ParentListBaseHookTraits<::Neptools::Item, ::Libshit::DefaultTag> >::FakeClass &)>(::Libshit::ParentListLua<::Neptools::Item, ::Neptools::ItemListTraits>::ToTable)
     >("to_table");
 
   }
-  static TypeRegister::StateRegister<::item> reg_neptools_parent_list_item;
+  static TypeRegister::StateRegister<::item> reg_libshit_parent_list_item;
 
 }
 #endif

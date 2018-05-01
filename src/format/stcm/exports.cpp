@@ -4,9 +4,9 @@
 #include "instruction.hpp"
 #include "../context.hpp"
 #include "../../sink.hpp"
-#include "../../container/vector.lua.hpp"
 
 #include <libshit/char_utils.hpp>
+#include <libshit/container/vector.lua.hpp>
 #include <iostream>
 
 namespace Neptools::Stcm
@@ -99,7 +99,7 @@ namespace Neptools::Stcm
 
 }
 
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   stcm_exports_item_entry_type, Libshit::NotNull<Libshit::RefCountedPtr<
     Neptools::Stcm::ExportsItem::EntryType>>);
 #include "exports.binding.hpp"

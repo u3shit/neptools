@@ -1,11 +1,12 @@
 #include "cl3.hpp"
 #include "stcm/file.hpp"
 #include "../open.hpp"
-#include "../container/ordered_map.lua.hpp"
-#include "../container/vector.lua.hpp"
 
-#include <libshit/except.hpp>
 #include <libshit/char_utils.hpp>
+#include <libshit/except.hpp>
+#include <libshit/container/ordered_map.lua.hpp>
+#include <libshit/container/vector.lua.hpp>
+
 #include <fstream>
 #include <boost/filesystem/operations.hpp>
 
@@ -475,8 +476,8 @@ namespace Neptools
 
 }
 
-NEPTOOLS_ORDERED_MAP_LUAGEN(
+LIBSHIT_ORDERED_MAP_LUAGEN(
   cl3_entry, Neptools::Cl3::Entry, Neptools::Cl3::EntryKeyOfValue);
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   cl3_entry, Libshit::WeakRefCountedPtr<Neptools::Cl3::Entry>);
 #include "cl3.binding.hpp"

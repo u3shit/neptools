@@ -3,8 +3,9 @@
 #include "../cstring_item.hpp"
 #include "../eof_item.hpp"
 #include "../raw_item.hpp"
-#include "../../container/vector.lua.hpp"
 #include "../../sink.hpp"
+
+#include <libshit/container/vector.lua.hpp>
 
 namespace Neptools::Stcm
 {
@@ -140,7 +141,7 @@ namespace Neptools::Stcm
 
 }
 
-NEPTOOLS_STD_VECTOR_LUAGEN(
+LIBSHIT_STD_VECTOR_LUAGEN(
   stcm_collection_link_item_link_entry,
   Neptools::Stcm::CollectionLinkItem::LinkEntry);
 #include "collection_link.binding.hpp"
