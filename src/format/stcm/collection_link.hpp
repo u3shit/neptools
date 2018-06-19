@@ -88,11 +88,10 @@ namespace Neptools::Stcm
 
     struct LinkEntry : public Libshit::Lua::ValueObject
     {
-      Libshit::NotNull<LabelPtr> name_0;
-      Libshit::NotNull<LabelPtr> name_1;
+      LabelPtr name_0;
+      LabelPtr name_1;
 
-      LinkEntry(Libshit::NotNull<LabelPtr> name_0,
-                Libshit::NotNull<LabelPtr> name_1)
+      LinkEntry(LabelPtr name_0, LabelPtr name_1)
         : name_0{std::move(name_0)}, name_1{std::move(name_1)} {}
       LIBSHIT_LUA_CLASS;
     };

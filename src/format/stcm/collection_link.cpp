@@ -107,11 +107,20 @@ namespace Neptools::Stcm
       auto e = src.ReadGen<Entry>();
       e.Validate(ctx.GetSize());
 
-      auto& str0 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_0));
-      auto& str1 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_1));
-      entries.emplace_back(
-        ctx.GetLabelTo(e.name_0, str0.GetLabelName()),
-        ctx.GetLabelTo(e.name_1, str1.GetLabelName()));
+      LabelPtr label0, label1;
+      if (e.name_0)
+      {
+        auto& str0 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_0));
+        label0 = ctx.GetLabelTo(e.name_0, str0.GetLabelName());
+      }
+
+      if (e.name_1)
+      {
+        auto& str1 = MaybeCreate<CStringItem>(ctx.GetPointer(e.name_1));
+        label1 = ctx.GetLabelTo(e.name_1, str1.GetLabelName());
+      }
+
+      entries.emplace_back(label0, label1);
     }
   }
 
@@ -120,8 +129,8 @@ namespace Neptools::Stcm
     Entry ee{};
     for (const auto& e : entries)
     {
-      ee.name_0 = ToFilePos(e.name_0->GetPtr());
-      ee.name_1 = ToFilePos(e.name_1->GetPtr());
+      ee.name_0 = e.name_0 ? ToFilePos(e.name_0->GetPtr()) : 0;
+      ee.name_1 = e.name_0 ? ToFilePos(e.name_1->GetPtr()) : 0;
       sink.WriteGen(ee);
     }
   }
@@ -133,8 +142,13 @@ namespace Neptools::Stcm
     os << "collection_link{\n";
     for (const auto& e : entries)
     {
-      Indent(os, indent+1) << '{' << PrintLabel(e.name_0) << ", "
-                           << PrintLabel(e.name_1) << "},\n";
+      if (!e.name_0 || ! e.name_1)
+        Indent(os, indent+1) << "neptools.stcm.collection_link_item.link_entry("
+                             << PrintLabel(e.name_0) << ", "
+                             << PrintLabel(e.name_1) << "),\n";
+      else
+        Indent(os, indent+1) << '{' << PrintLabel(e.name_0) << ", "
+                             << PrintLabel(e.name_1) << "},\n";
     }
     Indent(os, indent) << "}";
   }

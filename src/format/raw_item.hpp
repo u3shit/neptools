@@ -88,7 +88,7 @@ namespace Neptools
     if (item)
       return T::CreateAndInsert(ptr);
     else
-      return ptr.As0<T>(); // assert it
+      return ptr.AsChecked0<T>(); // check it
   }
 
   template <typename T>

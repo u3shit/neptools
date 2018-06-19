@@ -58,13 +58,13 @@ namespace Libshit::Lua
   {
 
     bld.AddFunction<
-      &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_0>
+      &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Neptools::LabelPtr, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_0>
     >("get_name_0");
     bld.AddFunction<
-      &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_1>
+      &::Libshit::Lua::GetMember<::Neptools::Stcm::CollectionLinkItem::LinkEntry, ::Neptools::LabelPtr, &::Neptools::Stcm::CollectionLinkItem::LinkEntry::name_1>
     >("get_name_1");
     bld.AddFunction<
-      &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Make<LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Stcm::CollectionLinkItem::LinkEntry>::Make<LuaGetRef<::Neptools::LabelPtr>, LuaGetRef<::Neptools::LabelPtr>>
     >("new");
 
   }
