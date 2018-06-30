@@ -100,7 +100,7 @@ namespace Libshit::Lua
       &::Libshit::Lua::TypeTraits<::cl3_entry>::Make<>
     >("new");
     bld.AddFunction<
-      static_cast<::Neptools::Cl3::Entry & (::cl3_entry::*)(::size_t)>(&::cl3_entry::at)
+      static_cast<::Neptools::Cl3::Entry & (::cl3_entry::*)(::cl3_entry::size_type)>(&::cl3_entry::at)
     >("at");
     bld.AddFunction<
       static_cast<::Neptools::Cl3::Entry & (::cl3_entry::*)()>(&::cl3_entry::front<Check::Throw>)
@@ -112,19 +112,19 @@ namespace Libshit::Lua
       static_cast<bool (::cl3_entry::*)() const noexcept>(&::cl3_entry::empty)
     >("empty");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
     >("__len");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
     >("size");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)() const noexcept>(&::cl3_entry::max_size)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::max_size)
     >("max_size");
     bld.AddFunction<
       static_cast<void (::cl3_entry::*)(::size_t)>(&::cl3_entry::reserve)
     >("reserve");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)() const noexcept>(&::cl3_entry::capacity)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::capacity)
     >("capacity");
     bld.AddFunction<
       static_cast<void (::cl3_entry::*)()>(&::cl3_entry::shrink_to_fit)
@@ -139,10 +139,10 @@ namespace Libshit::Lua
       static_cast<void (::cl3_entry::*)(::cl3_entry &)>(&::cl3_entry::swap)
     >("swap");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)(const ::Neptools::Cl3::Entry &) const>(&::cl3_entry::index_of<Check::Throw>)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)(const ::Neptools::Cl3::Entry &) const>(&::cl3_entry::index_of<Check::Throw>)
     >("index_of");
     bld.AddFunction<
-      static_cast<::size_t (::cl3_entry::*)(const ::cl3_entry::key_type &) const>(&::cl3_entry::count)
+      static_cast<::cl3_entry::size_type (::cl3_entry::*)(const ::cl3_entry::key_type &) const>(&::cl3_entry::count)
     >("count");
     bld.AddFunction<
       static_cast<Libshit::SmartPtr<::Neptools::Cl3::Entry> (*)(::cl3_entry &, ::size_t) noexcept>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get),

@@ -17,7 +17,7 @@
 #include <functional>
 #include <boost/intrusive/set_hook.hpp>
 
-namespace Neptools LIBSHIT_META(alias_file src/format/item.hpp)
+namespace Neptools LIBSHIT_META("alias_file src/format/item.hpp")
 {
 
   class Item;

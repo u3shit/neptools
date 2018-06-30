@@ -48,7 +48,7 @@ namespace Libshit::Lua
     bld.AddFunction<
       static_cast<void (::Neptools::Sink::*)(::Libshit::NonowningString)>(&::Neptools::Sink::WriteCString<Check::Throw>)
     >("write_cstring");
- lua_getfield(bld, -2, "__gc"); bld.SetField("close"); 
+ lua_getfield(bld, -2, "__gc"); bld.SetField("close");
   }
   static TypeRegister::StateRegister<::Neptools::Sink> reg_neptools_sink;
 
