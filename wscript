@@ -63,6 +63,18 @@ def build_common(bld):
                 includes = 'src',
                 target   = 'common-stsc')
 
+
+from waflib.TaskGen import taskgen_method
+@taskgen_method
+def apply_defs(self):
+    if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
+        node = self.path.find_resource(self.defs)
+        if not node:
+            raise Errors.WafError('invalid def file %r' % self.defs)
+
+        self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
+        self.link_task.dep_nodes.append(node)
+
 def build(bld):
     build_common(bld)
 
@@ -79,21 +91,9 @@ def build(bld):
         bld.program(source = 'src/programs/launcher.c src/programs/launcher.rc',
                     includes = 'src', # for version.hpp
                     target = 'launcher',
-                    cflags = '-O1 -Gs9999999',
+                    cflags = '-O1 -Gs9999999 -Xclang -stack-protector -Xclang 0',
                     uselib = 'KERNEL32 SHELL32 USER32 NEPTOOLS',
                     linkflags = ld)
-
-        # server.dll has no implib (doesn't export anything)
-        from waflib.TaskGen import taskgen_method
-        @taskgen_method
-        def apply_implib(self):
-            if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
-                node = self.path.find_resource(self.defs)
-                if not node:
-                    raise Errors.WafError('invalid def file %r' % self.defs)
-
-                self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
-                self.link_task.dep_nodes.append(node)
 
         src_inject = [
             'src/injected/cpk.cpp',
