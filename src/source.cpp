@@ -6,12 +6,16 @@
 #include <libshit/lua/function_call.hpp>
 
 #include <iostream>
+#include <fstream>
+
+#include <libshit/doctest.hpp>
 
 #define LIBSHIT_LOG_NAME "source"
 #include <libshit/logger_helper.hpp>
 
 namespace Neptools
 {
+  TEST_SUITE_BEGIN("Neptools::Source");
 
   namespace
   {
@@ -331,6 +335,21 @@ namespace Neptools
 
 #endif
 
+  TEST_CASE("small source")
+  {
+    char buf[16] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    std::ofstream os{"tmp", std::ios_base::binary};
+    os.write(buf, 16);
+    os.close();
+
+    auto src = Source::FromFile("tmp");
+    char buf2[16];
+    src.ReadGen(buf2);
+    REQUIRE(memcmp(buf, buf2, 16) == 0);
+    CHECK(src.Inspect() ==
+          R"(neptools.source.from_memory("tmp", "\x00\x01\x02\x03\x04\x05\x06\a\b\t\n\v\f\r\x0e\x0f"))");
+  }
+  TEST_SUITE_END();
 }
 
 #include "source.binding.hpp"

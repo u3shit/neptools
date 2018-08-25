@@ -11,7 +11,18 @@ def options(opt):
 def configure(cfg):
     cfg.recurse('libshit', name='configure', once=False)
 
-def build_common(bld):
+from waflib.TaskGen import taskgen_method
+@taskgen_method
+def apply_defs(self):
+    if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
+        node = self.path.find_resource(self.defs)
+        if not node:
+            raise Errors.WafError('invalid def file %r' % self.defs)
+
+        self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
+        self.link_task.dep_nodes.append(node)
+
+def build(bld):
     bld.recurse('libshit')
 
     src = [
@@ -45,6 +56,8 @@ def build_common(bld):
             'src/txt_serializable.cpp',
             'src/format/builder.lua',
         ]
+    if bld.env.WITH_TESTS:
+        src += [ 'test/pattern.cpp' ]
 
     bld.objects(source   = src,
                 uselib   = 'NEPTOOLS',
@@ -62,21 +75,6 @@ def build_common(bld):
                 use      = 'libshit boost_system boost_filesystem',
                 includes = 'src',
                 target   = 'common-stsc')
-
-
-from waflib.TaskGen import taskgen_method
-@taskgen_method
-def apply_defs(self):
-    if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
-        node = self.path.find_resource(self.defs)
-        if not node:
-            raise Errors.WafError('invalid def file %r' % self.defs)
-
-        self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
-        self.link_task.dep_nodes.append(node)
-
-def build(bld):
-    build_common(bld)
 
     bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
                 includes = 'src', # for version.hpp
@@ -108,30 +106,17 @@ def build(bld):
                   uselib = 'SHELL32 USER32 NEPTOOLS',
                   defs   = 'src/programs/server.def')
 
-def test(bld):
-    build_common(bld)
-
-    # test pattern parser
-    bld(features='cxx',
-        source='test/pattern_fail.cpp',
-        uselib='BOOST NEPTOOLS',
-        use='boost_system boost_filesystem libshit',
-        includes='src',
-        defines=['TEST_PATTERN="b2 ff"'])
-    bld(features='cxx fail_cxx',
-        source='test/pattern_fail.cpp',
-        uselib='BOOST NEPTOOLS',
-        use='boost_system boost_filesystem libshit',
-        includes='src',
-        defines=['TEST_PATTERN="bz ff"'])
-
-    src = [
-        'libshit/test/main.cpp',
-        'test/pattern.cpp',
-        'test/sink.cpp',
-    ]
-    bld.program(source   = src,
-                includes = 'src libshit/ext/catch/include',
-                uselib   = 'NEPTOOLS',
-                use      = 'common libshit-tests',
-                target   = 'run-tests')
+    if bld.env.WITH_TESTS:
+        # test pattern parser
+        bld(features='cxx',
+            source='test/pattern_fail.cpp',
+            uselib='BOOST NEPTOOLS',
+            use='boost_system boost_filesystem libshit',
+            includes='src',
+            defines=['TEST_PATTERN="b2 ff"'])
+        bld(features='cxx fail_cxx',
+            source='test/pattern_fail.cpp',
+            uselib='BOOST NEPTOOLS',
+            use='boost_system boost_filesystem libshit',
+            includes='src',
+            defines=['TEST_PATTERN="bz ff"'])

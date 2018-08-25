@@ -1,3 +1,5 @@
+source tools/ci_conf_linuxcommon.sh
+
 run export CC=clang
 run export CXX=clang++
 run export CXXFLAGS=-stdlib=libc++

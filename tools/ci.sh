@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 function einfo()
 {
@@ -31,7 +31,8 @@ fi
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-function before() { :; }
+function before_build() { :; }
+function after_build() { :; }
 function after() { :; }
 
 function load()
@@ -52,23 +53,16 @@ function run()
 load default
 load "$compiler"
 
-if [[ $mode = rel ]]; then
-    mode_arg=--release
-else
-    mode_arg=--optimize-ext
-fi
-
-before
-run ./waf --color=yes configure "${config_opts[@]}" "$mode_arg" --all-bundle
-run ./waf --color=yes build test "${build_opts[@]}" --skip-run-tests
-if [[ -f build/stcm-editor && $mode = rel ]]; then
-    run strip --strip-unneeded -R .comment -R .GCC.command.line build/stcm-editor
-fi
+before_build
+build
+after_build
 
 ret=0
-for t in "${tests[@]}"; do
-    einfo "$t"
-    eval "$t" || ret=1
-done
+if [[ $mode != rel ]]; then
+    for t in "${tests[@]}"; do
+        einfo "$t"
+        eval "$t" || ret=1
+    done
+fi
 after
 exit $ret
