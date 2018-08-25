@@ -12,7 +12,7 @@ if [[ $mode = rel ]]; then
 elif [[ $mode = rel-test ]]; then
     mode_arg=(--release --with-tests)
 else
-    mode_arg=(--optimize-ext --with-tests)
+    mode_arg=(--debug --optimize-ext --with-tests)
 fi
 
 function build()

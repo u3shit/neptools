@@ -24,7 +24,7 @@ fi
 compiler="$1"
 mode="$2"
 
-if [[ $mode != rel && $mode != debug ]]; then
+if [[ $mode != rel && $mode != rel-test && $mode != debug ]]; then
     eerror "Invalid mode $mode"
     exit 1
 fi
