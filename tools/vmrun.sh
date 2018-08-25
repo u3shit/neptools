@@ -50,7 +50,7 @@ scp -o StrictHostKeyChecking=no -P $port "$@" "$username@localhost:$tmp_dir/"
 rm -f "$fifo" && mkfifo "$fifo"
 sleep 60 > "$fifo" &
 ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
-    "cd $tmp_dir && stcm-editor --xml-output=test.xml --test --reporters=junit,console" \
+    "cd $tmp_dir && stcm-editor --xml-output=test.xml --test -fc --reporters=junit,console" \
     < "$fifo"
 
 scp -o StrictHostKeyChecking=no -P $port \

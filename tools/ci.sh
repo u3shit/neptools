@@ -1,5 +1,7 @@
 #! /bin/bash
 
+export TERM=xterm
+
 function einfo()
 {
     echo -e " \033[32m*\033[0m $@" >&2

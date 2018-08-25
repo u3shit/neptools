@@ -1,127 +1,114 @@
 import os
-variants = ['gcc-debug', 'gcc-rel', 'clang-debug', 'clang-rel', 'clang-msvc',
-            'clang-msvc-debug', 'clang-msvc64']
+compilers = ['gcc', 'clang', 'clang-msvc', 'clang-msvc64']
+configs = ['debug', 'rel-test', 'rel']
+
+import itertools
+variants = list(map(lambda x: '%s-%s' % x, itertools.product(compilers, configs)))
 
 def my_configure(cfg):
     bdir = cfg.path.abspath()
 
-    gcc = 'gcc-5.4.0'
-    gxx = 'g++-5.4.0'
-    winrc = '%s/rc.sh' % bdir
+    gcc = 'gcc-7.3.0'
+    gxx = 'g++-7.3.0'
+    winrc = '%s/libshit/rc.sh' % bdir
     clang_bin = os.path.expanduser('~/llvm/prefix/bin/')
+    clang_flags = [
+        '-stdlib=libc++', '-ferror-limit=5', '-ftemplate-backtrace-limit=0',
+        '-march=native'
+    ]
+    clang_linkflags = [
+        '-stdlib=libc++', '-fuse-ld=gold', '-march=native'
+    ]
 
-    cfg.environ['HOST_CC'] = 'gcc'
-    cfg.environ['HOST_CXX'] = 'g++'
-    cfg.options.host_lua = 'luajit'
-
-    if 'gcc-debug' in variants:
-        cfg.setenv('gcc-debug')
-        cfg.env.CC = gcc
-        cfg.env.CXX = gxx
-        cfg.env.CXXFLAGS = '-ggdb3'
-        cfg.env.LINKFLAGS = ['-ggdb3']
-        cfg.options.optimize = False
-        cfg.options.optimize_ext = True
-        cfg.options.release = False
-        configure(cfg)
-
-    if 'gcc-rel' in variants:
-        cfg.setenv('gcc-rel')
-        cfg.env.AR = 'gcc-ar'
-        cfg.env.CC = gcc
-        cfg.env.CXX = gxx
-        cfg.env.CXXFLAGS = '-march=native'
-        cfg.env.LINKFLAGS = ['-march=native']
-        cfg.options.optimize = True
-        cfg.options.release = True
-        configure(cfg)
-
-    if 'clang-debug' in variants:
-        cfg.setenv('clang-debug')
-        cfg.env.CC = clang_bin+'clang'
-        cfg.env.CXX = clang_bin+'clang++'
-        cfg.env.CXXFLAGS = ['-stdlib=libc++', '-ggdb3']
-        cfg.env.LINKFLAGS = ['-stdlib=libc++', '-ggdb3']
-        cfg.options.optimize = False
-        cfg.options.optimize_ext = True
-        cfg.options.release = False
-        configure(cfg)
-
-    if 'clang-rel' in variants:
-        cfg.setenv('clang-rel')
-        cfg.env.CC = clang_bin+'clang'
-        cfg.env.CXX = clang_bin+'clang++'
-        cfg.env.CXXFLAGS = ['-stdlib=libc++', '-march=native']
-        cfg.env.LINKFLAGS = ['-stdlib=libc++', '-march=native', '-fuse-ld=gold']
-        cfg.options.optimize = True
-        cfg.options.release = True
-        configure(cfg)
-
-    clang_cxxflags = [
+    vcdir = '/mnt/msvc/vc12'
+    clangcl_cxxflags = [
         '-Xclang', '-target-cpu', '-Xclang', 'x86-64',
         '-fms-compatibility-version=18',
-        '-imsvc', '/mnt/msvc/vc12/include',
-        '-imsvc', '/mnt/msvc/vc12/win_sdk/Include/um',
-        '-imsvc', '/mnt/msvc/vc12/win_sdk/Include/shared',
+        '-imsvc', vcdir+'/include',
+        '-imsvc', vcdir+'/win_sdk/include/um',
+        '-imsvc', vcdir+'/win_sdk/include/shared',
+        '-DDOCTEST_CONFIG_COLORS_ANSI',
+        '-ferror-limit=5',
     ]
-    if 'clang-msvc' in variants:
-        cfg.setenv('clang-msvc')
-        cfg.env.AR = clang_bin+'llvm-lib'
-        cfg.env.CC = clang_bin+'clang-cl'
-        cfg.env.CXX = clang_bin+'clang-cl'
-        cfg.env.WINRC = winrc
-        cfg.env.WINRCFLAGS = '-m32'
-        cfg.env.LINK_CXX = clang_bin+'lld-link'
-        cfg.env.CXXFLAGS = cfg.env.CFLAGS = ['-m32'] + clang_cxxflags
-        cfg.env.LINKFLAGS = [
-            #'/opt:lldlto=0',
-            '/libpath:/mnt/msvc/vc12/lib',
-            '/libpath:/mnt/msvc/vc12/win_sdk/Lib/winv6.3/um/x86',
-            #'/debug',
-        ]
-        cfg.options.clang_hack = True
-        cfg.options.optimize = True
-        cfg.options.release = True
-        configure(cfg)
+    clangcl_lib32 = [
+        '/libpath:%s/lib' % vcdir,
+        '/libpath:%s/win_sdk/lib/winv6.3/um/x86' % vcdir,
+    ]
+    clangcl_lib64 = [
+        '/libpath:%s/lib/amd64' % vcdir,
+        '/libpath:%s/win_sdk/lib/winv6.3/um/x64' % vcdir,
+    ]
 
-    if 'clang-msvc-debug' in variants:
-        cfg.setenv('clang-msvc-debug')
-        cfg.env.AR = clang_bin+'llvm-lib'
-        cfg.env.CC = clang_bin+'clang-cl'
-        cfg.env.CXX = clang_bin+'clang-cl'
-        cfg.env.WINRC = winrc
-        cfg.env.WINRCFLAGS = '-m32'
-        cfg.env.LINK_CXX = clang_bin+'lld-link'
-        cfg.env.CXXFLAGS = cfg.env.CFLAGS = ['-m32'] + clang_cxxflags
-        cfg.env.LINKFLAGS = [
-            '/libpath:/mnt/msvc/vc12/lib',
-            '/libpath:/mnt/msvc/vc12/win_sdk/Lib/winv6.3/um/x86',
-            #'/debug',
-        ]
-        cfg.options.clang_hack = True
-        cfg.options.optimize = True
-        cfg.options.release = False
-        configure(cfg)
+    cfg.options.host_lua = 'luajit'
+    cfg.options.lua_dll = True
 
+    for comp in compilers:
+        for conf in configs:
+            var = '%s-%s' % (comp, conf)
+            if var not in variants: continue
 
-    if 'clang-msvc64' in variants:
-        cfg.setenv('clang-msvc64')
-        cfg.env.AR = clang_bin+'llvm-lib'
-        cfg.env.CC = clang_bin+'clang-cl'
-        cfg.env.CXX = clang_bin+'clang-cl'
-        cfg.env.WINRC = winrc
-        cfg.env.WINRCFLAGS = '-m64'
-        cfg.env.LINK_CXX = clang_bin+'lld-link'
-        cfg.env.CXXFLAGS = cfg.env.CFLAGS = clang_cxxflags
-        cfg.env.LINKFLAGS = [
-            '/opt:lldlto=1',
-            '/libpath:/mnt/msvc/vc12/lib/amd64',
-            '/libpath:/mnt/msvc/vc12/win_sdk/Lib/winv6.3/um/x64',
-        ]
-        cfg.options.clang_hack = True
-        cfg.options.optimize = True
-        cfg.options.release = True
-        configure(cfg)
+            cfg.setenv(var)
+            if comp == 'gcc':
+                cfg.env.AR = 'gcc-ar'
+                cfg.env.CC = gcc
+                cfg.env.CXX = gxx
+                cfg.env.CXXFLAGS = ['-march=native']
+                cfg.env.LINKFLAGS = ['-march=native']
+                cfg.options.clang_hack = False
+                cfg.environ.pop('HOST_CC', None)
+                cfg.environ.pop('HOST_CXX', None)
+                cfg.options.all_system = None
+            elif comp == 'clang':
+                cfg.env.AR = clang_bin+'llvm-ar'
+                cfg.env.CC = clang_bin+'clang'
+                cfg.env.CXX = clang_bin+'clang++'
+                cfg.env.CXXFLAGS = clang_flags
+                cfg.env.LINKFLAGS = clang_linkflags
+                cfg.options.clang_hack = False
+                cfg.environ.pop('HOST_CC', None)
+                cfg.environ.pop('HOST_CXX', None)
+                cfg.options.all_system = 'bundle'
+            else: # msvc
+                cfg.env.AR = clang_bin+'llvm-lib'
+                cfg.env.CC = clang_bin+'clang-cl'
+                cfg.env.CXX = clang_bin+'clang-cl'
+                cfg.options.clang_hack = True
+                cfg.environ['HOST_CC'] = 'gcc'
+                cfg.environ['HOST_CXX'] = 'g++'
+                cfg.options.all_system = 'bundle'
+
+                cfg.env.WINRC = winrc
+                cfg.env.LINK_CXX = clang_bin+'lld-link'
+                if comp == 'clang-msvc':
+                    cfg.env.WINRCFLAGS = '-m32'
+                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = ['-m32'] + clangcl_cxxflags
+                    cfg.env.LINKFLAGS = clangcl_lib32
+                elif comp == 'clang-msvc64':
+                    cfg.env.WINRCFLAGS = '-m64'
+                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = clangcl_cxxflags
+                    cfg.env.LINKFLAGS = clangcl_lib64
+                else:
+                    error()
+
+            cfg.options.optimize_ext = True
+            if conf == 'debug':
+                cfg.options.debug = True
+                cfg.options.optimize = False
+                cfg.options.release = False
+                cfg.options.with_tests = True
+            elif conf == 'rel-test':
+                cfg.options.debug = False
+                cfg.options.optimize = True
+                cfg.options.release = True
+                cfg.options.with_tests = True
+            elif conf == 'rel':
+                cfg.options.debug = False
+                cfg.options.optimize = True
+                cfg.options.release = True
+                cfg.options.with_tests = False
+            else:
+                error()
+            configure(cfg)
 
 from waflib.Configure import ConfigurationContext
 class my_configure_cls(ConfigurationContext):
@@ -132,7 +119,7 @@ from waflib.Build import BuildContext, CleanContext, InstallContext, UninstallCo
 
 def init(ctx):
     for x in variants:
-        for y in (BuildContext, CleanContext, InstallContext, UninstallContext, TestContext):
+        for y in (BuildContext, CleanContext, InstallContext, UninstallContext):
             name = y.__name__.replace('Context','').lower()
             class tmp(y):
                 cmd = '%s-%s' % (name, x)
@@ -146,34 +133,6 @@ class buildall_ctx(Build.BuildContext):
         pass
 
 def buildall(ctx):
-    # timer = Utils.Timer()
-    # threads = []
-    # count = [0]
-    # line_lock = Utils.threading.Lock()
-    # class sub_build(Utils.threading.Thread):
-    #     def run(self):
-    #         bld = self.bld = self.cls(top_dir=ctx.top_dir, out_dir=ctx.out_dir)
-    #         bld.restore()
-    #         bld.siblings = threads
-    #         bld.count = count
-    #         bld.line_lock = line_lock
-    #         bld.timer = timer
-    #         bld.logger = ctx.logger
-    #         bld.load_envs()
-    #         bld.targets = ctx.targets
-    #         bld.recurse([bld.run_dir])
-    #         bld.compile()
-
-    # for x in variants:
-    #     cls = type(Build.BuildContext)(x, (Build.BuildContext,), {'cmd': x, 'variant': x})
-    #     f = sub_build()
-    #     f.cls = cls
-    #     threads.append(f)
-    #     f.start()
-
-    # for x in threads:
-    #     x.join()
-
     _build_many(ctx, variants)
 
 def _build_many(ctx, variants):
@@ -198,34 +157,3 @@ def _build_many(ctx, variants):
 
     for t in threads: t.start()
     for t in threads: t.join()
-
-
-class package_ctx(Build.BuildContext):
-    cmd = fun = 'package'
-
-def package(ctx):
-    _build_many(ctx, ['clang-msvc', 'clang-msvc-debug'])
-
-    import zipfile, zlib
-    def get_compr(t):
-        # you can't change compression level, are python developers retarded?
-        # yes, they are
-        return zlib.compressobj(9, zlib.DEFLATED, -15, 9)
-    zipfile._get_compressor = get_compr # for python3
-    zlib.Z_DEFAULT_COMPRESSION = 9 # for python2, but worse
-
-    def make_zip(ctx, variant, name_suff):
-        ctx.variant = variant
-        ctx.env = ctx.all_envs[variant]
-        ctx.init_dirs()
-
-        pdir = ctx.path.make_node('pkg')
-        pdir.mkdir()
-        zipn = pdir.make_node('neptools-windows-%s%s.zip' % (VERSION, name_suff))
-        with zipfile.ZipFile(zipn.abspath(), 'w', zipfile.ZIP_DEFLATED) as zip:
-            for s in ['COPYING', 'README.md', 'launcher.exe',
-                      'neptools-server.dll', 'stcm-editor.exe']:
-                zip.write(ctx.path.find_or_declare(s).abspath(), s)
-
-    make_zip(ctx, 'clang-msvc', '')
-    make_zip(ctx, 'clang-msvc-debug', '-debug')
