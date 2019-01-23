@@ -1,3 +1,5 @@
+run clang --version
+
 run export HOST_CC=gcc
 run export HOST_CXX=g++
 run export HOST_CFLAGS=

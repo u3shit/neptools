@@ -46,9 +46,22 @@ function load()
     fi
 }
 
+# env printf: bypass bash's printf as gnu printf uses 'foo bar' instead of
+# foo\ bar. provided we have gnu printf...
+if env printf '%q' >/dev/null 2>/dev/null; then
+    quot_printf='env printf'
+else
+    quot_printf=printf
+fi
+
+function quot()
+{
+    $quot_printf '%q' "$1"
+}
+
 function run()
 {
-    einfo "$@"
+    einfo "$($quot_printf '%q ' "$@")"
     "$@" || exit 1
 }
 
@@ -63,7 +76,7 @@ ret=0
 if [[ $mode != rel ]]; then
     for t in "${tests[@]}"; do
         einfo "$t"
-        eval "$t" || ret=1
+        time eval "$t" || ret=1
     done
 fi
 after
