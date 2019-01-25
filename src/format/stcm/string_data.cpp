@@ -32,9 +32,9 @@ namespace Neptools::Stcm
     for (size_t i = 0; i < padlen; ++i)
       if (pad[i] != 0) return nullptr;
 
-    auto sit = it.GetContext()->Create<StringDataItem>(std::move(s));
+    auto sit = it.GetContext()->Create<StringDataItem>(Libshit::Move(s));
     it.Replace(sit);
-    return sit;
+    return Libshit::Move(sit);
   }
 
   FilePosition StringDataItem::GetSize() const noexcept
