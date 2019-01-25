@@ -11,7 +11,9 @@ run clang --version
 run export CC=clang
 run export CXX=clang++
 run export CFLAGS="--sysroot $qsysroot $opt"
-run export CXXFLAGS="--sysroot $qsysroot $opt $libcxx"
+# define: old glibc doesn't know about clang
+run export CXXFLAGS="--sysroot $qsysroot $opt $libcxx \
+-D__extern_always_inline='extern __always_inline __attribute__((__gnu_inline__))'"
 # -lrt only needed with glibc < 2.17
 run export LINKFLAGS="--sysroot $qsysroot $libcxx -fuse-ld=lld \
 -static-libstdc++ -Wl,--as-needed -lpthread -lrt -Wl,--no-as-needed"
