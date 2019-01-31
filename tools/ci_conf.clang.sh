@@ -35,4 +35,5 @@ tests=(
     "$te-native.xml $ts"
     "$ld-ld.xml $ts"
     "$qemu"
+    "$valgrind"
 )

@@ -20,3 +20,12 @@ function join()
     shift
     echo "$*"
 }
+
+valgrind="valgrind --suppressions=tools/valgrind.supp --leak-check=full \
+--track-origins=yes --show-leak-kinds=all --xml=yes \
+--xml-file=valgrind.xml build/stcm-editor --test"
+
+tests=(
+    "${tests[@]}"
+    "$valgrind"
+)

@@ -1,0 +1,68 @@
+{
+   libstdc++ leaking iostream
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:_Znam
+   ...
+   fun:_ZNSt8ios_base15sync_with_stdioEb
+}
+
+{
+   libc++ 7.0.1 exception leak with sysroot
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_ZN10__cxxabiv122__calloc_with_fallbackEmm
+   fun:__cxa_get_globals
+   fun:__cxa_begin_catch
+}
+
+{
+   libc++ exit
+   Memcheck:Addr8
+   fun:check_free
+   fun:free_key_mem
+   fun:__dlerror_main_freeres
+   fun:__libc_freeres
+   fun:_vgnU_freeres
+   fun:__run_exit_handlers
+   fun:exit
+}
+
+{
+    libunwind wtf?
+    Memcheck:Cond
+    obj:/usr/lib64/libunwind.so.8.0.1
+}
+{
+    libunwind wtf?
+    Memcheck:Addr8
+    obj:/usr/lib64/libunwind.so.8.0.1
+}
+{
+    libunwind wtf?
+    Memcheck:Param
+    rt_sigprocmask(set)
+    obj:/usr/lib64/libunwind.so.8.0.1
+}
+
+
+{
+   luajit fastcmp in gsub/debug
+   Memcheck:Cond
+   fun:str_fastcmp
+   fun:lj_str_new
+   fun:lua_pushlstring
+   fun:emptybuffer
+   fun:luaL_pushresult
+   fun:lj_cf_string_gsub
+   fun:lj_BC_FUNCC
+}
+{
+   luajit fastcmp in gsub/opt
+   Memcheck:Cond
+   fun:lj_str_new
+   fun:lua_pushlstring
+   fun:lj_cf_string_gsub
+   fun:lj_BC_FUNCC
+}

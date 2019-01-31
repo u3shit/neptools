@@ -52,6 +52,7 @@ sleep 60 > "$fifo" &
 ssh -o StrictHostKeyChecking=no -p $port $username@localhost \
     "cd $tmp_dir && stcm-editor --ansi-colors --xml-output=test.xml --test -fc --reporters=junit,console" \
     < "$fifo"
+kill %1
 
 scp -o StrictHostKeyChecking=no -P $port \
     "$username@localhost:$tmp_dir/test.xml" "$test_dest"

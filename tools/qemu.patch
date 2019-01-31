@@ -1,0 +1,113 @@
+diff --git a/linux-user/qemu.h b/linux-user/qemu.h
+index 069df8f1f9..5fa645ef55 100644
+--- a/linux-user/qemu.h
++++ b/linux-user/qemu.h
+@@ -443,7 +443,7 @@ abi_long target_mremap(abi_ulong old_addr, abi_ulong old_size,
+                        abi_ulong new_addr);
+ extern unsigned long last_brk;
+ extern abi_ulong mmap_next_start;
+-abi_ulong mmap_find_vma(abi_ulong, abi_ulong);
++abi_ulong mmap_find_vma(abi_ulong, abi_ulong, bool);
+ void mmap_fork_start(void);
+ void mmap_fork_end(int child);
+ 
+diff --git a/linux-user/syscall_defs.h b/linux-user/syscall_defs.h
+index 12c8407144..b16f554ed3 100644
+--- a/linux-user/syscall_defs.h
++++ b/linux-user/syscall_defs.h
+@@ -1163,6 +1163,7 @@ struct target_winsize {
+ #else
+ #define TARGET_MAP_FIXED	0x10		/* Interpret addr exactly */
+ #define TARGET_MAP_ANONYMOUS	0x20		/* don't use a file */
++#define TARGET_MAP_32BIT	0x40
+ #define TARGET_MAP_GROWSDOWN	0x0100		/* stack-like segment */
+ #define TARGET_MAP_DENYWRITE	0x0800		/* ETXTBSY */
+ #define TARGET_MAP_EXECUTABLE	0x1000		/* mark it as an executable */
+diff --git a/linux-user/mmap.c b/linux-user/mmap.c
+index e0249efe4f..016a8d3717 100644
+--- a/linux-user/mmap.c
++++ b/linux-user/mmap.c
+@@ -253,7 +253,7 @@ static abi_ulong mmap_find_vma_reserved(abi_ulong start, abi_ulong size)
+  * It must be called with mmap_lock() held.
+  * Return -1 if error.
+  */
+-abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
++abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size, bool map_32bit)
+ {
+     void *ptr, *prev;
+     abi_ulong addr;
+@@ -285,7 +285,11 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
+          *  - shmat() with SHM_REMAP flag
+          */
+         ptr = mmap(g2h(addr), size, PROT_NONE,
+-                   MAP_ANONYMOUS|MAP_PRIVATE|MAP_NORESERVE, -1, 0);
++                   MAP_ANONYMOUS|MAP_PRIVATE|MAP_NORESERVE|(map_32bit?MAP_32BIT:0), -1, 0);
++        /* if (map_32bit) { */
++        /*     printf("!!!!!!!!!!!! %p %p %p %p\n", ptr, (void*) h2g(ptr), */
++        /*            (void*) h2g(ptr+size-1), (void*) (ptrdiff_t) (uint32_t) (ptrdiff_t) (ptr+size-1)); */
++        /* } */
+ 
+         /* ENOMEM, if host address space has no memory */
+         if (ptr == MAP_FAILED) {
+@@ -296,7 +300,7 @@ abi_ulong mmap_find_vma(abi_ulong start, abi_ulong size)
+            This is used to modify the search algorithm below.  */
+         repeat = (ptr == prev ? repeat + 1 : 0);
+ 
+-        if (h2g_valid(ptr + size - 1)) {
++        if (map_32bit ? h2g(ptr+size-1) == (uint32_t) (ptrdiff_t) (ptr+size-1): h2g_valid(ptr + size - 1)) {
+             addr = h2g(ptr);
+ 
+             if ((addr & ~TARGET_PAGE_MASK) == 0) {
+@@ -416,7 +420,7 @@ abi_long target_mmap(abi_ulong start, abi_ulong len, int prot,
+     if (!(flags & MAP_FIXED)) {
+         host_len = len + offset - host_offset;
+         host_len = HOST_PAGE_ALIGN(host_len);
+-        start = mmap_find_vma(real_start, host_len);
++        start = mmap_find_vma(real_start, host_len, flags & MAP_32BIT);
+         if (start == (abi_ulong)-1) {
+             errno = ENOMEM;
+             goto fail;
+@@ -710,7 +714,7 @@ abi_long target_mremap(abi_ulong old_addr, abi_ulong old_size,
+     } else if (flags & MREMAP_MAYMOVE) {
+         abi_ulong mmap_start;
+ 
+-        mmap_start = mmap_find_vma(0, new_size);
++        mmap_start = mmap_find_vma(0, new_size, flags & MAP_32BIT);
+ 
+         if (mmap_start == -1) {
+             errno = ENOMEM;
+diff --git a/linux-user/strace.c b/linux-user/strace.c
+index 7318392e57..afd5a1ac62 100644
+--- a/linux-user/strace.c
++++ b/linux-user/strace.c
+@@ -912,6 +912,9 @@ UNUSED static struct flags mmap_flags[] = {
+ #ifdef MAP_POPULATE
+     FLAG_TARGET(MAP_POPULATE),
+ #endif
++#ifdef TARGET_MAP_32BIT
++    FLAG_TARGET(MAP_32BIT),
++#endif
+ #ifdef TARGET_MAP_UNINITIALIZED
+     FLAG_TARGET(MAP_UNINITIALIZED),
+ #endif
+diff --git a/linux-user/syscall.c b/linux-user/syscall.c
+index b5786d4fc1..96e944af66 100644
+--- a/linux-user/syscall.c
++++ b/linux-user/syscall.c
+@@ -3868,7 +3868,7 @@ static inline abi_ulong do_shmat(CPUArchState *cpu_env,
+     else {
+         abi_ulong mmap_start;
+ 
+-        mmap_start = mmap_find_vma(0, shm_info.shm_segsz);
++        mmap_start = mmap_find_vma(0, shm_info.shm_segsz, false);
+ 
+         if (mmap_start == -1) {
+             errno = ENOMEM;
+@@ -5063,6 +5063,7 @@ static const StructEntry struct_termios_def = {
+ };
+ 
+ static bitmask_transtbl mmap_flags_tbl[] = {
++    { TARGET_MAP_32BIT, TARGET_MAP_32BIT, MAP_32BIT, MAP_32BIT },
+     { TARGET_MAP_SHARED, TARGET_MAP_SHARED, MAP_SHARED, MAP_SHARED },
+     { TARGET_MAP_PRIVATE, TARGET_MAP_PRIVATE, MAP_PRIVATE, MAP_PRIVATE },
+     { TARGET_MAP_FIXED, TARGET_MAP_FIXED, MAP_FIXED, MAP_FIXED },
