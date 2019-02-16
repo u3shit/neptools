@@ -11,17 +11,6 @@ def options(opt):
 def configure(cfg):
     cfg.recurse('libshit', name='configure', once=False)
 
-from waflib.TaskGen import taskgen_method
-@taskgen_method
-def apply_defs(self):
-    if getattr(self, 'defs', None) and self.env.DEST_BINFMT == 'pe':
-        node = self.path.find_resource(self.defs)
-        if not node:
-            raise Errors.WafError('invalid def file %r' % self.defs)
-
-        self.env.append_value('LINKFLAGS', '/def:%s' % node.path_from(self.bld.bldnode))
-        self.link_task.dep_nodes.append(node)
-
 def build(bld):
     bld.recurse('libshit')
 
@@ -82,14 +71,14 @@ def build(bld):
                 use = 'common common-stsc',
                 target = 'stcm-editor')
 
-    if bld.env.DEST_OS == 'win32':
+    if bld.env.DEST_OS == 'win32' and bld.env.DEST_CPU == 'x86':
         # technically launcher can be compiled for 64bits, but it makes no sense
-        ld = ['/nodefaultlib', '/entry:start', '/subsystem:windows', '/FIXED',
-              '/NXCOMPAT:NO', '/IGNORE:4254']
+        ld = ['-Wl,/nodefaultlib', '-Wl,/entry:start', '-Wl,/subsystem:windows',
+              '-Wl,/FIXED', '-Wl,/NXCOMPAT:NO', '-Wl,/IGNORE:4254']
         bld.program(source = 'src/programs/launcher.c src/programs/launcher.rc',
                     includes = 'src', # for version.hpp
                     target = 'launcher',
-                    cflags = '-O1 -Gs9999999 -Xclang -stack-protector -Xclang 0',
+                    cflags = '-Os -mstack-probe-size=999999999 -fno-stack-protector',
                     uselib = 'KERNEL32 SHELL32 USER32 NEPTOOLS',
                     linkflags = ld)
 

@@ -5,7 +5,10 @@ run export HOST_CXX=g++
 run export HOST_CFLAGS=
 run export HOST_CXXFLAGS=
 run export HOST_LINKFLAGS=
-config_opts=(--clang-hack --lua-dll)
+run export AR=llvm-ar
+run export CC=clang
+run export CXX=clang++
+config_opts=(--lua-dll)
 
 tests=(
     'wine build/stcm-editor.exe --ansi-colors --xml-output=test-wine.xml --test -fc --reporters=junit,console'

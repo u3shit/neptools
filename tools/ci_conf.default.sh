@@ -6,7 +6,7 @@ function before_build()
     # should remove exactly the same items jenkins put into artifacts to prevent
     # stale files ending up in archives
     run rm -f build/stcm-editor build/*.{debug,exe,dll,pdb} \
-        build/libshit/ext/luajit-ljx{,exe,debug,pdb} \
+        build/libshit/ext/luajit-ljx{,.exe,.debug,.pdb} \
         build/libshit/ext/jit/*
 }
 build_opts=(-j2)
@@ -16,7 +16,7 @@ if [[ $mode = rel ]]; then
 elif [[ $mode = rel-test ]]; then
     mode_arg=(--release --with-tests)
 else
-    mode_arg=(--debug --optimize-ext --with-tests)
+    mode_arg=(--optimize-ext --with-tests)
 fi
 
 function build()

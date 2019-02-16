@@ -8,6 +8,7 @@ sysroot=/opt/sysroot_amd64
 qsysroot="$(quot "$sysroot")"
 
 run clang --version
+run export AR=llvm-ar
 run export CC=clang
 run export CXX=clang++
 run export CFLAGS="--sysroot $qsysroot $opt"

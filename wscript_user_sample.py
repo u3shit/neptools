@@ -8,35 +8,39 @@ variants = list(map(lambda x: '%s-%s' % x, itertools.product(compilers, configs)
 def my_configure(cfg):
     bdir = cfg.path.abspath()
 
-    gcc = 'gcc-7.3.0'
-    gxx = 'g++-7.3.0'
-    winrc = '%s/libshit/rc.sh' % bdir
+    gcc = 'gcc'
+    gxx = 'g++'
     clang_bin = os.path.expanduser('~/llvm/prefix/bin/')
     clang_flags = [
         '-stdlib=libc++', '-ferror-limit=5', '-ftemplate-backtrace-limit=0',
         '-march=native'
     ]
     clang_linkflags = [
-        '-stdlib=libc++', '-fuse-ld=gold', '-march=native'
+        '-stdlib=libc++', '-fuse-ld=lld', '-march=native'
     ]
 
     vcdir = '/mnt/msvc/vc12'
-    clangcl_cxxflags = [
-        '-Xclang', '-target-cpu', '-Xclang', 'x86-64',
+    # i386 and x86_64
+    clang_win32_tgt = [ '-target', 'i386-pc-windows-msvc18' ]
+    clang_win64_tgt = [ '-target', 'x86_64-pc-windows-msvc18' ]
+    clang_win_cxxflags = [
+        '-march=x86-64',
         '-fms-compatibility-version=18',
-        '-imsvc', vcdir+'/include',
-        '-imsvc', vcdir+'/win_sdk/include/um',
-        '-imsvc', vcdir+'/win_sdk/include/shared',
+        '-Xclang', '-internal-isystem', '-Xclang', vcdir+'/include',
+        '-Xclang', '-internal-isystem', '-Xclang', vcdir+'/win_sdk/include/um',
+        '-Xclang', '-internal-isystem', '-Xclang', vcdir+'/win_sdk/include/shared',
         '-DDOCTEST_CONFIG_COLORS_ANSI',
         '-ferror-limit=5',
     ]
-    clangcl_lib32 = [
-        '/libpath:%s/lib' % vcdir,
-        '/libpath:%s/win_sdk/lib/winv6.3/um/x86' % vcdir,
+    clang_win32_linkflags = clang_win32_tgt + [
+        '-fuse-ld=lld',
+        '-L%s/lib' % vcdir,
+        '-L%s/win_sdk/lib/winv6.3/um/x86' % vcdir,
     ]
-    clangcl_lib64 = [
-        '/libpath:%s/lib/amd64' % vcdir,
-        '/libpath:%s/win_sdk/lib/winv6.3/um/x64' % vcdir,
+    clang_win64_linkflags = clang_win64_tgt + [
+        '-fuse-ld=lld',
+        '-L%s/lib/amd64' % vcdir,
+        '-L%s/win_sdk/lib/winv6.3/um/x64' % vcdir,
     ]
 
     cfg.options.host_lua = 'luajit'
@@ -54,7 +58,6 @@ def my_configure(cfg):
                 cfg.env.CXX = gxx
                 cfg.env.CXXFLAGS = ['-march=native']
                 cfg.env.LINKFLAGS = ['-march=native']
-                cfg.options.clang_hack = False
                 cfg.environ.pop('HOST_CC', None)
                 cfg.environ.pop('HOST_CXX', None)
                 cfg.options.all_system = None
@@ -64,45 +67,40 @@ def my_configure(cfg):
                 cfg.env.CXX = clang_bin+'clang++'
                 cfg.env.CXXFLAGS = clang_flags
                 cfg.env.LINKFLAGS = clang_linkflags
-                cfg.options.clang_hack = False
                 cfg.environ.pop('HOST_CC', None)
                 cfg.environ.pop('HOST_CXX', None)
                 cfg.options.all_system = 'bundle'
-            else: # msvc
-                cfg.env.AR = clang_bin+'llvm-lib'
-                cfg.env.CC = clang_bin+'clang-cl'
-                cfg.env.CXX = clang_bin+'clang-cl'
-                cfg.options.clang_hack = True
+            else: # clang-msvc*
+                cfg.env.AR = clang_bin+'llvm-ar'
+                cfg.env.CC = clang_bin+'clang'
+                cfg.env.CXX = clang_bin+'clang++'
                 cfg.environ['HOST_CC'] = 'gcc'
                 cfg.environ['HOST_CXX'] = 'g++'
                 cfg.options.all_system = 'bundle'
 
-                cfg.env.WINRC = winrc
-                cfg.env.LINK_CXX = clang_bin+'lld-link'
                 if comp == 'clang-msvc':
-                    cfg.env.WINRCFLAGS = '-m32'
-                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = ['-m32'] + clangcl_cxxflags
-                    cfg.env.LINKFLAGS = clangcl_lib32
+                    cfg.environ['WINRC'] = 'i686-w64-mingw32-windres'
+                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = \
+                        clang_win32_tgt + clang_win_cxxflags
+                    cfg.env.LINKFLAGS = clang_win32_linkflags
                 elif comp == 'clang-msvc64':
-                    cfg.env.WINRCFLAGS = '-m64'
-                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = clangcl_cxxflags
-                    cfg.env.LINKFLAGS = clangcl_lib64
+                    cfg.environ['WINRC'] = 'x86_64-w64-mingw32-windres'
+                    cfg.env.CXXFLAGS = cfg.env.CFLAGS = \
+                        clang_win64_tgt + clang_win_cxxflags
+                    cfg.env.LINKFLAGS = clang_win64_linkflags
                 else:
                     error()
 
             cfg.options.optimize_ext = True
             if conf == 'debug':
-                cfg.options.debug = True
                 cfg.options.optimize = False
                 cfg.options.release = False
                 cfg.options.with_tests = True
             elif conf == 'rel-test':
-                cfg.options.debug = False
                 cfg.options.optimize = True
                 cfg.options.release = True
                 cfg.options.with_tests = True
             elif conf == 'rel':
-                cfg.options.debug = False
                 cfg.options.optimize = True
                 cfg.options.release = True
                 cfg.options.with_tests = False
