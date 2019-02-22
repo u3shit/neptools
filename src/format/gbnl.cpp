@@ -12,10 +12,9 @@
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <brigand/algorithms/wrap.hpp>
 
-//#define STRTOOL_COMPAT
-
 namespace Neptools
 {
+  static constexpr bool STRTOOL_COMPAT = false;
 
   void Gbnl::Header::Validate(size_t chunk_size) const
   {
@@ -208,7 +207,7 @@ namespace Neptools
 #undef VALIDATE
   }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
   Gbnl::Gbnl(Libshit::Lua::StateRef vm, Endian endian, bool is_gstl,
              uint32_t flags, uint32_t field_28, uint32_t field_30,
              Libshit::AT<Struct::TypePtr> type, Libshit::Lua::RawTable msgs)
@@ -569,9 +568,7 @@ namespace Neptools
       return m.Get<int32_t>(0);
     else if (is_gstl && m.GetSize() == 3 && m.Is<int32_t>(1))
     {
-#ifdef STRTOOL_COMPAT
-      if (i == 0) return -1;
-#endif
+      if (STRTOOL_COMPAT && i == 0) return -1;
       return m.Get<int32_t>(1) + 100000*(i==0);
     }
     else
@@ -597,10 +594,10 @@ namespace Neptools
             str = m->Get<OffsetString>(i).str;
           boost::replace_all(str, "\n", "\r\n");
 
-#ifdef STRTOOL_COMPAT
-          boost::replace_all(str, "#n", "\r\n");
-          if (!str.empty())
-#endif
+          if constexpr (STRTOOL_COMPAT)
+            boost::replace_all(str, "#n", "\r\n");
+
+          if (!STRTOOL_COMPAT || !str.empty())
           {
             os.write(sep.data(), sep.size());
             os << id << "\r\n" << str << "\r\n";

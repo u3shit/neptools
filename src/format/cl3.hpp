@@ -124,7 +124,7 @@ namespace Neptools
     Cl3(Source src);
     explicit Cl3(Endian endian = Endian::LITTLE)
       : endian{endian}, field_14{0} {}
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
     Cl3(Libshit::Lua::StateRef vm, Endian endian, uint32_t field_14,
         Libshit::Lua::RawTable entries);
 #endif

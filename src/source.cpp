@@ -1,9 +1,10 @@
 #include "source.hpp"
 #include "sink.hpp"
 
-#include <libshit/except.hpp>
 #include <libshit/char_utils.hpp>
+#include <libshit/except.hpp>
 #include <libshit/lua/function_call.hpp>
+#include <libshit/platform.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -193,7 +194,7 @@ namespace Neptools
   template <typename T>
   void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
   {
-    LIBSHIT_ASSERT(io.fd != NEPTOOLS_INVALID_FD);
+    LIBSHIT_ASSERT(io.fd != LowIo::INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
       return io.Pread(buf, len, offs);
 
@@ -232,7 +233,7 @@ namespace Neptools
 
     io.PrepareMmap(false);
     void* ptr = io.Mmap(0, to_map, false);
-#ifndef WINDOWS
+#if !LIBSHIT_OS_IS_WINDOWS
     if (to_map == size)
     {
       close(io.fd);
@@ -311,7 +312,7 @@ namespace Neptools
     return ss.str();
   }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 
   LIBSHIT_LUAGEN(name="read")
   static Libshit::Lua::RetNum LuaRead(

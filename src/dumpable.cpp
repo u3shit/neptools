@@ -1,9 +1,13 @@
 #include "dumpable.hpp"
-#include "sink.hpp"
-#include <fstream>
-#include <boost/filesystem/operations.hpp>
 
-#ifdef WINDOWS
+#include "sink.hpp"
+
+#include <libshit/platform.hpp>
+
+#include <boost/filesystem/operations.hpp>
+#include <fstream>
+
+#if LIBSHIT_OS_IS_WINDOWS
 #  include <vector>
 #  define WIN32_LEAN_AND_MEAN
 #  define NOMINMAX
@@ -40,7 +44,7 @@ namespace Neptools
       Dump(*sink);
     }
 
-#ifdef WINDOWS
+#if LIBSHIT_OS_IS_WINDOWS
     if (boost::filesystem::is_regular_file(path))
     {
       auto path3 = path;

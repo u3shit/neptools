@@ -4,20 +4,18 @@
 
 #include "utils.hpp"
 
+#include <libshit/platform.hpp>
+
 namespace Neptools
 {
 
   struct LowIo final
   {
-#ifdef WINDOWS
-    using FileName = const wchar_t*;
-    using FdType = void*;
-#define NEPTOOLS_INVALID_FD reinterpret_cast<::Neptools::LowIo::FdType>(-1)
-#else
-    using FileName = const char*;
-    using FdType = int;
-#define NEPTOOLS_INVALID_FD (-1)
-#endif
+    using FileName =
+      const std::conditional_t<LIBSHIT_OS_IS_WINDOWS, wchar_t, char>*;
+    using FdType = std::conditional_t<LIBSHIT_OS_IS_WINDOWS, void*, int>;
+    static inline const FdType INVALID_FD =
+      reinterpret_cast<::Neptools::LowIo::FdType>(-1);
 
     // used by Source/Sink
     static constexpr const size_t MEM_CHUNK  = 8*1024; // 8KiB
@@ -25,8 +23,8 @@ namespace Neptools
     static constexpr const size_t MMAP_LIMIT = 1*1024*1024; // 1MiB
 
 
-    LowIo() : fd{NEPTOOLS_INVALID_FD} {}
-    explicit LowIo(FdType fd) : fd{fd} {}
+    LowIo() noexcept = default;
+    explicit LowIo(FdType fd) noexcept : fd{fd} {}
     LowIo(FileName fname, bool write);
     ~LowIo() noexcept;
 
@@ -34,13 +32,13 @@ namespace Neptools
 
     LowIo(LowIo&& o) noexcept
         : fd{o.fd}
-#ifdef WINDOWS
+#if LIBSHIT_OS_IS_WINDOWS
         , mmap_fd{o.mmap_fd}
 #endif
     {
-      o.fd = NEPTOOLS_INVALID_FD;
-#ifdef WINDOWS
-      o.mmap_fd = NEPTOOLS_INVALID_FD;
+      o.fd = INVALID_FD;
+#if LIBSHIT_OS_IS_WINDOWS
+      o.mmap_fd = INVALID_FD;
 #endif
     }
     LowIo& operator=(LowIo&& o) noexcept
@@ -59,9 +57,9 @@ namespace Neptools
     void Pwrite(const void* buf, FileMemSize len, FilePosition offs) const;
     void Write(const void* buf, FileMemSize len) const;
 
-    FdType fd;
-#ifdef WINDOWS
-    FdType mmap_fd = NEPTOOLS_INVALID_FD;
+    FdType fd = INVALID_FD;
+#if LIBSHIT_OS_IS_WINDOWS
+    FdType mmap_fd = INVALID_FD;
 #endif
   };
 

@@ -1,5 +1,5 @@
 // Auto generated code, do not edit. See gen_binding in project root.
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 #include <libshit/lua/user_type.hpp>
 
 

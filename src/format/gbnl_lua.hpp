@@ -5,7 +5,7 @@
 #include "gbnl.hpp"
 #include "../dynamic_struct.lua.hpp"
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 
 namespace Neptools
 {

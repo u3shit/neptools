@@ -1,5 +1,7 @@
 #include "pattern.hpp"
+
 #include <libshit/assert.hpp>
+
 #include <boost/algorithm/searching/boyer_moore.hpp>
 
 #define LIBSHIT_LOG_NAME "pattern"

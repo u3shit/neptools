@@ -485,7 +485,7 @@ namespace Neptools
   }
 
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
   LIBSHIT_LUAGEN(name="new", class="Neptools::MemorySink")
   static Libshit::NotNull<Libshit::SmartPtr<MemorySink>>
   MemorySinkFromLua(Libshit::StringView view)

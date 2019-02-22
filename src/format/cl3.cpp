@@ -122,7 +122,7 @@ namespace Neptools
     ADD_SOURCE(Parse_(src), src);
   }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
   Cl3::Cl3(Libshit::Lua::StateRef vm, Endian endian, uint32_t field_14,
            Libshit::Lua::RawTable tbl)
     : endian{endian}, field_14{field_14}

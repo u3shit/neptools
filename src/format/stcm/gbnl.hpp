@@ -21,7 +21,7 @@ namespace Neptools::Stcm
              Libshit::AT<Gbnl::Struct::TypePtr> type)
       : Item{k, ctx},
         Gbnl{endian, is_gstl, flags, field_28, field_30, std::move(type)} {}
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
     GbnlItem(
       Key k, Context& ctx, Libshit::Lua::StateRef vm, Endian endian,
       bool is_gstl, uint32_t flags, uint32_t field_28, uint32_t field_30,

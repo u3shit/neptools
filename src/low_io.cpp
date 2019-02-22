@@ -2,7 +2,7 @@
 
 #include <libshit/except.hpp>
 
-#ifdef WINDOWS
+#if LIBSHIT_OS_IS_WINDOWS
 #  define NOMINMAX
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -15,7 +15,7 @@
 #endif
 
 // common helpers
-#ifdef WINDOWS
+#if LIBSHIT_OS_IS_WINDOWS
 #  include <iostream>
 
 #  define SYSERROR2(x, ...)                                \

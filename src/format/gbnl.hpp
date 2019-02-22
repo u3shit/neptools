@@ -81,7 +81,7 @@ namespace Neptools
          uint32_t field_30, Libshit::AT<Struct::TypePtr> type)
       : endian{endian}, is_gstl{is_gstl}, flags{flags}, field_28{field_28},
         field_30{field_30}, type{std::move(type.Get())} {}
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
     Gbnl(Libshit::Lua::StateRef vm, Endian endian, bool is_gstl, uint32_t flags,
          uint32_t field_28, uint32_t field_30, Libshit::AT<Struct::TypePtr> type,
          Libshit::Lua::RawTable messages);

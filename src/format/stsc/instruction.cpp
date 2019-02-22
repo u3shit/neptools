@@ -517,7 +517,7 @@ namespace Neptools::Stsc
 
 }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 namespace Libshit::Lua
 {
 

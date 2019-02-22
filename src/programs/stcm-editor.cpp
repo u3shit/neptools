@@ -10,9 +10,10 @@
 #include "../utils.hpp"
 #include "version.hpp"
 
-#include <libshit/options.hpp>
 #include <libshit/except.hpp>
 #include <libshit/lua/base.hpp>
+#include <libshit/options.hpp>
+#include <libshit/platform.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -21,10 +22,10 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#ifdef WINDOWS
-#undef _CRT_NONSTDC_DEPRECATE // fuck off m$
-#define _CRT_NONSTDC_DEPRECATE(x)
-#include <io.h>
+#if LIBSHIT_STDLIB_IS_MSVC
+#  undef _CRT_NONSTDC_DEPRECATE // fuck off m$
+#  define _CRT_NONSTDC_DEPRECATE(x)
+#  include <io.h>
 #endif
 
 #define LIBSHIT_LOG_NAME "stcm-editor"
@@ -135,10 +136,10 @@ namespace
     X(IMPORT_LUA,     "import-lua",      "import lua")
 #define MODE_PARS_POST(X)                                                       \
     X(MANUAL,         "manual",         "manual processing (set automatically)")
-#ifdef LIBSHIT_WITHOUT_LUA
-#   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_POST(X)
-#else
+#if LIBSHIT_WITH_LUA
 #   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_LUA(X) MODE_PARS_POST(X)
+#else
+#   define MODE_PARS(X) MODE_PARS_PRE(X) MODE_PARS_POST(X)
 #endif
 #define GEN_ENUM(name, shit1, shit2) name,
     MODE_PARS(GEN_ENUM)
@@ -184,7 +185,7 @@ static void DoAutoTxt(const boost::filesystem::path& p)
     st.txt->WriteTxt(OpenOut(txt));
 }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 static void DoAutoLua(const boost::filesystem::path& p)
 {
   auto [import, bin, lua] = BaseDoAutoFun(p, ".lua");
@@ -271,7 +272,7 @@ static bool IsTxt(const boost::filesystem::path& p, bool = false)
     boost::iends_with(p.native(), ".bin.txt"));
 }
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
 static bool IsLua(const boost::filesystem::path& p, bool = false)
 {
   return is_file(p) && (
@@ -344,7 +345,7 @@ static void DoAuto(const boost::filesystem::path& path)
     fun = DoAutoCl3;
     break;
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
   case Mode::AUTO_LUA:
     pred = [](auto& p, bool rec)
     {
@@ -571,7 +572,7 @@ int main(int argc, char** argv)
       if (st.stcm) st.stcm->Fixup();
     }};
 
-#ifndef LIBSHIT_WITHOUT_LUA
+#if LIBSHIT_WITH_LUA
   Option lua{
     lgrp, "lua", 'i', 0, nullptr, "Interactive lua prompt",
     [&](auto&&)
@@ -627,7 +628,7 @@ int main(int argc, char** argv)
 
     boost::filesystem::path self{argv[0]};
     if (boost::iequals(self.filename().string(), "cl3-tool")
-#ifdef WINDOWS
+#if LIBSHIT_OS_IS_WINDOWS
         || boost::iequals(self.filename().string(), "cl3-tool.exe")
 #endif
         )
