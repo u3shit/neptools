@@ -177,6 +177,7 @@ namespace Neptools
 
 }
 
+#if LIBSHIT_WITH_LUA
 template <typename T>
 struct Libshit::Lua::SmartObjectMaker<
   T, std::enable_if_t<
@@ -195,5 +196,6 @@ template<> struct Libshit::Lua::TypeTraits<Neptools::Item::Key>
   // using binding generator. It's undefined on purpose.
   template <bool> static void Get(Lua::StateRef, bool, int);
 };
+#endif
 
 #endif

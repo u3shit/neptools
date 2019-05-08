@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <iostream>
 
-#if !defined(LIBSHIT_WITHOUT_LUA) && !defined(LIBSHIT_BINDING_GENERATOR)
+#if LIBSHIT_WITH_LUA && !defined(LIBSHIT_BINDING_GENERATOR)
 #  include "format/builder.lua.h"
 #endif
 

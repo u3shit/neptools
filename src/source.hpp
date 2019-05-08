@@ -7,10 +7,11 @@
 #include "low_io.hpp"
 
 #include <libshit/check.hpp>
+#include <libshit/lua/value_object.hpp>
 #include <libshit/meta_utils.hpp>
+#include <libshit/nonowning_string.hpp>
 #include <libshit/not_null.hpp>
 #include <libshit/shared_ptr.hpp>
-#include <libshit/lua/value_object.hpp>
 
 #include <array>
 #include <cstdint>
