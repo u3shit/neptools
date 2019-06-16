@@ -167,7 +167,7 @@ static int CALLBACK NewWinMain2(
     auto& pars = OptionParser::GetGlobal();
     pars.SetVersion("NepTools server v" NEPTOOLS_VERSION);
     pars.SetUsage("[--options]");
-    pars.FailOnNoArg();
+    pars.FailOnNonArg();
     pars.SetOstream(ss);
 
     try { pars.Run(argc, cargv.get()); }

@@ -637,7 +637,7 @@ int main(int argc, char** argv)
     parser.SetVersion("NepTools stcm-editor v" NEPTOOLS_VERSION);
     parser.SetUsage("[--options] [<file/directory>...]");
     parser.SetShowHelpOnNoOptions();
-    parser.SetNoArgHandler(FUNC<DoAuto>);
+    parser.SetNonArgHandler(FUNC<DoAuto>);
 
     try { parser.Run(argc, argv); }
     catch (const Exit& e) { return !e.success; }
