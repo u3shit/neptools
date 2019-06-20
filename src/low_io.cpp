@@ -9,9 +9,11 @@
 #else
 #  include <sys/types.h>
 #  include <sys/stat.h>
-#  include <sys/mman.h>
 #  include <fcntl.h>
 #  include <unistd.h>
+#  if !LIBSHIT_OS_IS_VITA
+#    include <sys/mman.h>
+#  endif
 #endif
 
 // common helpers
@@ -170,20 +172,27 @@ namespace Neptools
 
   void* LowIo::Mmap(FilePosition offs, FilePosition size, bool write) const
   {
+#if LIBSHIT_OS_IS_VITA
+    errno = ENOSYS;
+    SYSERROR("mmap");
+#else
     auto ptr = mmap(
       nullptr, size, write ? PROT_WRITE : PROT_READ,
       write ? MAP_SHARED : MAP_PRIVATE, fd, offs);
     if (ptr == MAP_FAILED) SYSERROR("mmap");
     return ptr;
+#endif
   }
 
   void LowIo::Munmap(void* ptr, FileMemSize len)
   {
+#if !LIBSHIT_OS_IS_VITA
     if (munmap(ptr, len) != 0)
     {
       perror("munmap");
       abort();
     }
+#endif
   }
 
   void LowIo::Pread(void* buf, FileMemSize len, FilePosition offs) const

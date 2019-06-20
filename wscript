@@ -11,6 +11,9 @@ def options(opt):
 def configure(cfg):
     cfg.recurse('libshit', name='configure', once=False)
 
+    if cfg.env.DEST_OS == 'vita':
+        cfg.check_cxx(lib='taihen_stub', uselib_store='TAIHEN')
+
 def build(bld):
     bld.recurse('libshit')
 
@@ -65,11 +68,19 @@ def build(bld):
                 includes = 'src',
                 target   = 'common-stsc')
 
-    bld.program(source = 'src/programs/stcm-editor.cpp src/programs/stcm-editor.rc',
-                includes = 'src', # for version.hpp
-                uselib = 'NEPTOOLS',
-                use = 'common common-stsc',
-                target = 'stcm-editor')
+    if bld.env.DEST_OS == 'vita':
+        bld.program(source   = 'src/programs/tai_plugin.cpp',
+                    includes = 'src', # for version.hpp
+                    uselib   = 'NEPTOOLS TAIHEN',
+                    use      = 'common',
+                    target   = 'tai_plugin')
+    else:
+        bld.program(source = ['src/programs/stcm-editor.cpp',
+                              'src/programs/stcm-editor.rc'],
+                    includes = 'src', # for version.hpp
+                    uselib = 'NEPTOOLS',
+                    use = 'common common-stsc',
+                    target = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32' and bld.env.DEST_CPU == 'x86':
         # technically launcher can be compiled for 64bits, but it makes no sense

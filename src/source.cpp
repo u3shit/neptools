@@ -6,8 +6,10 @@
 #include <libshit/lua/function_call.hpp>
 #include <libshit/platform.hpp>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+
+#include <unistd.h>
 
 #include <libshit/doctest.hpp>
 
