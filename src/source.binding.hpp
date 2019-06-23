@@ -22,8 +22,11 @@ namespace Libshit::Lua
       static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &)>(::Neptools::Source::FromFile)
     >("from_file");
     bld.AddFunction<
+      static_cast<::Neptools::Source (*)(::boost::filesystem::path, int, bool)>(::Neptools::Source::FromFd)
+    >("from_fd");
+    bld.AddFunction<
       static_cast<::Neptools::Source (*)(std::string)>(::Neptools::Source::FromMemory),
-      static_cast<::Neptools::Source (*)(const ::boost::filesystem::path &, std::string)>(::Neptools::Source::FromMemory)
+      static_cast<::Neptools::Source (*)(::boost::filesystem::path, std::string)>(::Neptools::Source::FromMemory)
     >("from_memory");
     bld.AddFunction<
       static_cast<void (::Neptools::Source::*)(::Neptools::FilePosition, ::Neptools::FilePosition) noexcept>(&::Neptools::Source::Slice<Check::Throw>)

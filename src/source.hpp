@@ -40,13 +40,16 @@ namespace Neptools
       : Source{std::move(s)} { Slice(offset, size); get = 0; }
 
     static Source FromFile(const boost::filesystem::path& fname);
+    static Source FromFd(boost::filesystem::path fname, int fd, bool owning);
     static Source FromMemory(std::string data)
     { return FromMemory("", std::move(data)); }
-    static Source FromMemory(
-      const boost::filesystem::path& fname, std::string data);
+    static Source FromMemory(boost::filesystem::path fname, std::string data);
+    LIBSHIT_NOLUA
+    static Source FromMemory(boost::filesystem::path fname,
+                             std::unique_ptr<char[]> data, std::size_t len);
 
     template <typename Checker = Libshit::Check::Assert>
-      void Slice(FilePosition offset, FilePosition size) noexcept
+    void Slice(FilePosition offset, FilePosition size) noexcept
     {
       LIBSHIT_CHECK(SourceOverflow, offset <= this->size &&
                     offset + size <= this->size, "Slice: invalid sizes");
@@ -181,9 +184,8 @@ namespace Neptools
       boost::filesystem::path file_name;
       FilePosition size;
     };
-    LIBSHIT_NOLUA
-      Source(Libshit::NotNull<Libshit::SmartPtr<Provider>> p, FilePosition size)
-      : size{size}, p{std::move(p)} {}
+    LIBSHIT_NOLUA Source(Libshit::NotNullSmartPtr<Provider> p)
+      : size{p->size}, p{Libshit::Move(p)} {}
 
     void Dump(Sink& sink) const;
     LIBSHIT_NOLUA void Dump(Sink&& sink) const { Dump(sink); }

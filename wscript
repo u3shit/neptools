@@ -71,6 +71,7 @@ def build(bld):
     if bld.env.DEST_OS == 'vita':
         bld.program(source   = 'src/programs/tai_plugin.cpp',
                     includes = 'src', # for version.hpp
+                    ldflags  = '-lSceAppMgr_stub',
                     uselib   = 'NEPTOOLS TAIHEN',
                     use      = 'common',
                     target   = 'tai_plugin')

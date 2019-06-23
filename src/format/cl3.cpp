@@ -463,6 +463,15 @@ namespace Neptools
     return *ret;
   }
 
+  Libshit::NotNullSharedPtr<TxtSerializable> Cl3::GetDefaultTxtSerializable(
+      const Libshit::NotNullSharedPtr<Dumpable>& thiz)
+  {
+    auto& stcm = GetStcm();
+    if (stcm.FindGbnl().empty())
+      LIBSHIT_THROW(Libshit::DecodeError, "No GBNL found in STCM");
+    return Libshit::NotNullRefCountedPtr<Stcm::File>{&stcm};
+  }
+
   static OpenFactory cl3_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
   {
     if (src.GetSize() < sizeof(Cl3::Header)) return nullptr;

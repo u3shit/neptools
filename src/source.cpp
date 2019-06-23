@@ -75,6 +75,20 @@ namespace Neptools
       std::string str;
     };
 
+    struct UniquePtrProvider final : public Source::Provider
+    {
+      UniquePtrProvider(boost::filesystem::path file_name,
+                        std::unique_ptr<char[]> data, std::size_t len)
+        : Source::Provider(std::move(file_name), len),
+          data{Libshit::Move(data)}
+      { LruPush(reinterpret_cast<const Byte*>(this->data.get()), 0, len); }
+
+      void Pread(FilePosition, Byte*, FileMemSize) override
+      { LIBSHIT_UNREACHABLE("UniquePtrProvider Pread"); }
+
+      std::unique_ptr<char[]> data;
+    };
+
   }
 
 
@@ -97,15 +111,30 @@ namespace Neptools
            << Libshit::ExceptionToString() << std::endl;
       p = Libshit::MakeSmart<UnixProvider>(std::move(io), fname, size);
     }
-    return {MakeNotNull(std::move(p)), size};
+    return Libshit::MakeNotNull(Libshit::Move(p));
   }
 
-  Source Source::FromMemory(const boost::filesystem::path& fname, std::string str)
+  Source Source::FromFd(boost::filesystem::path fname, int fd, bool owning)
   {
-    FilePosition len = str.length();
-    return {Libshit::MakeSmart<StringProvider>(
-        std::move(fname), std::move(str)), len};
+    LowIo io{fd, owning};
+    auto size = io.GetSize();
+    return {Libshit::MakeSmart<UnixProvider>(
+        Libshit::Move(io), Libshit::Move(fname), size)};
   }
+
+  Source Source::FromMemory(boost::filesystem::path fname, std::string str)
+  {
+    return {Libshit::MakeSmart<StringProvider>(
+        Libshit::Move(fname), Libshit::Move(str))};
+  }
+
+  Source Source::FromMemory(boost::filesystem::path fname,
+                            std::unique_ptr<char[]> data, std::size_t len)
+  {
+    return {Libshit::MakeSmart<UniquePtrProvider>(
+        Libshit::Move(fname), Libshit::Move(data), len)};
+  }
+
 
   void Source::Pread_(FilePosition offs, Byte* buf, FileMemSize len) const
   {

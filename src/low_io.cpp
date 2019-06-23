@@ -6,6 +6,7 @@
 #  define NOMINMAX
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
+#  include <iostream>
 #else
 #  include <sys/types.h>
 #  include <sys/stat.h>
@@ -16,18 +17,17 @@
 #  endif
 #endif
 
+namespace Neptools
+{
+  LowIo::LowIo(int fd, bool owning) : fd{fd}, owning{owning} {}
+
 // common helpers
 #if LIBSHIT_OS_IS_WINDOWS
-#  include <iostream>
-
 #  define SYSERROR2(x, ...)                                \
   LIBSHIT_THROW(Libshit::SystemError, std::error_code{     \
       int(GetLastError()), std::system_category()},        \
     "API function", x __VA_ARGS__)
 #  define SYSERROR(x) SYSERROR2(x, )
-
-namespace Neptools
-{
 
   LowIo::LowIo(const wchar_t* fname, bool write)
     : fd{CreateFileW(
@@ -53,7 +53,7 @@ namespace Neptools
   LowIo::~LowIo() noexcept
   {
     CloseHandle(mmap_fd);
-    CloseHandle(fd);
+    if (owning) CloseHandle(fd);
   }
 
   FilePosition LowIo::GetSize() const
@@ -125,17 +125,12 @@ namespace Neptools
       SYSERROR("WriteFile");
   }
 
-}
-
 #else // linux/unix
 
 #  define SYSERROR(x)                                           \
   LIBSHIT_THROW(Libshit::SystemError,                           \
                 std::error_code{errno, std::system_category()}, \
                 "API function", x)
-
-namespace Neptools
-{
 
   LowIo::LowIo(const char* fname, bool write)
     : fd{open(fname, write ? O_CREAT | O_TRUNC | O_RDWR : O_RDONLY, 0666)}
@@ -152,7 +147,7 @@ namespace Neptools
 
   LowIo::~LowIo() noexcept
   {
-    if (fd != -1 && close(fd) != 0)
+    if (owning && fd != -1 && close(fd) != 0)
       perror("close");
   }
 
@@ -210,5 +205,5 @@ namespace Neptools
     if (write(fd, buf, len) != len) SYSERROR("write");
   }
 
-}
 #endif
+}

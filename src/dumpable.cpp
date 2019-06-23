@@ -36,8 +36,17 @@ namespace
 namespace Neptools
 {
 
+  Libshit::NotNullSharedPtr<TxtSerializable>
+  Dumpable::GetDefaultTxtSerializable(
+    const Libshit::NotNullSharedPtr<Dumpable>& thiz)
+  { LIBSHIT_THROW(Libshit::DecodeError, "Not txt-serializable file"); }
+
   void Dumpable::Dump(const boost::filesystem::path& path) const
   {
+#if LIBSHIT_OS_IS_VITA
+    // no unique_path on vita
+    Dump(*Sink::ToFile(path, GetSize()));
+#else
     auto path2 = path;
     {
       auto sink = Sink::ToFile(path2+=boost::filesystem::unique_path(), GetSize());
@@ -45,7 +54,7 @@ namespace Neptools
     }
 
 #if LIBSHIT_OS_IS_WINDOWS
-    if (boost::filesystem::is_regular_file(path))
+    if (LIBSHIT_OS_IS_WINDOWS && boost::filesystem::is_regular_file(path))
     {
       auto path3 = path;
       boost::filesystem::rename(path, path3+=boost::filesystem::unique_path());
@@ -54,6 +63,7 @@ namespace Neptools
     }
 #endif
     boost::filesystem::rename(path2, path);
+#endif
   }
 
   void Dumpable::Inspect(const boost::filesystem::path& path) const

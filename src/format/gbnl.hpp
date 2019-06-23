@@ -102,6 +102,10 @@ namespace Neptools
     void RecalcSize();
     FilePosition GetSize() const noexcept override;
 
+    Libshit::NotNullSharedPtr<TxtSerializable> GetDefaultTxtSerializable(
+      const Libshit::NotNullSharedPtr<Dumpable>& thiz) override
+    { return Libshit::NotNullSharedPtr<TxtSerializable>{thiz.Get(), this}; }
+
   protected:
     // todo: private after removing GbnlItem
     void Dump_(Sink& sink) const override;

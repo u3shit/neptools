@@ -4,14 +4,17 @@
 
 #include "utils.hpp"
 
-#include <libshit/meta.hpp>
 #include <libshit/lua/dynamic_object.hpp>
 #include <libshit/lua/type_traits.hpp>
+#include <libshit/meta.hpp>
+#include <libshit/shared_ptr.hpp>
+
 #include <boost/filesystem/path.hpp>
 
 namespace Neptools
 {
 
+  class TxtSerializable;
   class Sink;
 
   class Dumpable : public Libshit::Lua::DynamicObject
@@ -25,6 +28,10 @@ namespace Neptools
 
     virtual void Fixup() {};
     virtual FilePosition GetSize() const = 0;
+
+    LIBSHIT_NOLUA
+    virtual Libshit::NotNullSharedPtr<TxtSerializable>
+    GetDefaultTxtSerializable(const Libshit::NotNullSharedPtr<Dumpable>& thiz);
 
     void Dump(Sink& os) const { return Dump_(os); }
     LIBSHIT_NOLUA

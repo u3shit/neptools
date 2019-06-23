@@ -387,6 +387,7 @@ namespace Neptools
     memcpy(head.magic, is_gstl ? "GST" : "GBN", 4);
     head.endian = endian == Endian::LITTLE ? 'L' : 'B';
     head.field_04 = 1;
+    head.field_06 = 0;
     head.field_08 = 16;
     head.field_0c = 4;
     head.flags = flags;

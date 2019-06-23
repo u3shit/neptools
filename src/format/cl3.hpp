@@ -147,6 +147,9 @@ namespace Neptools
 
     Stcm::File& GetStcm();
 
+    Libshit::NotNullSharedPtr<TxtSerializable> GetDefaultTxtSerializable(
+      const Libshit::NotNullSharedPtr<Dumpable>& thiz) override;
+
     void Dispose() noexcept override;
 
   private:
