@@ -228,6 +228,12 @@ extern "C" int module_start(SceSize, const void*)
   for (auto ptr = __init_array_start; ptr != __init_array_end; ++ptr)
     (*ptr)();
 
+  {
+    char buf[32];
+    sceAppMgrWorkDirMount(0xc9, buf);
+    cache_path = std::string(buf) + "neptools_cache";
+  }
+
   std::vector<std::string> argv;
 
   {
@@ -255,8 +261,8 @@ extern "C" int module_start(SceSize, const void*)
   try { pars.Run(argc, cargv.get()); }
   catch (const Libshit::Exit& e) { _exit(!e.success); }
 
-  //INF << "Erasing cache" << std::endl;
-  //boost::filesystem::remove_all("ux0:neptools/cache");
+  INF << "Erasing cache " << cache_path << std::endl;
+  boost::filesystem::remove_all(cache_path);
 
   auto main_mod = reinterpret_cast<const char*>(TAI_MAIN_MODULE);
 
