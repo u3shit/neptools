@@ -12,6 +12,7 @@
 #include <memory>
 #include <psp2/appmgr.h>
 #include <psp2/io/stat.h>
+#include <psp2/io/dirent.h>
 #include <psp2/kernel/modulemgr.h>
 #include <psp2/kernel/processmgr.h>
 #include <taihen.h>
@@ -197,7 +198,7 @@ static int HookGetFileInfo(
 }
 
 
-static void uncaught()
+static void Uncaught()
 {
   printf("Terminate handler\n");
   auto curr = std::current_exception();
@@ -208,26 +209,106 @@ static void uncaught()
   abort();
 }
 
+static bool CheckPath(const char* buf, const char*& out)
+{
+  SceIoStat stat;
+  auto ret = sceIoGetstat(buf, &stat);
+  if (ret == 0 && SCE_S_ISDIR(stat.st_mode))
+  {
+    out = buf;
+    return true;
+  }
+  return false;
+}
+
+static void my_strlcpy(char* dst, const char* str, size_t n)
+{
+  while (--n && (*dst++ = *str++));
+  *dst = 0;
+}
+
+static int FindDir(char* out_base_fname, char* out_data_fname, char* out_cache_fname)
+{
+  char log_buf[32];
+  log_buf[0] = 0;
+
+  char buf[] = "____:neptools/_________";
+  constexpr size_t off = sizeof("____:neptools/")-1;
+  int ret = sceAppMgrAppParamGetString(sceKernelGetProcessId(), 12, buf+off, 10);
+  if (ret < 0) return ret; // can't log anything here...
+
+  // same order as repatch
+  const char* base_path = nullptr;
+  bool cache_td = false;
+  for (const auto& x : {"ux0", "uma0", "imc0", "grw0", "xmc0"})
+  {
+    size_t len = strlen(x);
+    memcpy(buf + 4 - len, x, len);
+    if (CheckPath(buf + 4 - len, base_path))
+    {
+      my_strlcpy(log_buf, base_path, buf+off+1-base_path);
+      break;
+    }
+  }
+  if (!base_path && CheckPath("app0:neptools", base_path)) cache_td = true;
+  if (!base_path) return -1;
+  my_strlcpy(out_data_fname, base_path, 32);
+
+  // check for ioplus bug
+  if (!cache_td)
+  {
+    ret = sceIoDopen(base_path);
+    if (ret >= 0) sceIoDclose(ret);
+    else cache_td = true;
+  }
+
+  char td_buf[16];
+  if (cache_td)
+  {
+    ret = sceAppMgrWorkDirMount(0xc9, td_buf);
+    if (ret < 0) return ret;
+  }
+  if (!log_buf[0]) strcpy(log_buf, td_buf);
+
+  if (cache_td)
+  {
+    strcpy(out_cache_fname, td_buf);
+    strcat(out_cache_fname, "neptools_cache");
+  }
+  else
+  {
+    my_strlcpy(out_cache_fname, base_path, strlen(base_path) - 9 + 1);
+    strcat(out_cache_fname, "cache");
+  }
+
+  strcpy(out_base_fname, log_buf);
+  auto pos = log_buf + strlen(log_buf);
+  strcpy(pos, "log_out.txt");
+  freopen(log_buf, "w", stdout);
+  strcpy(pos, "log_err.txt");
+  freopen(log_buf, "w", stderr);
+
+  return 0;
+}
+
 extern "C" int _start() __attribute__ ((weak, alias ("module_start")));
 extern "C" int module_start(SceSize, const void*)
 {
-  freopen("ux0:neptools/log_out.txt", "w", stdout);
-  freopen("ux0:neptools/log_err.txt", "w", stderr);
+  char base_fname[32], data_fname[32], cache_fname[32];
+  if (FindDir(base_fname, data_fname, cache_fname) < 0)
+    return SCE_KERNEL_START_FAILED;
 
-  std::set_terminate(uncaught);
+  std::set_terminate(Uncaught);
 
   LibshitInitVita();
 
-  {
-    char buf[32];
-    sceAppMgrWorkDirMount(0xc9, buf);
-    cache_path = std::string(buf) + "neptools_cache";
-  }
+  data_path = data_fname;
+  cache_path = cache_fname;
 
   std::vector<std::string> argv;
-
   {
-    std::ifstream is{"ux0:neptools/command_line.txt"};
+    strcat(base_fname, "/command_line.txt");
+    std::ifstream is{base_fname};
     while (is.good())
     {
       std::string s;
@@ -251,7 +332,10 @@ extern "C" int module_start(SceSize, const void*)
   try { pars.Run(argc, cargv.get()); }
   catch (const Libshit::Exit& e) { _exit(!e.success); }
 
-  INF << "Erasing cache " << cache_path << std::endl;
+  INF << "Neptools vita preinit done\nData path: " << data_path
+      << "\nCache path: " << cache_path << std::endl;
+
+  INF << "Erasing cache..." << std::endl;
   boost::filesystem::remove_all(cache_path);
 
   auto main_mod = reinterpret_cast<const char*>(TAI_MAIN_MODULE);
@@ -276,15 +360,6 @@ extern "C" int module_start(SceSize, const void*)
 
   DBG(1) << "Base: " << kern_info.segments[0].vaddr << ", size: "
          << kern_info.segments[0].size << std::endl;
-
-  char app_id[10];
-  ret = sceAppMgrAppParamGetString(sceKernelGetProcessId(), 12, app_id, 10);
-  if (ret < 0)
-  {
-    ERR << "sceAppMgrAppParamGetString failed" << std::endl;
-    return SCE_KERNEL_START_FAILED;
-  }
-  INF << "AppID: " << app_id << std::endl;
 
   ret = taiHookFunctionOffset(get_file_info, tai_info.modid, 0, 0x1eb8f8, 1,
                               reinterpret_cast<void*>(&HookGetFileInfo));
