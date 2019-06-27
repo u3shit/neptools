@@ -5,6 +5,7 @@
 
 #include <libshit/options.hpp>
 #include <libshit/memory_utils.hpp>
+#include <libshit/vita_fixup.h>
 
 #include <boost/filesystem/operations.hpp>
 #include <fstream>
@@ -196,11 +197,6 @@ static int HookGetFileInfo(
 }
 
 
-extern void (*__preinit_array_start []) (void) __attribute__((weak));
-extern void (*__preinit_array_end []) (void) __attribute__((weak));
-extern void (*__init_array_start []) (void) __attribute__((weak));
-extern void (*__init_array_end []) (void) __attribute__((weak));
-
 static void uncaught()
 {
   printf("Terminate handler\n");
@@ -209,8 +205,6 @@ static void uncaught()
   catch (const std::exception& e) { printf("Caught std: %s\n", e.what()); }
   catch (...) { printf("Caught ...\n"); }
 
-  fflush(stdout);
-  fflush(stderr);
   abort();
 }
 
@@ -222,11 +216,7 @@ extern "C" int module_start(SceSize, const void*)
 
   std::set_terminate(uncaught);
 
-  pthread_init();
-  for (auto ptr = __preinit_array_start; ptr != __preinit_array_end; ++ptr)
-    (*ptr)();
-  for (auto ptr = __init_array_start; ptr != __init_array_end; ++ptr)
-    (*ptr)();
+  LibshitInitVita();
 
   {
     char buf[32];
