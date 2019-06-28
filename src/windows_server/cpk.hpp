@@ -5,6 +5,8 @@
 #include <boost/filesystem/path.hpp>
 #include <vector>
 
+#include <libshit/except.hpp>
+
 #include "../source.hpp"
 
 #define WIN32_LEAN_AND_MEAN
@@ -88,9 +90,7 @@ namespace Neptools
   };
   static_assert(sizeof(CpkHandler) == 0x50);
 
-  struct CpkError : std::runtime_error, virtual Libshit::Exception
-  {
-    using std::runtime_error::runtime_error;
-  };
+  LIBSHIT_GEN_EXCEPTION_TYPE(CpkError, std::runtime_error);
+
 }
 #endif

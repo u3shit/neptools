@@ -69,19 +69,23 @@ def build(bld):
                 target   = 'common-stsc')
 
     if bld.env.DEST_OS == 'vita':
-        bld.program(source   = 'src/vita_plugin/plugin.cpp',
+        src = [
+            'src/vita_plugin/cpk.cpp',
+            'src/vita_plugin/plugin.cpp',
+        ]
+        bld.program(source   = src,
                     includes = 'src', # for version.hpp
                     ldflags  = '-lSceAppMgr_stub',
                     uselib   = 'NEPTOOLS TAIHEN',
                     use      = 'common',
                     target   = 'vita_plugin')
     else:
-        bld.program(source = ['src/programs/stcm-editor.cpp',
-                              'src/programs/stcm-editor.rc'],
+        bld.program(source   = ['src/programs/stcm-editor.cpp',
+                                'src/programs/stcm-editor.rc'],
                     includes = 'src', # for version.hpp
-                    uselib = 'NEPTOOLS',
-                    use = 'common common-stsc',
-                    target = 'stcm-editor')
+                    uselib   = 'NEPTOOLS',
+                    use      = 'common common-stsc',
+                    target   = 'stcm-editor')
 
     if bld.env.DEST_OS == 'win32' and bld.env.DEST_CPU == 'x86':
         # technically launcher can be compiled for 64bits, but it makes no sense
