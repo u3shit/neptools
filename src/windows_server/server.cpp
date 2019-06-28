@@ -1,6 +1,6 @@
-#include "../injected/cpk.hpp"
-#include "../injected/hook.hpp"
-#include "../pattern_parse.hpp"
+#include "windows_server/cpk.hpp"
+#include "windows_server/hook.hpp"
+#include "pattern_parse.hpp"
 #include "version.hpp"
 
 #include <libshit/options.hpp>

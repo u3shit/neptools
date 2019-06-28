@@ -114,7 +114,8 @@ namespace Neptools
     return Libshit::MakeNotNull(Libshit::Move(p));
   }
 
-  Source Source::FromFd(boost::filesystem::path fname, int fd, bool owning)
+  Source Source::FromFd(
+    boost::filesystem::path fname, LowIo::FdType fd, bool owning)
   {
     LowIo io{fd, owning};
     auto size = io.GetSize();

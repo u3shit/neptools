@@ -285,11 +285,7 @@ namespace Neptools
     if (!OrigOpenFile(fname, &index))
       LIBSHIT_THROW(CpkError, "Cpk::OrigOpenFile failed",
                     "Cpk error code", last_error);
-    try
-    {
-      return Source(Libshit::MakeSmart<CpkSource>(fname, this, index),
-                    entry_vect[index]->entry.uncompressed_size);
-    }
+    try { return Source(Libshit::MakeSmart<CpkSource>(fname, this, index)); }
     catch (...)
     {
       OrigCloseFile(index);

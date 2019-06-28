@@ -26,7 +26,7 @@ namespace Neptools
     LowIo() noexcept = default;
     explicit LowIo(FdType fd) noexcept : fd{fd} {}
     LowIo(FileName fname, bool write);
-    LowIo(int fd, bool owning);
+    LowIo(FdType fd, bool owning);
     ~LowIo() noexcept;
 
     static LowIo OpenStdOut();

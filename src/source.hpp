@@ -40,7 +40,9 @@ namespace Neptools
       : Source{std::move(s)} { Slice(offset, size); get = 0; }
 
     static Source FromFile(const boost::filesystem::path& fname);
-    static Source FromFd(boost::filesystem::path fname, int fd, bool owning);
+    LIBSHIT_NOLUA
+    static Source FromFd(
+      boost::filesystem::path fname, LowIo::FdType fd, bool owning);
     static Source FromMemory(std::string data)
     { return FromMemory("", std::move(data)); }
     static Source FromMemory(boost::filesystem::path fname, std::string data);

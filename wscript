@@ -69,12 +69,12 @@ def build(bld):
                 target   = 'common-stsc')
 
     if bld.env.DEST_OS == 'vita':
-        bld.program(source   = 'src/programs/tai_plugin.cpp',
+        bld.program(source   = 'src/vita_plugin/plugin.cpp',
                     includes = 'src', # for version.hpp
                     ldflags  = '-lSceAppMgr_stub',
                     uselib   = 'NEPTOOLS TAIHEN',
                     use      = 'common',
-                    target   = 'tai_plugin')
+                    target   = 'vita_plugin')
     else:
         bld.program(source = ['src/programs/stcm-editor.cpp',
                               'src/programs/stcm-editor.rc'],
@@ -95,17 +95,17 @@ def build(bld):
                     linkflags = ld)
 
         src_inject = [
-            'src/injected/cpk.cpp',
-            'src/injected/hook.cpp',
-            'src/programs/server.cpp',
-            'src/programs/server.rc',
+            'src/windows_server/cpk.cpp',
+            'src/windows_server/hook.cpp',
+            'src/windows_server/server.cpp',
+            'src/windows_server/server.rc',
         ]
         bld.shlib(source = src_inject,
                   includes = 'src', # for version.hpp
                   target = 'neptools-server',
                   use    = 'common',
                   uselib = 'SHELL32 USER32 NEPTOOLS',
-                  defs   = 'src/programs/server.def')
+                  defs   = 'src/windows_server/server.def')
 
     if bld.env.WITH_TESTS:
         # test pattern parser

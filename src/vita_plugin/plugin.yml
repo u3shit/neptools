@@ -1,9 +1,8 @@
-tai_plugin:
+neptools:
   attributes: 0
   version:
-    major: 1
+    major: 0
     minor: 0
   main:
     start: module_start
     #stop: module_stop
-    #exit: module_exit
