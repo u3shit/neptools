@@ -101,6 +101,16 @@ namespace Neptools
         Args...>::value;
     };
 
+    template <typename Pat, char A, char B, char C, char D, char... Args>
+    struct PatternParse<Pat, A, B, '/', C, D, ' ', Args...>
+    {
+      static constexpr auto Val = FromHexV<A, B>;
+      static constexpr auto Mask = FromHexV<C, D>;
+      using value = typename PatternParse<
+        typename Pat::template Append<Val & Mask, Mask>,
+        Args...>::value;
+    };
+
     template <typename Pat, char... Args>
     struct PatternParse<Pat, ' ', Args...>
     {

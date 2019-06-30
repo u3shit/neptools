@@ -187,7 +187,7 @@ namespace Neptools
       [&]() -> Libshit::NotNull<Libshit::RefCountedPtr<Sink>>
       {
         LowIo io{fname.c_str(), true};
-        if (!try_mmap)
+        if (LIBSHIT_OS_IS_VITA || !try_mmap)
           return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
 
         try { return Libshit::MakeRefCounted<MmapSink>(std::move(io), size); }

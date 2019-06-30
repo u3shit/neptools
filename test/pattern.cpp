@@ -8,45 +8,52 @@ namespace Neptools::Test
 
   // static test...
   auto fuck_you_cpp_committee = NEPTOOLS_PATTERN("01 02 03 04");
-  static_assert(std::is_same<
+  static_assert(std::is_same_v<
     decltype(fuck_you_cpp_committee),
     PatternParse::Pattern<
       PatternParse::ByteSequence<1,2,3,4>,
-      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
+      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>,
     "simple pattern");
 
   auto why_cant_I_use_fucking_lambdas = NEPTOOLS_PATTERN("11 05 f3 14");
-  static_assert(std::is_same<
+  static_assert(std::is_same_v<
     decltype(why_cant_I_use_fucking_lambdas),
     PatternParse::Pattern<
       PatternParse::ByteSequence<0x11,0x05,0xf3,0x14>,
-      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
+      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>,
     "multi digit");
 
   auto in_an_unevaluated_context_like_decltype = NEPTOOLS_PATTERN("11 5 f3 4");
-  static_assert(std::is_same<
+  static_assert(std::is_same_v<
     decltype(in_an_unevaluated_context_like_decltype),
     PatternParse::Pattern<
       PatternParse::ByteSequence<0x11,0x05,0xf3,0x04>,
-      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>::value,
+      PatternParse::ByteSequence<0xff,0xff,0xff,0xff>>>,
     "shortcuts");
 
   auto or_why_cant_you_add_a_sane_way_to_use = NEPTOOLS_PATTERN("11 ?? f3 04");
-  static_assert(std::is_same<
+  static_assert(std::is_same_v<
     decltype(or_why_cant_you_add_a_sane_way_to_use),
     PatternParse::Pattern<
       PatternParse::ByteSequence<0x11,0x00,0xf3,0x04>,
-      PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>::value,
+      PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>,
     "placeholder");
 
   auto fucking_strings_as_template_arguments = NEPTOOLS_PATTERN("11 ? f3 04");
-  static_assert(std::is_same<
+  static_assert(std::is_same_v<
     decltype(fucking_strings_as_template_arguments),
     PatternParse::Pattern<
       PatternParse::ByteSequence<0x11,0x00,0xf3,0x04>,
-      PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>::value,
+      PatternParse::ByteSequence<0xff,0x00,0xff,0xff>>>,
     "short placeholder");
   // PS. you should add ctr instead of shit like a wrapper around cairo
+
+  auto with_mask = NEPTOOLS_PATTERN("11 22/ff 33/f0 44/77 55/00");
+  static_assert(std::is_same_v<
+    decltype(with_mask),
+    PatternParse::Pattern<
+      PatternParse::ByteSequence<0x11, 0x22, 0x30, 0x44, 0x00>,
+      PatternParse::ByteSequence<0xff, 0xff, 0xf0, 0x77, 0x00>>>);
 
   Byte data[] = {
     /* 00 */ 0xff, 0xf0, 0x64, 0x22, 0x50, 0xca, 0x9f, 0x23,

@@ -1,6 +1,7 @@
 #include "vita_plugin/cpk.hpp"
 
 #include "open.hpp"
+#include "pattern_parse.hpp"
 #include "source.hpp"
 #include "txt_serializable.hpp"
 #include "vita_plugin/taihen_cpp.hpp"
@@ -66,8 +67,8 @@ namespace Neptools::VitaPlugin
   static std::string data_path;
   static std::string cache_path;
 
-  using UncompressFun = uint64_t (*)(char*, char*, uint64_t, char*, uint64_t);
-  static auto uncompress = reinterpret_cast<UncompressFun>(0x812480b1);
+  using DecompressFun = uint64_t (*)(char*, char*, uint64_t, char*, uint64_t);
+  static DecompressFun decompress;
 
   static Source GetSource(const FileCpkData& dat)
   {
@@ -79,7 +80,7 @@ namespace Neptools::VitaPlugin
     src.Pread(0, buf.get(), dat.compr_size);
 
     char tmp[0x104];
-    auto res = uncompress(tmp, buf.get(), dat.compr_size, buf.get(),
+    auto res = decompress(tmp, buf.get(), dat.compr_size, buf.get(),
                           dat.uncompr_size);
     if (res != dat.uncompr_size)
       LIBSHIT_THROW(std::runtime_error, "Data decompression failed");
@@ -123,19 +124,18 @@ namespace Neptools::VitaPlugin
   }
 
   using FsBinderHandleCreateFun = int(*)(FsBinderHandle**);
-  static FsBinderHandleCreateFun fs_binder_handle_create =
-    reinterpret_cast<FsBinderHandleCreateFun>(0x811ea9a3);
+  static FsBinderHandleCreateFun fs_binder_handle_create;
 
   static FileHandle* dir_fhan = reinterpret_cast<FileHandle*>(0x8143ada0);
 
   static TaiHook<int(FsBinderHandle*, FileInfo*, FsBinderHandle**, int*)>
-  get_file_info;
+  get_file_info_hook;
   static FsBinderHandle* my_han;
 
   static int HookGetFileInfo(
     FsBinderHandle* han, FileInfo* fi, FsBinderHandle** han_out, int* succ)
   {
-    auto ret = get_file_info(han, fi, han_out, succ);
+    auto ret = get_file_info_hook(han, fi, han_out, succ);
 
     if (ret != 0 || *succ != 1 || !fi->dat) return ret;
     if (!my_han)
@@ -152,7 +152,8 @@ namespace Neptools::VitaPlugin
     if (!r.first) r = DoTxt(fi->name, *fi->dat);
     if (!r.first) return ret;
 
-    DBG(1) << "Hooked file: " << fi->name << std::endl;
+    DBG(1) << "Hooked file: " << fi->name << " to " << r.first
+           << ", size: " << r.second <<  std::endl;
 
     fi->dat->fhan = dir_fhan;
     fi->dat->cpk_name = r.first;
@@ -168,6 +169,30 @@ namespace Neptools::VitaPlugin
     if (han_out) *han_out = my_han;
 
     return ret;
+  }
+
+  static auto GET_FILE_INFO_PATTERN = NEPTOOLS_PATTERN(
+    "2d e9 30/bf 4f c0/f0 b0");
+
+  static auto DECOMPRESS_PATTERN = NEPTOOLS_PATTERN(
+    "2d e9 f0 43 83 b0 0a 9e");
+
+  static auto FS_BINDER_HANDLE_CREATE_PATTERN = NEPTOOLS_PATTERN(
+    "70 b5 04 1c 01 d0");
+
+  static auto DIR_FHAN_PATTERN = NEPTOOLS_PATTERN(
+    "4a/f0 f6/fb a0/00 5e/8f c8/f0 f2/fb 43/00 1e/8f b9 f1 00 0f 12 d0 c9 f8 "
+    "00 e0");
+
+  template <typename T>
+  static T ThumbPtr(const Byte* ptr) noexcept
+  { return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(ptr)|1); }
+
+  static uint16_t GetThumbImm16(const uint16_t* ptr) noexcept
+  {
+    auto b0 = ptr[0], b1 = ptr[1];
+    return ((b0 & 0x000f) << 12) | ((b0 & 0x0400) << 1) |
+      ((b1 & 0x7000) >> 4) | (b1 & 0x00ff);
   }
 
   void Init(std::string data_path_in, std::string cache_path_in)
@@ -193,11 +218,32 @@ namespace Neptools::VitaPlugin
     if (ret < 0)
       LIBSHIT_THROW(TaiError, "sceKernelGetModuleInfo failed", "Error code", ret);
 
-    DBG(1) << "Base: " << kern_info.segments[0].vaddr << ", size: "
-           << kern_info.segments[0].size << std::endl;
+    Libshit::StringView seg0{static_cast<char*>(kern_info.segments[0].vaddr),
+                             kern_info.segments[0].memsz};
+    DBG(1) << "Base: " << static_cast<const void*>(seg0.data())
+           << ", size: " << seg0.size() << std::endl;
 
-    ret = taiHookFunctionOffset(get_file_info, tai_info.modid, 0, 0x1eb8f8, 1,
-                                reinterpret_cast<void*>(&HookGetFileInfo));
+    DBG(2) << "Finding GET_FILE_INFO" << std::endl;
+    auto get_file_info_addr = GET_FILE_INFO_PATTERN.Find(seg0);
+
+    DBG(2) << "Finding DECOMPRESS" << std::endl;
+    decompress = ThumbPtr<DecompressFun>(DECOMPRESS_PATTERN.Find(seg0));
+    DBG(2) << "Finding FS_BINDER_HANDLE_CREATE" << std::endl;
+    fs_binder_handle_create = ThumbPtr<FsBinderHandleCreateFun>(
+      FS_BINDER_HANDLE_CREATE_PATTERN.Find(seg0));
+
+    DBG(2) << "Finding DIR_FHAN" << std::endl;
+    auto dir_fhan_info = reinterpret_cast<const uint16_t*>(
+      DIR_FHAN_PATTERN.Find(seg0));
+    dir_fhan = reinterpret_cast<FileHandle*>(
+      GetThumbImm16(dir_fhan_info) | (GetThumbImm16(dir_fhan_info+2) << 16));
+    DBG(3) << "dir_fhan -> " << dir_fhan << std::endl;
+
+    ret = taiHookFunctionOffset(
+      get_file_info_hook, tai_info.modid, 0,
+      get_file_info_addr - static_cast<Byte*>(kern_info.segments[0].vaddr), 1,
+      reinterpret_cast<void*>(&HookGetFileInfo));
+
     if (ret < 0)
       LIBSHIT_THROW(TaiError, "Hook GetFileInfo failed", "Error code", ret);
   }
