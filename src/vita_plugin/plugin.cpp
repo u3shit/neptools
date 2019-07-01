@@ -150,6 +150,7 @@ namespace Neptools::VitaPlugin
     try { pars.Run(argc, cargv.get()); }
     catch (const Libshit::Exit& e) { _exit(!e.success); }
 
+    INF << pars.GetVersion() << " initializing..." << std::endl;
     Init(data_fname, cache_fname);
 
     return SCE_KERNEL_START_SUCCESS;

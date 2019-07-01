@@ -5,6 +5,7 @@
 #include "source.hpp"
 #include "txt_serializable.hpp"
 #include "vita_plugin/taihen_cpp.hpp"
+#include "sink.hpp"
 
 #include <libshit/memory_utils.hpp>
 
@@ -105,11 +106,19 @@ namespace Neptools::VitaPlugin
     DBG(4) << "Mkdir " << dir << std::endl;
     boost::filesystem::create_directories(dir);
 
-    DBG(3) << "Txt exists: " << pth << std::endl;
-    auto dump = OpenFactory::Open(GetSource(dat));
+    DBG(3) << "Opening original " << pth << std::endl;
+    auto src = GetSource(dat);
+
+    if (CHECK_DBG(4)) src.Dump(*Sink::ToFile(cpth + ".orig", src.GetSize()));
+
+    auto dump = OpenFactory::Open(src);
+    DBG(4) << "GetTxt" << std::endl;
     auto txt = dump->GetDefaultTxtSerializable(dump);
+    DBG(4) << "Importing..." << std::endl;
     txt->ReadTxt(OpenIn(pth));
+    DBG(4) << "Fixup..." << std::endl;
     dump->Fixup();
+    DBG(4) << "Dump..." << std::endl;
     dump->Dump(Libshit::Move(cpth));
 
     return {cache_path.c_str(), dump->GetSize()};
@@ -147,28 +156,37 @@ namespace Neptools::VitaPlugin
       my_han->usage = 3;
     }
 
-    DBG(2) << "Checking file: " << fi->name << std::endl;
-    auto r = DoBin(fi->name);
-    if (!r.first) r = DoTxt(fi->name, *fi->dat);
-    if (!r.first) return ret;
+    try
+    {
+      DBG(2) << "Checking file: " << fi->name << std::endl;
 
-    DBG(1) << "Hooked file: " << fi->name << " to " << r.first
-           << ", size: " << r.second <<  std::endl;
+      auto r = DoBin(fi->name);
+      if (!r.first) r = DoTxt(fi->name, *fi->dat);
+      if (!r.first) return ret;
 
-    fi->dat->fhan = dir_fhan;
-    fi->dat->cpk_name = r.first;
-    fi->dat->offs = 0;
-    fi->dat->compr_size = r.second;
-    fi->dat->uncompr_size = r.second;
-    fi->dat->binder_index = my_han->index;
+      DBG(1) << "Hooked file: " << fi->name << " to " << r.first
+             << ", size: " << r.second <<  std::endl;
 
-    fi->cpk_name = r.first;
-    fi->cpk_offs = 0;
-    fi->fhan = dir_fhan;
-    fi->idx1 = fi->idx2 = my_han->index;
-    if (han_out) *han_out = my_han;
+      fi->dat->fhan = dir_fhan;
+      fi->dat->cpk_name = r.first;
+      fi->dat->offs = 0;
+      fi->dat->compr_size = r.second;
+      fi->dat->uncompr_size = r.second;
+      fi->dat->binder_index = my_han->index;
 
-    return ret;
+      fi->cpk_name = r.first;
+      fi->cpk_offs = 0;
+      fi->fhan = dir_fhan;
+      fi->idx1 = fi->idx2 = my_han->index;
+      if (han_out) *han_out = my_han;
+
+      return ret;
+    }
+    catch (...)
+    {
+      ERR << Libshit::ExceptionToString() << std::endl;
+      abort();
+    }
   }
 
   static auto GET_FILE_INFO_PATTERN = NEPTOOLS_PATTERN(
@@ -200,10 +218,10 @@ namespace Neptools::VitaPlugin
     data_path = Libshit::Move(data_path_in);
     cache_path = Libshit::Move(cache_path_in);
 
-    INF << "Neptools Vita Initializing...\nData path: " << data_path
+    INF << "Data path: " << data_path
         << "\nCache path: " << cache_path << std::endl;
 
-    INF << "Erasing cache..." << std::endl;
+    DBG(0) << "Erasing cache..." << std::endl;
     boost::filesystem::remove_all(cache_path);
 
     tai_module_info_t tai_info;

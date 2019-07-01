@@ -25,17 +25,19 @@ namespace Neptools
 
     LowIo() noexcept = default;
     explicit LowIo(FdType fd) noexcept : fd{fd} {}
+    LowIo(FdType fd, bool owning) noexcept : fd{fd}, owning{owning} {}
+
     LowIo(FileName fname, bool write);
-    LowIo(FdType fd, bool owning);
     ~LowIo() noexcept;
 
     static LowIo OpenStdOut();
 
     LowIo(LowIo&& o) noexcept
-        : fd{o.fd}
+      : fd{o.fd},
 #if LIBSHIT_OS_IS_WINDOWS
-        , mmap_fd{o.mmap_fd}
+        mmap_fd{o.mmap_fd},
 #endif
+        owning{o.owning}
     {
       o.fd = INVALID_FD;
 #if LIBSHIT_OS_IS_WINDOWS

@@ -19,7 +19,6 @@
 
 namespace Neptools
 {
-  LowIo::LowIo(FdType fd, bool owning) : fd{fd}, owning{owning} {}
 
 // common helpers
 #if LIBSHIT_OS_IS_WINDOWS

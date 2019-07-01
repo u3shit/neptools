@@ -130,7 +130,7 @@ namespace Neptools::Stcm
     for (const auto& e : entries)
     {
       ee.name_0 = e.name_0 ? ToFilePos(e.name_0->GetPtr()) : 0;
-      ee.name_1 = e.name_0 ? ToFilePos(e.name_1->GetPtr()) : 0;
+      ee.name_1 = e.name_1 ? ToFilePos(e.name_1->GetPtr()) : 0;
       sink.WriteGen(ee);
     }
   }
