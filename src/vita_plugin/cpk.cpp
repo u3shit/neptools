@@ -1,11 +1,12 @@
 #include "vita_plugin/cpk.hpp"
 
+#include "format/stcm/file.hpp"
 #include "open.hpp"
 #include "pattern_parse.hpp"
+#include "sink.hpp"
 #include "source.hpp"
 #include "txt_serializable.hpp"
 #include "vita_plugin/taihen_cpp.hpp"
-#include "sink.hpp"
 
 #include <libshit/memory_utils.hpp>
 
@@ -116,6 +117,8 @@ namespace Neptools::VitaPlugin
     auto txt = dump->GetDefaultTxtSerializable(dump);
     DBG(4) << "Importing..." << std::endl;
     txt->ReadTxt(OpenIn(pth));
+    DBG(4) << "Gc..." << std::endl;
+    if (auto f = dynamic_cast<Stcm::File*>(txt.get())) f->Gc();
     DBG(4) << "Fixup..." << std::endl;
     dump->Fixup();
     DBG(4) << "Dump..." << std::endl;
@@ -150,7 +153,7 @@ namespace Neptools::VitaPlugin
     if (!my_han)
     {
       DBG(0) << "Creating FsBinder handle: " << fs_binder_handle_create(&my_han)
-          << std::endl;
+             << std::endl;
       fs_binder_handle_create(&my_han);
       if (!my_han) return ret;
       my_han->usage = 3;

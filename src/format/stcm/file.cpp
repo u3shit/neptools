@@ -28,60 +28,26 @@ namespace Neptools::Stcm
     InspectChildren(os, indent);
   }
 
-  File::ConstGbnlVect File::FindGbnl() const
+  void File::SetGbnl(GbnlItem& gbnl) noexcept
   {
-    ConstGbnlVect ret;
-    FindGbnl_<const Item, const GbnlItem>(*this, ret);
-    return ret;
+    LIBSHIT_ASSERT(&gbnl.GetUnsafeContext() == this);
+    if (!first_gbnl) first_gbnl = &gbnl;
   }
 
-  File::GbnlVect File::FindGbnl()
+  void File::Gc() noexcept
   {
-    GbnlVect ret;
-    FindGbnl_<Item, GbnlItem>(*this, ret);
-    return ret;
-  }
-
-  namespace
-  {
-    // automatically determine if we need dynamic_cast to ptr* or const ptr*
-    template <typename T, typename Ref> struct MkPtr;
-    template <typename T, typename Ref>
-    struct MkPtr<T*, Ref> { using type = T*; };
-    template <typename T, typename Ref>
-    struct MkPtr<T*, const Ref> { using type = const T*; };
-
-    template <typename T, typename Ref>
-    using MkPtrT = typename MkPtr<T, Ref>::type;
-  }
-
-  template <typename ItemT, typename GbnlT>
-  void File::FindGbnl_(ItemT& root, GbnlVectG<GbnlT>& vect) const
-  {
-    auto x = dynamic_cast<MkPtrT<Stcm::GbnlItem*, ItemT>>(&root);
-    if (x)
-    {
-      vect.emplace_back(x);
-      return;
-    }
-
-    auto ch = dynamic_cast<MkPtrT<ItemWithChildren*, ItemT>>(&root);
-    if (ch)
-      for (auto& c : ch->GetChildren())
-        FindGbnl_<ItemT, GbnlT>(c, vect);
+    for (auto it = GetChildren().begin(); it != GetChildren().end(); )
+      if (dynamic_cast<RawItem*>(&*it) && it->GetLabels().empty())
+        it = GetChildren().erase(it);
+      else
+        ++it;
   }
 
   void File::WriteTxt_(std::ostream& os) const
-  {
-    for (auto& x : FindGbnl())
-      x->WriteTxt(os);
-  }
+  { if (first_gbnl) first_gbnl->WriteTxt(os); }
 
   void File::ReadTxt_(std::istream& is)
-  {
-    for (auto& x : FindGbnl())
-      x->ReadTxt(is);
-  }
+  { if (first_gbnl) first_gbnl->ReadTxt(is);  }
 
   static OpenFactory stcm_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
   {

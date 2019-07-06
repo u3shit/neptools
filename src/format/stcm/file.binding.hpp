@@ -19,8 +19,11 @@ namespace Libshit::Lua
       &::Libshit::Lua::TypeTraits<::Neptools::Stcm::File>::Make<LuaGetRef<::Neptools::Source>>
     >("new");
     bld.AddFunction<
-      TableRetWrap<static_cast<::Neptools::Stcm::File::GbnlVect (::Neptools::Stcm::File::*)()>(&::Neptools::Stcm::File::FindGbnl)>::Wrap
-    >("find_gbnl");
+      static_cast<::Neptools::Stcm::GbnlItem * (::Neptools::Stcm::File::*)() const noexcept>(&::Neptools::Stcm::File::GetGbnl)
+    >("get_gbnl");
+    bld.AddFunction<
+      static_cast<void (::Neptools::Stcm::File::*)() noexcept>(&::Neptools::Stcm::File::Gc)
+    >("gc");
 
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::File> reg_neptools_stcm_file;

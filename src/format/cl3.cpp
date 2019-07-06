@@ -467,7 +467,7 @@ namespace Neptools
       const Libshit::NotNullSharedPtr<Dumpable>& thiz)
   {
     auto& stcm = GetStcm();
-    if (stcm.FindGbnl().empty())
+    if (!stcm.GetGbnl())
       LIBSHIT_THROW(Libshit::DecodeError, "No GBNL found in STCM");
     return Libshit::NotNullRefCountedPtr<Stcm::File>{&stcm};
   }

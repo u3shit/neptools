@@ -22,6 +22,7 @@ namespace Neptools::VitaPlugin
     };
 
     operator uintptr_t*() { return reinterpret_cast<uintptr_t*>(&n); }
+    operator uintptr_t() { return reinterpret_cast<uintptr_t>(n); }
 
   private:
     using FuncPtr = Res(*)(Args...);

@@ -93,7 +93,7 @@ static void EnsureTxt(State& st)
 {
   if (st.txt) return;
   EnsureStcm(st);
-  if (st.stcm->FindGbnl().empty())
+  if (!st.stcm->GetGbnl())
     LIBSHIT_THROW(DecodeError, "No GBNL found in STCM");
   st.txt = st.stcm;
 }
@@ -133,7 +133,7 @@ namespace
 #define MODE_PARS_LUA(X)                                                        \
     X(AUTO_LUA,       "auto-lua",       "import/export stcms")                  \
     X(EXPORT_LUA,     "export-lua",     "export stcms")                         \
-    X(IMPORT_LUA,     "import-lua",      "import lua")
+    X(IMPORT_LUA,     "import-lua",     "import lua")
 #define MODE_PARS_POST(X)                                                       \
     X(MANUAL,         "manual",         "manual processing (set automatically)")
 #if LIBSHIT_WITH_LUA

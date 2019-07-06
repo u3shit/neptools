@@ -9,6 +9,14 @@
 namespace Neptools::Stcm
 {
 
+  void GbnlItem::Dispose() noexcept
+  {
+    if (auto ctx = GetContextMaybe())
+      if (auto file = ctx.DynamicPointerCast<File>())
+        file->UnsetGbnl(*this);
+    Item::Dispose();
+  }
+
   GbnlItem& GbnlItem::CreateAndInsert(ItemPointer ptr)
   {
     auto x = RawItem::GetSource(ptr, -1);
