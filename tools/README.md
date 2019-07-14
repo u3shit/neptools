@@ -20,7 +20,7 @@ rm usr/lib/gcc/x86_64-linux-gnu/*/{lto1,lto-wrapper}
 mv lib{*_nonshared,readline,ncurses,tinfo}.a usr/lib/x86_64-linux-gnu/
 ```
 
-To compile libc++, you'll need an [llvm git clone][llvm-git] at 7.0.1 or
+To compile libc++, you'll need an [llvm git clone][llvm-git] at `release/8.x` or
 manually downloading and unpacking a libc++ and libc++abi tarball to a
 directory.
 
@@ -39,4 +39,4 @@ cp -R "$LLVM"/libcxx{,abi}/include/* "$SYSROOT"/usr/include/c++/v1
 rm "$SYSROOT"/usr/include/c++/v1/{CMakeLists.txt,__config_site.in}
 ```
 
-[llvm-git]: https://github.com/llvm-project/llvm-project-20170507
+[llvm-git]: https://github.com/llvm/llvm-project

@@ -82,10 +82,10 @@ namespace Libshit::Lua
     >("new");
     bld.AddFunction<
       static_cast<::size_t (::DynStructBindgbnl::*)() const noexcept>(&::DynStructBindgbnl::GetSize)
-    >("__len");
+    >("get_size");
     bld.AddFunction<
       static_cast<::size_t (::DynStructBindgbnl::*)() const noexcept>(&::DynStructBindgbnl::GetSize)
-    >("get_size");
+    >("__len");
     bld.AddFunction<
       static_cast<const ::DynStructBindgbnl::TypePtr & (::DynStructBindgbnl::*)() const noexcept>(&::DynStructBindgbnl::GetType)
     >("get_type");
@@ -110,10 +110,10 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::DynStructTypeBindgbnl, ::size_t, &::DynStructTypeBindgbnl::item_count>
-    >("__len");
+    >("get_item_count");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::DynStructTypeBindgbnl, ::size_t, &::DynStructTypeBindgbnl::item_count>
-    >("get_item_count");
+    >("__len");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::DynStructTypeBindgbnl, ::size_t, &::DynStructTypeBindgbnl::byte_size>
     >("get_byte_size");

@@ -74,35 +74,35 @@ namespace Libshit::Lua
       static_cast<::Neptools::Stcm::InstructionItem::Param48::Type (::Neptools::Stcm::InstructionItem::Param48::*)() const noexcept>(&::Neptools::Stcm::InstructionItem::Param48::GetType)
     >("get_type");
     bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>)
-    >("get_read_4ac");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>)
-    >("get_read_stack");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>)
-    >("get_indirect");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>)
+    >("get_mem_offset");
     bld.AddFunction<
       static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::IMMEDIATE>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::IMMEDIATE>)
     >("get_immediate");
     bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>)
-    >("get_mem_offset");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>)
+    >("get_indirect");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>)
-    >("new_read_4ac");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>)
+    >("get_read_stack");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>)
-    >("new_read_stack");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param48>().Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>()) (::Neptools::Stcm::InstructionItem::Param48::*)() const>(&::Neptools::Stcm::InstructionItem::Param48::Get<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>)
+    >("get_read_4ac");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>)
-    >("new_indirect");
+      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>)
+    >("new_mem_offset");
     bld.AddFunction<
       static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::IMMEDIATE), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::IMMEDIATE>)
     >("new_immediate");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::MEM_OFFSET>)
-    >("new_mem_offset");
+      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::INDIRECT>)
+    >("new_indirect");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::READ_STACK>)
+    >("new_read_stack");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param48 (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC), ::Neptools::Stcm::InstructionItem::Param48::Variant>)>(::Neptools::Stcm::InstructionItem::Param48::New<Neptools::Stcm::InstructionItem::Param48::Type::READ_4AC>)
+    >("new_read_4ac");
 bld.TaggedNew();
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param48> reg_neptools_stcm_instruction_item_param48;
@@ -133,49 +133,49 @@ bld.TaggedNew();
       static_cast<::Neptools::Stcm::InstructionItem::Param::Type (::Neptools::Stcm::InstructionItem::Param::*)() const noexcept>(&::Neptools::Stcm::InstructionItem::Param::GetType)
     >("get_type");
     bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
-    >("get_coll_link");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>)
-    >("get_instr_ptr1");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>)
-    >("get_instr_ptr0");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>)
-    >("get_read_4ac");
-    bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>)
-    >("get_read_stack");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>)
+    >("get_mem_offset");
     bld.AddFunction<
       static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::INDIRECT>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::INDIRECT>)
     >("get_indirect");
     bld.AddFunction<
-      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>)
-    >("get_mem_offset");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>)
+    >("get_read_stack");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
-    >("new_coll_link");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>)
+    >("get_read_4ac");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>)
-    >("new_instr_ptr1");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>)
+    >("get_instr_ptr0");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>)
-    >("new_instr_ptr0");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>)
+    >("get_instr_ptr1");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::READ_4AC), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>)
-    >("new_read_4ac");
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
+    >("get_coll_link");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::READ_STACK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>)
-    >("new_read_stack");
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>),
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::Libshit::NotNull<::Neptools::LabelPtr>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>)>(::Neptools::Stcm::InstructionItem::Param::NewMemOffset)
+    >("new_mem_offset");
     bld.AddFunction<
       static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INDIRECT), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INDIRECT>),
       static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::uint32_t, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>)>(::Neptools::Stcm::InstructionItem::Param::NewIndirect)
     >("new_indirect");
     bld.AddFunction<
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>),
-      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::Libshit::NotNull<::Neptools::LabelPtr>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>)>(::Neptools::Stcm::InstructionItem::Param::NewMemOffset)
-    >("new_mem_offset");
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::READ_STACK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::READ_STACK>)
+    >("new_read_stack");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::READ_4AC), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::READ_4AC>)
+    >("new_read_4ac");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0>)
+    >("new_instr_ptr0");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1>)
+    >("new_instr_ptr1");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
+    >("new_coll_link");
 bld.TaggedNew();
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param> reg_neptools_stcm_instruction_item_param;

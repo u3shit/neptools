@@ -113,10 +113,10 @@ namespace Libshit::Lua
     >("empty");
     bld.AddFunction<
       static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
-    >("__len");
+    >("size");
     bld.AddFunction<
       static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::size)
-    >("size");
+    >("__len");
     bld.AddFunction<
       static_cast<::cl3_entry::size_type (::cl3_entry::*)() const noexcept>(&::cl3_entry::max_size)
     >("max_size");
