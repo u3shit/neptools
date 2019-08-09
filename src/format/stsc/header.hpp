@@ -2,6 +2,7 @@
 #define UUID_F87DF453_742A_4C38_8660_ABC81ACB04B8
 #pragma once
 
+#include "file.hpp"
 #include "../../source.hpp"
 #include "../item.hpp"
 #include <boost/endian/arithmetic.hpp>
@@ -23,7 +24,7 @@ namespace Neptools::Stsc
     };
     static_assert(sizeof(Header) == 12);
 
-    struct ExtraHeader2
+    struct ExtraHeader2Ser
     {
       boost::endian::little_uint16_t field_0;
       boost::endian::little_uint16_t field_2;
@@ -33,28 +34,46 @@ namespace Neptools::Stsc
       boost::endian::little_uint16_t field_a;
       boost::endian::little_uint16_t field_c;
     };
-    static_assert(sizeof(ExtraHeader2) == 14);
+    static_assert(sizeof(ExtraHeader2Ser) == 14);
 
+    class LIBSHIT_LUAGEN(name="extra_headers_2") ExtraHeaders2
+      : public Libshit::Lua::ValueObject
+    {
+      LIBSHIT_LUA_CLASS;
+
+    public:
+      std::uint16_t field_0;
+      std::uint16_t field_2;
+      std::uint16_t field_4;
+      std::uint16_t field_6;
+      std::uint16_t field_8;
+      std::uint16_t field_a;
+      std::uint16_t field_c;
+
+      ExtraHeaders2(
+        std::uint16_t field_0, std::uint16_t field_2, std::uint16_t field_4,
+        std::uint16_t field_6, std::uint16_t field_8, std::uint16_t field_a,
+        std::uint16_t field_c) noexcept
+        : field_0{field_0}, field_2{field_2}, field_4{field_4},
+          field_6{field_6}, field_8{field_8}, field_a{field_a},
+          field_c{field_c} {}
+    };
 
     HeaderItem(Key k, Context& ctx, Source src);
-    static HeaderItem& CreateAndInsert(ItemPointer ptr);
+    HeaderItem(
+      Key k, Context& ctx, Libshit::NotNull<LabelPtr> entry_point,
+      std::optional<Libshit::StringView> extra_headers_1,
+      std::optional<ExtraHeaders2> extra_headers_2,
+      std::optional<uint16_t> extra_headers_4);
+    static HeaderItem& CreateAndInsert(ItemPointer ptr, Flavor flavor);
 
     FilePosition GetSize() const noexcept override;
 
     Libshit::NotNull<LabelPtr> entry_point;
-    uint32_t flags = 0;
 
-    std::array<uint8_t, 32> extra_headers_1;
-
-    uint16_t extra_headers_2_0;
-    uint16_t extra_headers_2_2;
-    uint16_t extra_headers_2_4;
-    uint16_t extra_headers_2_6;
-    uint16_t extra_headers_2_8;
-    uint16_t extra_headers_2_a;
-    uint16_t extra_headers_2_c;
-
-    uint16_t extra_headers_4;
+    std::optional<std::array<std::uint8_t, 32>> extra_headers_1;
+    std::optional<ExtraHeaders2> extra_headers_2;
+    std::optional<std::uint16_t> extra_headers_4;
 
   private:
     void Parse_(Context& ctx, Source& src);

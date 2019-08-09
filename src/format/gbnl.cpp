@@ -61,7 +61,7 @@ namespace Neptools
     boost::endian::endian_reverse_inplace(desc.offset);
   }
 
-  static size_t GetSize(uint16_t type)
+  static size_t GetTypeSize(uint16_t type)
   {
     switch (type)
     {
@@ -114,7 +114,7 @@ namespace Neptools
       VALIDATE("unordered types", calc_offs <= type.offset);
 
       Pad(type.offset - calc_offs, bld, int8_in_progress);
-      calc_offs = type.offset + ::Neptools::GetSize(type.type);
+      calc_offs = type.offset + GetTypeSize(type.type);
 
       switch (type.type)
       {

@@ -215,6 +215,7 @@ namespace Neptools::Stcm
         x(INSTR_PTR1, __VA_ARGS__) \
         x(COLL_LINK, __VA_ARGS__)
         NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
+#undef NEPTOOLS_GEN_ENUM
       };
       using Variant = std::variant<
         MemOffset, Indirect, uint32_t, uint32_t, Libshit::NotNull<LabelPtr>,

@@ -29,6 +29,10 @@ local function get_helpers(typename)
     tbl.call = tbl.instruction -- alias
   elseif typename == "neptools.stsc.file" then
     gen_helpers(tbl, neptools.stsc)
+    function tbl.instruction(ctx, opcode, ...)
+      return neptools.stsc.instruction_item[ctx.flavor][opcode].
+        new(ctx, opcode, ...)
+    end
   else
     error("unknown type "..typename)
   end

@@ -81,21 +81,21 @@ namespace Neptools
     Source src;
   };
 
-  template <typename T>
-  inline auto& MaybeCreate(ItemPointer ptr)
+  template <typename T, typename... Args>
+  inline auto& MaybeCreate(ItemPointer ptr, Args&&... args)
   {
     auto item = ptr.Maybe<RawItem>();
     if (item)
-      return T::CreateAndInsert(ptr);
+      return T::CreateAndInsert(ptr, std::forward<Args>(args)...);
     else
       return ptr.AsChecked0<T>(); // check it
   }
 
-  template <typename T>
-  inline void MaybeCreateUnchecked(ItemPointer ptr)
+  template <typename T, typename... Args>
+  inline void MaybeCreateUnchecked(ItemPointer ptr, Args&&... args)
   {
     if (ptr.Maybe<RawItem>())
-      T::CreateAndInsert(ptr);
+      T::CreateAndInsert(ptr, std::forward<Args>(args)...);
   }
 
 }

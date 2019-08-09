@@ -27,7 +27,7 @@ namespace Libshit::Lua
     bld.Inherit<::Neptools::Stsc::InstructionBase, ::Neptools::Item>();
 
     bld.AddFunction<
-      static_cast<::Neptools::Stsc::InstructionBase & (*)(::Neptools::ItemPointer)>(::Neptools::Stsc::InstructionBase::CreateAndInsert)
+      static_cast<::Neptools::Stsc::InstructionBase & (*)(::Neptools::ItemPointer, ::Neptools::Stsc::Flavor)>(::Neptools::Stsc::InstructionBase::CreateAndInsert)
     >("create_and_insert");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Stsc::InstructionBase, const ::uint8_t, &::Neptools::Stsc::InstructionBase::opcode>
@@ -72,7 +72,9 @@ namespace Libshit::Lua
     bld.Inherit<::Neptools::Stsc::Instruction1dItem, ::Neptools::Stsc::InstructionBase>();
 
     bld.AddFunction<
-      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Neptools::Source>>,
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::uint8_t>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<std::vector<::Neptools::Stsc::Instruction1dItem::Node>>>,
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Libshit::Lua::StateRef>, LuaGetRef<::uint8_t>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Libshit::Lua::RawTable>>
     >("new");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stsc::Instruction1dItem::tgt>
@@ -105,6 +107,7 @@ namespace Libshit::Lua
       &::Libshit::Lua::GetMember<::Neptools::Stsc::Instruction1dItem::Node, ::size_t, &::Neptools::Stsc::Instruction1dItem::Node::right>
     >("get_right");
     bld.AddFunction<
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem::Node>::Make<>,
       &::Libshit::Lua::TypeTraits<::Neptools::Stsc::Instruction1dItem::Node>::Make<LuaGetRef<::uint8_t>, LuaGetRef<::uint32_t>, LuaGetRef<::size_t>, LuaGetRef<::size_t>>
     >("new");
 

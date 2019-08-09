@@ -20,13 +20,13 @@ namespace Neptools::Stsc
     auto root = Create<RawItem>(src);
     SetupParseFrom(*root);
     root->Split(root->GetSize(), Create<EofItem>());
-    HeaderItem::CreateAndInsert({&*root, 0});
+    HeaderItem::CreateAndInsert({&*root, 0}, flavor);
   }
 
   void File::Inspect_(std::ostream& os, unsigned indent) const
   {
     LIBSHIT_ASSERT(GetLabels().empty());
-    os << "neptools.stsc.file()";
+    os << "neptools.stsc.file(neptools.stsc.flavor." << ToString(flavor) << ")";
     InspectChildren(os, indent);
   }
 

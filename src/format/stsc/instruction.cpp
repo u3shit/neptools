@@ -8,6 +8,11 @@
 #include <libshit/lua/user_type.hpp>
 #include <iomanip>
 
+#include <brigand/sequences/list.hpp>
+#include <brigand/algorithms/transform.hpp>
+#include <brigand/sequences/make_sequence.hpp>
+#include <brigand/algorithms/flatten.hpp>
+
 namespace Neptools::Stsc
 {
 
@@ -17,34 +22,50 @@ namespace Neptools::Stsc
     using CreateType = Libshit::NotNull<Libshit::SmartPtr<InstructionBase>>
       (*)(Context&, const Source&);
 
-    template <uint8_t I>
+    template <Flavor F, uint8_t I>
     Libshit::NotNull<Libshit::SmartPtr<InstructionBase>>
     CreateAdapt(Context& ctx, const Source& src)
-    { return ctx.Create<InstructionItem<I>>(I, src); }
+    { return ctx.Create<InstructionItem<F, I>>(I, src); }
 
-    template <typename T> struct CreateMapImpl;
-    template <size_t... I>
-    struct CreateMapImpl<std::index_sequence<I...>>
+
+#define NEPTOOLS_GEN(x,y) , Flavor::x
+    using Flavors = brigand::integral_list<
+      Flavor NEPTOOLS_GEN_STSC_FLAVOR(NEPTOOLS_GEN,)>;
+#undef NEPTOOLS_GEN
+
+    template <typename F>
+    using MakeMap = brigand::transform<
+      brigand::make_sequence<brigand::uint32_t<0>, 256>,
+      brigand::bind<brigand::pair, F, brigand::_1>>;
+    using AllOpcodes = brigand::flatten<
+      brigand::transform<Flavors, brigand::bind<MakeMap, brigand::_1>>>;
+
+    template <typename List> struct CreateMapImpl;
+    template <typename... X>
+    struct CreateMapImpl<brigand::list<X...>>
     {
-      static const constexpr CreateType MAP[] = { CreateAdapt<I>... };
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+      static inline const constexpr CreateType
+      MAP[brigand::size<Flavors>::value][256] =
+      { CreateAdapt<X::first_type::value, X::second_type::value>... };
+#pragma GCC diagnostic pop
     };
 
-    template <size_t... I>
-    const constexpr CreateType CreateMapImpl<std::index_sequence<I...>>::MAP[];
-
-    using CreateMap = CreateMapImpl<std::make_index_sequence<256>>;
+    using CreateMap = CreateMapImpl<AllOpcodes>;
   }
 
   // base
-  InstructionBase& InstructionBase::CreateAndInsert(ItemPointer ptr)
+  InstructionBase& InstructionBase::CreateAndInsert(ItemPointer ptr, Flavor f)
   {
     auto x = RawItem::GetSource(ptr, -1);
     x.src.CheckSize(1);
     uint8_t opcode = x.src.ReadLittleUint8();
     auto ctx = x.ritem.GetContext();
-    auto& ret = x.ritem.Split(ptr.offset, CreateMap::MAP[opcode](*ctx, x.src));
+    auto& ret = x.ritem.Split(
+      ptr.offset, CreateMap::MAP[static_cast<size_t>(f)][opcode](*ctx, x.src));
 
-    ret.PostInsert();
+    ret.PostInsert(f);
     return ret;
   }
 
@@ -119,7 +140,7 @@ namespace Neptools::Stsc
       static T Parse(RawType r, Context&) { return r; }
       static RawType Dump(T r) { return r; }
       static void Inspect(std::ostream& os, T t) { os << uint32_t(t); }
-      static void PostInsert(T) {}
+      static void PostInsert(T, Flavor) {}
     };
 
     template<> struct Traits<float>
@@ -144,7 +165,7 @@ namespace Neptools::Stsc
       }
 
       static void Inspect(std::ostream& os, float v) { os << v; }
-      static void PostInsert(float) {}
+      static void PostInsert(float, Flavor) {}
     };
 
     template<> struct Traits<void*>
@@ -164,7 +185,7 @@ namespace Neptools::Stsc
       static void Inspect(std::ostream& os, const LabelPtr& l)
       { os << PrintLabel(l); }
 
-      static void PostInsert(const LabelPtr&) {}
+      static void PostInsert(const LabelPtr&, Flavor) {}
     };
 
     template<> struct Traits<std::string> : public Traits<void*>
@@ -182,14 +203,14 @@ namespace Neptools::Stsc
           return ctx.GetLabelTo(r);
       }
 
-      static void PostInsert(const LabelPtr& lbl)
+      static void PostInsert(const LabelPtr& lbl, Flavor)
       { MaybeCreate<CStringItem>(lbl->GetPtr()); }
     };
 
     template<> struct Traits<Code*> : public Traits<void*>
     {
-      static void PostInsert(const LabelPtr& lbl)
-      { MaybeCreateUnchecked<InstructionBase>(lbl->GetPtr()); }
+      static void PostInsert(const LabelPtr& lbl, Flavor f)
+      { MaybeCreateUnchecked<InstructionBase>(lbl->GetPtr(), f); }
     };
 
     template <typename T, typename... Args> struct OperationsImpl;
@@ -226,8 +247,11 @@ namespace Neptools::Stsc
       }
 
       template <typename Tuple>
-      static void PostInsert(const Tuple& tuple)
-      { FORALL(Traits<T>::PostInsert(std::get<I>(tuple))); }
+      static void PostInsert(const Tuple& tuple, Flavor f)
+      {
+        (void) f; // shut up, retarded gcc
+        FORALL(Traits<T>::PostInsert(std::get<I>(tuple), f));
+      }
 
       static constexpr size_t Size()
       {
@@ -290,10 +314,10 @@ namespace Neptools::Stsc
   }
 
   template <bool NoReturn, typename... Args>
-  void SimpleInstruction<NoReturn, Args...>::PostInsert()
+  void SimpleInstruction<NoReturn, Args...>::PostInsert(Flavor f)
   {
-    Operations<Args...>::PostInsert(args);
-    if (!NoReturn) MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
+    Operations<Args...>::PostInsert(args, f);
+    if (!NoReturn) MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
   }
 
   // ------------------------------------------------------------------------
@@ -343,10 +367,10 @@ namespace Neptools::Stsc
     os << ')';
   }
 
-  void Instruction0dItem::PostInsert()
+  void Instruction0dItem::PostInsert(Flavor f)
   {
     for (const auto& l : tgts)
-      MaybeCreateUnchecked<InstructionBase>(l->GetPtr());
+      MaybeCreateUnchecked<InstructionBase>(l->GetPtr(), f);
   }
 
   // ------------------------------------------------------------------------
@@ -376,6 +400,41 @@ namespace Neptools::Stsc
   {
     ADD_SOURCE(Parse_(ctx, src), src);
   }
+
+#if LIBSHIT_WITH_LUA
+  size_t ParseTree(
+    Libshit::Lua::StateRef vm, std::vector<Instruction1dItem::Node>& tree,
+    Libshit::Lua::Any lua_tree, int type)
+  {
+    if (type == LUA_TNIL) return 0;
+
+    lua_checkstack(vm, 5);
+
+    auto i = tree.size();
+    tree.emplace_back();
+
+    lua_rawgeti(vm, lua_tree, 1); // +1
+    tree[i].operation = vm.Check<uint8_t>(-1);
+    lua_rawgeti(vm, lua_tree, 2); // +2
+    tree[i].value = vm.Check<uint32_t>(-1);
+    lua_pop(vm, 2); // 0
+
+    type = lua_rawgeti(vm, lua_tree, 3); // +1
+    tree[i].left = ParseTree(vm, tree, lua_gettop(vm), type);
+    lua_pop(vm, 1); // 0
+
+    type = lua_rawgeti(vm, lua_tree, 4); // +1
+    tree[i].right = ParseTree(vm, tree, lua_gettop(vm), type);
+    lua_pop(vm, 1); // 0
+    return i+1;
+  }
+
+  Instruction1dItem::Instruction1dItem(
+    Key k, Context& ctx, Libshit::Lua::StateRef vm, uint8_t opcode,
+    Libshit::NotNull<LabelPtr> tgt, Libshit::Lua::RawTable lua_tree)
+    : InstructionBase{k, ctx, opcode}, tgt{tgt}
+  { ParseTree(vm, tree, lua_tree, LUA_TTABLE); }
+#endif
 
   void Instruction1dItem::Dispose() noexcept
   {
@@ -432,10 +491,10 @@ namespace Neptools::Stsc
     os << '}';
   }
 
-  void Instruction1dItem::PostInsert()
+  void Instruction1dItem::PostInsert(Flavor f)
   {
-    MaybeCreateUnchecked<InstructionBase>(tgt->GetPtr());
-    MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
+    MaybeCreateUnchecked<InstructionBase>(tgt->GetPtr(), f);
+    MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
   }
 
   // ------------------------------------------------------------------------
@@ -508,11 +567,11 @@ namespace Neptools::Stsc
     os << "})";
   }
 
-  void Instruction1eItem::PostInsert()
+  void Instruction1eItem::PostInsert(Flavor f)
   {
     for (const auto& e : expressions)
-      MaybeCreate<InstructionBase>(e.target->GetPtr());
-    MaybeCreateUnchecked<InstructionBase>(&*++Iterator());
+      MaybeCreate<InstructionBase>(e.target->GetPtr(), f);
+    MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
   }
 
 }
@@ -527,16 +586,18 @@ namespace Libshit::Lua
     using T = Neptools::Stsc::SimpleInstruction<NoReturn, Args...>;
 
     template <size_t I>
-    static RetNum Get(StateRef vm, T& instr, int idx)
+    static RetNum Get0(StateRef vm, T& instr, int idx)
     {
       if constexpr (I == sizeof...(Args))
         lua_pushnil(vm);
       else if (idx == I)
         vm.Push(std::get<I>(instr.args));
       else
-        return Get<I+1>(vm, instr, idx);
+        return Get0<I+1>(vm, instr, idx);
       return 1;
     }
+    static void Get1(const T&, Libshit::Lua::VarArg) noexcept {}
+
 
     template <size_t I>
     static void Set(StateRef vm, T& instr, int idx, Skip val)
@@ -553,7 +614,7 @@ namespace Libshit::Lua
 
     static void Register(TypeBuilder& bld)
     {
-      bld.Inherit<Neptools::Stsc::InstructionBase>();
+      bld.Inherit<T, Neptools::Stsc::InstructionBase>();
 
       // that tuple constructors can blow up exponentially, disable overload
       // check (tuple constructors can't take source, so it should be ok)
@@ -565,7 +626,7 @@ namespace Libshit::Lua
           LuaGetRef<Neptools::Stsc::TupleTypeMapT<Args>>...>
       >("new");
 
-      bld.AddFunction<&Get<0>>("get");
+      bld.AddFunction<&Get0<0>, &Get1>("get");
       bld.AddFunction<&Set<0>>("set");
     }
   };
@@ -579,20 +640,35 @@ namespace Libshit::Lua
     constexpr char InstructionItem::TYPE_NAME[];
 
     template <typename T> struct InstructionReg;
-    template <size_t... Idx> struct InstructionReg<std::index_sequence<Idx...>>
+    template <typename... X> struct InstructionReg<brigand::list<X...>>
     {
+      static void GetTab(Lua::StateRef vm, int i, int& prev)
+      {
+        if (i == prev) return;
+        if (prev != -1) lua_pop(vm, 1);
+        prev = i;
+        lua_createtable(vm, 255, 0);
+        lua_pushvalue(vm, -1);
+        lua_rawseti(vm, -4, i);
+      }
+
       static void Register(TypeBuilder& bld)
       {
+        static_assert(sizeof...(X) > 0);
         auto vm = bld.GetVm();
-        ((TypeRegister::Register<Neptools::Stsc::InstructionItem<Idx>>(vm),
-          lua_rawseti(vm, -3, Idx)), ...);
+        int prev = -1;
+        ((GetTab(vm, static_cast<int>(X::first_type::value), prev),
+          TypeRegister::Register<Neptools::Stsc::InstructionItem<
+          X::first_type::value, X::second_type::value>>(vm),
+          lua_rawseti(vm, -2, X::second_type::value)), ...);
+        lua_pop(vm, 1);
       }
     };
 
   }
 
   template<> struct TypeRegisterTraits<InstructionItem>
-    : InstructionReg<std::make_index_sequence<256>> {};
+    : InstructionReg<Neptools::Stsc::AllOpcodes> {};
 
   static TypeRegister::StateRegister<InstructionItem> reg;
 
