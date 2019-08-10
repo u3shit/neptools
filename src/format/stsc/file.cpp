@@ -10,7 +10,7 @@
 namespace Neptools::Stsc
 {
 
-  File::File(Source src)
+  File::File(Source src, Flavor flavor) : flavor{flavor}
   {
     ADD_SOURCE(Parse_(src), src);
   }
@@ -84,13 +84,31 @@ namespace Neptools::Stsc
       LIBSHIT_THROW(Libshit::DecodeError, "StscTxt: not enough strings");
   }
 
+  static Flavor glob_flavor = Flavor::NOIRE;
+  static Libshit::Option flavor_opt{
+    GetFlavorOptions(), "stsc-flavor", 1, "FLAVOR",
+#define GEN_HELP(x,y) "\t\t" #x "\n"
+    "Set STSC flavor:\n" NEPTOOLS_GEN_STSC_FLAVOR(GEN_HELP,),
+#undef GEN_HELP
+    [](auto&& args)
+    {
+      if (false); // NOLINT
+#define GEN_IFS(x, y)                         \
+      else if (strcmp(args.front(), #x) == 0) \
+        glob_flavor = Flavor::x;
+
+      NEPTOOLS_GEN_STSC_FLAVOR(GEN_IFS,)
+#undef GEN_IFS
+      else throw Libshit::InvalidParam{"invalid argument"};
+    }};
+
   static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
   {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];
     src.PreadGen(0, buf);
     if (memcmp(buf, "STSC", 4) == 0)
-      return Libshit::MakeSmart<File>(src);
+      return Libshit::MakeSmart<File>(src, glob_flavor);
     else
       return nullptr;
   }};

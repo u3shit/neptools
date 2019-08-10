@@ -16,6 +16,21 @@ namespace Neptools
 {
   static constexpr bool STRTOOL_COMPAT = false;
 
+  namespace { enum class Separator { AUTO, SJIS, UTF8 }; }
+  static Separator export_sep = Separator::AUTO;
+
+  static Libshit::Option sep_opt{
+    GetFlavorOptions(), "txt-encoding", 1, "ENCODING",
+    "Set exported txt encoding of .cl3/.gbin/.gstr files: "
+    "auto, sjis (Shift-JIS) or utf8",
+    [](auto&& args)
+    {
+      if (strcmp(args.front(), "auto") == 0) export_sep = Separator::AUTO;
+      else if (strcmp(args.front(), "sjis") == 0) export_sep = Separator::SJIS;
+      else if (strcmp(args.front(), "utf8") == 0) export_sep = Separator::UTF8;
+      else throw Libshit::InvalidParam{"invalid argument"};
+    }};
+
   void Gbnl::Header::Validate(size_t chunk_size) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Gbnl::Header", x)
@@ -578,7 +593,9 @@ namespace Neptools
 
   void Gbnl::WriteTxt_(std::ostream& os) const
   {
-    auto sep = field_30 == 8 ? SEP_DASH_UTF8 : SEP_DASH;
+    bool utf8 = export_sep == Separator::UTF8 ||
+      (export_sep == Separator::AUTO && field_30 == 8);
+    auto sep = utf8 ? SEP_DASH_UTF8 : SEP_DASH;
     size_t j = 0;
     for (const auto& m : messages)
     {

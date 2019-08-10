@@ -6,14 +6,22 @@
 #include "factory.hpp"
 #include "source.hpp"
 
-#include <libshit/shared_ptr.hpp>
 #include <libshit/lua/static_class.hpp>
+#include <libshit/options.hpp>
+#include <libshit/shared_ptr.hpp>
 
 #include <functional>
 #include <vector>
 
 namespace Neptools
 {
+
+  inline Libshit::OptionGroup& GetFlavorOptions()
+  {
+    static Libshit::OptionGroup grp{
+      Libshit::OptionParser::GetGlobal(), "Game specific options"};
+    return grp;
+  }
 
   class OpenFactory
     : public BaseFactory<Libshit::SmartPtr<Dumpable> (*)(Source)>,

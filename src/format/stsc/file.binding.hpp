@@ -29,7 +29,7 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::TypeTraits<::Neptools::Stsc::File>::Make<LuaGetRef<::Neptools::Stsc::Flavor>>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::File>::Make<LuaGetRef<::Neptools::Source>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::File>::Make<LuaGetRef<::Neptools::Source>, LuaGetRef<::Neptools::Stsc::Flavor>>
     >("new");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Stsc::File, ::Neptools::Stsc::Flavor, &::Neptools::Stsc::File::flavor>

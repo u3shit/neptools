@@ -37,9 +37,9 @@ namespace Neptools::Stsc
     LIBSHIT_DYNAMIC_OBJECT;
   public:
     File(Flavor flavor) : flavor{flavor} {}
-    File(Source src);
+    File(Source src, Flavor flavor);
 
-    Flavor flavor = Flavor::NOIRE;
+    Flavor flavor;
 
   protected:
     void Inspect_(std::ostream& os, unsigned indent) const override;
