@@ -322,14 +322,14 @@ namespace Neptools::Stsc
 
   // ------------------------------------------------------------------------
   // specific instruction implementations
-  Instruction0dItem::Instruction0dItem(
+  InstructionRndJumpItem::InstructionRndJumpItem(
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
   {
     ADD_SOURCE(Parse_(ctx, src), src);
   }
 
-  void Instruction0dItem::Parse_(Context& ctx, Source& src)
+  void InstructionRndJumpItem::Parse_(Context& ctx, Source& src)
   {
     src.CheckRemainingSize(1);
     uint8_t n = src.ReadLittleUint8();
@@ -341,12 +341,12 @@ namespace Neptools::Stsc
     {
       uint32_t t = src.ReadLittleUint32();
       LIBSHIT_VALIDATE_FIELD(
-        "Stsc::Instruction0dItem", t < ctx.GetSize());
+        "Stsc::InstructionRndJumpItem", t < ctx.GetSize());
       tgts.push_back(ctx.GetLabelTo(t));
     }
   }
 
-  void Instruction0dItem::Dump_(Sink& sink) const
+  void InstructionRndJumpItem::Dump_(Sink& sink) const
   {
     InstrDump(sink);
     sink.WriteLittleUint8(tgts.size());
@@ -354,7 +354,7 @@ namespace Neptools::Stsc
       sink.WriteLittleUint32(ToFilePos(l->GetPtr()));
   }
 
-  void Instruction0dItem::Inspect_(std::ostream& os, unsigned indent) const
+  void InstructionRndJumpItem::Inspect_(std::ostream& os, unsigned indent) const
   {
     InstrInspect(os, indent);
     bool first = true;
@@ -367,34 +367,35 @@ namespace Neptools::Stsc
     os << ')';
   }
 
-  void Instruction0dItem::PostInsert(Flavor f)
+  void InstructionRndJumpItem::PostInsert(Flavor f)
   {
     for (const auto& l : tgts)
       MaybeCreateUnchecked<InstructionBase>(l->GetPtr(), f);
+    MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
   }
 
   // ------------------------------------------------------------------------
 
-  void Instruction1dItem::FixParams::Validate(
+  void InstructionJumpIfItem::FixParams::Validate(
     FilePosition rem_size, FilePosition size)
   {
 #define VALIDATE(x) \
-    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1dItem::FixParams", x)
+    LIBSHIT_VALIDATE_FIELD("Stsc::InstructionJumpIfItem::FixParams", x)
     VALIDATE(this->size * sizeof(NodeParams) <= rem_size);
     VALIDATE(tgt < size);
 #undef VALIDATE
   }
 
-  void Instruction1dItem::NodeParams::Validate(uint16_t size)
+  void InstructionJumpIfItem::NodeParams::Validate(uint16_t size)
   {
 #define VALIDATE(x) \
-    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1dItem::NodeParams", x)
+    LIBSHIT_VALIDATE_FIELD("Stsc::InstructionJumpIfItem::NodeParams", x)
     VALIDATE(left <= size);
     VALIDATE(right <= size);
 #undef VALIDATE
   }
 
-  Instruction1dItem::Instruction1dItem(
+  InstructionJumpIfItem::InstructionJumpIfItem(
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}, tgt{Libshit::EmptyNotNull{}}
   {
@@ -403,7 +404,7 @@ namespace Neptools::Stsc
 
 #if LIBSHIT_WITH_LUA
   size_t ParseTree(
-    Libshit::Lua::StateRef vm, std::vector<Instruction1dItem::Node>& tree,
+    Libshit::Lua::StateRef vm, std::vector<InstructionJumpIfItem::Node>& tree,
     Libshit::Lua::Any lua_tree, int type)
   {
     if (type == LUA_TNIL) return 0;
@@ -429,20 +430,20 @@ namespace Neptools::Stsc
     return i+1;
   }
 
-  Instruction1dItem::Instruction1dItem(
+  InstructionJumpIfItem::InstructionJumpIfItem(
     Key k, Context& ctx, Libshit::Lua::StateRef vm, uint8_t opcode,
     Libshit::NotNull<LabelPtr> tgt, Libshit::Lua::RawTable lua_tree)
     : InstructionBase{k, ctx, opcode}, tgt{tgt}
   { ParseTree(vm, tree, lua_tree, LUA_TTABLE); }
 #endif
 
-  void Instruction1dItem::Dispose() noexcept
+  void InstructionJumpIfItem::Dispose() noexcept
   {
     tree.clear();
     InstructionBase::Dispose();
   }
 
-  void Instruction1dItem::Parse_(Context& ctx, Source& src)
+  void InstructionJumpIfItem::Parse_(Context& ctx, Source& src)
   {
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
@@ -460,7 +461,7 @@ namespace Neptools::Stsc
     }
   }
 
-  void Instruction1dItem::Dump_(Sink& sink) const
+  void InstructionJumpIfItem::Dump_(Sink& sink) const
   {
     InstrDump(sink);
     sink.WriteGen(FixParams{tree.size(), ToFilePos(tgt->GetPtr())});
@@ -468,14 +469,14 @@ namespace Neptools::Stsc
       sink.WriteGen(NodeParams{n.operation, n.value, n.left, n.right});
   }
 
-  void Instruction1dItem::Inspect_(std::ostream& os, unsigned indent) const
+  void InstructionJumpIfItem::Inspect_(std::ostream& os, unsigned indent) const
   {
     InstrInspect(os, indent) << ", " << PrintLabel(tgt) << ", ";
     InspectNode(os, 0);
     os << ')';
   }
 
-  void Instruction1dItem::InspectNode(std::ostream& os, size_t i) const
+  void InstructionJumpIfItem::InspectNode(std::ostream& os, size_t i) const
   {
     if (i >= tree.size())
     {
@@ -491,7 +492,7 @@ namespace Neptools::Stsc
     os << '}';
   }
 
-  void Instruction1dItem::PostInsert(Flavor f)
+  void InstructionJumpIfItem::PostInsert(Flavor f)
   {
     MaybeCreateUnchecked<InstructionBase>(tgt->GetPtr(), f);
     MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
@@ -499,40 +500,48 @@ namespace Neptools::Stsc
 
   // ------------------------------------------------------------------------
 
-  void Instruction1eItem::FixParams::Validate(FilePosition rem_size)
+  void InstructionJumpSwitchItemNoire::FixParams::Validate(FilePosition rem_size)
   {
-    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1eItem::FixParams",
+    LIBSHIT_VALIDATE_FIELD("Stsc::InstructionJumpSwitchItemNoire::FixParams",
                            size * sizeof(ExpressionParams) <= rem_size);
   }
 
-  void Instruction1eItem::ExpressionParams::Validate(FilePosition size)
+  void InstructionJumpSwitchItemNoire::ExpressionParams::Validate(
+    FilePosition size)
   {
-    LIBSHIT_VALIDATE_FIELD("Stsc::Instruction1eItem::ExpressionParams",
-                           tgt < size);
+    LIBSHIT_VALIDATE_FIELD(
+      "Stsc::InstructionJumpSwitchItemNoire::ExpressionParams", tgt < size);
   }
 
-  Instruction1eItem::Instruction1eItem(
+  InstructionJumpSwitchItemNoire::InstructionJumpSwitchItemNoire(
     Key k, Context& ctx, uint8_t opcode, Source src)
     : InstructionBase{k, ctx, opcode}
   {
     ADD_SOURCE(Parse_(ctx, src), src);
   }
 
-  void Instruction1eItem::Dispose() noexcept
+  InstructionJumpSwitchItemPotbb::InstructionJumpSwitchItemPotbb(
+    Key k, Context& ctx, uint8_t opcode, Source src)
+    : InstructionJumpSwitchItemNoire{k, ctx, opcode}
+  {
+    ADD_SOURCE(Parse_(ctx, src), src);
+  }
+
+  void InstructionJumpSwitchItemNoire::Dispose() noexcept
   {
     expressions.clear();
     InstructionBase::Dispose();
   }
 
-  void Instruction1eItem::Parse_(Context& ctx, Source& src)
+  void InstructionJumpSwitchItemNoire::Parse_(Context& ctx, Source& src)
   {
     src.CheckRemainingSize(sizeof(FixParams));
     auto fp = src.ReadGen<FixParams>();
     fp.Validate(src.GetRemainingSize());
 
-    field_0 = fp.field_0;
-    flag = fp.size & 0x8000;
-    auto size = flag ? fp.size & 0x7ff : uint16_t(fp.size);
+    expected_val = fp.expected_val;
+    last_is_default = fp.size & 0x8000;
+    auto size = last_is_default ? fp.size & 0x7ff : uint16_t(fp.size);
 
     expressions.reserve(size);
     for (uint16_t i = 0; i < size; ++i)
@@ -544,19 +553,34 @@ namespace Neptools::Stsc
     }
   }
 
-  void Instruction1eItem::Dump_(Sink& sink) const
+  void InstructionJumpSwitchItemPotbb::Parse_(Context& ctx, Source& src)
+  {
+    InstructionJumpSwitchItemNoire::Parse_(ctx, src);
+    src.CheckRemainingSize(1);
+    trailing_byte = src.ReadLittleUint8();
+  }
+
+  void InstructionJumpSwitchItemNoire::Dump_(Sink& sink) const
   {
     InstrDump(sink);
-    sink.WriteGen(FixParams{field_0, (flag << 15) | expressions.size()});
+    sink.WriteGen(FixParams{expected_val,
+                            (last_is_default << 15) | expressions.size()});
     for (auto& e : expressions)
       sink.WriteGen(ExpressionParams{
           e.expression, ToFilePos(e.target->GetPtr())});
-
   }
 
-  void Instruction1eItem::Inspect_(std::ostream& os, unsigned indent) const
+  void InstructionJumpSwitchItemPotbb::Dump_(Sink& sink) const
   {
-    InstrInspect(os, indent) << ", " << field_0 << ", " << flag << ", {";
+    InstructionJumpSwitchItemNoire::Dump_(sink);
+    sink.WriteLittleUint8(trailing_byte);
+  }
+
+  void InstructionJumpSwitchItemNoire::InspectBase(
+    std::ostream& os, unsigned indent) const
+  {
+    InstrInspect(os, indent) << ", " << expected_val << ", "
+                             << last_is_default << ", {";
     bool first = true;
     for (auto& e : expressions)
     {
@@ -564,14 +588,29 @@ namespace Neptools::Stsc
       first = false;
       os << '{' << e.expression << ", " << PrintLabel(e.target) << '}';
     }
-    os << "})";
+    os << '}';
   }
 
-  void Instruction1eItem::PostInsert(Flavor f)
+  void InstructionJumpSwitchItemNoire::Inspect_(
+    std::ostream& os, unsigned indent) const
+  {
+    InspectBase(os, indent);
+    os << ')';
+  }
+
+  void InstructionJumpSwitchItemPotbb::Inspect_(
+    std::ostream& os, unsigned indent) const
+  {
+    InspectBase(os, indent);
+    os << ", " << int(trailing_byte) << ')';
+  }
+
+  void InstructionJumpSwitchItemNoire::PostInsert(Flavor f)
   {
     for (const auto& e : expressions)
       MaybeCreate<InstructionBase>(e.target->GetPtr(), f);
-    MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
+    if (!last_is_default)
+      MaybeCreateUnchecked<InstructionBase>(&*++Iterator(), f);
   }
 
 }
@@ -678,10 +717,11 @@ namespace Libshit::Lua
 LIBSHIT_STD_VECTOR_LUAGEN(
   label, Libshit::NotNull<Neptools::LabelPtr>);
 LIBSHIT_STD_VECTOR_LUAGEN(
-  stsc_instruction1d_item_node, Neptools::Stsc::Instruction1dItem::Node);
+  stsc_instruction_jump_if_item_node,
+  Neptools::Stsc::InstructionJumpIfItem::Node);
 LIBSHIT_STD_VECTOR_LUAGEN(
-  stsc_instruction1e_item_expression,
-  Neptools::Stsc::Instruction1eItem::Expression);
+  stsc_instruction_jump_switch_item_noire_expression,
+  Neptools::Stsc::InstructionJumpSwitchItemNoire::Expression);
 #include "instruction.binding.hpp"
 
 #endif
