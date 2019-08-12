@@ -176,11 +176,11 @@ namespace Neptools::Stsc
       static void Validate(uint32_t r, FilePosition size)
       { LIBSHIT_VALIDATE_FIELD("Stsc::Instruction", r <= size); }
 
-      static Libshit::NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
-      { return ctx.GetLabelTo(r); }
+      static LabelPtr Parse(uint32_t r, Context& ctx)
+      { return r ? ctx.GetLabelTo(r) : LabelPtr{}; }
 
       static RawType Dump(const LabelPtr& l)
-      { return ToFilePos(l->GetPtr()); }
+      { return l ? ToFilePos(l->GetPtr()) : 0; }
 
       static void Inspect(std::ostream& os, const LabelPtr& l)
       { os << PrintLabel(l); }
@@ -190,10 +190,10 @@ namespace Neptools::Stsc
 
     template<> struct Traits<std::string> : public Traits<void*>
     {
-      static Libshit::NotNull<LabelPtr> Parse(uint32_t r, Context& ctx)
+      static LabelPtr Parse(uint32_t r, Context& ctx)
       {
-        auto ptr = ctx.GetPointer(r);
-        if (ptr.Maybe<RawItem>())
+        if (!r) return {};
+        if (auto ptr = ctx.GetPointer(r); ptr.Maybe<RawItem>())
         {
           auto x = RawItem::GetSource(ptr, -1);
           return ctx.GetLabelTo(
@@ -204,13 +204,13 @@ namespace Neptools::Stsc
       }
 
       static void PostInsert(const LabelPtr& lbl, Flavor)
-      { MaybeCreate<CStringItem>(lbl->GetPtr()); }
+      { if (lbl) MaybeCreate<CStringItem>(lbl->GetPtr()); }
     };
 
     template<> struct Traits<Code*> : public Traits<void*>
     {
       static void PostInsert(const LabelPtr& lbl, Flavor f)
-      { MaybeCreateUnchecked<InstructionBase>(lbl->GetPtr(), f); }
+      { if (lbl) MaybeCreateUnchecked<InstructionBase>(lbl->GetPtr(), f); }
     };
 
     template <typename T, typename... Args> struct OperationsImpl;

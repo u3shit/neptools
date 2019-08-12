@@ -31,7 +31,7 @@ namespace Neptools::Stsc
   }
 
   static const char SEP_DASH[] = {
-#define REP_MACRO(x,y,z) char(0x81), char(0x5c),
+#define REP_MACRO(x,y,z) '-',
     BOOST_PP_REPEAT(40, REP_MACRO, )
     '\r', 0,
   };
