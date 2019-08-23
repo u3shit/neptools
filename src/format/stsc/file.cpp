@@ -102,7 +102,7 @@ namespace Neptools::Stsc
       else throw Libshit::InvalidParam{"invalid argument"};
     }};
 
-  static OpenFactory stsc_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
+  static OpenFactory stsc_open{[](const Source& src) -> Libshit::SmartPtr<Dumpable>
   {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];

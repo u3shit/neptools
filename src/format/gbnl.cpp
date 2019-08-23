@@ -704,7 +704,7 @@ namespace Neptools
     LIBSHIT_THROW(Libshit::DecodeError, "GbnlTxt: EOF");
   }
 
-  static OpenFactory gbnl_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
+  static OpenFactory gbnl_open{[](const Source& src) -> Libshit::SmartPtr<Dumpable>
     {
       if (src.GetSize() < sizeof(Gbnl::Header)) return nullptr;
       char buf[4];

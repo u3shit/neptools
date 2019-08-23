@@ -28,7 +28,8 @@ namespace Neptools
     {
       UnixLike(LowIo io, boost::filesystem::path file_name, FilePosition size)
         : Source::Provider{std::move(file_name), size}, io{std::move(io)} {}
-      ~UnixLike();
+
+      void Destroy() noexcept;
 
       void Pread(FilePosition offs, Byte* buf, FileMemSize len) override;
       void EnsureChunk(FilePosition i);
@@ -40,6 +41,7 @@ namespace Neptools
     {
       MmapProvider(LowIo&& fd, boost::filesystem::path file_name,
                    FilePosition size);
+      ~MmapProvider() noexcept { Destroy(); }
 
       static FileMemSize CHUNK_SIZE;
       void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -53,6 +55,7 @@ namespace Neptools
       UnixProvider(LowIo&& io, boost::filesystem::path file_name,
                    FilePosition size)
         : UnixLike{std::move(io), std::move(file_name), size} {}
+      ~UnixProvider() noexcept { Destroy(); }
 
       static FileMemSize CHUNK_SIZE;
       void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -207,6 +210,7 @@ namespace Neptools
       auto x = lru[i];
       if (x.offset <= offs && x.offset + x.size > offs)
       {
+        LIBSHIT_ASSERT(x.ptr);
         memmove(&lru[1], &lru[0], sizeof(BufEntry)*i);
         lru[0] = x;
         return true;
@@ -216,7 +220,7 @@ namespace Neptools
   }
 
   template <typename T>
-  UnixLike<T>::~UnixLike()
+  void UnixLike<T>::Destroy() noexcept
   {
     for (size_t i = 0; i < lru.size(); ++i)
       if (lru[i].size)

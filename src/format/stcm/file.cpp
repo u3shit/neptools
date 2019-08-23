@@ -49,7 +49,7 @@ namespace Neptools::Stcm
   void File::ReadTxt_(std::istream& is)
   { if (first_gbnl) first_gbnl->ReadTxt(is);  }
 
-  static OpenFactory stcm_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
+  static OpenFactory stcm_open{[](const Source& src) -> Libshit::SmartPtr<Dumpable>
   {
     if (src.GetSize() < sizeof(HeaderItem::Header)) return nullptr;
     char buf[4];

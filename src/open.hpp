@@ -24,7 +24,7 @@ namespace Neptools
   }
 
   class OpenFactory
-    : public BaseFactory<Libshit::SmartPtr<Dumpable> (*)(Source)>,
+    : public BaseFactory<Libshit::SmartPtr<Dumpable> (*)(const Source&)>,
       public Libshit::Lua::StaticClass
   {
     LIBSHIT_LUA_CLASS;

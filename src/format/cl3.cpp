@@ -472,7 +472,7 @@ namespace Neptools
     return Libshit::NotNullRefCountedPtr<Stcm::File>{&stcm};
   }
 
-  static OpenFactory cl3_open{[](Source src) -> Libshit::SmartPtr<Dumpable>
+  static OpenFactory cl3_open{[](const Source& src) -> Libshit::SmartPtr<Dumpable>
   {
     if (src.GetSize() < sizeof(Cl3::Header)) return nullptr;
     char buf[3];
