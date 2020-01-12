@@ -358,12 +358,18 @@ namespace Neptools
     os << "})";
   }
 
-  template <typename T>
-  static T endian_reverse(T t) noexcept
-  {
-    endian_reverse_inplace(t);
-    return t;
+  // workaround, revert to template if/when
+  // https://github.com/boostorg/endian/issues/41 is fixed
+#define GEN_REVERSE(T)                  \
+  static T endian_reverse(T t) noexcept \
+  {                                     \
+    endian_reverse_inplace(t);          \
+    return t;                           \
   }
+  GEN_REVERSE(Cl3::Section);
+  GEN_REVERSE(Cl3::FileEntry);
+  GEN_REVERSE(Cl3::LinkEntry);
+#undef GEN_REVERSE
 
   void Cl3::Dump_(Sink& sink) const
   {

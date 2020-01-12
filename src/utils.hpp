@@ -3,6 +3,7 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
+#include <fstream>
 
 namespace Neptools
 {

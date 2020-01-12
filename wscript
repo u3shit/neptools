@@ -17,6 +17,8 @@ def configure(cfg):
 def build(bld):
     bld.recurse('libshit')
 
+    bld.gen_version_hpp('src/version.hpp')
+
     src = [
         'src/dumpable.cpp',
         'src/endian.cpp',

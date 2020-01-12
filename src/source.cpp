@@ -9,7 +9,9 @@
 #include <fstream>
 #include <iostream>
 
-#include <unistd.h>
+#if !LIBSHIT_OS_IS_WINDOWS
+#  include <unistd.h>
+#endif
 
 #include <libshit/doctest.hpp>
 
