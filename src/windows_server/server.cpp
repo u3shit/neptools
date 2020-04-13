@@ -183,7 +183,8 @@ static int CALLBACK NewWinMain2(
   }
   catch (const std::exception& e)
   {
-    ERR << "Exception during NewWinMain: " << ExceptionToString()
+    ERR << "Exception during NewWinMain: "
+        << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
         << std::endl;
     MessageBoxA(nullptr, e.what(), "WinMain", MB_OK | MB_ICONERROR);
     return -1;

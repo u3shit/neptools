@@ -109,7 +109,9 @@ static void RecDo(
     catch (const std::exception& e)
     {
       auto_failed = true;
-      ERR << "Failed: " << ExceptionToString() << std::endl;
+      ERR << "Failed: "
+          << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+          << std::endl;
     }
   }
   else if (boost::filesystem::is_directory(path))
@@ -643,7 +645,9 @@ int main(int argc, char** argv)
     catch (const Exit& e) { return !e.success; }
     catch (...)
     {
-      ERR << "Fatal error, aborting\n" << ExceptionToString() << std::endl;
+      ERR << "Fatal error, aborting\n"
+          << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+          << std::endl;
       return 2;
     }
     return auto_failed;

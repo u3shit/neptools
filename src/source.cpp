@@ -113,7 +113,8 @@ namespace Neptools
     catch (const std::system_error& e)
     {
       WARN << "Mmap failed, falling back to normal reading: "
-           << Libshit::ExceptionToString() << std::endl;
+           << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+           << std::endl;
       p = Libshit::MakeSmart<UnixProvider>(std::move(io), fname, size);
     }
     return Libshit::MakeNotNull(Libshit::Move(p));

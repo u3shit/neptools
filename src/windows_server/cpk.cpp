@@ -196,7 +196,7 @@ namespace Neptools
     }
     catch (const std::exception& e)
     {
-      auto except = Libshit::ExceptionToString();
+      auto except = Libshit::ExceptionToString(false);
       DBG(2) << " -- txt hook failed: " << except << std::endl;
 
       std::stringstream ss;

@@ -124,7 +124,9 @@ namespace Neptools
     try { Flush(); }
     catch (std::exception& e)
     {
-      ERR << "~SimpleSink " << Libshit::ExceptionToString() << std::endl;
+      ERR << "~SimpleSink "
+          << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+          << std::endl;
     }
   }
 
@@ -194,7 +196,8 @@ namespace Neptools
         catch (const std::system_error& e)
         {
           WARN << "Mmmap failed, falling back to normal writing: "
-               << Libshit::ExceptionToString() << std::endl;
+               << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+               << std::endl;
           return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
         }
       },

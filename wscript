@@ -45,7 +45,7 @@ def build(bld):
         'src/format/stcm/instruction.cpp',
         'src/format/stcm/string_data.cpp',
     ]
-    if bld.env.WITH_LUA:
+    if bld.env.WITH_LUA != 'none':
         src += [
             'src/txt_serializable.cpp',
             'src/format/builder.lua',

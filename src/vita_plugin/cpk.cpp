@@ -187,7 +187,9 @@ namespace Neptools::VitaPlugin
     }
     catch (...)
     {
-      ERR << Libshit::ExceptionToString() << std::endl;
+      ERR << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
+          << std::endl;
+
       abort();
     }
   }

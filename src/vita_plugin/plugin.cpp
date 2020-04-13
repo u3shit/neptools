@@ -24,7 +24,7 @@ namespace Neptools::VitaPlugin
   static void Uncaught()
   {
     printf("Terminate handler\n");
-    printf("Caught: %s\n", Libshit::ExceptionToString().c_str());
+    printf("Caught: %s\n", Libshit::ExceptionToString(false).c_str());
 
     abort();
   }
