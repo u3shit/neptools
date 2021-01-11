@@ -91,10 +91,13 @@ namespace Neptools
     auto base_pos = position;
 
     auto label = lbls.unlink_leftmost_without_rebalance();
+    FilePosition last_offset = 0;
     for (auto& el : seq)
     {
       LIBSHIT_ASSERT(el.first->labels.empty());
-      while (label && label->ptr.offset < el.second)
+      while (label && (label->ptr.offset < el.second ||
+                       (label->ptr.offset == el.second &&
+                        label->ptr.offset == last_offset)))
       {
         label->ptr.item = el.first.get();
         label->ptr.offset -= offset;
@@ -102,6 +105,7 @@ namespace Neptools
 
         label = lbls.unlink_leftmost_without_rebalance();
       }
+      last_offset = el.second;
 
       // move in place
       el.first->position = base_pos + offset;

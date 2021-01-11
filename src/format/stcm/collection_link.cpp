@@ -75,7 +75,7 @@ namespace Neptools::Stcm
   {
     Header hdr{};
     hdr.offset = ToFilePos(data->GetPtr());
-    hdr.count = data->GetPtr().As0<CollectionLinkItem>().entries.size();
+    hdr.count = data->GetPtr().AsChecked0<CollectionLinkItem>().entries.size();
     sink.WriteGen(hdr);
   }
 
