@@ -403,7 +403,7 @@ namespace Neptools::Stsc
   }
 
 #if LIBSHIT_WITH_LUA
-  size_t ParseTree(
+  static size_t ParseTree(
     Libshit::Lua::StateRef vm, std::vector<InstructionJumpIfItem::Node>& tree,
     Libshit::Lua::Any lua_tree, int type)
   {

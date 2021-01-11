@@ -20,9 +20,10 @@
 #include <shellapi.h>
 #include <io.h>
 
-extern "C"
-HRESULT WINAPI DirectInput8Create(HINSTANCE inst, DWORD version, REFIID iid,
-                                  LPVOID* out, void* unk) noexcept
+extern "C" HRESULT WINAPI DirectInput8Create(
+  HINSTANCE inst, DWORD version, REFIID iid, LPVOID* out, void* unk) noexcept;
+extern "C" HRESULT WINAPI DirectInput8Create(
+  HINSTANCE inst, DWORD version, REFIID iid, LPVOID* out, void* unk) noexcept
 {
   {
     auto sys_len = GetSystemDirectory(nullptr, 0);
@@ -206,6 +207,7 @@ static int CALLBACK NewWinMain(
 // msvc 2013 crt offset between entry point and call to WinMain+1
 static constexpr size_t MAIN_CALL_OFFSET = -201+1;
 
+BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID);
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID)
 {
   if (reason != DLL_PROCESS_ATTACH) return true;

@@ -129,7 +129,8 @@ static int mymain(void)
   return 0;
 }
 
-void __cdecl start()
+void __cdecl start(void);
+void __cdecl start(void)
 {
   ExitProcess(mymain());
 }

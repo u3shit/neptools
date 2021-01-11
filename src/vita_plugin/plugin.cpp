@@ -112,6 +112,8 @@ namespace Neptools::VitaPlugin
   }
 
   extern "C" int _start() __attribute__ ((weak, alias ("module_start")));
+
+  extern "C" int module_start(SceSize, const void*);
   extern "C" int module_start(SceSize, const void*)
   {
     char base_fname[32], data_fname[32], cache_fname[32];

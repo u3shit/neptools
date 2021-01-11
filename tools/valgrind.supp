@@ -14,13 +14,12 @@
    fun:calloc
    fun:_ZN10__cxxabiv122__calloc_with_fallbackEmm
    fun:__cxa_get_globals
-   fun:__cxa_begin_catch
 }
 
 {
    libc++ exit
-   Memcheck:Addr8
-   fun:check_free
+   Memcheck:Free
+   fun:free
    fun:free_key_mem
    fun:__dlerror_main_freeres
    fun:__libc_freeres
