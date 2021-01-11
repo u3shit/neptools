@@ -1,5 +1,6 @@
 #include "instruction.hpp"
 #include "data.hpp"
+#include "expansion.hpp"
 #include "../context.hpp"
 #include "../raw_item.hpp"
 #include "../../sink.hpp"
@@ -70,6 +71,11 @@ namespace Neptools::Stcm
       else if (param_0 == Type0Special::COLL_LINK)
       {
         VALIDATE(param_4 + 8 < file_size);
+        VALIDATE(param_8 == 0);
+      }
+      else if (param_0 == Type0Special::EXPANSION)
+      {
+        VALIDATE(param_4 + 80 < file_size);
         VALIDATE(param_8 == 0);
       }
       else
@@ -154,6 +160,8 @@ namespace Neptools::Stcm
         RETVAR(INSTR_PTR1, ctx.GetLabelTo(in.param_4));
       else if (in.param_0 == Parameter::Type0Special::COLL_LINK)
         RETVAR(COLL_LINK, ctx.GetLabelTo(in.param_4));
+      else if (in.param_0 == Parameter::Type0Special::EXPANSION)
+        RETVAR(EXPANSION, ctx.GetLabelTo(in.param_4));
       else
         LIBSHIT_UNREACHABLE("Invalid special parameter type");
     }
@@ -216,6 +224,12 @@ namespace Neptools::Stcm
       pp.param_4 = ToFilePos(Get<Type::COLL_LINK>()->GetPtr());
       pp.param_8 = 0;
       break;
+
+    case Type::EXPANSION:
+      pp.param_0 = Parameter::Type0Special::EXPANSION;
+      pp.param_4 = ToFilePos(Get<Type::EXPANSION>()->GetPtr());
+      pp.param_8 = 0;
+      break;
     }
     sink.WriteGen(pp);
   }
@@ -246,6 +260,8 @@ namespace Neptools::Stcm
       return os << "{'instr_ptr1', " << PrintLabel(p.Get<T::INSTR_PTR1>()) << '}';
     case T::COLL_LINK:
       return os << "{'coll_link', " << PrintLabel(p.Get<T::COLL_LINK>()) << '}';
+    case T::EXPANSION:
+      return os << "{'expansion', " << PrintLabel(p.Get<T::EXPANSION>()) << '}';
     }
     LIBSHIT_UNREACHABLE("Invalid type");
   }
@@ -340,6 +356,9 @@ namespace Neptools::Stcm
         break;
       case T::INSTR_PTR1:
         MaybeCreate<InstructionItem>(p.Get<T::INSTR_PTR1>()->GetPtr());
+        break;
+      case T::EXPANSION:
+        MaybeCreate<ExpansionItem>(p.Get<T::EXPANSION>()->GetPtr());
         break;
       default:;
       }

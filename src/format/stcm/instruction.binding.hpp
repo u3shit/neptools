@@ -154,6 +154,9 @@ bld.TaggedNew();
       static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
     >("get_coll_link");
     bld.AddFunction<
+      static_cast<decltype(std::declval<::Neptools::Stcm::InstructionItem::Param>().Get<Neptools::Stcm::InstructionItem::Param::Type::EXPANSION>()) (::Neptools::Stcm::InstructionItem::Param::*)() const>(&::Neptools::Stcm::InstructionItem::Param::Get<Neptools::Stcm::InstructionItem::Param::Type::EXPANSION>)
+    >("get_expansion");
+    bld.AddFunction<
       static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::MEM_OFFSET>),
       static_cast<::Neptools::Stcm::InstructionItem::Param (*)(::Libshit::NotNull<::Neptools::LabelPtr>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>, Libshit::AT<::Neptools::Stcm::InstructionItem::Param48>)>(::Neptools::Stcm::InstructionItem::Param::NewMemOffset)
     >("new_mem_offset");
@@ -176,6 +179,9 @@ bld.TaggedNew();
     bld.AddFunction<
       static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK>)
     >("new_coll_link");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::InstructionItem::Param (*)(std::variant_alternative_t<static_cast<size_t>(::Neptools::Stcm::InstructionItem::Param::Type::EXPANSION), ::Neptools::Stcm::InstructionItem::Param::Variant>)>(::Neptools::Stcm::InstructionItem::Param::New<Neptools::Stcm::InstructionItem::Param::Type::EXPANSION>)
+    >("new_expansion");
 bld.TaggedNew();
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param> reg_neptools_stcm_instruction_item_param;
@@ -231,6 +237,7 @@ bld.TaggedNew();
     bld.Add("INSTR_PTR0", ::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR0);
     bld.Add("INSTR_PTR1", ::Neptools::Stcm::InstructionItem::Param::Type::INSTR_PTR1);
     bld.Add("COLL_LINK", ::Neptools::Stcm::InstructionItem::Param::Type::COLL_LINK);
+    bld.Add("EXPANSION", ::Neptools::Stcm::InstructionItem::Param::Type::EXPANSION);
 
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::InstructionItem::Param::Type> reg_neptools_stcm_instruction_item_param_type;

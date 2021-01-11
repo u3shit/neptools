@@ -57,6 +57,7 @@ namespace Neptools::Stcm
         static constexpr uint32_t INSTR_PTR0     = 0xffffff40;
         static constexpr uint32_t INSTR_PTR1     = 0xffffff41;
         static constexpr uint32_t COLL_LINK      = 0xffffff42;
+        static constexpr uint32_t EXPANSION      = 0xffffff43;
       };
 
       struct Type48
@@ -213,13 +214,15 @@ namespace Neptools::Stcm
         x(READ_4AC, __VA_ARGS__)   \
         x(INSTR_PTR0, __VA_ARGS__) \
         x(INSTR_PTR1, __VA_ARGS__) \
-        x(COLL_LINK, __VA_ARGS__)
+        x(COLL_LINK, __VA_ARGS__)  \
+        x(EXPANSION, __VA_ARGS__)
         NEPTOOLS_GEN_TYPES(NEPTOOLS_GEN_ENUM,)
 #undef NEPTOOLS_GEN_ENUM
       };
       using Variant = std::variant<
         MemOffset, Indirect, uint32_t, uint32_t, Libshit::NotNull<LabelPtr>,
-        Libshit::NotNull<LabelPtr>, Libshit::NotNull<LabelPtr>>;
+        Libshit::NotNull<LabelPtr>, Libshit::NotNull<LabelPtr>,
+        Libshit::NotNull<LabelPtr>>;
 
       LIBSHIT_NOLUA
       Param(Context& ctx, const Parameter& p) : val{GetVariant(ctx, p)} {}

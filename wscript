@@ -38,6 +38,7 @@ def build(bld):
         'src/format/raw_item.cpp',
         'src/format/stcm/collection_link.cpp',
         'src/format/stcm/data.cpp',
+        'src/format/stcm/expansion.cpp',
         'src/format/stcm/exports.cpp',
         'src/format/stcm/file.cpp',
         'src/format/stcm/gbnl.cpp',
