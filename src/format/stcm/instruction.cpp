@@ -357,9 +357,6 @@ namespace Neptools::Stcm
       case T::INSTR_PTR1:
         MaybeCreate<InstructionItem>(p.Get<T::INSTR_PTR1>()->GetPtr());
         break;
-      case T::EXPANSION:
-        MaybeCreate<ExpansionItem>(p.Get<T::EXPANSION>()->GetPtr());
-        break;
       default:;
       }
     }

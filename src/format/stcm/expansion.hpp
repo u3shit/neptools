@@ -16,7 +16,8 @@ namespace Neptools::Stcm
     {
       boost::endian::little_uint32_t index;
       boost::endian::little_uint32_t name;
-      boost::endian::little_uint32_t pad[18];
+      boost::endian::little_uint64_t ptr; // used by game engine
+      boost::endian::little_uint32_t pad[16];
 
       void Validate(FilePosition file_size) const;
     };
@@ -35,6 +36,17 @@ namespace Neptools::Stcm
 
   private:
     void Dump_(Sink& sink) const override;
+    void Inspect_(std::ostream& os, unsigned indent) const override;
+  };
+
+  class ExpansionsItem final : public ItemWithChildren
+  {
+    LIBSHIT_DYNAMIC_OBJECT;
+  public:
+    ExpansionsItem(Key k, Context& ctx) : ItemWithChildren{k, ctx} {}
+    static ExpansionsItem& CreateAndInsert(ItemPointer ptr, uint32_t count);
+
+  private:
     void Inspect_(std::ostream& os, unsigned indent) const override;
   };
 

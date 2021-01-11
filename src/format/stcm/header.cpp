@@ -1,5 +1,6 @@
 #include "header.hpp"
 #include "collection_link.hpp"
+#include "expansion.hpp"
 #include "exports.hpp"
 #include "../context.hpp"
 #include "../../sink.hpp"
@@ -20,12 +21,15 @@ namespace Neptools::Stcm
     VALIDATE(msg.is_valid());
     VALIDATE(export_offset < file_size - 0x28*export_count);
     VALIDATE(collection_link_offset < file_size);
+    VALIDATE(field_30 == 0);
+    VALIDATE(expansion_offset < file_size - 0x50*expansion_count);
 #undef VALIDATE
   }
 
   HeaderItem::HeaderItem(Key k, Context& ctx, const Header& hdr)
     : Item{k, ctx}, export_sec{Libshit::EmptyNotNull{}},
-      collection_link{Libshit::EmptyNotNull{}}
+      collection_link{Libshit::EmptyNotNull{}},
+      expansion{Libshit::EmptyNotNull()}
   {
     hdr.Validate(ctx.GetSize());
 
@@ -33,6 +37,7 @@ namespace Neptools::Stcm
     export_sec = ctx.CreateLabelFallback("exports", hdr.export_offset);
     collection_link = ctx.CreateLabelFallback(
       "collection_link_hdr", hdr.collection_link_offset);;
+    expansion = ctx.CreateLabelFallback("expansion", hdr.expansion_offset);
     field_28 = hdr.field_28;
   }
 
@@ -42,6 +47,8 @@ namespace Neptools::Stcm
 
     auto& ret = x.ritem.SplitCreate<HeaderItem>(ptr.offset, x.t);
     CollectionLinkHeaderItem::CreateAndInsert(ret.collection_link->GetPtr());
+    ExpansionsItem::CreateAndInsert(ret.expansion->GetPtr(),
+                                        x.t.expansion_count);
     ExportsItem::CreateAndInsert(ret.export_sec->GetPtr(), x.t.export_count);
     return ret;
   }
@@ -56,6 +63,10 @@ namespace Neptools::Stcm
     hdr.export_count = export_sec->GetPtr().As0<ExportsItem>().entries.size();
     hdr.field_28 = field_28;
     hdr.collection_link_offset = ToFilePos(collection_link->GetPtr());
+    hdr.field_30 = 0;
+    hdr.expansion_offset = ToFilePos(expansion->GetPtr());
+    hdr.expansion_count = expansion->GetPtr().As0<ExpansionsItem>().
+      GetChildren().size();
 
     sink.WriteGen(hdr);
   }
@@ -66,7 +77,7 @@ namespace Neptools::Stcm
 
     os << "header(" << Libshit::Quoted(msg.c_str()) << ", "
        << PrintLabel(export_sec) << ", " << PrintLabel(collection_link) << ", "
-       << field_28 << ")";
+       << field_28 << ", " << PrintLabel(expansion) << ")";
   }
 
 }

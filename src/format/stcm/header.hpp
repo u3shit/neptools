@@ -24,17 +24,22 @@ namespace Neptools::Stcm
       boost::endian::little_uint32_t export_count;
       boost::endian::little_uint32_t field_28;
       boost::endian::little_uint32_t collection_link_offset;
+      boost::endian::little_uint32_t field_30;
+      boost::endian::little_uint32_t expansion_offset;
+      boost::endian::little_uint32_t expansion_count;
 
       void Validate(FilePosition file_size) const;
     };
-    static_assert(sizeof(Header) == 0x30);
+    static_assert(sizeof(Header) == 0x3c);
 
     HeaderItem(
       Key k, Context& ctx, const MsgType& msg,
       Libshit::NotNull<LabelPtr> export_sec,
-      Libshit::NotNull<LabelPtr> collection_link, uint32_t field_28)
-      : Item{k, ctx}, msg{msg}, export_sec{std::move(export_sec)},
-        collection_link{std::move(collection_link)}, field_28{field_28} {}
+      Libshit::NotNull<LabelPtr> collection_link, uint32_t field_28,
+      Libshit::NotNull<LabelPtr> expansion)
+      : Item{k, ctx}, msg{msg}, export_sec{Libshit::Move(export_sec)},
+        collection_link{Libshit::Move(collection_link)},
+        expansion{Libshit::Move(expansion)},field_28{field_28} {}
     LIBSHIT_NOLUA
     HeaderItem(Key k, Context& ctx, const Header& hdr);
     static HeaderItem& CreateAndInsert(ItemPointer ptr);
@@ -44,6 +49,7 @@ namespace Neptools::Stcm
     MsgType msg;
     Libshit::NotNull<LabelPtr> export_sec;
     Libshit::NotNull<LabelPtr> collection_link;
+    Libshit::NotNull<LabelPtr> expansion;
     uint32_t field_28;
 
   private:

@@ -5,6 +5,8 @@
 
 const char ::Neptools::Stcm::ExpansionItem::TYPE_NAME[] = "neptools.stcm.expansion_item";
 
+const char ::Neptools::Stcm::ExpansionsItem::TYPE_NAME[] = "neptools.stcm.expansions_item";
+
 namespace Libshit::Lua
 {
 
@@ -35,6 +37,22 @@ namespace Libshit::Lua
 
   }
   static TypeRegister::StateRegister<::Neptools::Stcm::ExpansionItem> reg_neptools_stcm_expansion_item;
+
+  // class neptools.stcm.expansions_item
+  template<>
+  void TypeRegisterTraits<::Neptools::Stcm::ExpansionsItem>::Register(TypeBuilder& bld)
+  {
+    bld.Inherit<::Neptools::Stcm::ExpansionsItem, ::Neptools::ItemWithChildren>();
+
+    bld.AddFunction<
+      &::Libshit::Lua::TypeTraits<::Neptools::Stcm::ExpansionsItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>>
+    >("new");
+    bld.AddFunction<
+      static_cast<::Neptools::Stcm::ExpansionsItem & (*)(::Neptools::ItemPointer, ::uint32_t)>(::Neptools::Stcm::ExpansionsItem::CreateAndInsert)
+    >("create_and_insert");
+
+  }
+  static TypeRegister::StateRegister<::Neptools::Stcm::ExpansionsItem> reg_neptools_stcm_expansions_item;
 
 }
 #endif

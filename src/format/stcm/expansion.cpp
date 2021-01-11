@@ -11,6 +11,7 @@ namespace Neptools::Stcm
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Stcm::ExpansionItemItem::Header", x)
     VALIDATE(name < file_size);
+    VALIDATE(ptr == 0);
     for (const auto& p : pad) VALIDATE(p == 0);
 #undef VALIDATE
   }
@@ -46,6 +47,31 @@ namespace Neptools::Stcm
   {
     Item::Inspect_(os, indent);
     os << "expansion(" << index << ", " << PrintLabel(name) << ")";
+  }
+
+
+  ExpansionsItem& ExpansionsItem::CreateAndInsert(
+    ItemPointer ptr, uint32_t count)
+  {
+    auto& ret = ptr.AsChecked<RawItem>().SplitCreate<ExpansionsItem>(
+      ptr.offset);
+    ret.MoveNextToChild(count * sizeof(ExpansionItem::Header));
+    auto it = ret.GetChildren().begin();
+
+    for (uint32_t i = 0; i < count; ++i)
+    {
+      auto lbl = ret.GetContext()->CreateLabelFallback("expansion", *it);
+      auto& exp = ExpansionItem::CreateAndInsert(lbl->GetPtr());
+      it = std::next(exp.Iterator());
+    }
+    return ret;
+  }
+
+  void ExpansionsItem::Inspect_(std::ostream& os, unsigned indent) const
+  {
+    Item::Inspect_(os, indent);
+    os << "expansions()";
+    InspectChildren(os, indent);
   }
 
 }
