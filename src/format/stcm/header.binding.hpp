@@ -15,7 +15,7 @@ namespace Libshit::Lua
     bld.Inherit<::Neptools::Stcm::HeaderItem, ::Neptools::Item>();
 
     bld.AddFunction<
-      &::Libshit::Lua::TypeTraits<::Neptools::Stcm::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Stcm::HeaderItem::MsgType &>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::uint32_t>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Stcm::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<const ::Neptools::Stcm::HeaderItem::MsgType &>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<::uint32_t>, LuaGetRef<::Neptools::LabelPtr>>
     >("new");
     bld.AddFunction<
       static_cast<::Neptools::Stcm::HeaderItem & (*)(::Neptools::ItemPointer)>(::Neptools::Stcm::HeaderItem::CreateAndInsert)
@@ -39,10 +39,10 @@ namespace Libshit::Lua
       &::Libshit::Lua::SetMember<::Neptools::Stcm::HeaderItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::HeaderItem::collection_link>
     >("set_collection_link");
     bld.AddFunction<
-      &::Libshit::Lua::GetMember<::Neptools::Stcm::HeaderItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::HeaderItem::expansion>
+      &::Libshit::Lua::GetMember<::Neptools::Stcm::HeaderItem, ::Neptools::LabelPtr, &::Neptools::Stcm::HeaderItem::expansion>
     >("get_expansion");
     bld.AddFunction<
-      &::Libshit::Lua::SetMember<::Neptools::Stcm::HeaderItem, ::Libshit::NotNull<::Neptools::LabelPtr>, &::Neptools::Stcm::HeaderItem::expansion>
+      &::Libshit::Lua::SetMember<::Neptools::Stcm::HeaderItem, ::Neptools::LabelPtr, &::Neptools::Stcm::HeaderItem::expansion>
     >("set_expansion");
     bld.AddFunction<
       &::Libshit::Lua::GetMember<::Neptools::Stcm::HeaderItem, ::uint32_t, &::Neptools::Stcm::HeaderItem::field_28>

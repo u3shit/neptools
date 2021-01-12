@@ -36,7 +36,7 @@ namespace Neptools::Stcm
       Key k, Context& ctx, const MsgType& msg,
       Libshit::NotNull<LabelPtr> export_sec,
       Libshit::NotNull<LabelPtr> collection_link, uint32_t field_28,
-      Libshit::NotNull<LabelPtr> expansion)
+      LabelPtr expansion)
       : Item{k, ctx}, msg{msg}, export_sec{Libshit::Move(export_sec)},
         collection_link{Libshit::Move(collection_link)},
         expansion{Libshit::Move(expansion)},field_28{field_28} {}
@@ -49,7 +49,7 @@ namespace Neptools::Stcm
     MsgType msg;
     Libshit::NotNull<LabelPtr> export_sec;
     Libshit::NotNull<LabelPtr> collection_link;
-    Libshit::NotNull<LabelPtr> expansion;
+    LabelPtr expansion;
     uint32_t field_28;
 
   private:
