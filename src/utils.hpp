@@ -3,7 +3,10 @@
 #pragma once
 
 #include <boost/filesystem/path.hpp>
-#include <fstream>
+
+#include <cstdint>
+#include <cstdlib>
+#include <iosfwd>
 
 namespace Neptools
 {
@@ -11,11 +14,12 @@ namespace Neptools
 
   using Byte = unsigned char;
 
-  // if you want to change it to 64-bit: change FileMemSize to size_t,
-  // #define _FILE_OFFSET_BITS 64
-  // to the beginning of source.cpp, and fix braindead winapi
-  using FilePosition = uint32_t;
-  using FileMemSize = uint32_t; // min(FilePos, size_t)
+  using FilePosition = std::uint64_t;
+  using FileMemSize = std::size_t;
+
+  static constexpr const std::size_t MEM_CHUNK  = 8*1024; // 8KiB
+  static constexpr const std::size_t MMAP_CHUNK = 128*1024; // 128KiB
+  static constexpr const std::size_t MMAP_LIMIT = 1*1024*1024; // 1MiB
 
   std::ofstream OpenOut(const boost::filesystem::path& pth);
   std::ifstream OpenIn(const boost::filesystem::path& pth);

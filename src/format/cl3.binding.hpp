@@ -150,17 +150,17 @@ namespace Libshit::Lua
       static_cast<void (*)(::cl3_entry &, ::Libshit::Lua::Skip) noexcept>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::get)
     >("get");
     bld.AddFunction<
-      static_cast<std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::size_t, ::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::NotNullPtr &&)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert)
+      static_cast<std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::size_t, ::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char, ::std::char_traits<char>, ::std::allocator<char> > > >::NotNullPtr &&)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::insert)
     >("insert");
     bld.AddFunction<
       static_cast<::size_t (*)(::cl3_entry &, ::size_t, ::size_t)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase),
       static_cast<::size_t (*)(::cl3_entry &, ::size_t)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::erase)
     >("erase");
     bld.AddFunction<
-      static_cast<::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::NotNullPtr (*)(::cl3_entry &, ::size_t)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::remove)
+      static_cast<::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char, ::std::char_traits<char>, ::std::allocator<char> > > >::NotNullPtr (*)(::cl3_entry &, ::size_t)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::remove)
     >("remove");
     bld.AddFunction<
-      static_cast<std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char> > >::NotNullPtr &&)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::push_back)
+      static_cast<std::tuple<bool, ::size_t> (*)(::cl3_entry &, ::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue, ::std::less<::std::basic_string<char, ::std::char_traits<char>, ::std::allocator<char> > > >::NotNullPtr &&)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::push_back)
     >("push_back");
     bld.AddFunction<
       static_cast<::Libshit::Lua::RetNum (*)(::Libshit::Lua::StateRef, ::cl3_entry &, const typename ::cl3_entry::key_type &)>(::Libshit::OrderedMapLua<::Neptools::Cl3::Entry, ::Neptools::Cl3::EntryKeyOfValue>::find)

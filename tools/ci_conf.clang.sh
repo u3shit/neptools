@@ -24,7 +24,7 @@ run export PKG_CONFIG_SYSROOT_DIR="$sysroot"
 
 
 te='build/stcm-editor --xml-output=test'
-ts='--test -fc --reporters=junit,console'
+ts='--test -fc --reporters=libshit-junit,console'
 ld="LD_LIBRARY_PATH=$(quot "$(join : "$sysroot"/{,usr/}lib/{,*-linux-gnu})") \
 $(quot "$sysroot"/lib/*/ld-linux*.so*) $te"
 qemu="\$CC -O2 -shared -o tools/qemu_vdso_fix_linux_amd64.so \

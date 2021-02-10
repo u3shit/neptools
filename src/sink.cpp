@@ -1,7 +1,7 @@
 #include "sink.hpp"
-#include "low_io.hpp"
 
 #include <libshit/except.hpp>
+#include <libshit/low_io.hpp>
 #include <libshit/lua/boost_endian_traits.hpp>
 
 #include <iostream>
@@ -19,37 +19,38 @@ namespace Neptools
   {
     struct LIBSHIT_NOLUA MmapSink final : public Sink
     {
-      MmapSink(LowIo&& io, FilePosition size);
-      ~MmapSink();
+      MmapSink(Libshit::LowIo&& io, FilePosition size);
+      ~MmapSink() override;
       void Write_(Libshit::StringView data) override;
       void Pad_(FileMemSize len) override;
 
       void MapNext(FileMemSize len);
 
-      LowIo io;
+      Libshit::LowIo io;
     };
 
     struct LIBSHIT_NOLUA SimpleSink final : public Sink
     {
-      SimpleSink(LowIo io, FilePosition size) : Sink{size}, io{std::move(io)}
+      SimpleSink(Libshit::LowIo io, FilePosition size)
+        : Sink{size}, io{std::move(io)}
       {
         Sink::buf = buf;
-        buf_size = LowIo::MEM_CHUNK;
+        buf_size = MEM_CHUNK;
       }
-      ~SimpleSink();
+      ~SimpleSink() override;
 
       void Write_(Libshit::StringView data) override;
       void Pad_(FileMemSize len) override;
       void Flush() override;
 
-      LowIo io;
-      Byte buf[LowIo::MEM_CHUNK];
+      Libshit::LowIo io;
+      Byte buf[MEM_CHUNK];
     };
   }
 
-  MmapSink::MmapSink(LowIo&& io, FilePosition size) : Sink{size}
+  MmapSink::MmapSink(Libshit::LowIo&& io, FilePosition size) : Sink{size}
   {
-    size_t to_map = size < LowIo::MMAP_LIMIT ? size : LowIo::MMAP_CHUNK;
+    size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
 
     io.Truncate(size);
     io.PrepareMmap(true);
@@ -62,18 +63,18 @@ namespace Neptools
   MmapSink::~MmapSink()
   {
     if (buf)
-      LowIo::Munmap(buf, buf_size);
+      Libshit::LowIo::Munmap(buf, buf_size);
   }
 
   void MmapSink::Write_(Libshit::StringView data)
   {
     LIBSHIT_ASSERT(buf_put == buf_size && offset < size &&
-                   buf_size == LowIo::MMAP_CHUNK);
+                   buf_size == MMAP_CHUNK);
 
     offset += buf_put;
-    if (data.length() / LowIo::MMAP_CHUNK)
+    if (data.length() / MMAP_CHUNK)
     {
-      auto to_write = data.length() / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
+      auto to_write = data.length() / MMAP_CHUNK * MMAP_CHUNK;
       io.Pwrite(data.udata(), to_write, offset);
       data.remove_prefix(to_write);
       offset += to_write;
@@ -90,11 +91,11 @@ namespace Neptools
   void MmapSink::Pad_(FileMemSize len)
   {
     LIBSHIT_ASSERT(buf_put == buf_size && offset < size &&
-                   buf_size == LowIo::MMAP_CHUNK);
+                   buf_size == MMAP_CHUNK);
 
-    offset += buf_put + len / LowIo::MMAP_CHUNK * LowIo::MMAP_CHUNK;
+    offset += buf_put + len / MMAP_CHUNK * MMAP_CHUNK;
     LIBSHIT_ASSERT_MSG(offset <= size, "sink overflow");
-    MapNext(len % LowIo::MMAP_CHUNK);
+    MapNext(len % MMAP_CHUNK);
   }
 
   void MmapSink::MapNext(FileMemSize len)
@@ -104,7 +105,7 @@ namespace Neptools
     // (linux doesn't care...)
     if (offset < size)
     {
-      auto nbuf_size = std::min<FileMemSize>(LowIo::MMAP_CHUNK, size-offset);
+      auto nbuf_size = std::min<FileMemSize>(MMAP_CHUNK, size-offset);
       LIBSHIT_ASSERT(nbuf_size >= len);
       void* nbuf = io.Mmap(offset, nbuf_size, true);
       io.Munmap(buf, buf_size);
@@ -142,12 +143,11 @@ namespace Neptools
 
   void SimpleSink::Write_(Libshit::StringView data)
   {
-    LIBSHIT_ASSERT(buf_size == LowIo::MEM_CHUNK &&
-                   buf_put == LowIo::MEM_CHUNK);
-    io.Write(buf, LowIo::MEM_CHUNK);
-    offset += LowIo::MEM_CHUNK;
+    LIBSHIT_ASSERT(buf_size == MEM_CHUNK && buf_put == MEM_CHUNK);
+    io.Write(buf, MEM_CHUNK);
+    offset += MEM_CHUNK;
 
-    if (data.length() >= LowIo::MEM_CHUNK)
+    if (data.length() >= MEM_CHUNK)
     {
       io.Write(data.data(), data.length());
       offset += data.length();
@@ -162,24 +162,23 @@ namespace Neptools
 
   void SimpleSink::Pad_(FileMemSize len)
   {
-    LIBSHIT_ASSERT(buf_size == LowIo::MEM_CHUNK &&
-                   buf_put == LowIo::MEM_CHUNK);
-    io.Write(buf, LowIo::MEM_CHUNK);
-    offset += LowIo::MEM_CHUNK;
+    LIBSHIT_ASSERT(buf_size == MEM_CHUNK && buf_put == MEM_CHUNK);
+    io.Write(buf, MEM_CHUNK);
+    offset += MEM_CHUNK;
 
     // assume we're not seekable (I don't care about not mmap-able but seekable
     // files)
-    if (len >= LowIo::MEM_CHUNK)
+    if (len >= MEM_CHUNK)
     {
-      memset(buf, 0, LowIo::MEM_CHUNK);
+      memset(buf, 0, MEM_CHUNK);
       size_t i;
-      for (i = LowIo::MEM_CHUNK; i < len; i += LowIo::MEM_CHUNK)
-        io.Write(buf, LowIo::MEM_CHUNK);
-      offset += i - LowIo::MEM_CHUNK;
+      for (i = MEM_CHUNK; i < len; i += MEM_CHUNK)
+        io.Write(buf, MEM_CHUNK);
+      offset += i - MEM_CHUNK;
     }
     else
       memset(buf, 0, len);
-    buf_put = len % LowIo::MEM_CHUNK;
+    buf_put = len % MEM_CHUNK;
   }
 
   Libshit::NotNull<Libshit::RefCountedPtr<Sink>> Sink::ToFile(
@@ -188,7 +187,8 @@ namespace Neptools
     return Libshit::AddInfo(
       [&]() -> Libshit::NotNull<Libshit::RefCountedPtr<Sink>>
       {
-        LowIo io{fname.c_str(), true};
+        Libshit::LowIo io{fname.c_str(), Libshit::LowIo::Permission::READ_WRITE,
+          Libshit::LowIo::Mode::TRUNC_OR_CREATE};
         if (LIBSHIT_OS_IS_VITA || !try_mmap)
           return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
 
@@ -206,7 +206,7 @@ namespace Neptools
 
   Libshit::NotNull<Libshit::RefCountedPtr<Sink>> Sink::ToStdOut()
   {
-    return Libshit::MakeRefCounted<SimpleSink>(LowIo::OpenStdOut(), -1);
+    return Libshit::MakeRefCounted<SimpleSink>(Libshit::LowIo::OpenStdOut(), -1);
   }
 
 #define TRY_MMAP                           \
@@ -247,7 +247,7 @@ namespace Neptools
       auto sink = Sink::ToFile("tmp", SIZE, try_mmap);
       for (FilePosition i = 0; i < SIZE; i += 24)
       {
-        buf[0] = i/24;
+        buf[0] = static_cast<int>(i / 24);
         sink->WriteGen(buf);
       }
       REQUIRE(sink->Tell() == SIZE);
@@ -256,7 +256,7 @@ namespace Neptools
     std::unique_ptr<char[]> buf_exp{new char[SIZE]};
     for (FilePosition i = 0; i < SIZE; i += 24)
     {
-      buf[0] = i/24;
+      buf[0] = static_cast<int>(i / 24);
       memcpy(buf_exp.get()+i, buf, 24);
     }
 

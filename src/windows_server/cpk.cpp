@@ -8,6 +8,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <iostream>
+#include <fstream>
 
 #define LIBSHIT_LOG_NAME "cpk"
 #include <libshit/logger_helper.hpp>
@@ -82,7 +83,7 @@ namespace Neptools
     do
     {
       auto coffs = offs / CPK_CHUNK * CPK_CHUNK;
-      auto csize = std::min(CPK_CHUNK, size-coffs);
+      auto csize = std::min<FilePosition>(CPK_CHUNK, size-coffs);
       std::unique_ptr<char[]> cbuf{new char[csize]};
 
       size_t read;
@@ -93,7 +94,7 @@ namespace Neptools
       LIBSHIT_ASSERT(read == csize);
 
       auto to_offs = offs % CPK_CHUNK;
-      auto to_copy = std::min(len, csize - to_offs);
+      auto to_copy = std::min<FilePosition>(len, csize - to_offs);
       memcpy(buf, cbuf.get() + to_offs, to_copy);
       delete[] lru[lru.size()-1].ptr;
       LruPush(reinterpret_cast<Byte*>(cbuf.release()), offs, csize);

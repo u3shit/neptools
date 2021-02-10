@@ -44,7 +44,7 @@ namespace Neptools
   {
     auto it = labels.find(name);
     if (it == labels.end())
-      LIBSHIT_THROW(Libshit::OutOfRange, "Context::GetLabel",
+      LIBSHIT_THROW(std::out_of_range, "Context::GetLabel",
                     "Affected label", name);
     return MakeNotNull(const_cast<Label*>(&*it));
   }
@@ -58,7 +58,7 @@ namespace Neptools
     {
       name = std::move(lbl->name);
       delete lbl;
-      LIBSHIT_THROW(Libshit::OutOfRange, "label already exists",
+      LIBSHIT_THROW(std::out_of_range, "label already exists",
                     "Affected label", std::move(name));
     }
 
@@ -132,14 +132,14 @@ namespace Neptools
   }
 
   Libshit::NotNull<LabelPtr> Context::GetLabelTo(
-    FilePosition pos, std::string name)
+    FilePosition pos, const std::string& name)
   {
     auto ptr = GetPointer(pos);
     auto& lctr = ptr.item->labels;
     auto it = lctr.find(ptr.offset);
     if (it != lctr.end()) return MakeNotNull(&*it);
 
-    return CreateLabelFallback(std::move(name), ptr);
+    return CreateLabelFallback(name, ptr);
   }
 
   ItemPointer Context::GetPointer(FilePosition pos) const noexcept

@@ -22,7 +22,6 @@ def build(bld):
     src = [
         'src/dumpable.cpp',
         'src/endian.cpp',
-        'src/low_io.cpp',
         'src/open.cpp',
         'src/pattern.cpp',
         'src/sink.cpp',

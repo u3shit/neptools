@@ -17,7 +17,7 @@ namespace Neptools
     LIBSHIT_LUA_CLASS;
   public:
     Context();
-    ~Context();
+    ~Context() override;
 
     void Fixup() override;
 
@@ -43,7 +43,8 @@ namespace Neptools
     Libshit::NotNull<LabelPtr> GetLabelTo(FilePosition pos)
     { return GetLabelTo(GetPointer(pos)); }
 
-    Libshit::NotNull<LabelPtr> GetLabelTo(FilePosition pos, std::string name);
+    Libshit::NotNull<LabelPtr> GetLabelTo(
+      FilePosition pos, const std::string& name);
 
     ItemPointer GetPointer(FilePosition pos) const noexcept;
 

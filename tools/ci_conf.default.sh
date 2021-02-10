@@ -27,5 +27,5 @@ function build()
 }
 
 tests=(
-    'build/stcm-editor --xml-output=test.xml --test -fc --reporters=junit,console'
+    'build/stcm-editor --xml-output=test.xml --test -fc --reporters=libshit-junit,console'
 )

@@ -4,9 +4,9 @@
 
 #include "dumpable.hpp"
 #include "endian.hpp"
-#include "low_io.hpp"
 
 #include <libshit/check.hpp>
+#include <libshit/low_io.hpp>
 #include <libshit/lua/value_object.hpp>
 #include <libshit/meta_utils.hpp>
 #include <libshit/nonowning_string.hpp>
@@ -42,7 +42,7 @@ namespace Neptools
     static Source FromFile(const boost::filesystem::path& fname);
     LIBSHIT_NOLUA
     static Source FromFd(
-      boost::filesystem::path fname, LowIo::FdType fd, bool owning);
+      boost::filesystem::path fname, Libshit::LowIo::FdType fd, bool owning);
     static Source FromMemory(std::string data)
     { return FromMemory("", std::move(data)); }
     static Source FromMemory(boost::filesystem::path fname, std::string data);

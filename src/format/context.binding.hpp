@@ -33,7 +33,7 @@ namespace Libshit::Lua
     bld.AddFunction<
       static_cast<::Libshit::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(::Neptools::ItemPointer)>(&::Neptools::Context::GetLabelTo),
       static_cast<::Libshit::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(::Neptools::FilePosition)>(&::Neptools::Context::GetLabelTo),
-      static_cast<::Libshit::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(::Neptools::FilePosition, std::string)>(&::Neptools::Context::GetLabelTo)
+      static_cast<::Libshit::NotNull<::Neptools::LabelPtr> (::Neptools::Context::*)(::Neptools::FilePosition, const std::string &)>(&::Neptools::Context::GetLabelTo)
     >("get_label_to");
     bld.AddFunction<
       static_cast<::Neptools::ItemPointer (::Neptools::Context::*)(::Neptools::FilePosition) const noexcept>(&::Neptools::Context::GetPointer)

@@ -74,7 +74,7 @@ namespace Neptools
     { Write<Checker>({str.c_str(), str.size()+1}); }
 
   protected:
-    Sink(FileMemSize size) : size{size} {}
+    Sink(FilePosition size) : size{size} {}
 
     Byte* buf = nullptr;
     FilePosition offset = 0, size;

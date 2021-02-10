@@ -28,7 +28,8 @@ namespace Neptools
     template <typename T>
     struct UnixLike : public Source::Provider
     {
-      UnixLike(LowIo io, boost::filesystem::path file_name, FilePosition size)
+      UnixLike(Libshit::LowIo io, boost::filesystem::path file_name,
+               FilePosition size)
         : Source::Provider{std::move(file_name), size}, io{std::move(io)} {}
 
       void Destroy() noexcept;
@@ -36,14 +37,14 @@ namespace Neptools
       void Pread(FilePosition offs, Byte* buf, FileMemSize len) override;
       void EnsureChunk(FilePosition i);
 
-      LowIo io;
+      Libshit::LowIo io;
     };
 
     struct MmapProvider final : public UnixLike<MmapProvider>
     {
-      MmapProvider(LowIo&& fd, boost::filesystem::path file_name,
+      MmapProvider(Libshit::LowIo&& fd, boost::filesystem::path file_name,
                    FilePosition size);
-      ~MmapProvider() noexcept { Destroy(); }
+      ~MmapProvider() noexcept override { Destroy(); }
 
       static FileMemSize CHUNK_SIZE;
       void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -54,10 +55,10 @@ namespace Neptools
     {
       //using UnixLike::UnixLike;
       // workaround clang bug...
-      UnixProvider(LowIo&& io, boost::filesystem::path file_name,
+      UnixProvider(Libshit::LowIo&& io, boost::filesystem::path file_name,
                    FilePosition size)
         : UnixLike{std::move(io), std::move(file_name), size} {}
-      ~UnixProvider() noexcept { Destroy(); }
+      ~UnixProvider() noexcept override { Destroy(); }
 
       static FileMemSize CHUNK_SIZE;
       void* ReadChunk(FilePosition offs, FileMemSize size);
@@ -104,7 +105,8 @@ namespace Neptools
 
   Source Source::FromFile_(const boost::filesystem::path& fname)
   {
-    LowIo io{fname.c_str(), false};
+    Libshit::LowIo io{fname.c_str(), Libshit::LowIo::Permission::READ_ONLY,
+      Libshit::LowIo::Mode::OPEN_ONLY};
 
     FilePosition size = io.GetSize();
 
@@ -121,9 +123,9 @@ namespace Neptools
   }
 
   Source Source::FromFd(
-    boost::filesystem::path fname, LowIo::FdType fd, bool owning)
+    boost::filesystem::path fname, Libshit::LowIo::FdType fd, bool owning)
   {
-    LowIo io{fd, owning};
+    Libshit::LowIo io{fd, owning};
     auto size = io.GetSize();
     return {Libshit::MakeSmart<UnixProvider>(
         Libshit::Move(io), Libshit::Move(fname), size)};
@@ -152,7 +154,7 @@ namespace Neptools
       {
         auto& x = p->lru[0];
         auto buf_offs = offs - x.offset;
-        auto to_cpy = std::min(len, x.size - buf_offs);
+        auto to_cpy = std::min<FilePosition>(len, x.size - buf_offs);
         memcpy(buf, x.ptr + buf_offs, to_cpy);
         offs += to_cpy;
         buf += to_cpy;
@@ -193,7 +195,7 @@ namespace Neptools
     auto e = GetTemporaryEntry(offs + offset);
     auto eoffs = offs + offset - e.offset;
     auto size = std::min(e.size - eoffs, GetSize() - offs);
-    return { e.ptr + eoffs, size };
+    return { e.ptr + eoffs, std::size_t(size) };
   }
 
 
@@ -233,7 +235,7 @@ namespace Neptools
   template <typename T>
   void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
   {
-    LIBSHIT_ASSERT(io.fd != LowIo::INVALID_FD);
+    LIBSHIT_ASSERT(io.fd != Libshit::LowIo::INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
       return io.Pread(buf, len, offs);
 
@@ -242,7 +244,7 @@ namespace Neptools
     {
       EnsureChunk(offs);
       auto buf_offs = offs - lru[0].offset;
-      auto to_cpy = std::min(len, lru[0].size - buf_offs);
+      auto to_cpy = std::min<FilePosition>(len, lru[0].size - buf_offs);
       memcpy(buf, lru[0].ptr + buf_offs, to_cpy);
       buf += to_cpy;
       offs += to_cpy;
@@ -257,18 +259,18 @@ namespace Neptools
     auto ch_offs = offs/CHUNK_SIZE*CHUNK_SIZE;
     if (LruGet(offs)) return;
 
-    auto size = std::min(CHUNK_SIZE, this->size-ch_offs);
+    auto size = std::min<FilePosition>(CHUNK_SIZE, this->size-ch_offs);
     auto x = static_cast<T*>(this)->ReadChunk(ch_offs, size);
     static_cast<T*>(this)->DeleteChunk(lru.size()-1);
     LruPush(static_cast<Byte*>(x), ch_offs, size);
   }
 
-  FileMemSize MmapProvider::CHUNK_SIZE = LowIo::MMAP_CHUNK;
+  FileMemSize MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
   MmapProvider::MmapProvider(
-    LowIo&& io, boost::filesystem::path file_name, FilePosition size)
+    Libshit::LowIo&& io, boost::filesystem::path file_name, FilePosition size)
     : UnixLike{{}, std::move(file_name), size}
   {
-    size_t to_map = size < LowIo::MMAP_LIMIT ? size : LowIo::MMAP_CHUNK;
+    std::size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
 
     io.PrepareMmap(false);
     void* ptr = io.Mmap(0, to_map, false);
@@ -297,7 +299,7 @@ namespace Neptools
       io.Munmap(const_cast<Byte*>(lru[i].ptr), lru[i].size);
   }
 
-  FilePosition UnixProvider::CHUNK_SIZE = LowIo::MEM_CHUNK;
+  FileMemSize UnixProvider::CHUNK_SIZE = MEM_CHUNK;
 
   void* UnixProvider::ReadChunk(FilePosition offs, FileMemSize size)
   {
