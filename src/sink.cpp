@@ -193,7 +193,7 @@ namespace Neptools
           return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
 
         try { return Libshit::MakeRefCounted<MmapSink>(std::move(io), size); }
-        catch (const std::system_error& e)
+        catch (const Libshit::SystemError& e)
         {
           WARN << "Mmmap failed, falling back to normal writing: "
                << Libshit::PrintException(Libshit::Logger::HasAnsiColor())

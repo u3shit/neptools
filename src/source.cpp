@@ -112,7 +112,7 @@ namespace Neptools
 
     Libshit::SmartPtr<Provider> p;
     try { p = Libshit::MakeSmart<MmapProvider>(std::move(io), fname, size); }
-    catch (const std::system_error& e)
+    catch (const Libshit::SystemError& e)
     {
       WARN << "Mmap failed, falling back to normal reading: "
            << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
