@@ -10,9 +10,11 @@
 #include <libshit/container/ordered_map.hpp>
 #include <libshit/lua/auto_table.hpp>
 
+#include <boost/filesystem/path.hpp>
+
 #include <cstdint>
 #include <vector>
-#include <boost/filesystem/path.hpp>
+#include <string_view>
 
 namespace Neptools
 {
@@ -140,7 +142,7 @@ namespace Neptools
     Entries entries;
     uint32_t IndexOf(const Libshit::WeakSmartPtr<Entry>& ptr) const noexcept;
 
-    Entry& GetOrCreateFile(Libshit::StringView fname);
+    Entry& GetOrCreateFile(std::string_view fname);
 
     void ExtractTo(const boost::filesystem::path& dir) const;
     void UpdateFromDir(const boost::filesystem::path& dir);

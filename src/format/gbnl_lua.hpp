@@ -5,6 +5,8 @@
 #include "gbnl.hpp"
 #include "../dynamic_struct.lua.hpp"
 
+#include <string_view>
+
 #if LIBSHIT_WITH_LUA
 
 namespace Neptools
@@ -56,7 +58,7 @@ namespace Neptools
 
     static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-      auto str = vm.Check<Libshit::StringView>(idx);
+      auto str = vm.Check<std::string_view>(idx);
       auto dst = static_cast<char*>(ptr);
 
       auto n = std::min(size-1, str.length());
@@ -79,7 +81,7 @@ namespace Neptools
 
     static void Get(Libshit::Lua::StateRef vm, int idx, void* ptr, size_t size)
     {
-      auto str = vm.Check<Libshit::StringView>(idx);
+      auto str = vm.Check<std::string_view>(idx);
       auto dst = static_cast<char*>(ptr);
 
       auto n = std::min(size, str.length());

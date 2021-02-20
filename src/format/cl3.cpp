@@ -285,12 +285,12 @@ namespace Neptools
     return ret;
   }
 
-  Cl3::Entry& Cl3::GetOrCreateFile(Libshit::StringView fname)
+  Cl3::Entry& Cl3::GetOrCreateFile(std::string_view fname)
   {
     auto it = entries.find(fname, std::less<>{});
     if (it == entries.end())
     {
-      entries.emplace_back(fname);
+      entries.emplace_back(std::string{fname});
       return entries.back();
     }
     return *it;

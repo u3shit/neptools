@@ -18,7 +18,7 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::TypeTraits<::Neptools::Stsc::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Neptools::Source>>,
-      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<std::optional<::Libshit::StringView>>, LuaGetRef<std::optional<::Neptools::Stsc::HeaderItem::ExtraHeaders2>>, LuaGetRef<std::optional<::uint16_t>>>
+      &::Libshit::Lua::TypeTraits<::Neptools::Stsc::HeaderItem>::Make<LuaGetRef<::Neptools::Item::Key>, LuaGetRef<::Neptools::Context &>, LuaGetRef<::Libshit::NotNull<::Neptools::LabelPtr>>, LuaGetRef<std::optional<std::string_view>>, LuaGetRef<std::optional<::Neptools::Stsc::HeaderItem::ExtraHeaders2>>, LuaGetRef<std::optional<::uint16_t>>>
     >("new");
     bld.AddFunction<
       static_cast<::Neptools::Stsc::HeaderItem & (*)(::Neptools::ItemPointer, ::Neptools::Stsc::Flavor)>(::Neptools::Stsc::HeaderItem::CreateAndInsert)

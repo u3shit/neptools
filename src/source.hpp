@@ -9,13 +9,14 @@
 #include <libshit/low_io.hpp>
 #include <libshit/lua/value_object.hpp>
 #include <libshit/meta_utils.hpp>
-#include <libshit/nonowning_string.hpp>
 #include <libshit/not_null.hpp>
 #include <libshit/shared_ptr.hpp>
 
+#include <boost/filesystem/path.hpp>
+
 #include <array>
 #include <cstdint>
-#include <boost/filesystem/path.hpp>
+#include <string_view>
 
 namespace Neptools
 {
@@ -195,7 +196,7 @@ namespace Neptools
     LIBSHIT_NOLUA void Inspect(std::ostream&& os) const { Inspect(os); }
     std::string Inspect() const;
 
-    LIBSHIT_NOLUA Libshit::StringView GetChunk(FilePosition offs) const;
+    LIBSHIT_NOLUA std::string_view GetChunk(FilePosition offs) const;
 
   private:
     // offset: in original file!

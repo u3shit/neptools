@@ -42,7 +42,7 @@ namespace Libshit::Lua
       static_cast<::uint32_t (::Neptools::Cl3::*)(const Libshit::WeakSmartPtr<::Neptools::Cl3::Entry> &) const noexcept>(&::Neptools::Cl3::IndexOf)
     >("index_of");
     bld.AddFunction<
-      static_cast<::Neptools::Cl3::Entry & (::Neptools::Cl3::*)(::Libshit::StringView)>(&::Neptools::Cl3::GetOrCreateFile)
+      static_cast<::Neptools::Cl3::Entry & (::Neptools::Cl3::*)(std::string_view)>(&::Neptools::Cl3::GetOrCreateFile)
     >("get_or_create_file");
     bld.AddFunction<
       static_cast<void (::Neptools::Cl3::*)(const ::boost::filesystem::path &) const>(&::Neptools::Cl3::ExtractTo)

@@ -7,13 +7,14 @@
 #include <libshit/check.hpp>
 #include <libshit/meta.hpp>
 #include <libshit/meta_utils.hpp>
-#include <libshit/nonowning_string.hpp>
 #include <libshit/shared_ptr.hpp>
 #include <libshit/lua/dynamic_object.hpp>
 
-#include <cstring>
 #include <boost/endian/arithmetic.hpp>
 #include <boost/filesystem/path.hpp>
+
+#include <cstring>
+#include <string_view>
 
 namespace Neptools
 {
@@ -35,7 +36,7 @@ namespace Neptools
     { Write<Checker>({reinterpret_cast<const char*>(&x), Libshit::EmptySizeof<T>}); }
 
     template <typename Checker = Libshit::Check::Assert>
-    void Write(Libshit::StringView data)
+    void Write(std::string_view data)
     {
       LIBSHIT_CHECK(SinkOverflow, offset+buf_put+data.length() <= size,
                     "Sink overflow during write");
@@ -70,7 +71,7 @@ namespace Neptools
 #undef NEPTOOLS_GEN
 
     template <typename Checker = Libshit::Check::Assert>
-    void WriteCString(Libshit::NonowningString str)
+    void WriteCString(const std::string& str)
     { Write<Checker>({str.c_str(), str.size()+1}); }
 
   protected:
@@ -81,7 +82,7 @@ namespace Neptools
     FileMemSize buf_put = 0, buf_size;
 
   private:
-    virtual void Write_(Libshit::StringView data) = 0;
+    virtual void Write_(std::string_view data) = 0;
     virtual void Pad_(FileMemSize len) = 0;
   } LIBSHIT_LUAGEN(post_register=[[
     // hack to get close call __gc
@@ -107,8 +108,8 @@ namespace Neptools
     { buf = uniq_buf.get(); buf_size = size; }
 
     LIBSHIT_LUAGEN(name="to_string")
-    Libshit::StringView GetStringView() const noexcept
-    { return {buf, buf_size}; }
+    std::string_view GetStringView() const noexcept
+    { return {reinterpret_cast<const char*>(buf), buf_size}; }
 
     LIBSHIT_NOLUA
     std::unique_ptr<Byte[]> Release() noexcept { return std::move(uniq_buf); }
@@ -116,7 +117,7 @@ namespace Neptools
   private:
     std::unique_ptr<Byte[]> uniq_buf;
 
-    void Write_(Libshit::StringView) override;
+    void Write_(std::string_view) override;
     void Pad_(FileMemSize) override;
   };
 

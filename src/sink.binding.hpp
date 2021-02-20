@@ -25,7 +25,7 @@ namespace Libshit::Lua
       static_cast<::Neptools::FilePosition (::Neptools::Sink::*)() const noexcept>(&::Neptools::Sink::Tell)
     >("tell");
     bld.AddFunction<
-      static_cast<void (::Neptools::Sink::*)(::Libshit::StringView)>(&::Neptools::Sink::Write<Check::Throw>)
+      static_cast<void (::Neptools::Sink::*)(std::string_view)>(&::Neptools::Sink::Write<Check::Throw>)
     >("write");
     bld.AddFunction<
       static_cast<void (::Neptools::Sink::*)(::Neptools::FileMemSize)>(&::Neptools::Sink::Pad<Check::Throw>)
@@ -46,7 +46,7 @@ namespace Libshit::Lua
       static_cast<void (::Neptools::Sink::*)(::boost::endian::little_uint64_t)>(&::Neptools::Sink::WriteLittleUint64<Check::Throw>)
     >("write_little_uint64");
     bld.AddFunction<
-      static_cast<void (::Neptools::Sink::*)(::Libshit::NonowningString)>(&::Neptools::Sink::WriteCString<Check::Throw>)
+      static_cast<void (::Neptools::Sink::*)(const std::string &)>(&::Neptools::Sink::WriteCString<Check::Throw>)
     >("write_cstring");
  lua_getfield(bld, -2, "__gc"); bld.SetField("close");
   }
@@ -60,10 +60,10 @@ namespace Libshit::Lua
 
     bld.AddFunction<
       &::Libshit::Lua::TypeTraits<::Neptools::MemorySink>::Make<LuaGetRef<::Neptools::FileMemSize>>,
-      static_cast<::Libshit::NotNull<Libshit::SmartPtr<::Neptools::MemorySink> > (*)(::Libshit::StringView)>(&Neptools::MemorySinkFromLua)
+      static_cast<::Libshit::NotNull<Libshit::SmartPtr<::Neptools::MemorySink> > (*)(std::string_view)>(&Neptools::MemorySinkFromLua)
     >("new");
     bld.AddFunction<
-      static_cast<::Libshit::StringView (::Neptools::MemorySink::*)() const noexcept>(&::Neptools::MemorySink::GetStringView)
+      static_cast<std::string_view (::Neptools::MemorySink::*)() const noexcept>(&::Neptools::MemorySink::GetStringView)
     >("to_string");
 
   }

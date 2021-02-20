@@ -55,7 +55,7 @@ namespace Neptools::Test
       PatternParse::ByteSequence<0x11, 0x22, 0x30, 0x44, 0x00>,
       PatternParse::ByteSequence<0xff, 0xff, 0xf0, 0x77, 0x00>>>);
 
-  Byte data[] = {
+  static constexpr const Byte data[] = {
     /* 00 */ 0xff, 0xf0, 0x64, 0x22, 0x50, 0xca, 0x9f, 0x23,
     /* 08 */ 0x92, 0xf7, 0xb3, 0x8f, 0xb1, 0x30, 0x8a, 0xd6,
     /* 10 */ 0x1e, 0x38, 0xd8, 0xf3, 0xa7, 0xfa, 0x98, 0xee,
@@ -65,87 +65,90 @@ namespace Neptools::Test
     /* 30 */ 0x82, 0xf4, 0xca, 0x11, 0x47, 0x22, 0xcf, 0x98,
     /* 38 */ 0x40, 0xfe, 0x18, 0x0e, 0x2e, 0xb9, 0xfc, 0xce,
   };
+  static std::string_view data_sv{
+    reinterpret_cast<const char*>(data), sizeof(data)};
+
   TEST_CASE("simple patterns")
   {
     Pattern p = NEPTOOLS_PATTERN("a8 fe 0 1c"); //middle
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1b);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x1b);
+    CHECK(p.MaybeFind(data_sv) == data + 0x1b);
+    CHECK(p.Find(data_sv) == data + 0x1b);
 
     p = NEPTOOLS_PATTERN("ff f0 64"); //beginning
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
-    CHECK(p.Find({data, sizeof(data)}) == data);
+    CHECK(p.MaybeFind(data_sv) == data);
+    CHECK(p.Find(data_sv) == data);
 
     p = NEPTOOLS_PATTERN("18 e 2e b9 fc ce"); //end
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3a);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x3a);
+    CHECK(p.MaybeFind(data_sv) == data + 0x3a);
+    CHECK(p.Find(data_sv) == data + 0x3a);
   }
   TEST_CASE("simple not match")
   {
     auto p = NEPTOOLS_PATTERN("12 34 56 76");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
   TEST_CASE("multiple match")
   {
     auto p = NEPTOOLS_PATTERN("58 ec 21");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
 
   TEST_CASE("wildcards")
   {
     Pattern p = NEPTOOLS_PATTERN("48 ? c5 ? ? be"); // mid
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x22);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x22);
+    CHECK(p.MaybeFind(data_sv) == data + 0x22);
+    CHECK(p.Find(data_sv) == data + 0x22);
 
     p = NEPTOOLS_PATTERN("ff ? ? 22 50"); // begin
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
-    CHECK(p.Find({data, sizeof(data)}) == data);
+    CHECK(p.MaybeFind(data_sv) == data);
+    CHECK(p.Find(data_sv) == data);
 
 
     p = NEPTOOLS_PATTERN("e ? b9 ? ce"); // end
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
+    CHECK(p.MaybeFind(data_sv) == data + 0x3b);
+    CHECK(p.Find(data_sv) == data + 0x3b);
 
     p = NEPTOOLS_PATTERN("? ? fe 00 ?"); // mid
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x1a);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x1a);
+    CHECK(p.MaybeFind(data_sv) == data + 0x1a);
+    CHECK(p.Find(data_sv) == data + 0x1a);
 
     p = NEPTOOLS_PATTERN("? ? 64 22 ?"); // begin
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data);
-    CHECK(p.Find({data, sizeof(data)}) == data);
+    CHECK(p.MaybeFind(data_sv) == data);
+    CHECK(p.Find(data_sv) == data);
 
     p = NEPTOOLS_PATTERN("? 2e b9 ? ?"); // end
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x3b);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x3b);
+    CHECK(p.MaybeFind(data_sv) == data + 0x3b);
+    CHECK(p.Find(data_sv) == data + 0x3b);
   }
   TEST_CASE("wildcards not match")
   {
     Pattern p = NEPTOOLS_PATTERN("12 34 ?? 56 ?? 78");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
 
     p = NEPTOOLS_PATTERN("? ? 12 34 56");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
 
     p = NEPTOOLS_PATTERN("12 34 ? 56 ? ? ?");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
   TEST_CASE("wildcards multiple match")
   {
     Pattern p = NEPTOOLS_PATTERN("58 ? 21");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
 
     p = NEPTOOLS_PATTERN("? 58 ? ?");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
 
     p = NEPTOOLS_PATTERN("? ? ? ?");
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
 
   TEST_CASE("mask")
@@ -153,8 +156,8 @@ namespace Neptools::Test
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x28, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x2f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x18);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x18);
+    CHECK(p.MaybeFind(data_sv) == data + 0x18);
+    CHECK(p.Find(data_sv) == data + 0x18);
   }
 
   TEST_CASE("mask no match")
@@ -162,8 +165,8 @@ namespace Neptools::Test
     Byte pat[]  = { 0x58, 0xe0, 0x21, 0x18, 0x3e };
     Byte mask[] = { 0xff, 0xf0, 0xff, 0x1f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
 
   TEST_CASE("mask no 0xff")
@@ -171,14 +174,14 @@ namespace Neptools::Test
     Byte pat[]  = { 0x58, 0xe0, 0x20, 0x28, 0x3e };
     Byte mask[] = { 0x5f, 0xf0, 0xf2, 0x2f, 0x3f };
     auto p = Pattern{pat, mask, 5};
-    CHECK(p.MaybeFind({data, sizeof(data)}) == data + 0x18);
-    CHECK(p.Find({data, sizeof(data)}) == data + 0x18);
+    CHECK(p.MaybeFind(data_sv) == data + 0x18);
+    CHECK(p.Find(data_sv) == data + 0x18);
 
     Byte pat2[]  = { 0x58, 0xe0, 0x20, 0x18, 0x3e };
     Byte mask2[] = { 0x5f, 0xf0, 0xf2, 0x1f, 0x3f };
     p = Pattern{pat2, mask2, 5};
-    CHECK(p.MaybeFind({data, sizeof(data)}) == nullptr);
-    CHECK_THROWS_AS(p.Find({data, sizeof(data)}), std::runtime_error);
+    CHECK(p.MaybeFind(data_sv) == nullptr);
+    CHECK_THROWS_AS(p.Find(data_sv), std::runtime_error);
   }
 
   TEST_SUITE_END();

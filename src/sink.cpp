@@ -21,7 +21,7 @@ namespace Neptools
     struct LIBSHIT_NOLUA MmapSink final : public Sink
     {
       MmapSink(Libshit::LowIo&& io, FilePosition size);
-      void Write_(Libshit::StringView data) override;
+      void Write_(std::string_view data) override;
       void Pad_(FileMemSize len) override;
 
       void MapNext(FileMemSize len);
@@ -40,7 +40,7 @@ namespace Neptools
       }
       ~SimpleSink() override;
 
-      void Write_(Libshit::StringView data) override;
+      void Write_(std::string_view data) override;
       void Pad_(FileMemSize len) override;
       void Flush() override;
 
@@ -62,7 +62,7 @@ namespace Neptools
     this->io = Libshit::Move(io);
   }
 
-  void MmapSink::Write_(Libshit::StringView data)
+  void MmapSink::Write_(std::string_view data)
   {
     LIBSHIT_ASSERT(buf_put == buf_size && offset < size &&
                    buf_size == MMAP_CHUNK);
@@ -71,7 +71,7 @@ namespace Neptools
     if (data.length() / MMAP_CHUNK)
     {
       auto to_write = data.length() / MMAP_CHUNK * MMAP_CHUNK;
-      io.Pwrite(data.udata(), to_write, offset);
+      io.Pwrite(data.data(), to_write, offset);
       data.remove_prefix(to_write);
       offset += to_write;
       buf_put = 0;
@@ -136,7 +136,7 @@ namespace Neptools
     }
   }
 
-  void SimpleSink::Write_(Libshit::StringView data)
+  void SimpleSink::Write_(std::string_view data)
   {
     LIBSHIT_ASSERT(buf_size == MEM_CHUNK && buf_put == MEM_CHUNK);
     io.Write(buf, MEM_CHUNK);
@@ -276,7 +276,7 @@ namespace Neptools
     {
       auto sink = Sink::ToFile("tmp", SIZE, try_mmap);
       REQUIRE(sink->Tell() == 0);
-      sink->Write({buf.get(), SIZE});
+      sink->Write({reinterpret_cast<char*>(buf.get()), SIZE});
       REQUIRE(sink->Tell() == SIZE);
     }
 
@@ -416,7 +416,7 @@ namespace Neptools
   }
 
 
-  void MemorySink::Write_(Libshit::StringView)
+  void MemorySink::Write_(std::string_view)
   { LIBSHIT_UNREACHABLE("MemorySink::Write_ called"); }
   void MemorySink::Pad_(FileMemSize)
   { LIBSHIT_UNREACHABLE("MemorySink::Pad_ called"); }
@@ -486,7 +486,7 @@ namespace Neptools
 #if LIBSHIT_WITH_LUA
   LIBSHIT_LUAGEN(name="new", class="Neptools::MemorySink")
   static Libshit::NotNull<Libshit::SmartPtr<MemorySink>>
-  MemorySinkFromLua(Libshit::StringView view)
+  MemorySinkFromLua(std::string_view view)
   {
     std::unique_ptr<Byte[]> buf{new Byte[view.length()]};
     memcpy(buf.get(), view.data(), view.length());

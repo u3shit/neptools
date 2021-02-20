@@ -10,11 +10,13 @@
 
 #include <libshit/memory_utils.hpp>
 
-#include <cstdint>
 #include <boost/filesystem/operations.hpp>
+
+#include <cstdint>
 #include <fstream>
 #include <psp2/kernel/modulemgr.h>
 #include <stdexcept>
+#include <string_view>
 
 #define LIBSHIT_LOG_NAME "cpk"
 #include <libshit/logger_helper.hpp>
@@ -241,8 +243,8 @@ namespace Neptools::VitaPlugin
     if (ret < 0)
       LIBSHIT_THROW(TaiError, "sceKernelGetModuleInfo failed", "Error code", ret);
 
-    Libshit::StringView seg0{static_cast<char*>(kern_info.segments[0].vaddr),
-                             kern_info.segments[0].memsz};
+    std::string_view seg0{static_cast<char*>(kern_info.segments[0].vaddr),
+                          kern_info.segments[0].memsz};
     DBG(1) << "Base: " << static_cast<const void*>(seg0.data())
            << ", size: " << seg0.size() << std::endl;
 

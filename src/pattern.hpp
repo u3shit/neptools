@@ -3,8 +3,10 @@
 #pragma once
 
 #include "utils.hpp"
+
 #include <libshit/except.hpp>
-#include <libshit/nonowning_string.hpp>
+
+#include <string_view>
 
 namespace Neptools
 {
@@ -15,9 +17,9 @@ namespace Neptools
     const Byte* mask;
     size_t size;
 
-    const Byte* MaybeFind(Libshit::StringView data) const noexcept;
+    const Byte* MaybeFind(std::string_view data) const noexcept;
 
-    const Byte* Find(Libshit::StringView data) const
+    const Byte* Find(std::string_view data) const
     {
       auto ret = MaybeFind(data);
       if (!ret) LIBSHIT_THROW(std::runtime_error, "Couldn't find pattern");

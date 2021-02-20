@@ -169,7 +169,7 @@ namespace Neptools
   std::string Source::PreadCString(FilePosition offs) const
   {
     std::string ret;
-    Libshit::StringView e;
+    std::string_view e;
     size_t len;
     do
     {
@@ -190,13 +190,13 @@ namespace Neptools
     return p->lru[0];
   }
 
-  Libshit::StringView Source::GetChunk(FilePosition offs) const
+  std::string_view Source::GetChunk(FilePosition offs) const
   {
     LIBSHIT_ASSERT(offs < size);
     auto e = GetTemporaryEntry(offs + offset);
     auto eoffs = offs + offset - e.offset;
     auto size = std::min(e.size - eoffs, GetSize() - offs);
-    return { e.ptr + eoffs, std::size_t(size) };
+    return { reinterpret_cast<const char*>(e.ptr + eoffs), std::size_t(size) };
   }
 
 

@@ -317,7 +317,7 @@ namespace Neptools
     for (const auto& m : messages)
     {
       m->ForEach(WriteDescr{msgd.data(), endian});
-      sink.Write({msgd.data(), msg_descr_size});
+      sink.Write({reinterpret_cast<char*>(msgd.data()), msg_descr_size});
     }
 
     auto msgs_end = msg_descr_size * messages.size();
@@ -550,7 +550,7 @@ namespace Neptools
 #undef REP_MACRO
     ' '
   };
-  static const Libshit::StringView SEP_DASH{
+  static const std::string_view SEP_DASH{
     SEP_DASH_DATA, sizeof(SEP_DASH_DATA)};
 
   static const char SEP_DASH_UTF8_DATA[] = {
@@ -559,7 +559,7 @@ namespace Neptools
 #undef REP_MACRO
     ' '
   };
-  static const Libshit::StringView SEP_DASH_UTF8{
+  static const std::string_view SEP_DASH_UTF8{
     SEP_DASH_UTF8_DATA, sizeof(SEP_DASH_UTF8_DATA)};
 
 

@@ -32,7 +32,7 @@ namespace Neptools::Stsc
 
   HeaderItem::HeaderItem(
       Key k, Context& ctx, Libshit::NotNull<LabelPtr> entry_point,
-      std::optional<Libshit::StringView> extra_headers_1,
+      std::optional<std::string_view> extra_headers_1,
       std::optional<ExtraHeaders2> extra_headers_2,
       std::optional<uint16_t> extra_headers_4)
     : Item{k, ctx}, entry_point{entry_point},
@@ -124,7 +124,9 @@ namespace Neptools::Stsc
 
     os << "header(" << PrintLabel(entry_point) << ", ";
     if (extra_headers_1)
-      Libshit::DumpBytes(os, {extra_headers_1->data(), extra_headers_1->size()});
+      Libshit::DumpBytes(os, {
+          reinterpret_cast<const char*>(extra_headers_1->data()),
+          extra_headers_1->size()});
     else os << "nil";
 
     if (extra_headers_2)

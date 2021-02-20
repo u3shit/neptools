@@ -19,7 +19,7 @@ namespace Neptools
     return true;
   }
 
-  const Byte* Pattern::MaybeFind(Libshit::StringView data) const noexcept
+  const Byte* Pattern::MaybeFind(std::string_view data) const noexcept
   {
     size_t max_len = 0, max_i = 0;
     size_t start_i = 0;
@@ -39,8 +39,9 @@ namespace Neptools
     boost::algorithm::boyer_moore<const Byte*> bm{
       pattern + max_i, pattern + max_i + max_len};
 
-    auto ptr = data.udata() + max_i;
-    auto ptr_end = data.udata() + data.length() - (size - max_len - max_i);
+    auto ptr = reinterpret_cast<const Byte*>(data.data()) + max_i;
+    auto ptr_end = reinterpret_cast<const Byte*>(data.data()) + data.length() -
+      (size - max_len - max_i);
     const Byte* res = nullptr;
 
     while (true)

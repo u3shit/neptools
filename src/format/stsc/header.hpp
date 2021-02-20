@@ -5,7 +5,10 @@
 #include "file.hpp"
 #include "../../source.hpp"
 #include "../item.hpp"
+
 #include <boost/endian/arithmetic.hpp>
+
+#include <string_view>
 
 namespace Neptools::Stsc
 {
@@ -62,7 +65,7 @@ namespace Neptools::Stsc
     HeaderItem(Key k, Context& ctx, Source src);
     HeaderItem(
       Key k, Context& ctx, Libshit::NotNull<LabelPtr> entry_point,
-      std::optional<Libshit::StringView> extra_headers_1,
+      std::optional<std::string_view> extra_headers_1,
       std::optional<ExtraHeaders2> extra_headers_2,
       std::optional<uint16_t> extra_headers_4);
     static HeaderItem& CreateAndInsert(ItemPointer ptr, Flavor flavor);
