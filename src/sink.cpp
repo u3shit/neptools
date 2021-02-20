@@ -15,24 +15,25 @@
 namespace Neptools
 {
   TEST_SUITE_BEGIN("Neptools::Sink");
+
   namespace
   {
     struct LIBSHIT_NOLUA MmapSink final : public Sink
     {
       MmapSink(Libshit::LowIo&& io, FilePosition size);
-      ~MmapSink() override;
       void Write_(Libshit::StringView data) override;
       void Pad_(FileMemSize len) override;
 
       void MapNext(FileMemSize len);
 
       Libshit::LowIo io;
+      Libshit::LowIo::MmapPtr mm;
     };
 
     struct LIBSHIT_NOLUA SimpleSink final : public Sink
     {
       SimpleSink(Libshit::LowIo io, FilePosition size)
-        : Sink{size}, io{std::move(io)}
+        : Sink{size}, io{Libshit::Move(io)}
       {
         Sink::buf = buf;
         buf_size = MEM_CHUNK;
@@ -54,16 +55,11 @@ namespace Neptools
 
     io.Truncate(size);
     io.PrepareMmap(true);
+    mm = io.Mmap(0, to_map, true);
     buf_size = to_map;
-    buf = static_cast<Byte*>(io.Mmap(0, to_map, true));
+    buf = reinterpret_cast<Neptools::Byte*>(mm.Get());
 
-    this->io = std::move(io);
-  }
-
-  MmapSink::~MmapSink()
-  {
-    if (buf)
-      Libshit::LowIo::Munmap(buf, buf_size);
+    this->io = Libshit::Move(io);
   }
 
   void MmapSink::Write_(Libshit::StringView data)
@@ -107,15 +103,14 @@ namespace Neptools
     {
       auto nbuf_size = std::min<FileMemSize>(MMAP_CHUNK, size-offset);
       LIBSHIT_ASSERT(nbuf_size >= len);
-      void* nbuf = io.Mmap(offset, nbuf_size, true);
-      io.Munmap(buf, buf_size);
-      buf = static_cast<Byte*>(nbuf);
+      mm = io.Mmap(offset, nbuf_size, true);
+      buf = static_cast<Byte*>(mm.Get());
       buf_put = len;
       buf_size = nbuf_size;
     }
     else
     {
-      io.Munmap(buf, buf_size);
+      mm.Reset();
       buf = nullptr;
     }
   }
@@ -190,15 +185,15 @@ namespace Neptools
         Libshit::LowIo io{fname.c_str(), Libshit::LowIo::Permission::READ_WRITE,
           Libshit::LowIo::Mode::TRUNC_OR_CREATE};
         if (LIBSHIT_OS_IS_VITA || !try_mmap)
-          return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
+          return Libshit::MakeRefCounted<SimpleSink>(Libshit::Move(io), size);
 
-        try { return Libshit::MakeRefCounted<MmapSink>(std::move(io), size); }
+        try { return Libshit::MakeRefCounted<MmapSink>(Libshit::Move(io), size); }
         catch (const Libshit::SystemError& e)
         {
           WARN << "Mmmap failed, falling back to normal writing: "
                << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
                << std::endl;
-          return Libshit::MakeRefCounted<SimpleSink>(std::move(io), size);
+          return Libshit::MakeRefCounted<SimpleSink>(Libshit::Move(io), size);
         }
       },
       [&](auto& e) { Libshit::AddInfos(e, "File name", fname.string()); });
@@ -495,7 +490,7 @@ namespace Neptools
   {
     std::unique_ptr<Byte[]> buf{new Byte[view.length()]};
     memcpy(buf.get(), view.data(), view.length());
-    return Libshit::MakeSmart<MemorySink>(std::move(buf), view.length());
+    return Libshit::MakeSmart<MemorySink>(Libshit::Move(buf), view.length());
   }
 #endif
 

@@ -30,7 +30,8 @@ namespace Neptools
     {
       UnixLike(Libshit::LowIo io, boost::filesystem::path file_name,
                FilePosition size)
-        : Source::Provider{std::move(file_name), size}, io{std::move(io)} {}
+        : Source::Provider{Libshit::Move(file_name), size},
+          io{Libshit::Move(io)} {}
 
       void Destroy() noexcept;
 
@@ -57,7 +58,7 @@ namespace Neptools
       // workaround clang bug...
       UnixProvider(Libshit::LowIo&& io, boost::filesystem::path file_name,
                    FilePosition size)
-        : UnixLike{std::move(io), std::move(file_name), size} {}
+        : UnixLike{Libshit::Move(io), Libshit::Move(file_name), size} {}
       ~UnixProvider() noexcept override { Destroy(); }
 
       static FileMemSize CHUNK_SIZE;
@@ -68,8 +69,8 @@ namespace Neptools
     struct StringProvider final : public Source::Provider
     {
       StringProvider(boost::filesystem::path file_name, std::string str)
-        : Source::Provider(std::move(file_name), str.size()),
-        str{std::move(str)}
+        : Source::Provider(Libshit::Move(file_name), str.size()),
+          str{Libshit::Move(str)}
       {
         LruPush(reinterpret_cast<const Byte*>(this->str.data()),
                 0, this->str.size());
@@ -85,7 +86,7 @@ namespace Neptools
     {
       UniquePtrProvider(boost::filesystem::path file_name,
                         std::unique_ptr<char[]> data, std::size_t len)
-        : Source::Provider(std::move(file_name), len),
+        : Source::Provider(Libshit::Move(file_name), len),
           data{Libshit::Move(data)}
       { LruPush(reinterpret_cast<const Byte*>(this->data.get()), 0, len); }
 
@@ -111,13 +112,13 @@ namespace Neptools
     FilePosition size = io.GetSize();
 
     Libshit::SmartPtr<Provider> p;
-    try { p = Libshit::MakeSmart<MmapProvider>(std::move(io), fname, size); }
+    try { p = Libshit::MakeSmart<MmapProvider>(Libshit::Move(io), fname, size); }
     catch (const Libshit::SystemError& e)
     {
       WARN << "Mmap failed, falling back to normal reading: "
            << Libshit::PrintException(Libshit::Logger::HasAnsiColor())
            << std::endl;
-      p = Libshit::MakeSmart<UnixProvider>(std::move(io), fname, size);
+      p = Libshit::MakeSmart<UnixProvider>(Libshit::Move(io), fname, size);
     }
     return Libshit::MakeNotNull(Libshit::Move(p));
   }
@@ -235,7 +236,6 @@ namespace Neptools
   template <typename T>
   void UnixLike<T>::Pread(FilePosition offs, Byte* buf, FileMemSize len)
   {
-    LIBSHIT_ASSERT(io.fd != Libshit::LowIo::INVALID_FD);
     if (len > static_cast<T*>(this)->CHUNK_SIZE)
       return io.Pread(buf, len, offs);
 
@@ -268,20 +268,16 @@ namespace Neptools
   FileMemSize MmapProvider::CHUNK_SIZE = MMAP_CHUNK;
   MmapProvider::MmapProvider(
     Libshit::LowIo&& io, boost::filesystem::path file_name, FilePosition size)
-    : UnixLike{{}, std::move(file_name), size}
+    : UnixLike{{}, Libshit::Move(file_name), size}
   {
     std::size_t to_map = size < MMAP_LIMIT ? size : MMAP_CHUNK;
 
     io.PrepareMmap(false);
-    void* ptr = io.Mmap(0, to_map, false);
+    void* ptr = io.Mmap(0, to_map, false).Release();
 #if !LIBSHIT_OS_IS_WINDOWS
-    if (to_map == size)
-    {
-      close(io.fd);
-      io.fd = -1;
-    }
+    if (to_map == size) io.Reset();
 #endif
-    this->io = std::move(io);
+    this->io = Libshit::Move(io);
 
     lru[0].ptr = static_cast<Byte*>(ptr);
     lru[0].offset = 0;
@@ -290,13 +286,13 @@ namespace Neptools
 
   void* MmapProvider::ReadChunk(FilePosition offs, FileMemSize size)
   {
-    return io.Mmap(offs, size, false);
+    return io.Mmap(offs, size, false).Release();
   }
 
   void MmapProvider::DeleteChunk(size_t i)
   {
     if (lru[i].ptr)
-      io.Munmap(const_cast<Byte*>(lru[i].ptr), lru[i].size);
+      Libshit::LowIo::Munmap(const_cast<Byte*>(lru[i].ptr), lru[i].size);
   }
 
   FileMemSize UnixProvider::CHUNK_SIZE = MEM_CHUNK;
