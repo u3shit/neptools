@@ -217,8 +217,7 @@ namespace Neptools::Stsc
     template <typename... T, size_t... I>
     struct OperationsImpl<std::index_sequence<I...>, T...>
     {
-      using Swallow = int[];
-#define FORALL(...) (void) Swallow{0, ((void)(__VA_ARGS__), 0)...}
+#define FORALL(...) ((__VA_ARGS__), ...)
 
       template <typename Tuple>
       static void Validate(const Tuple& tuple, FilePosition size)
