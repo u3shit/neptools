@@ -222,7 +222,7 @@ static void DoAutoLua(const boost::filesystem::path& p)
   else
   {
     auto st = SmartOpen(bin);
-    EnsureTxt(st);
+    EnsureStcm(st);
     OpenOut(lua) << "return " << *(st.stcm ? st.stcm : st.dump.get()) << '\n';
   }
 }
