@@ -121,8 +121,9 @@ namespace Neptools
     void Pad(uint16_t diff, Struct::TypeBuilder& bld, bool& int8_in_progress);
     FilePosition Align(FilePosition x) const noexcept;
 
-    int32_t GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
-    size_t FindDst(int32_t id, std::vector<StructPtr>& messages,
+    std::optional<std::int32_t> GetId(
+      bool simple, const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const;
+    size_t FindDst(bool simple, int32_t id, std::vector<StructPtr>& messages,
                    size_t& index) const;
 
     size_t msg_descr_size, msgs_size;

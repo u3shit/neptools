@@ -31,6 +31,13 @@ namespace Neptools
       else throw Libshit::InvalidParam{"invalid argument"};
     }};
 
+  static bool simple_ids = false;
+  static Libshit::Option simple_opt{
+    GetFlavorOptions(), "simple-ids", 0, nullptr,
+    "Use simple IDs with txt export "
+    "(Incompatible with STRTOOL and txts produced without this option!)",
+    [](auto&& args) { simple_ids = true; }};
+
   void Gbnl::Header::Validate(size_t chunk_size) const
   {
 #define VALIDATE(x) LIBSHIT_VALIDATE_FIELD("Gbnl::Header", x)
@@ -563,19 +570,22 @@ namespace Neptools
     SEP_DASH_UTF8_DATA, sizeof(SEP_DASH_UTF8_DATA)};
 
 
-  int32_t Gbnl::GetId(const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
+  std::optional<int32_t> Gbnl::GetId(
+    bool simple, const Gbnl::Struct& m, size_t i, size_t j, size_t& k) const
   {
     size_t this_k;
     if (m.Is<Gbnl::OffsetString>(i))
     {
       if (m.Get<Gbnl::OffsetString>(i).offset == static_cast<uint32_t>(-1))
-        return -1;
+        return {};
       this_k = ++k;
     }
     else if (m.Is<Gbnl::FixStringTag>(i))
       this_k = (flags && field_28 != 1) ? 10000 : 0;
     else
-      return -1;
+      return {};
+
+    if (simple) return std::int32_t(i + j*1000);
 
     // hack
     if (!is_gstl && m.Is<int32_t>(0) && (
@@ -602,8 +612,8 @@ namespace Neptools
       size_t k = 0;
       for (size_t i = 0; i < m->GetSize(); ++i)
       {
-        auto id = GetId(*m, i, j, k);
-        if (id != -1)
+        auto id = GetId(simple_ids, *m, i, j, k);
+        if (id)
         {
           std::string str;
           if (m->Is<FixStringTag>(i))
@@ -618,7 +628,8 @@ namespace Neptools
           if (!STRTOOL_COMPAT || !str.empty())
           {
             os.write(sep.data(), sep.size());
-            os << id << "\r\n" << str << "\r\n";
+            if (simple_ids) os << '#';
+            os << *id << "\r\n" << str << "\r\n";
           }
         }
       }
@@ -628,9 +639,15 @@ namespace Neptools
     os << "EOF\r\n";
   }
 
-  size_t Gbnl::FindDst(int32_t id, std::vector<StructPtr>& messages,
+  size_t Gbnl::FindDst(bool simple, int32_t id, std::vector<StructPtr>& messages,
                        size_t& index) const
   {
+    if (simple)
+    {
+      index = id / 1000;
+      return id % 1000;
+    }
+
     auto size = messages.size();
     for (size_t j = 0; j < size; ++j)
     {
@@ -639,8 +656,8 @@ namespace Neptools
       size_t k = 0;
       for (size_t i = 0; i < m->GetSize(); ++i)
       {
-        auto tid = GetId(*m, i, j2, k);
-        if (tid == id)
+        auto tid = GetId(false, *m, i, j2, k);
+        if (tid && *tid == id)
         {
           index = j2;
           return i;
@@ -683,8 +700,10 @@ namespace Neptools
           RecalcSize();
           return;
         }
+        bool simple = false;
+        if (line[offs] == '#') simple = true, ++offs;
         int32_t id = std::strtol(line.data() + offs, nullptr, 10);
-        pos = FindDst(id, messages, last_index);
+        pos = FindDst(simple, id, messages, last_index);
         if (pos == static_cast<size_t>(-1))
         {
           LIBSHIT_THROW(
